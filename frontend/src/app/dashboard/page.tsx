@@ -360,16 +360,16 @@ export default function DashboardPage() {
             Live Camera Feeds
           </h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* CAM 01 — Entrance */}
             <div>
-              <CRTFrame label="CAM 01 — ENTRANCE" live videoSrc="/videos/cam1.mp4" className="w-full" />
+              <CRTFrame label="CAM 01 — ENTRANCE" live signal={false} className="w-full" />
               <FootfallCard />
             </div>
 
             {/* CAM 02 — Floor A */}
             <div>
-              <CRTFrame label="CAM 02 — FLOOR A" live signal={false} className="w-full" />
+              <CRTFrame label="CAM 02 — FLOOR A" live videoSrc="/videos/cam1.mp4" className="w-full" />
               <EngagementCard interactions={MOCK_INTERACTIONS_FLOOR_A} />
             </div>
 
