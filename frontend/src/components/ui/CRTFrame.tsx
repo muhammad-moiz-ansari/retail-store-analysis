@@ -113,7 +113,9 @@ export function CRTFrame({
         <div className="relative z-0">{screenContent}</div>
 
         {/* Scanline overlay */}
-        <div className="scanlines absolute inset-0 z-10" />
+        {!signal && (
+          <div className="scanlines absolute inset-0 z-10" />
+        )}
       </div>
 
       {/* ── Bottom label plaque ── */}
