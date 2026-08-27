@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Space_Grotesk, Inter, JetBrains_Mono } from "next/font/google";
 import { NavbarShell } from "@/components/ui/NavbarShell";
+import { Footer } from "@/components/ui";
 import "./globals.css";
 
 const spaceGrotesk = Space_Grotesk({
@@ -38,7 +39,8 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <NavbarShell />
-        {children}
+        <div className="flex-1">{children}</div>
+        <Footer />
       </body>
     </html>
   );
