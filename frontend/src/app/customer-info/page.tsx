@@ -128,6 +128,9 @@ export default function CustomerInfoPage() {
 
         {/* ── Section 3: Trajectory & Spatial Behavior ── */}
         <TrajectorySection />
+
+        {/* ── Section 4: Additional Insights ── */}
+        <AdditionalInsightsSection />
       </main>
     </div>
   );
@@ -518,5 +521,94 @@ function TrajectorySection() {
         </RetroCard>
       </div>
     </RetroWindow>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Section 4: Additional Insights
+   ═══════════════════════════════════════════════════════════════ */
+
+function AdditionalInsightsSection() {
+  return (
+    <RetroWindow title="Additional Insights">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* ── Return Visit Rate ── */}
+        <RetroCard label="Return Visit Rate">
+          <div className="flex flex-col items-center justify-center py-6">
+            <p className="font-mono text-5xl font-bold text-success">34%</p>
+            <p className="text-xs text-text-muted mt-3 text-center">
+              of today&apos;s customers have visited in the past 7 days
+            </p>
+            <div className="flex items-center gap-2 mt-4 text-xs">
+              <TrendUpIcon />
+              <span className="text-success font-mono">+4%</span>
+              <span className="text-text-muted">vs last week</span>
+            </div>
+          </div>
+        </RetroCard>
+
+        {/* ── Peak Service Pressure ── */}
+        <RetroCard label="Peak Service Pressure">
+          <div className="flex flex-col items-center justify-center py-6">
+            <p className="font-mono text-4xl font-bold text-danger">1:00 PM</p>
+            <p className="text-xs text-text-muted mt-2 text-center">
+              highest customer-to-staff ratio today
+            </p>
+
+            <div className="w-full max-w-[260px] mt-5 space-y-2">
+              <PressureBar label="Customers" value={52} max={70} color="var(--color-accent)" />
+              <PressureBar label="Staff on Floor" value={6} max={70} color="var(--color-success)" />
+              <p className="text-[10px] text-text-muted text-center mt-1">
+                Ratio: <span className="font-mono text-danger font-bold">8.7 : 1</span>
+              </p>
+            </div>
+          </div>
+        </RetroCard>
+      </div>
+    </RetroWindow>
+  );
+}
+
+function PressureBar({
+  label,
+  value,
+  max,
+  color,
+}: {
+  label: string;
+  value: number;
+  max: number;
+  color: string;
+}) {
+  const pct = Math.min((value / max) * 100, 100);
+  return (
+    <div className="space-y-1">
+      <div className="flex justify-between text-[10px]">
+        <span className="text-text-muted">{label}</span>
+        <span className="font-mono text-text">{value}</span>
+      </div>
+      <div className="w-full h-2 rounded-full bg-surface-alt overflow-hidden">
+        <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, backgroundColor: color }} />
+      </div>
+    </div>
+  );
+}
+
+function TrendUpIcon() {
+  return (
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="text-success shrink-0"
+    >
+      <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" />
+      <polyline points="16 7 22 7 22 13" />
+    </svg>
   );
 }
