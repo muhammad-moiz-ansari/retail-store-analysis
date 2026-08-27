@@ -1,0 +1,65 @@
+@import "tailwindcss";
+
+/* ── Design System: Elegant Retro OS ── */
+
+:root {
+  /* Core palette */
+  --color-bg: #EDE0C8;
+  --color-surface: #F7EFDD;
+  --color-surface-alt: #E4D4B0;
+  --color-border: #4A2E1E;
+  --color-border-soft: #8B6A4A;
+  --color-accent: #C1652F;
+  --color-accent-hover: #A6521F;
+  --color-accent-soft: #E8B84B;
+  --color-success: #4C7A5A;
+  --color-danger: #B5432E;
+  --color-text: #2E1F14;
+  --color-text-muted: #6B5642;
+}
+
+@theme inline {
+  /* Map CSS variables into Tailwind utilities */
+  --color-bg: var(--color-bg);
+  --color-surface: var(--color-surface);
+  --color-surface-alt: var(--color-surface-alt);
+  --color-border: var(--color-border);
+  --color-border-soft: var(--color-border-soft);
+  --color-accent: var(--color-accent);
+  --color-accent-hover: var(--color-accent-hover);
+  --color-accent-soft: var(--color-accent-soft);
+  --color-success: var(--color-success);
+  --color-danger: var(--color-danger);
+  --color-text: var(--color-text);
+  --color-text-muted: var(--color-text-muted);
+
+  /* Font families */
+  --font-heading: var(--font-space-grotesk);
+  --font-body: var(--font-inter);
+  --font-mono: var(--font-jetbrains-mono);
+}
+
+/* ── Base styles ── */
+
+body {
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-body), system-ui, sans-serif;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading), system-ui, sans-serif;
+}
+
+/* ── Utility: Scanline overlay for CRT effect ── */
+
+.scanlines {
+  background-image: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.03) 2px,
+    rgba(0, 0, 0, 0.03) 4px
+  );
+  pointer-events: none;
+}
