@@ -2,6 +2,16 @@
 
 import React from "react";
 import { RetroWindow, RetroCard } from "@/components/ui";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  ReferenceLine,
+} from "recharts";
 
 /* ═══════════════════════════════════════════════════════════════
    Mock data
@@ -13,6 +23,32 @@ const LEADERBOARD = [
   { rank: 3, id: "Staff 05", approach: 25, idle: 19, interaction: 33, total: 77 },
   { rank: 4, id: "Staff 02", approach: 22, idle: 17, interaction: 30, total: 69 },
   { rank: 5, id: "Staff 04", approach: 19, idle: 14, interaction: 27, total: 60 },
+];
+
+const INTERACTION_SPARKLINE_7D = [
+  { day: "Mon", mins: 3.1 },
+  { day: "Tue", mins: 3.5 },
+  { day: "Wed", mins: 4.0 },
+  { day: "Thu", mins: 2.8 },
+  { day: "Fri", mins: 3.9 },
+  { day: "Sat", mins: 3.4 },
+  { day: "Sun", mins: 3.2 },
+];
+
+const RESPONSE_TIME_HOURLY = [
+  { hour: "9 AM", seconds: 85 },
+  { hour: "10 AM", seconds: 92 },
+  { hour: "11 AM", seconds: 105 },
+  { hour: "12 PM", seconds: 145 },
+  { hour: "1 PM", seconds: 168 },
+  { hour: "2 PM", seconds: 198 },
+  { hour: "3 PM", seconds: 155 },
+  { hour: "4 PM", seconds: 130 },
+  { hour: "5 PM", seconds: 142 },
+  { hour: "6 PM", seconds: 195 },
+  { hour: "7 PM", seconds: 110 },
+  { hour: "8 PM", seconds: 78 },
+  { hour: "9 PM", seconds: 72 },
 ];
 
 /* ═══════════════════════════════════════════════════════════════
@@ -42,6 +78,9 @@ export default function EmployeeInfoPage() {
 
         {/* ── Section 1: Overall Staff Performance ── */}
         <OverallPerformanceSection />
+
+        {/* ── Section 2: Interaction & Responsiveness ── */}
+        <InteractionResponsivenessSection />
       </main>
     </div>
   );
@@ -198,5 +237,150 @@ function ScoreRing({ score, max }: { score: number; max: number }) {
         <span className="font-mono text-sm text-text-muted">/ {max}</span>
       </div>
     </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Section 2: Interaction & Responsiveness
+   ═══════════════════════════════════════════════════════════════ */
+
+function InteractionResponsivenessSection() {
+  return (
+    <RetroWindow title="Interaction & Responsiveness">
+      <div className="space-y-6">
+        {/* ── Top row: 3 stat cards ── */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Total Interactions */}
+          <RetroCard label="Total Interactions">
+            <div className="flex flex-col items-center justify-center py-4">
+              <p className="font-mono text-4xl font-bold text-accent">143</p>
+              <p className="text-xs text-text-muted mt-2">interactions today</p>
+              <p className="text-[10px] text-text-muted mt-1">
+                successful staff–customer engagements
+              </p>
+              <p className="text-[10px] text-success mt-2 flex items-center gap-1">
+                <TrendUpIcon /> <span className="font-mono">↑ 18</span> more than yesterday
+              </p>
+            </div>
+          </RetroCard>
+
+          {/* Avg Interaction Duration */}
+          <RetroCard label="Avg. Interaction Duration">
+            <div className="flex flex-col items-center justify-center py-4">
+              <p className="font-mono text-4xl font-bold text-accent">3m 27s</p>
+              <p className="text-xs text-text-muted mt-2 mb-4">avg. duration per engagement</p>
+
+              {/* Sparkline bars */}
+              <div className="flex items-end gap-1.5 h-10 w-full max-w-[180px]">
+                {INTERACTION_SPARKLINE_7D.map((d) => {
+                  const maxVal = Math.max(...INTERACTION_SPARKLINE_7D.map((s) => s.mins));
+                  const pct = (d.mins / maxVal) * 100;
+                  return (
+                    <div key={d.day} className="flex-1 flex flex-col items-center gap-1">
+                      <div
+                        className="w-full rounded-sm min-h-[4px]"
+                        style={{ height: `${pct}%`, backgroundColor: "var(--color-accent-soft)" }}
+                        title={`${d.day}: ${d.mins}m`}
+                      />
+                      <span className="text-[8px] text-text-muted leading-none">{d.day.charAt(0)}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </RetroCard>
+
+          {/* Avg Response Time */}
+          <RetroCard label="Avg. Response Time">
+            <div className="flex flex-col items-center justify-center py-4">
+              <p className="font-mono text-4xl font-bold text-accent">1m 52s</p>
+              <p className="text-xs text-text-muted mt-2">
+                from customer zone entry to staff greeting
+              </p>
+              <p className="text-[10px] text-text-muted mt-2">
+                Target: <span className="text-success font-mono">under 2 minutes</span>
+              </p>
+            </div>
+          </RetroCard>
+        </div>
+
+        {/* ── Full-width: Responsiveness line chart ── */}
+        <RetroCard label="Responsiveness Throughout the Day">
+          <div className="pt-4">
+            <ResponsiveContainer width="100%" height={280}>
+              <LineChart data={RESPONSE_TIME_HOURLY} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+                <CartesianGrid
+                  strokeDasharray="4 4"
+                  stroke="var(--color-border-soft)"
+                  strokeOpacity={0.35}
+                />
+                <XAxis
+                  dataKey="hour"
+                  tick={{ fontSize: 11, fontFamily: "var(--font-mono)", fill: "var(--color-text-muted)" }}
+                  tickLine={false}
+                  axisLine={{ stroke: "var(--color-border-soft)", strokeOpacity: 0.5 }}
+                />
+                <YAxis
+                  tick={{ fontSize: 11, fontFamily: "var(--font-mono)", fill: "var(--color-text-muted)" }}
+                  tickLine={false}
+                  axisLine={false}
+                  unit="s"
+                />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: "var(--color-surface)",
+                    border: "1px solid var(--color-border-soft)",
+                    borderRadius: "6px",
+                    fontFamily: "var(--font-mono)",
+                    fontSize: 12,
+                    color: "var(--color-text)",
+                  }}
+                  formatter={(value) => [`${value}s`, "Response Time"]}
+                />
+                <ReferenceLine
+                  y={120}
+                  stroke="var(--color-danger)"
+                  strokeDasharray="6 4"
+                  label={{
+                    value: "Target (2m)",
+                    position: "insideTopRight",
+                    fill: "var(--color-danger)",
+                    fontSize: 10,
+                    fontFamily: "var(--font-mono)",
+                  }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="seconds"
+                  stroke="var(--color-accent)"
+                  strokeWidth={2}
+                  dot={{ r: 3, fill: "var(--color-accent)", strokeWidth: 0 }}
+                  activeDot={{ r: 5, fill: "var(--color-accent)", stroke: "var(--color-surface)", strokeWidth: 2 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </RetroCard>
+      </div>
+    </RetroWindow>
+  );
+}
+
+function TrendUpIcon() {
+  return (
+    <svg
+      width="12"
+      height="12"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="text-success shrink-0 inline-block"
+    >
+      <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" />
+      <polyline points="16 7 22 7 22 13" />
+    </svg>
   );
 }
