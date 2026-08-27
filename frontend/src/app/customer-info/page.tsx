@@ -13,6 +13,8 @@ import {
   PieChart,
   Pie,
   Cell,
+  BarChart,
+  Bar,
 } from "recharts";
 
 /* ═══════════════════════════════════════════════════════════════
@@ -52,6 +54,30 @@ const UNATTENDED_EVENTS = [
   { time: "7:02 PM", zone: "Grocery West", wait: "4m 28s" },
   { time: "7:28 PM", zone: "Checkout Queue", wait: "6m 02s" },
   { time: "7:50 PM", zone: "Customer Service", wait: "5m 18s" },
+];
+
+const ZONE_DWELL = [
+  { zone: "Electronics", mins: 6.2 },
+  { zone: "Fitting Rooms", mins: 4.8 },
+  { zone: "Grocery", mins: 3.5 },
+  { zone: "Home Goods", mins: 3.1 },
+  { zone: "Checkout", mins: 2.4 },
+  { zone: "Customer Svc", mins: 1.9 },
+];
+
+const BEHAVIOR_DATA = [
+  { name: "Browse & Leave", value: 38, color: "var(--color-accent)" },
+  { name: "Purposeful Shop", value: 35, color: "var(--color-success)" },
+  { name: "Quick Pickup", value: 18, color: "var(--color-accent-soft)" },
+  { name: "Window Shop", value: 9, color: "var(--color-border-soft)" },
+];
+
+const TOP_PATHS = [
+  { rank: 1, path: "Entrance → Electronics → Checkout", count: 42 },
+  { rank: 2, path: "Entrance → Grocery → Home Goods → Checkout", count: 37 },
+  { rank: 3, path: "Entrance → Fitting Rooms → Checkout", count: 29 },
+  { rank: 4, path: "Entrance → Electronics → Grocery → Checkout", count: 24 },
+  { rank: 5, path: "Entrance → Home Goods → Fitting Rooms → Checkout", count: 18 },
 ];
 
 const HOURLY_TRAFFIC = [
@@ -99,6 +125,9 @@ export default function CustomerInfoPage() {
 
         {/* ── Section 2: Service Quality & Engagement ── */}
         <ServiceQualitySection />
+
+        {/* ── Section 3: Trajectory & Spatial Behavior ── */}
+        <TrajectorySection />
       </main>
     </div>
   );
@@ -349,6 +378,142 @@ function ServiceQualitySection() {
                 </div>
               ))}
             </div>
+          </div>
+        </RetroCard>
+      </div>
+    </RetroWindow>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Section 3: Trajectory & Spatial Behavior
+   ═══════════════════════════════════════════════════════════════ */
+
+function TrajectorySection() {
+  return (
+    <RetroWindow title="Trajectory & Spatial Behavior">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* ── Avg Time in Store ── */}
+        <RetroCard label="Avg. Time in Store">
+          <div className="flex flex-col items-center justify-center h-full py-4">
+            <p className="font-mono text-4xl font-bold text-accent">14m 30s</p>
+            <p className="text-xs text-text-muted mt-2">
+              across <span className="font-mono text-text">247</span> customers today
+            </p>
+          </div>
+        </RetroCard>
+
+        {/* ── Zone Dwell Horizontal Bar Chart ── */}
+        <RetroCard label="Zone Dwell Time (avg mins)">
+          <div className="pt-2">
+            <ResponsiveContainer width="100%" height={200}>
+              <BarChart
+                data={ZONE_DWELL}
+                layout="vertical"
+                margin={{ top: 5, right: 20, left: 5, bottom: 5 }}
+              >
+                <CartesianGrid
+                  strokeDasharray="4 4"
+                  stroke="var(--color-border-soft)"
+                  strokeOpacity={0.35}
+                  horizontal={false}
+                />
+                <XAxis
+                  type="number"
+                  tick={{ fontSize: 11, fontFamily: "var(--font-mono)", fill: "var(--color-text-muted)" }}
+                  tickLine={false}
+                  axisLine={false}
+                  unit="m"
+                />
+                <YAxis
+                  type="category"
+                  dataKey="zone"
+                  tick={{ fontSize: 11, fontFamily: "var(--font-mono)", fill: "var(--color-text-muted)" }}
+                  tickLine={false}
+                  axisLine={false}
+                  width={95}
+                />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: "var(--color-surface)",
+                    border: "1px solid var(--color-border-soft)",
+                    borderRadius: "6px",
+                    fontFamily: "var(--font-mono)",
+                    fontSize: 12,
+                    color: "var(--color-text)",
+                  }}
+                  formatter={(value) => [`${value} mins`, "Dwell"]}
+                />
+                <Bar dataKey="mins" fill="var(--color-accent)" radius={[0, 4, 4, 0]} barSize={16} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </RetroCard>
+
+        {/* ── Shopper Behavior Donut ── */}
+        <RetroCard label="Shopper Behavior">
+          <div className="flex flex-col items-center py-2">
+            <div className="relative w-full max-w-[220px] aspect-square">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={BEHAVIOR_DATA}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius="55%"
+                    outerRadius="85%"
+                    paddingAngle={2}
+                    dataKey="value"
+                    stroke="none"
+                  >
+                    {BEHAVIOR_DATA.map((entry) => (
+                      <Cell key={entry.name} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "var(--color-surface)",
+                      border: "1px solid var(--color-border-soft)",
+                      borderRadius: "6px",
+                      fontFamily: "var(--font-mono)",
+                      fontSize: 12,
+                      color: "var(--color-text)",
+                    }}
+                    formatter={(value) => [`${value}%`, ""]}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                <span className="font-mono text-lg font-bold text-text">Behavior</span>
+                <span className="text-[10px] text-text-muted">Breakdown</span>
+              </div>
+            </div>
+            <div className="flex flex-wrap justify-center gap-x-4 gap-y-1 mt-3 text-xs text-text-muted">
+              {BEHAVIOR_DATA.map((d) => (
+                <span key={d.name} className="flex items-center gap-1.5">
+                  <span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: d.color }} />
+                  {d.name}
+                </span>
+              ))}
+            </div>
+          </div>
+        </RetroCard>
+
+        {/* ── Top Customer Paths ── */}
+        <RetroCard label="Top Customer Paths">
+          <div className="space-y-2">
+            {TOP_PATHS.map((p) => (
+              <div
+                key={p.rank}
+                className="flex items-center gap-3 text-xs py-1.5 border-b border-border-soft/40 last:border-0"
+              >
+                <span className="font-mono text-lg font-bold text-accent/40 w-6 text-right shrink-0">
+                  {p.rank}
+                </span>
+                <span className="text-text flex-1">{p.path}</span>
+                <span className="font-mono text-text-muted shrink-0">{p.count} trips</span>
+              </div>
+            ))}
           </div>
         </RetroCard>
       </div>
