@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { Navbar } from "@/components/ui";
 
 /** Routes where the user is considered authenticated (show role + Log Out) */
-const AUTHENTICATED_ROUTES = ["/dashboard", "/customer-info"];
+const AUTHENTICATED_ROUTES = ["/dashboard", "/customer-info", "/employee-info"];
 
 export function NavbarShell() {
   const pathname = usePathname();
