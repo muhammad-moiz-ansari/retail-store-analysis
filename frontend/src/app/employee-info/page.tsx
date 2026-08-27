@@ -11,6 +11,9 @@ import {
   Tooltip,
   ResponsiveContainer,
   ReferenceLine,
+  PieChart,
+  Pie,
+  Cell,
 } from "recharts";
 
 /* ═══════════════════════════════════════════════════════════════
@@ -51,6 +54,25 @@ const RESPONSE_TIME_HOURLY = [
   { hour: "9 PM", seconds: 72 },
 ];
 
+const ACTIVE_IDLE_SPLIT = [
+  { name: "Active", value: 67, color: "var(--color-success)" },
+  { name: "Idle", value: 33, color: "var(--color-border-soft)" },
+];
+
+const STAFF_IDLE = [
+  { id: "Staff 01", idle: "1h 20m", mins: 80 },
+  { id: "Staff 02", idle: "2h 10m", mins: 130 },
+  { id: "Staff 03", idle: "1h 05m", mins: 65 },
+  { id: "Staff 04", idle: "2h 25m", mins: 145 },
+  { id: "Staff 05", idle: "1h 40m", mins: 100 },
+];
+
+const UNSTAFFED_ALERTS = [
+  { time: "10:15–10:57 AM", zone: "Aisle 2 — Beverages", duration: "42 min" },
+  { time: "01:30–01:58 PM", zone: "Promo Display", duration: "28 min" },
+  { time: "03:45–04:22 PM", zone: "Aisle 1 — Snacks", duration: "37 min" },
+];
+
 /* ═══════════════════════════════════════════════════════════════
    Helpers
    ═══════════════════════════════════════════════════════════════ */
@@ -81,6 +103,9 @@ export default function EmployeeInfoPage() {
 
         {/* ── Section 2: Interaction & Responsiveness ── */}
         <InteractionResponsivenessSection />
+
+        {/* ── Section 3: Idle Time & Floor Coverage ── */}
+        <IdleCoverageSection />
       </main>
     </div>
   );
@@ -382,5 +407,138 @@ function TrendUpIcon() {
       <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" />
       <polyline points="16 7 22 7 22 13" />
     </svg>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Section 3: Idle Time & Floor Coverage
+   ═══════════════════════════════════════════════════════════════ */
+
+function IdleCoverageSection() {
+  const maxIdle = Math.max(...STAFF_IDLE.map((s) => s.mins));
+
+  return (
+    <RetroWindow title="Idle Time & Floor Coverage">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* ── Active vs Idle Donut ── */}
+        <RetroCard label="Active vs. Idle Split">
+          <div className="flex flex-col items-center py-2">
+            <div className="relative w-full max-w-[200px] aspect-square">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={ACTIVE_IDLE_SPLIT}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius="60%"
+                    outerRadius="85%"
+                    paddingAngle={3}
+                    dataKey="value"
+                    stroke="none"
+                  >
+                    {ACTIVE_IDLE_SPLIT.map((entry) => (
+                      <Cell key={entry.name} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "var(--color-surface)",
+                      border: "1px solid var(--color-border-soft)",
+                      borderRadius: "6px",
+                      fontFamily: "var(--font-mono)",
+                      fontSize: 12,
+                      color: "var(--color-text)",
+                    }}
+                    formatter={(value) => [`${value}%`, ""]}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                <span className="font-mono text-3xl font-bold text-success">67%</span>
+                <span className="text-[10px] text-text-muted">Active</span>
+              </div>
+            </div>
+            <div className="flex gap-5 mt-3 text-xs text-text-muted">
+              <span className="flex items-center gap-1.5">
+                <span className="inline-block w-2.5 h-2.5 rounded-full bg-success" />
+                Active
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="inline-block w-2.5 h-2.5 rounded-full bg-border-soft" />
+                Idle
+              </span>
+            </div>
+            <p className="text-[10px] text-text-muted mt-2 text-center">
+              across all 5 staff members, today&apos;s shift
+            </p>
+          </div>
+        </RetroCard>
+
+        {/* ── Idle Time per Staff ── */}
+        <RetroCard label="Idle Time per Staff">
+          <div className="space-y-3">
+            <div className="text-center mb-4">
+              <p className="font-mono text-3xl font-bold text-accent">1h 44m</p>
+              <p className="text-xs text-text-muted mt-1">avg. idle per employee</p>
+            </div>
+
+            <div className="space-y-2">
+              {STAFF_IDLE.map((s) => {
+                const pct = (s.mins / maxIdle) * 100;
+                const isWorst = s.mins === maxIdle;
+                return (
+                  <div key={s.id} className="space-y-1">
+                    <div className="flex justify-between text-xs">
+                      <span className="font-mono text-text">{s.id}</span>
+                      <span className={`font-mono ${isWorst ? "text-danger font-bold" : "text-text-muted"}`}>
+                        {s.idle}
+                      </span>
+                    </div>
+                    <div className="w-full h-1.5 rounded-full bg-surface-alt overflow-hidden">
+                      <div
+                        className="h-full rounded-full transition-all"
+                        style={{
+                          width: `${pct}%`,
+                          backgroundColor: isWorst ? "var(--color-danger)" : "var(--color-danger)",
+                          opacity: isWorst ? 1 : 0.35,
+                        }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </RetroCard>
+
+        {/* ── Unstaffed Zone Alerts ── */}
+        <RetroCard label="Unstaffed Zone Alerts">
+          <div className="space-y-3">
+            <p className="text-xs text-text-muted">
+              <span className="font-mono font-bold text-danger">3</span> coverage gaps today —
+              totaling <span className="font-mono font-bold text-danger">1h 47m</span> of unstaffed floor time.
+            </p>
+
+            <div className="space-y-2">
+              {UNSTAFFED_ALERTS.map((alert, i) => (
+                <div
+                  key={i}
+                  className={`flex items-start gap-2 text-xs border-l-2 border-danger pl-3 py-2 rounded-r ${
+                    i % 2 === 0 ? "bg-danger/5" : "bg-surface"
+                  }`}
+                >
+                  <span className="text-danger shrink-0 mt-0.5">⚠</span>
+                  <div className="min-w-0">
+                    <p className="font-mono text-text-muted">{alert.time}</p>
+                    <p className="text-text truncate">{alert.zone}</p>
+                    <p className="font-mono text-danger">{alert.duration}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </RetroCard>
+      </div>
+    </RetroWindow>
   );
 }
