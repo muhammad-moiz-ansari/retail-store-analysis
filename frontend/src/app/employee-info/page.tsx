@@ -5,10 +5,13 @@ import { RetroWindow, RetroCard } from "@/components/ui";
 import {
   LineChart,
   Line,
+  BarChart,
+  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
+  Legend,
   ResponsiveContainer,
   ReferenceLine,
   PieChart,
@@ -73,6 +76,38 @@ const UNSTAFFED_ALERTS = [
   { time: "03:45–04:22 PM", zone: "Aisle 1 — Snacks", duration: "37 min" },
 ];
 
+const HOURLY_DUAL = [
+  { hour: "9 AM",  interactions: 14, idle: 2 },
+  { hour: "10 AM", interactions: 19, idle: 1 },
+  { hour: "11 AM", interactions: 18, idle: 2 },
+  { hour: "12 PM", interactions: 12, idle: 4 },
+  { hour: "1 PM",  interactions: 10, idle: 5 },
+  { hour: "2 PM",  interactions: 8,  idle: 6 },
+  { hour: "3 PM",  interactions: 11, idle: 4 },
+  { hour: "4 PM",  interactions: 13, idle: 3 },
+  { hour: "5 PM",  interactions: 12, idle: 4 },
+  { hour: "6 PM",  interactions: 9,  idle: 5 },
+  { hour: "7 PM",  interactions: 15, idle: 2 },
+  { hour: "8 PM",  interactions: 16, idle: 1 },
+  { hour: "9 PM",  interactions: 14, idle: 2 },
+];
+
+const ZONE_BREAKDOWN = [
+  { zone: "Entrance Lobby",     active: 82, idle: 18 },
+  { zone: "Aisle 1 — Snacks",   active: 61, idle: 39 },
+  { zone: "Aisle 2 — Beverages", active: 55, idle: 45 },
+  { zone: "Promo Display",       active: 70, idle: 30 },
+  { zone: "Checkout Counter",    active: 91, idle: 9 },
+];
+
+const STAFF_WORKLOAD = [
+  { id: "Staff 01", hours: 7.2, risk: "low" },
+  { id: "Staff 02", hours: 5.1, risk: "low" },
+  { id: "Staff 03", hours: 8.5, risk: "medium" },
+  { id: "Staff 04", hours: 4.0, risk: "low" },
+  { id: "Staff 05", hours: 9.3, risk: "high" },
+];
+
 /* ═══════════════════════════════════════════════════════════════
    Helpers
    ═══════════════════════════════════════════════════════════════ */
@@ -106,6 +141,12 @@ export default function EmployeeInfoPage() {
 
         {/* ── Section 3: Idle Time & Floor Coverage ── */}
         <IdleCoverageSection />
+
+        {/* ── Section 4: Advanced Visualizations ── */}
+        <AdvancedChartsSection />
+
+        {/* ── Section 5: Additional Insights ── */}
+        <InsightsSection />
       </main>
     </div>
   );
@@ -540,5 +581,236 @@ function IdleCoverageSection() {
         </RetroCard>
       </div>
     </RetroWindow>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Section 4: Advanced Visualizations
+   ═══════════════════════════════════════════════════════════════ */
+
+const CHART_TOOLTIP_STYLE = {
+  backgroundColor: "var(--color-surface)",
+  border: "1px solid var(--color-border-soft)",
+  borderRadius: "6px",
+  fontFamily: "var(--font-mono)",
+  fontSize: 12,
+  color: "var(--color-text)",
+};
+
+function AdvancedChartsSection() {
+  return (
+    <RetroWindow title="Advanced Visualizations">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* ── Dual Line: Interactions vs Idle ── */}
+        <RetroCard label="Interactions vs. Idle Events (Hourly)">
+          <div className="pt-4">
+            <ResponsiveContainer width="100%" height={280}>
+              <LineChart data={HOURLY_DUAL} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+                <CartesianGrid
+                  strokeDasharray="4 4"
+                  stroke="var(--color-border-soft)"
+                  strokeOpacity={0.35}
+                />
+                <XAxis
+                  dataKey="hour"
+                  tick={{ fontSize: 10, fontFamily: "var(--font-mono)", fill: "var(--color-text-muted)" }}
+                  tickLine={false}
+                  axisLine={{ stroke: "var(--color-border-soft)", strokeOpacity: 0.5 }}
+                />
+                <YAxis
+                  tick={{ fontSize: 11, fontFamily: "var(--font-mono)", fill: "var(--color-text-muted)" }}
+                  tickLine={false}
+                  axisLine={false}
+                />
+                <Tooltip contentStyle={CHART_TOOLTIP_STYLE} />
+                <Legend
+                  verticalAlign="top"
+                  height={28}
+                  iconType="plainline"
+                  wrapperStyle={{ fontSize: 11, fontFamily: "var(--font-mono)" }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="interactions"
+                  name="Interactions"
+                  stroke="var(--color-accent)"
+                  strokeWidth={2}
+                  dot={{ r: 3, fill: "var(--color-accent)", strokeWidth: 0 }}
+                  activeDot={{ r: 5, fill: "var(--color-accent)", stroke: "var(--color-surface)", strokeWidth: 2 }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="idle"
+                  name="Idle Events"
+                  stroke="var(--color-danger)"
+                  strokeWidth={2}
+                  strokeDasharray="5 3"
+                  dot={{ r: 3, fill: "var(--color-danger)", strokeWidth: 0 }}
+                  activeDot={{ r: 5, fill: "var(--color-danger)", stroke: "var(--color-surface)", strokeWidth: 2 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+            <p className="text-[10px] text-text-muted mt-2 text-center">
+              Notice the inverse correlation — interactions dip when idle events rise during
+              the midday lull (12 PM – 2 PM).
+            </p>
+          </div>
+        </RetroCard>
+
+        {/* ── Zone-by-Zone Horizontal Bars ── */}
+        <RetroCard label="Zone Activity Breakdown">
+          <div className="pt-4">
+            <ResponsiveContainer width="100%" height={280}>
+              <BarChart
+                data={ZONE_BREAKDOWN}
+                layout="vertical"
+                margin={{ top: 5, right: 20, left: 10, bottom: 5 }}
+              >
+                <CartesianGrid
+                  strokeDasharray="4 4"
+                  stroke="var(--color-border-soft)"
+                  strokeOpacity={0.35}
+                  horizontal={false}
+                />
+                <XAxis
+                  type="number"
+                  domain={[0, 100]}
+                  tick={{ fontSize: 11, fontFamily: "var(--font-mono)", fill: "var(--color-text-muted)" }}
+                  tickLine={false}
+                  axisLine={{ stroke: "var(--color-border-soft)", strokeOpacity: 0.5 }}
+                  unit="%"
+                />
+                <YAxis
+                  type="category"
+                  dataKey="zone"
+                  tick={{ fontSize: 10, fontFamily: "var(--font-mono)", fill: "var(--color-text-muted)" }}
+                  tickLine={false}
+                  axisLine={false}
+                  width={110}
+                />
+                <Tooltip
+                  contentStyle={CHART_TOOLTIP_STYLE}
+                  formatter={(value) => [`${value}%`, ""]}
+                />
+                <Legend
+                  verticalAlign="top"
+                  height={28}
+                  iconType="square"
+                  wrapperStyle={{ fontSize: 11, fontFamily: "var(--font-mono)" }}
+                />
+                <Bar dataKey="active" name="Active %" fill="var(--color-success)" radius={[0, 3, 3, 0]} barSize={10} />
+                <Bar dataKey="idle" name="Idle %" fill="var(--color-border-soft)" radius={[0, 3, 3, 0]} barSize={10} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </RetroCard>
+      </div>
+    </RetroWindow>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Section 5: Additional Insights
+   ═══════════════════════════════════════════════════════════════ */
+
+function InsightsSection() {
+  const maxHours = Math.max(...STAFF_WORKLOAD.map((s) => s.hours));
+
+  return (
+    <RetroWindow title="Additional Insights">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* ── Best Performing Hour ── */}
+        <RetroCard label="Best Performing Hour">
+          <div className="flex flex-col items-center justify-center py-6 space-y-3">
+            <ClockIcon />
+            <p className="font-mono text-2xl font-bold text-success">10:00 AM – 11:00 AM</p>
+            <div className="text-center space-y-1">
+              <p className="text-xs text-text-muted">
+                Highest interaction count (<span className="font-mono text-accent">19</span>) with the lowest idle
+                events (<span className="font-mono text-success">1</span>).
+              </p>
+              <p className="text-[10px] text-text-muted">
+                Staff were most engaged during the late-morning window.
+              </p>
+            </div>
+          </div>
+        </RetroCard>
+
+        {/* ── Workload & Burnout Risk ── */}
+        <RetroCard label="Workload Distribution">
+          <div className="space-y-4 py-2">
+            <p className="text-xs text-text-muted">
+              Active hours per staff member — prolonged high activity may signal burnout risk.
+            </p>
+
+            <div className="space-y-3">
+              {STAFF_WORKLOAD.map((s) => {
+                const pct = (s.hours / maxHours) * 100;
+                const riskColor =
+                  s.risk === "high"
+                    ? "var(--color-danger)"
+                    : s.risk === "medium"
+                      ? "var(--color-accent-soft)"
+                      : "var(--color-success)";
+                const riskLabel =
+                  s.risk === "high" ? "High" : s.risk === "medium" ? "Moderate" : "Normal";
+
+                return (
+                  <div key={s.id} className="space-y-1">
+                    <div className="flex justify-between text-xs">
+                      <span className="font-mono text-text">{s.id}</span>
+                      <span className="flex items-center gap-2">
+                        <span className="font-mono text-text-muted">{s.hours}h</span>
+                        <span
+                          className="text-[10px] font-mono px-1.5 py-0.5 rounded"
+                          style={{
+                            color: riskColor,
+                            backgroundColor: `color-mix(in srgb, ${riskColor} 12%, transparent)`,
+                          }}
+                        >
+                          {riskLabel}
+                        </span>
+                      </span>
+                    </div>
+                    <div className="w-full h-2 rounded-full bg-surface-alt overflow-hidden">
+                      <div
+                        className="h-full rounded-full transition-all"
+                        style={{
+                          width: `${pct}%`,
+                          backgroundColor: riskColor,
+                        }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <p className="text-[10px] text-text-muted mt-2 leading-relaxed">
+              Workload flags are decision-support signals — consider rotation adjustments for
+              staff flagged <span className="text-danger font-mono">High</span>.
+            </p>
+          </div>
+        </RetroCard>
+      </div>
+    </RetroWindow>
+  );
+}
+
+function ClockIcon() {
+  return (
+    <svg
+      width="28"
+      height="28"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="var(--color-success)"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <circle cx="12" cy="12" r="10" />
+      <polyline points="12 6 12 12 16 14" />
+    </svg>
   );
 }
