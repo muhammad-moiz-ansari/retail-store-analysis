@@ -7,15 +7,11 @@ import {
   RetroButton,
   RetroInput,
   RetroCard,
-  Badge,
-  Logo,
 } from "@/components/ui";
 
 /* ═══════════════════════════════════════════════════════════════
    Mock data — replace with real API calls later
    ═══════════════════════════════════════════════════════════════ */
-
-const MOCK_ROLE: "Manager" | "Employee" = "Manager";
 
 const MOCK_INTERACTIONS_FLOOR_A = [
   { employee: "Employee A", customer: "Customer", duration: "00:02:14", zone: "Zone 1", time: "14:32" },
@@ -95,28 +91,6 @@ function SparkleIcon() {
 /* ═══════════════════════════════════════════════════════════════
    Sub-components
    ═══════════════════════════════════════════════════════════════ */
-
-/** Top bar — RetroWindow-style title bar, full width */
-function TopBar({ role }: { role: "Manager" | "Employee" }) {
-  return (
-    <header
-      className="flex items-center justify-between bg-surface-alt px-4 py-2.5 md:px-6 border-b-2 border-border select-none"
-      style={{ boxShadow: "0 2px 0px rgba(74, 46, 30, 0.15)" }}
-    >
-      <Logo size={28} />
-
-      <div className="flex items-center gap-3">
-        <Badge variant={role === "Manager" ? "accent" : "neutral"}>
-          {role}
-        </Badge>
-        <RetroButton variant="secondary" className="!px-3 !py-1.5 !text-xs">
-          Log Out
-        </RetroButton>
-      </div>
-    </header>
-  );
-}
-
 
 /** Footfall stats card (under entrance camera) */
 function FootfallCard() {
@@ -345,9 +319,6 @@ function AIAgentBar() {
 export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-bg flex flex-col">
-      {/* ── Top Bar ── */}
-      <TopBar role={MOCK_ROLE} />
-
       {/* ── Main content (scrollable, padded for sticky bar) ── */}
       <main className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-6 md:py-8 space-y-8 md:space-y-10 pb-28">
         {/* ── Section: Camera Feeds ── */}

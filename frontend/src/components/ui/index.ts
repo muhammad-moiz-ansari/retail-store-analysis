@@ -5,3 +5,4 @@ export { RetroInput } from "./RetroInput";
 export { RetroCard } from "./RetroCard";
 export { Badge } from "./Badge";
 export { Logo } from "./Logo";
+export { Navbar } from "./Navbar";
