@@ -1,6 +1,16 @@
 "use client";
 
 import React from "react";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  Cell,
+  Legend,
+} from "recharts";
 import { RetroWindow, RetroCard, Badge } from "@/components/ui";
 
 /* ═══════════════════════════════════════════════════════════════
@@ -123,6 +133,12 @@ export default function SpatialAnalyticsPage() {
 
         {/* ── Section 3: Bottleneck & Crowd Density Alerts ── */}
         <BottleneckAlertsSection />
+
+        {/* ── Section 4: Zone Conversion Rate ── */}
+        <ConversionRateSection />
+
+        {/* ── Section 5: Zone Popularity Ranking ── */}
+        <PopularityRankingSection />
       </main>
     </div>
   );
@@ -381,6 +397,174 @@ function AlertCard({
         </div>
       </div>
     </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Section 4: Zone Conversion Rate
+   ═══════════════════════════════════════════════════════════════ */
+
+/** Recharts tooltip matched to the design system */
+function ConversionTooltip({ active, payload, label }: any) {
+  if (!active || !payload?.length) return null;
+  return (
+    <div className="rounded-lg border border-border-soft bg-surface px-3 py-2 shadow-lg text-xs">
+      <p className="font-heading font-semibold text-text mb-1">{label}</p>
+      {payload.map((entry: any) => (
+        <p key={entry.name} className="font-mono text-text-muted">
+          <span
+            className="inline-block w-2.5 h-2.5 rounded-sm mr-1.5 align-middle"
+            style={{ backgroundColor: entry.color }}
+          />
+          {entry.name}: {entry.value}
+        </p>
+      ))}
+    </div>
+  );
+}
+
+function ConversionRateSection() {
+  return (
+    <RetroWindow title="Zone Conversion Rate">
+      <div className="space-y-8">
+        {/* Horizontal grouped bar chart */}
+        <div>
+          <p className="text-xs text-text-muted mb-4 font-body">
+            Walked Past vs. Stopped — per zone (today)
+          </p>
+          <div className="w-full h-[280px] md:h-[320px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart
+                data={CONVERSION_DATA}
+                layout="vertical"
+                margin={{ top: 4, right: 24, left: 8, bottom: 4 }}
+              >
+                <XAxis type="number" tick={{ fontSize: 11, fill: "#6B5642" }} />
+                <YAxis
+                  type="category"
+                  dataKey="zone"
+                  width={140}
+                  tick={{ fontSize: 11, fill: "#2E1F14" }}
+                />
+                <Tooltip content={<ConversionTooltip />} />
+                <Legend
+                  iconSize={10}
+                  wrapperStyle={{ fontSize: 11, fontFamily: "var(--font-mono)" }}
+                />
+                <Bar dataKey="walkedPast" name="Walked Past" fill="#8B6A4A" radius={[0, 4, 4, 0]} />
+                <Bar dataKey="stopped" name="Stopped" fill="#C1652F" radius={[0, 4, 4, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* Conversion table — sorted by pct descending */}
+        <div>
+          <h3 className="font-heading text-sm font-semibold text-text mb-3">
+            Conversion Table
+          </h3>
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="border-b border-border-soft text-left text-text-muted font-mono">
+                  <th className="py-2 pr-3 font-medium">Zone</th>
+                  <th className="py-2 pr-3 font-medium text-right">Walked Past</th>
+                  <th className="py-2 pr-3 font-medium text-right">Stopped</th>
+                  <th className="py-2 font-medium text-right">Conversion %</th>
+                </tr>
+              </thead>
+              <tbody>
+                {CONVERSION_TABLE.map((row) => {
+                  const highlight =
+                    row.pct >= 60
+                      ? "border-l-4 border-l-success"
+                      : row.pct < 30
+                        ? "border-l-4 border-l-danger"
+                        : "";
+                  return (
+                    <tr
+                      key={row.zone}
+                      className={`border-b border-border-soft/50 ${highlight}`}
+                    >
+                      <td className="py-2.5 pr-3 font-body text-text pl-2">
+                        {row.zone}
+                      </td>
+                      <td className="py-2.5 pr-3 font-mono text-text-muted text-right">
+                        {row.walkedPast}
+                      </td>
+                      <td className="py-2.5 pr-3 font-mono text-text-muted text-right">
+                        {row.stopped}
+                      </td>
+                      <td className="py-2.5 font-mono font-semibold text-right text-text">
+                        {row.pct}%
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </RetroWindow>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Section 5: Zone Popularity Ranking
+   ═══════════════════════════════════════════════════════════════ */
+
+function PopularityRankingSection() {
+  const maxVisits = Math.max(...POPULARITY_RANKING.map((z) => z.visits));
+
+  return (
+    <RetroWindow title="Zone Popularity Ranking">
+      <div className="space-y-3">
+        {POPULARITY_RANKING.map((z) => (
+          <div
+            key={z.rank}
+            className="flex items-center gap-3 rounded-lg border border-border-soft/50 bg-surface px-4 py-3"
+          >
+            {/* Rank badge */}
+            <Badge
+              variant={z.rank <= 3 ? "accent" : "neutral"}
+            >
+              #{z.rank}
+            </Badge>
+
+            {/* Zone name + note */}
+            <div className="flex-1 min-w-0">
+              <p className="font-heading text-sm font-semibold text-text truncate">
+                {z.zone}
+              </p>
+              {z.note && (
+                <p className="text-[10px] text-text-muted italic mt-0.5">
+                  {z.note}
+                </p>
+              )}
+            </div>
+
+            {/* Visit bar + count */}
+            <div className="hidden sm:flex items-center gap-3 w-[180px]">
+              <div className="flex-1 h-2 rounded-full bg-surface-alt overflow-hidden">
+                <div
+                  className="h-full rounded-full bg-accent"
+                  style={{ width: `${(z.visits / maxVisits) * 100}%` }}
+                />
+              </div>
+              <span className="font-mono text-xs text-text-muted w-10 text-right">
+                {z.visits}
+              </span>
+            </div>
+
+            {/* Mobile: just the count */}
+            <span className="sm:hidden font-mono text-xs text-text-muted">
+              {z.visits}
+            </span>
+          </div>
+        ))}
+      </div>
+    </RetroWindow>
   );
 }
 
