@@ -20,6 +20,7 @@ const NAV_LINKS = [
   { label: "Employee Info", href: "/employee-info" },
   { label: "Spatial Analytics", href: "/spatial-analytics" },
   { label: "Sales & Product Trends", href: "/sales-trends" },
+  { label: "Store Settings", href: "/settings", managerOnly: true },
   { label: "About", href: "/about" },
 ];
 
@@ -42,23 +43,25 @@ export function Navbar({ authenticated = false, role = "Manager" }: NavbarProps)
 
         {/* Nav Links */}
         <nav className="hidden sm:flex items-center gap-4">
-          {NAV_LINKS.map((link) => {
-            const isActive = pathname === link.href;
-            return (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={[
-                  "text-sm font-body transition-colors duration-150",
-                  isActive
-                    ? "text-accent font-semibold underline underline-offset-4 decoration-2"
-                    : "text-text hover:text-accent",
-                ].join(" ")}
-              >
-                {link.label}
-              </Link>
-            );
-          })}
+          {NAV_LINKS
+            .filter((link) => !link.managerOnly || role === "Manager")
+            .map((link) => {
+              const isActive = pathname === link.href;
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={[
+                    "text-sm font-body transition-colors duration-150",
+                    isActive
+                      ? "text-accent font-semibold underline underline-offset-4 decoration-2"
+                      : "text-text hover:text-accent",
+                  ].join(" ")}
+                >
+                  {link.label}
+                </Link>
+              );
+            })}
         </nav>
       </div>
 
