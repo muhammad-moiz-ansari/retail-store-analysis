@@ -117,6 +117,12 @@ export default function SpatialAnalyticsPage() {
 
         {/* ── Section 1: Interactive Heatmap ── */}
         <HeatmapSection />
+
+        {/* ── Section 2: Live Zone Occupancy ── */}
+        <LiveOccupancySection />
+
+        {/* ── Section 3: Bottleneck & Crowd Density Alerts ── */}
+        <BottleneckAlertsSection />
       </main>
     </div>
   );
@@ -240,6 +246,139 @@ function HeatmapCell({
         <p className="font-mono text-text-muted">
           {zone.count} people · {zone.avgStay} avg stay
         </p>
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Section 2: Live Zone Occupancy
+   ═══════════════════════════════════════════════════════════════ */
+
+function LiveOccupancySection() {
+  return (
+    <RetroWindow title="Live Zone Occupancy">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {ZONE_OCCUPANCY.map((z) => (
+          <OccupancyCard key={z.zone} zone={z} />
+        ))}
+      </div>
+    </RetroWindow>
+  );
+}
+
+function OccupancyCard({
+  zone,
+}: {
+  zone: (typeof ZONE_OCCUPANCY)[number];
+}) {
+  const statusVariant =
+    zone.status === "Crowded"
+      ? "danger"
+      : zone.status === "Busy"
+        ? "accent"
+        : "success";
+
+  /** Capacity bar color tiers: success <60%, accent-soft 60-85%, danger 85%+ */
+  const barColor =
+    zone.capacityPct >= 85
+      ? "var(--color-danger)"
+      : zone.capacityPct >= 60
+        ? "var(--color-accent-soft)"
+        : "var(--color-success)";
+
+  return (
+    <RetroCard label={zone.zone}>
+      <div className="flex items-baseline justify-between mb-3">
+        <span className="font-mono text-3xl font-bold text-text">
+          {zone.count}
+        </span>
+        <Badge variant={statusVariant}>{zone.status}</Badge>
+      </div>
+
+      {/* Capacity bar */}
+      <div className="space-y-1.5">
+        <div className="h-2.5 w-full rounded-full bg-surface-alt overflow-hidden">
+          <div
+            className="h-full rounded-full transition-all duration-500"
+            style={{ width: `${zone.capacityPct}%`, backgroundColor: barColor }}
+          />
+        </div>
+        <p className="text-[11px] font-mono text-text-muted text-right">
+          {zone.capacityPct}% capacity
+        </p>
+      </div>
+    </RetroCard>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Section 3: Bottleneck & Crowd Density Alerts
+   ═══════════════════════════════════════════════════════════════ */
+
+function BottleneckAlertsSection() {
+  const hasAlerts = ALERTS.length > 0;
+
+  return (
+    <RetroWindow title="Bottleneck & Crowd Density Alerts">
+      {hasAlerts ? (
+        <div className="space-y-4">
+          {ALERTS.map((alert, idx) => (
+            <AlertCard key={idx} alert={alert} />
+          ))}
+        </div>
+      ) : (
+        /* Empty state */
+        <div className="flex items-center gap-3 py-6 px-4 rounded-lg bg-surface">
+          <span className="text-xl">✅</span>
+          <p className="font-body text-sm text-success font-medium">
+            No active bottlenecks — floor traffic is flowing normally.
+          </p>
+        </div>
+      )}
+    </RetroWindow>
+  );
+}
+
+function AlertCard({
+  alert,
+}: {
+  alert: (typeof ALERTS)[number];
+}) {
+  const isHigh = alert.severity === "High";
+  const borderColor = isHigh ? "var(--color-danger)" : "var(--color-accent-soft)";
+  const severityVariant = isHigh ? "danger" : "accent";
+
+  return (
+    <div
+      className="rounded-lg border border-border-soft bg-surface p-4 pl-5"
+      style={{ borderLeftWidth: "4px", borderLeftColor: borderColor }}
+    >
+      <div className="flex items-start gap-3">
+        {/* Warning icon */}
+        <span className="text-lg mt-0.5 shrink-0" aria-hidden="true">
+          ⚠️
+        </span>
+
+        <div className="flex-1 min-w-0 space-y-2">
+          {/* Headline + severity badge */}
+          <div className="flex flex-wrap items-center gap-2">
+            <h3 className="font-heading text-sm font-semibold text-text">
+              {alert.headline}
+            </h3>
+            <Badge variant={severityVariant}>{alert.severity}</Badge>
+          </div>
+
+          {/* Description */}
+          <p className="text-xs text-text-muted leading-relaxed">
+            {alert.description}
+          </p>
+
+          {/* Duration tag */}
+          <p className="font-mono text-[11px] text-text-muted">
+            Duration: <span className="font-semibold text-text">{alert.duration}</span>
+          </p>
+        </div>
       </div>
     </div>
   );
