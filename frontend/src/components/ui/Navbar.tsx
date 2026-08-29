@@ -33,23 +33,27 @@ export function Navbar({ authenticated = false, role = "Manager" }: NavbarProps)
   const linkRefs = useRef<(HTMLAnchorElement | null)[]>([]);
   const navbarRef = useRef<HTMLElement>(null);
 
-  const visibleLinks = NAV_LINKS.filter((link) => !link.managerOnly || role === "Manager");
-
   // Update sliding indicator position
   useEffect(() => {
+    const visibleLinks = NAV_LINKS.filter((link) => !link.managerOnly || role === "Manager");
     const activeIndex = visibleLinks.findIndex((link) => pathname === link.href);
     if (activeIndex !== -1 && linkRefs.current[activeIndex]) {
       const activeLink = linkRefs.current[activeIndex];
       if (activeLink) {
-        setIndicatorStyle({
-          left: activeLink.offsetLeft,
-          width: activeLink.offsetWidth,
+        const newLeft = activeLink.offsetLeft;
+        const newWidth = activeLink.offsetWidth;
+        setIndicatorStyle((prev) => {
+          if (prev.left === newLeft && prev.width === newWidth) return prev;
+          return { left: newLeft, width: newWidth };
         });
         // Enable transition after first render
-        setTimeout(() => setShowTransition(true), 50);
+        const timer = setTimeout(() => setShowTransition(true), 50);
+        return () => clearTimeout(timer);
       }
     }
-  }, [pathname, visibleLinks]);
+  }, [pathname, role]);
+
+  const visibleLinks = NAV_LINKS.filter((link) => !link.managerOnly || role === "Manager");
 
   // Close mobile menu on outside click
   useEffect(() => {
