@@ -37,7 +37,6 @@ export default function RootLayout({
       lang="en"
       className={`${spaceGrotesk.variable} ${inter.variable} ${jetbrainsMono.variable} h-full antialiased`}
     >
-      <link rel="icon" href="/logo.png" />
       <body className="min-h-full flex flex-col">
         <NavbarShell />
         <div className="flex-1">{children}</div>

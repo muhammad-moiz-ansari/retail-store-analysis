@@ -10,6 +10,7 @@ const QUICK_LINKS = [
   { label: "Employee Info", href: "/employee-info" },
   { label: "Spatial Analytics", href: "/spatial-analytics" },
   { label: "Sales & Product Trends", href: "/sales-trends" },
+  { label: "Reports & Exports", href: "/reports" },
   { label: "About", href: "/about" },
 ];
 
