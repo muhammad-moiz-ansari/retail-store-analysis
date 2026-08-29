@@ -87,17 +87,18 @@ export function Navbar({ authenticated = false, role = "Manager" }: NavbarProps)
         {/* ── Left: Logo + Wordmark ── */}
         <Link
           href="/dashboard"
-          className="flex items-center gap-2.5 w-[180px] shrink-0"
+          className="flex items-center gap-2.5 xl:w-[180px] w-auto shrink-0"
         >
           <NavLogo />
-          <span className="hidden xs:inline font-heading text-lg font-bold tracking-tight text-text">
+          {/* Wordmark: visible on mobile, hidden on tablet/1024px laptop, visible on large desktop */}
+          <span className="min-[1090px]:hidden min-[1280px]:inline font-heading text-lg font-bold tracking-tight text-text">
             Retail<span className="text-accent">Pulse</span>
           </span>
         </Link>
 
         {/* ── Center: Nav Links (desktop only) ── */}
-        <nav className="hidden md:flex items-center justify-center flex-1 relative">
-          <div className="flex items-center gap-5 relative">
+        <nav className="hidden min-[1090px]:flex items-center justify-center flex-1 relative">
+          <div className="flex items-center gap-3 min-[1120px]:gap-4 min-[1292px]:gap-5 relative">    {/* Space between nav links */}
             {visibleLinks.map((link, index) => {
               const isActive = pathname === link.href;
               return (
@@ -133,23 +134,21 @@ export function Navbar({ authenticated = false, role = "Manager" }: NavbarProps)
           </div>
         </nav>
 
-        {/* ── Right: Auth Controls (desktop only) ── */}
-        {authenticated && (
-          <div className="hidden md:flex items-center gap-3 w-[200px] justify-end shrink-0">
-            <Badge variant={role === "Manager" ? "accent" : "neutral"}>
-              {role}
-            </Badge>
-            <RetroButton variant="secondary" className="!px-3 !py-1.5 !text-xs">
-              Log Out
-            </RetroButton>
-          </div>
-        )}
+        {/* ── Right: Auth Controls (desktop only - always visible) ── */}
+        <div className="hidden min-[1090px]:flex items-center gap-3 xl:w-[200px] w-auto justify-end shrink-0">
+          <Badge variant={role === "Manager" ? "accent" : "neutral"}>
+            {role}
+          </Badge>
+          <RetroButton variant="secondary" className="!px-3 !py-1.5 !text-xs">
+            Log Out
+          </RetroButton>
+        </div>
 
         {/* ── Right: Hamburger (mobile only) ── */}
         <button
           type="button"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="md:hidden w-[38px] h-[38px] flex flex-col items-center justify-center gap-[4px] border border-border bg-surface rounded"
+          className="min-[1090px]:hidden w-[38px] h-[38px] flex flex-col items-center justify-center gap-[4px] border border-border bg-surface rounded"
           style={{ borderWidth: "1.5px" }}
           aria-label="Toggle menu"
         >
@@ -181,7 +180,7 @@ export function Navbar({ authenticated = false, role = "Manager" }: NavbarProps)
       {/* ── Mobile Dropdown Menu ── */}
       <div
         className={[
-          "md:hidden overflow-hidden transition-all duration-350 ease-in-out bg-surface-alt border-t border-border-soft",
+          "min-[1090px]:hidden overflow-hidden transition-all duration-350 ease-in-out bg-surface-alt border-t border-border-soft",
           mobileMenuOpen ? "max-h-[500px]" : "max-h-0",
         ].join(" ")}
         style={{
@@ -209,17 +208,15 @@ export function Navbar({ authenticated = false, role = "Manager" }: NavbarProps)
           );
         })}
 
-        {/* Auth Controls (mobile) */}
-        {authenticated && (
-          <div className="py-3 px-5 border-t border-border-soft flex items-center justify-between gap-3">
-            <Badge variant={role === "Manager" ? "accent" : "neutral"}>
-              {role}
-            </Badge>
-            <RetroButton variant="secondary" className="!px-3 !py-1.5 !text-xs">
-              Log Out
-            </RetroButton>
-          </div>
-        )}
+        {/* Auth Controls (mobile - always visible) */}
+        <div className="py-3 px-5 border-t border-border-soft flex items-center justify-between gap-3">
+          <Badge variant={role === "Manager" ? "accent" : "neutral"}>
+            {role}
+          </Badge>
+          <RetroButton variant="secondary" className="!px-3 !py-1.5 !text-xs">
+            Log Out
+          </RetroButton>
+        </div>
       </div>
     </header>
   );
