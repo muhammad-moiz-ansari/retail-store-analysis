@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { RetroWindow, RetroCard, RetroButton, Badge } from "@/components/ui";
+import jsPDF from "jspdf";
 
 type DateRangeOption = "last7" | "last30" | "thisMonth" | "custom";
 
@@ -79,8 +80,177 @@ export default function ReportsPage() {
     }, 1500);
   };
 
+  const [isExporting, setIsExporting] = useState(false);
+
+  const generatePDF = () => {
+    const doc = new jsPDF({
+      orientation: "portrait",
+      unit: "mm",
+      format: "a4",
+    });
+
+    const pageWidth = 210;
+    const pageHeight = 297;
+    const marginLeft = 20;
+    const marginRight = 20;
+    const marginTop = 15;
+    const marginBottom = 15;
+    const contentWidth = pageWidth - marginLeft - marginRight;
+    let yPos = marginTop;
+
+    // Colors
+    const colorAccent = "#C1652F";
+    const colorTextMuted = "#6B5642";
+    const colorText = "#2E1F14";
+    const colorFooter = "#8B6A4A";
+
+    // ── Header Block ──
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(22);
+    doc.setTextColor(colorAccent);
+    doc.text("RETAILPULSE", marginLeft, yPos);
+    yPos += 8;
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(11);
+    doc.setTextColor(colorTextMuted);
+    doc.text("AI-Generated Store Analytics Summary", marginLeft, yPos);
+    yPos += 6;
+
+    doc.setFontSize(10);
+    doc.text(`Report Period: ${getDateRangeDisplay()}`, marginLeft, yPos);
+    yPos += 5;
+
+    doc.setFontSize(9);
+    const now = new Date();
+    const formattedDate = now.toLocaleDateString("en-GB", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
+    const formattedTime = now.toLocaleTimeString("en-GB", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
+    doc.text(`Generated on: ${formattedDate}, ${formattedTime}`, marginLeft, yPos);
+    yPos += 6;
+
+    // Header divider
+    doc.setDrawColor(colorAccent);
+    doc.setLineWidth(0.3);
+    doc.line(marginLeft, yPos, pageWidth - marginRight, yPos);
+    yPos += 8;
+
+    // ── Body: AI Narrative ──
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(13);
+    doc.setTextColor(colorText);
+    doc.text("Executive Summary", marginLeft, yPos);
+    yPos += 8;
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+    doc.setTextColor(colorText);
+
+    const aiNarrative = [
+      "This week, your store recorded 1,742 customer visits — a 12% increase over the previous 7-day period. Peak footfall occurred on Thursday between 2:00 PM and 5:00 PM, accounting for 18% of weekly traffic in a single afternoon window.",
+
+      "Service quality improved marginally: the store-wide average staff score reached 84/100, up from 79 last week. Average time to first approach held at 1 minute 52 seconds — within the 2-minute target — though 3 coverage gaps were recorded in Aisle 2 and the Promo Display zone, totaling 1 hour 47 minutes of unstaffed floor time. This is the primary area flagged for operational attention.",
+
+      "Customer engagement deepened: average interaction duration increased to 3 minutes 27 seconds (up from 2 minutes 58 seconds), and the attended-to-unattended customer ratio improved to 72% attended. Customers spent an average of 14 minutes 30 seconds in-store, with the Promo Display and Checkout Counter recording the highest dwell times at 4m 50s and 5m 30s respectively.",
+
+      "The Promo Display zone continues to generate strong dwell time but has not converted to proportionally high sales — this warrants a review of the current promotional placement or product mix in that zone.",
+
+      "Staffing efficiency was strongest between 10:00 AM and 11:00 AM. Staff 03 led the leaderboard with 87 points; Staff 04 recorded the lowest score at 60 points, driven primarily by above-average idle time. Workload distribution is uneven — consider redeploying underutilized staff to high-traffic periods.",
+    ];
+
+    const lineHeight = 6;
+    const paragraphGap = 5;
+
+    aiNarrative.forEach((paragraph, index) => {
+      const lines = doc.splitTextToSize(paragraph, contentWidth);
+
+      // Check if we need a new page
+      const paragraphHeight = lines.length * lineHeight + (index < aiNarrative.length - 1 ? paragraphGap : 0);
+      if (yPos + paragraphHeight > pageHeight - marginBottom - 20) {
+        doc.addPage();
+        yPos = marginTop;
+      }
+
+      lines.forEach((line: string) => {
+        doc.text(line, marginLeft, yPos);
+        yPos += lineHeight;
+      });
+
+      // Add gap between paragraphs (except after last one)
+      if (index < aiNarrative.length - 1) {
+        yPos += paragraphGap;
+      }
+    });
+
+    // ── Footer on every page ──
+    const totalPages = doc.getNumberOfPages();
+    for (let i = 1; i <= totalPages; i++) {
+      doc.setPage(i);
+
+      const footerY = pageHeight - marginBottom + 5;
+
+      // Footer divider
+      doc.setDrawColor(colorFooter);
+      doc.setLineWidth(0.2);
+      doc.line(marginLeft, footerY - 3, pageWidth - marginRight, footerY - 3);
+
+      // Footer text
+      doc.setFontSize(8);
+      doc.setTextColor(colorFooter);
+      doc.setFont("helvetica", "normal");
+
+      // Left: Confidential text
+      doc.text("RetailPulse Analytics — Confidential", marginLeft, footerY);
+
+      // Right: Page number
+      doc.text(
+        `Page ${i} of ${totalPages}`,
+        pageWidth - marginRight,
+        footerY,
+        { align: "right" }
+      );
+    }
+
+    // ── Generate filename from date range ──
+    let filename = "RetailPulse_Report";
+    if (dateRange === "last7") {
+      filename += "_21Aug_28Aug_2026.pdf";
+    } else if (dateRange === "last30") {
+      filename += "_29Jul_28Aug_2026.pdf";
+    } else if (dateRange === "thisMonth") {
+      filename += "_1Aug_28Aug_2026.pdf";
+    } else if (dateRange === "custom" && customFrom && customTo) {
+      const fromFormatted = new Date(customFrom).toLocaleDateString("en-GB", {
+        day: "numeric",
+        month: "short",
+      }).replace(/ /g, "");
+      const toFormatted = new Date(customTo).toLocaleDateString("en-GB", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      }).replace(/ /g, "");
+      filename += `_${fromFormatted}_${toFormatted}.pdf`;
+    } else {
+      filename += `_${now.toLocaleDateString("en-GB").replace(/\//g, "-")}.pdf`;
+    }
+
+    // Download
+    doc.save(filename);
+  };
+
   const handleExport = () => {
-    window.print();
+    setIsExporting(true);
+    setTimeout(() => {
+      generatePDF();
+      setIsExporting(false);
+    }, 800);
   };
 
   const getDateRangeDisplay = () => {
@@ -199,11 +369,15 @@ export default function ReportsPage() {
               >
                 {isGenerating ? "Generating summary…" : "Generate AI Summary"}
               </RetroButton>
-              <RetroButton variant="secondary" onClick={handleExport}>
-                ↓ Export PDF
+              <RetroButton
+                variant="secondary"
+                onClick={handleExport}
+                disabled={isExporting}
+              >
+                {isExporting ? "Generating…" : "↓ Export PDF"}
               </RetroButton>
               <p className="text-xs text-text-muted italic ml-auto">
-                Opens browser print dialog. Select 'Save as PDF' to export.
+                Generates and downloads a professional PDF report.
               </p>
             </div>
           </RetroCard>
@@ -254,8 +428,12 @@ export default function ReportsPage() {
 
                 {/* Export Action */}
                 <div className="mt-6 pt-4 border-t border-border-soft flex items-center justify-between">
-                  <RetroButton variant="secondary" onClick={handleExport}>
-                    ↓ Export PDF
+                  <RetroButton
+                    variant="secondary"
+                    onClick={handleExport}
+                    disabled={isExporting}
+                  >
+                    {isExporting ? "Generating…" : "↓ Export PDF"}
                   </RetroButton>
                   <p className="text-xs text-text-muted italic">
                     The AI summary will be included in the exported report.
@@ -301,6 +479,7 @@ export default function ReportsPage() {
                     exportedBy="Manager"
                     format="PDF"
                     onReexport={handleExport}
+                    isExporting={isExporting}
                   />
                   <ExportHistoryRow
                     date="20 Aug 2026"
@@ -309,6 +488,7 @@ export default function ReportsPage() {
                     exportedBy="Manager"
                     format="PDF"
                     onReexport={handleExport}
+                    isExporting={isExporting}
                   />
                   <ExportHistoryRow
                     date="13 Aug 2026"
@@ -317,6 +497,7 @@ export default function ReportsPage() {
                     exportedBy="Manager"
                     format="PDF"
                     onReexport={handleExport}
+                    isExporting={isExporting}
                   />
                 </tbody>
               </table>
@@ -328,7 +509,7 @@ export default function ReportsPage() {
         </RetroWindow>
       </div>
 
-      {/* Print Styles */}
+      {/* Animations */}
       <style jsx global>{`
         @keyframes fadeIn {
           from {
@@ -338,31 +519,6 @@ export default function ReportsPage() {
           to {
             opacity: 1;
             transform: translateY(0);
-          }
-        }
-
-        @media print {
-          header,
-          footer,
-          .no-print {
-            display: none !important;
-          }
-
-          /* Hide everything except AI summary when printing */
-          body * {
-            visibility: hidden;
-          }
-
-          #ai-summary,
-          #ai-summary * {
-            visibility: visible;
-          }
-
-          #ai-summary {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
           }
         }
       `}</style>
@@ -459,6 +615,7 @@ interface ExportHistoryRowProps {
   exportedBy: string;
   format: string;
   onReexport: () => void;
+  isExporting: boolean;
 }
 
 function ExportHistoryRow({
@@ -468,6 +625,7 @@ function ExportHistoryRow({
   exportedBy,
   format,
   onReexport,
+  isExporting,
 }: ExportHistoryRowProps) {
   return (
     <tr className="border-b border-border-soft/50 hover:bg-surface-alt/30 transition-colors">
@@ -480,7 +638,8 @@ function ExportHistoryRow({
         <button
           type="button"
           onClick={onReexport}
-          className="text-accent text-xs font-semibold hover:underline"
+          disabled={isExporting}
+          className="text-accent text-xs font-semibold hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
         >
           Re-export
         </button>
