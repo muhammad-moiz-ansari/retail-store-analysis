@@ -95,7 +95,7 @@ function SparkleIcon() {
 /** Footfall stats card (under entrance camera) */
 function FootfallCard() {
   return (
-    <RetroCard label="Today's Footfall" className="mt-3">
+    <RetroCard label="Today's Footfall" className="mt-6">
       <p className="font-mono text-lg font-bold text-text mt-1 tracking-wide">
         IN: <span className="text-success">142</span> · OUT:{" "}
         <span className="text-accent">118</span>
@@ -114,7 +114,7 @@ function EngagementCard({
   interactions: typeof MOCK_INTERACTIONS_FLOOR_A;
 }) {
   return (
-    <RetroCard label="Recent Interactions" className="mt-3">
+    <RetroCard label="Recent Interactions" className="mt-6">
       <div className="space-y-1.5 mt-1">
         {interactions.map((i, idx) => (
           <p
