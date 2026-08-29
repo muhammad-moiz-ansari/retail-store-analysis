@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
@@ -27,56 +27,196 @@ const NAV_LINKS = [
 
 export function Navbar({ authenticated = false, role = "Manager" }: NavbarProps) {
   const pathname = usePathname();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [indicatorStyle, setIndicatorStyle] = useState({ left: 0, width: 0 });
+  const [showTransition, setShowTransition] = useState(false);
+  const linkRefs = useRef<(HTMLAnchorElement | null)[]>([]);
+  const navbarRef = useRef<HTMLElement>(null);
+
+  const visibleLinks = NAV_LINKS.filter((link) => !link.managerOnly || role === "Manager");
+
+  // Update sliding indicator position
+  useEffect(() => {
+    const activeIndex = visibleLinks.findIndex((link) => pathname === link.href);
+    if (activeIndex !== -1 && linkRefs.current[activeIndex]) {
+      const activeLink = linkRefs.current[activeIndex];
+      if (activeLink) {
+        setIndicatorStyle({
+          left: activeLink.offsetLeft,
+          width: activeLink.offsetWidth,
+        });
+        // Enable transition after first render
+        setTimeout(() => setShowTransition(true), 50);
+      }
+    }
+  }, [pathname, visibleLinks]);
+
+  // Close mobile menu on outside click
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        navbarRef.current &&
+        !navbarRef.current.contains(event.target as Node) &&
+        mobileMenuOpen
+      ) {
+        setMobileMenuOpen(false);
+      }
+    };
+
+    if (mobileMenuOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [mobileMenuOpen]);
 
   return (
     <header
-      className="sticky top-0 z-40 flex items-center justify-between bg-surface-alt px-4 py-2.5 md:px-6 border-b border-border-soft select-none"
+      ref={navbarRef}
+      className="sticky top-0 z-50 bg-surface-alt border-b border-border-soft select-none"
+      style={{ borderBottomWidth: "1.5px" }}
     >
-      {/* ── Left: Logo + Nav Links ── */}
-      <div className="flex items-center gap-6">
-        {/* Logo */}
-        <Link href="/dashboard" className="flex items-center gap-2.5">
+      {/* ── Desktop & Mobile Container ── */}
+      <div className="h-[52px] px-4 md:px-6 flex items-center justify-between">
+        {/* ── Left: Logo + Wordmark ── */}
+        <Link
+          href="/dashboard"
+          className="flex items-center gap-2.5 w-[180px] shrink-0"
+        >
           <NavLogo />
-          <span className="font-heading text-xl font-bold tracking-tight text-text">
+          <span className="hidden xs:inline font-heading text-lg font-bold tracking-tight text-text">
             Retail<span className="text-accent">Pulse</span>
           </span>
         </Link>
 
-        {/* Nav Links */}
-        <nav className="hidden sm:flex items-center gap-4">
-          {NAV_LINKS
-            .filter((link) => !link.managerOnly || role === "Manager")
-            .map((link) => {
+        {/* ── Center: Nav Links (desktop only) ── */}
+        <nav className="hidden md:flex items-center justify-center flex-1 relative">
+          <div className="flex items-center gap-5 relative">
+            {visibleLinks.map((link, index) => {
               const isActive = pathname === link.href;
               return (
                 <Link
                   key={link.href}
                   href={link.href}
+                  ref={(el) => {
+                    linkRefs.current[index] = el;
+                  }}
                   className={[
-                    "text-sm font-body transition-colors duration-150",
+                    "text-[13.5px] font-medium transition-all duration-150 relative py-1",
                     isActive
-                      ? "text-accent font-semibold underline underline-offset-4 decoration-2"
-                      : "text-text hover:text-accent",
+                      ? "text-accent opacity-100 font-medium"
+                      : "text-text opacity-75 hover:opacity-100",
                   ].join(" ")}
                 >
                   {link.label}
                 </Link>
               );
             })}
+
+            {/* Sliding Indicator Bar */}
+            <div
+              className="absolute bottom-0 h-[2.5px] bg-accent rounded-sm"
+              style={{
+                left: `${indicatorStyle.left}px`,
+                width: `${indicatorStyle.width}px`,
+                transition: showTransition
+                  ? "left 300ms cubic-bezier(0.4, 0, 0.2, 1), width 300ms cubic-bezier(0.4, 0, 0.2, 1)"
+                  : "none",
+              }}
+            />
+          </div>
         </nav>
+
+        {/* ── Right: Auth Controls (desktop only) ── */}
+        {authenticated && (
+          <div className="hidden md:flex items-center gap-3 w-[200px] justify-end shrink-0">
+            <Badge variant={role === "Manager" ? "accent" : "neutral"}>
+              {role}
+            </Badge>
+            <RetroButton variant="secondary" className="!px-3 !py-1.5 !text-xs">
+              Log Out
+            </RetroButton>
+          </div>
+        )}
+
+        {/* ── Right: Hamburger (mobile only) ── */}
+        <button
+          type="button"
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          className="md:hidden w-[38px] h-[38px] flex flex-col items-center justify-center gap-[4px] border border-border bg-surface rounded"
+          style={{ borderWidth: "1.5px" }}
+          aria-label="Toggle menu"
+        >
+          <span
+            className={[
+              "block w-[18px] h-[2px] bg-text transition-all duration-300 ease-in-out",
+              mobileMenuOpen
+                ? "rotate-45 translate-y-[6px]"
+                : "rotate-0 translate-y-0",
+            ].join(" ")}
+          />
+          <span
+            className={[
+              "block w-[18px] h-[2px] bg-text transition-all duration-300 ease-in-out",
+              mobileMenuOpen ? "opacity-0" : "opacity-100",
+            ].join(" ")}
+          />
+          <span
+            className={[
+              "block w-[18px] h-[2px] bg-text transition-all duration-300 ease-in-out",
+              mobileMenuOpen
+                ? "-rotate-45 -translate-y-[6px]"
+                : "rotate-0 translate-y-0",
+            ].join(" ")}
+          />
+        </button>
       </div>
 
-      {/* ── Right: Auth controls (only when authenticated) ── */}
-      {authenticated && (
-        <div className="flex items-center gap-3">
-          <Badge variant={role === "Manager" ? "accent" : "neutral"}>
-            {role}
-          </Badge>
-          <RetroButton variant="secondary" className="!px-3 !py-1.5 !text-xs">
-            Log Out
-          </RetroButton>
-        </div>
-      )}
+      {/* ── Mobile Dropdown Menu ── */}
+      <div
+        className={[
+          "md:hidden overflow-hidden transition-all duration-350 ease-in-out bg-surface-alt border-t border-border-soft",
+          mobileMenuOpen ? "max-h-[500px]" : "max-h-0",
+        ].join(" ")}
+        style={{
+          borderBottomWidth: mobileMenuOpen ? "2px" : "0",
+          borderBottomColor: "var(--color-border)",
+        }}
+      >
+        {/* Nav Links */}
+        {visibleLinks.map((link) => {
+          const isActive = pathname === link.href;
+          return (
+            <Link
+              key={link.href}
+              href={link.href}
+              onClick={() => setMobileMenuOpen(false)}
+              className={[
+                "block py-3 px-5 text-sm font-medium border-b border-border-soft transition-colors",
+                isActive
+                  ? "bg-surface text-accent border-l-[3px] border-l-accent"
+                  : "text-text hover:bg-surface",
+              ].join(" ")}
+            >
+              {link.label}
+            </Link>
+          );
+        })}
+
+        {/* Auth Controls (mobile) */}
+        {authenticated && (
+          <div className="py-3 px-5 border-t border-border-soft flex items-center justify-between gap-3">
+            <Badge variant={role === "Manager" ? "accent" : "neutral"}>
+              {role}
+            </Badge>
+            <RetroButton variant="secondary" className="!px-3 !py-1.5 !text-xs">
+              Log Out
+            </RetroButton>
+          </div>
+        )}
+      </div>
     </header>
   );
 }
@@ -93,9 +233,9 @@ function NavLogo() {
     <Image
       src="/logo.png"
       alt="RetailPulse logo"
-      width={36}
-      height={36}
-      className="h-9 w-9 object-contain"
+      width={34}
+      height={34}
+      className="h-[34px] w-[34px] object-contain"
       onError={() => setImgError(true)}
       priority
     />
@@ -106,8 +246,8 @@ function NavLogo() {
 function LogoFallbackSVG() {
   return (
     <svg
-      width={32}
-      height={32}
+      width={34}
+      height={34}
       viewBox="0 0 32 32"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
