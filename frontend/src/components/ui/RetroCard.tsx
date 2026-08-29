@@ -5,7 +5,6 @@ interface RetroCardProps {
   label?: string;
   children: React.ReactNode;
   className?: string;
-  style?: React.CSSProperties;
 }
 
 export function RetroCard({
