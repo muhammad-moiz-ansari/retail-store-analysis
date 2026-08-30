@@ -154,15 +154,15 @@ export default function ReportsPage() {
     doc.setTextColor(colorText);
 
     const aiNarrative = [
-      "This week, your store recorded 1,742 customer visits — a 12% increase over the previous 7-day period. Peak footfall occurred on Thursday between 2:00 PM and 5:00 PM, accounting for 18% of weekly traffic in a single afternoon window.",
+      "This week, your store recorded 1,742 customer visits - a 12% increase over the previous 7-day period. Peak footfall occurred on Thursday between 2:00 PM and 5:00 PM, accounting for 18% of weekly traffic in a single afternoon window.",
 
-      "Service quality improved marginally: the store-wide average staff score reached 84/100, up from 79 last week. Average time to first approach held at 1 minute 52 seconds — within the 2-minute target — though 3 coverage gaps were recorded in Aisle 2 and the Promo Display zone, totaling 1 hour 47 minutes of unstaffed floor time. This is the primary area flagged for operational attention.",
+      "Service quality improved marginally: the store-wide average staff score reached 84/100, up from 79 last week. Average time to first approach held at 1 minute 52 seconds - within the 2-minute target - though 3 coverage gaps were recorded in Aisle 2 and the Promo Display zone, totaling 1 hour 47 minutes of unstaffed floor time. This is the primary area flagged for operational attention.",
 
       "Customer engagement deepened: average interaction duration increased to 3 minutes 27 seconds (up from 2 minutes 58 seconds), and the attended-to-unattended customer ratio improved to 72% attended. Customers spent an average of 14 minutes 30 seconds in-store, with the Promo Display and Checkout Counter recording the highest dwell times at 4m 50s and 5m 30s respectively.",
 
-      "The Promo Display zone continues to generate strong dwell time but has not converted to proportionally high sales — this warrants a review of the current promotional placement or product mix in that zone.",
+      "The Promo Display zone continues to generate strong dwell time but has not converted to proportionally high sales - this warrants a review of the current promotional placement or product mix in that zone.",
 
-      "Staffing efficiency was strongest between 10:00 AM and 11:00 AM. Staff 03 led the leaderboard with 87 points; Staff 04 recorded the lowest score at 60 points, driven primarily by above-average idle time. Workload distribution is uneven — consider redeploying underutilized staff to high-traffic periods.",
+      "Staffing efficiency was strongest between 10:00 AM and 11:00 AM. Staff 03 led the leaderboard with 87 points; Staff 04 recorded the lowest score at 60 points, driven primarily by above-average idle time. Workload distribution is uneven - consider redeploying underutilized staff to high-traffic periods.",
     ];
 
     const lineHeight = 6;
@@ -207,7 +207,7 @@ export default function ReportsPage() {
       doc.setFont("helvetica", "normal");
 
       // Left: Confidential text
-      doc.text("RetailPulse Analytics — Confidential", marginLeft, footerY);
+      doc.text("RetailPulse Analytics - Confidential", marginLeft, footerY);
 
       // Right: Page number
       doc.text(
@@ -409,19 +409,19 @@ export default function ReportsPage() {
                 {/* AI Narrative */}
                 <div className="space-y-5 text-text leading-relaxed">
                   <p>
-                    This week, your store recorded <strong>1,742 customer visits</strong> — a <strong>12% increase</strong> over the previous 7-day period. Peak footfall occurred on Thursday between 2:00 PM and 5:00 PM, accounting for 18% of weekly traffic in a single afternoon window.
+                    This week, your store recorded <strong>1,742 customer visits</strong> - a <strong>12% increase</strong> over the previous 7-day period. Peak footfall occurred on Thursday between 2:00 PM and 5:00 PM, accounting for 18% of weekly traffic in a single afternoon window.
                   </p>
                   <p>
-                    Service quality improved marginally: the store-wide average staff score reached <strong>84/100</strong>, up from 79 last week. Average time to first approach held at <strong>1 minute 52 seconds</strong> — within the 2-minute target — though 3 coverage gaps were recorded in Aisle 2 and the Promo Display zone, totaling 1 hour 47 minutes of unstaffed floor time. This is the primary area flagged for operational attention.
+                    Service quality improved marginally: the store-wide average staff score reached <strong>84/100</strong>, up from 79 last week. Average time to first approach held at <strong>1 minute 52 seconds</strong> - within the 2-minute target - though 3 coverage gaps were recorded in Aisle 2 and the Promo Display zone, totaling 1 hour 47 minutes of unstaffed floor time. This is the primary area flagged for operational attention.
                   </p>
                   <p>
                     Customer engagement deepened: average interaction duration increased to <strong>3 minutes 27 seconds</strong> (up from 2 minutes 58 seconds), and the attended-to-unattended customer ratio improved to 72% attended. Customers spent an average of 14 minutes 30 seconds in-store, with the Promo Display and Checkout Counter recording the highest dwell times at 4m 50s and 5m 30s respectively.
                   </p>
                   <p>
-                    The Promo Display zone continues to generate strong dwell time but has not converted to proportionally high sales — this warrants a review of the current promotional placement or product mix in that zone.
+                    The Promo Display zone continues to generate strong dwell time but has not converted to proportionally high sales - this warrants a review of the current promotional placement or product mix in that zone.
                   </p>
                   <p>
-                    Staffing efficiency was strongest between 10:00 AM and 11:00 AM. Staff 03 led the leaderboard with 87 points; Staff 04 recorded the lowest score at 60 points, driven primarily by above-average idle time. Workload distribution is uneven — consider redeploying underutilized staff to high-traffic periods.
+                    Staffing efficiency was strongest between 10:00 AM and 11:00 AM. Staff 03 led the leaderboard with 87 points; Staff 04 recorded the lowest score at 60 points, driven primarily by above-average idle time. Workload distribution is uneven - consider redeploying underutilized staff to high-traffic periods.
                   </p>
                 </div>
 
