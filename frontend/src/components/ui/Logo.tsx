@@ -1,7 +1,7 @@
 import React from "react";
 
 /**
- * RetailPulse logo — shopping cart icon with a pulse/heartbeat line,
+ * RetailPulse logo - shopping cart icon with a pulse/heartbeat line,
  * rendered as an inline SVG in --color-accent.
  */
 export function Logo({ size = 32 }: { size?: number }) {

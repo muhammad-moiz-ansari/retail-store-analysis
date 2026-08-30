@@ -9,7 +9,7 @@ interface CRTFrameProps {
   live?: boolean;
   /** Path to a video file to play inside the frame (loops, muted, autoplay) */
   videoSrc?: string;
-  /** Whether the camera has a signal — false shows a retro "NO SIGNAL" screen (default true) */
+  /** Whether the camera has a signal - false shows a retro "NO SIGNAL" screen (default true) */
   signal?: boolean;
   children?: React.ReactNode;
   className?: string;
@@ -26,7 +26,7 @@ function NoSignalScreen() {
   );
 }
 
-/** Autoplay-safe video player — works around React's muted attribute bug */
+/** Autoplay-safe video player - works around React's muted attribute bug */
 function AutoplayVideo({ src, className }: { src: string; className?: string }) {
   const ref = useRef<HTMLVideoElement>(null);
 

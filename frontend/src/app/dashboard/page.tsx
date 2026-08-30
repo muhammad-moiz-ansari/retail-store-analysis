@@ -120,7 +120,7 @@ function EngagementCard({
             <span className="text-accent font-semibold">{i.employee}</span>
             {" ↔ "}
             <span className="text-text-muted">{i.customer}</span>
-            {" — "}
+            {" - "}
             <span className="font-bold">{i.duration}</span>
             <span className="text-text-muted ml-2 text-[10px]">
               {i.zone} · {i.time}
@@ -328,21 +328,21 @@ export default function DashboardPage() {
           </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* CAM 01 — Entrance */}
+            {/* CAM 01 - Entrance */}
             <div>
-              <CRTFrame label="CAM 01 — ENTRANCE" live signal={false} className="w-full" />
+              <CRTFrame label="CAM 01 - ENTRANCE" live signal={false} className="w-full" />
               <FootfallCard inCount={summary.footfallIn} outCount={summary.footfallOut} netInside={summary.netInside} />
             </div>
 
-            {/* CAM 02 — Floor A */}
+            {/* CAM 02 - Floor A */}
             <div>
-              <CRTFrame label="CAM 02 — FLOOR A" live videoSrc="/videos/cam1.mp4" className="w-full" />
+              <CRTFrame label="CAM 02 - FLOOR A" live videoSrc="/videos/cam1.mp4" className="w-full" />
               <EngagementCard interactions={floorAInteractions} />
             </div>
 
-            {/* CAM 03 — Floor B */}
+            {/* CAM 03 - Floor B */}
             <div>
-              <CRTFrame label="CAM 03 — FLOOR B" live signal={false} className="w-full" />
+              <CRTFrame label="CAM 03 - FLOOR B" live signal={false} className="w-full" />
               <EngagementCard interactions={floorBInteractions} />
             </div>
           </div>
