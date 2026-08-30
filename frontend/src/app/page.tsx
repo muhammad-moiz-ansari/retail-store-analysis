@@ -18,6 +18,12 @@ export default function Home() {
             Open Dashboard →
           </Link>
           <Link
+            href="/compare-people"
+            className="inline-block px-5 py-2.5 rounded-md bg-surface text-text font-heading text-sm font-semibold border-2 border-border shadow-[2px_2px_0px_rgba(74,46,30,0.25)] hover:bg-surface-alt transition-colors"
+          >
+            Process & Compare People →
+          </Link>
+          <Link
             href="/style-guide"
             className="inline-block px-5 py-2.5 rounded-md bg-surface text-text font-heading text-sm font-semibold border-2 border-border shadow-[2px_2px_0px_rgba(74,46,30,0.25)] hover:bg-surface-alt transition-colors"
           >

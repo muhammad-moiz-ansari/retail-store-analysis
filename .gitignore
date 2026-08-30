@@ -1,0 +1,47 @@
+# Dependencies
+node_modules/
+frontend/node_modules/
+
+# Next.js / frontend build output
+frontend/.next/
+out/
+.next/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.venv/
+venv/
+env/
+
+# Data / media artifacts
+*.mp4
+*.avi
+*.mov
+*.mkv
+*.jpg
+*.jpeg
+*.png
+*.webp
+*.log
+
+# Environment files
+.env
+.env.*
+
+# OS/editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Test / coverage outputs
+coverage/
+*.coverage
+
+# Package manager lockfiles (optional if you want them tracked)
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml

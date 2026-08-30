@@ -8,32 +8,14 @@ import {
   RetroInput,
   RetroCard,
 } from "@/components/ui";
+import { defaultDashboardData } from "@/lib/dashboard-data";
 
-/* ═══════════════════════════════════════════════════════════════
-   Mock data — replace with real API calls later
-   ═══════════════════════════════════════════════════════════════ */
+const { summary, floorAInteractions, floorBInteractions, flaggedEvents, comparisonBars } = defaultDashboardData;
 
-const MOCK_INTERACTIONS_FLOOR_A = [
-  { employee: "Employee A", customer: "Customer", duration: "00:02:14", zone: "Zone 1", time: "14:32" },
-  { employee: "Employee B", customer: "Customer", duration: "00:05:41", zone: "Zone 2", time: "14:28" },
-  { employee: "Employee A", customer: "Customer", duration: "00:01:03", zone: "Zone 1", time: "14:15" },
-];
-
-const MOCK_INTERACTIONS_FLOOR_B = [
-  { employee: "Employee C", customer: "Customer", duration: "00:03:22", zone: "Zone 3", time: "14:30" },
-  { employee: "Employee D", customer: "Customer", duration: "00:07:18", zone: "Zone 4", time: "14:21" },
-];
-
-const MOCK_FLAGGED_EVENTS = [
-  { label: "Unattended customer — Aisle 3", time: "14:28", severity: "danger" as const },
-  { label: "Avg response time exceeded — Zone 2", time: "14:15", severity: "accent" as const },
-  { label: "Long idle — Employee B", time: "13:52", severity: "neutral" as const },
-];
-
-const MOCK_TOP_SELLERS = [
-  { name: "Lays Classic 200g", units: 84 },
-  { name: "Coca-Cola 1.5L", units: 71 },
-  { name: "Maggi 2-Min Noodles", units: 63 },
+const TOP_SELLERS = [
+  { name: "Traffic similarity", units: Math.round(summary.similarityPercent) },
+  { name: "Net inside", units: summary.netInside },
+  { name: "Density", units: summary.density },
 ];
 
 /* ═══════════════════════════════════════════════════════════════
@@ -93,15 +75,23 @@ function SparkleIcon() {
    ═══════════════════════════════════════════════════════════════ */
 
 /** Footfall stats card (under entrance camera) */
-function FootfallCard() {
+function FootfallCard({
+  inCount,
+  outCount,
+  netInside,
+}: {
+  inCount: number;
+  outCount: number;
+  netInside: number;
+}) {
   return (
     <RetroCard label="Today's Footfall" className="mt-6">
       <p className="font-mono text-lg font-bold text-text mt-1 tracking-wide">
-        IN: <span className="text-success">142</span> · OUT:{" "}
-        <span className="text-accent">118</span>
+        IN: <span className="text-success">{inCount}</span> · OUT:{" "}
+        <span className="text-accent">{outCount}</span>
       </p>
       <p className="font-mono text-[10px] text-text-muted mt-0.5 tracking-wider uppercase">
-        Net inside: 24
+        Net inside: {netInside}
       </p>
     </RetroCard>
   );
@@ -111,7 +101,13 @@ function FootfallCard() {
 function EngagementCard({
   interactions,
 }: {
-  interactions: typeof MOCK_INTERACTIONS_FLOOR_A;
+  interactions: Array<{
+    employee: string;
+    customer: string;
+    duration: string;
+    zone: string;
+    time: string;
+  }>;
 }) {
   return (
     <RetroCard label="Recent Interactions" className="mt-6">
@@ -335,19 +331,19 @@ export default function DashboardPage() {
             {/* CAM 01 — Entrance */}
             <div>
               <CRTFrame label="CAM 01 — ENTRANCE" live signal={false} className="w-full" />
-              <FootfallCard />
+              <FootfallCard inCount={summary.footfallIn} outCount={summary.footfallOut} netInside={summary.netInside} />
             </div>
 
             {/* CAM 02 — Floor A */}
             <div>
               <CRTFrame label="CAM 02 — FLOOR A" live videoSrc="/videos/cam1.mp4" className="w-full" />
-              <EngagementCard interactions={MOCK_INTERACTIONS_FLOOR_A} />
+              <EngagementCard interactions={floorAInteractions} />
             </div>
 
             {/* CAM 03 — Floor B */}
             <div>
               <CRTFrame label="CAM 03 — FLOOR B" live signal={false} className="w-full" />
-              <EngagementCard interactions={MOCK_INTERACTIONS_FLOOR_B} />
+              <EngagementCard interactions={floorBInteractions} />
             </div>
           </div>
         </section>
@@ -380,18 +376,18 @@ export default function DashboardPage() {
                 <div className="grid grid-cols-3 gap-2">
                   <div className="text-center">
                     <p className="font-mono text-xl font-bold text-text">
-                      1:24
+                      {summary.avgResponse}
                     </p>
                     <p className="text-[10px] text-text-muted">Avg Response</p>
                   </div>
                   <div className="text-center">
                     <p className="font-mono text-xl font-bold text-text">
-                      4:38
+                      {summary.avgDuration}
                     </p>
                     <p className="text-[10px] text-text-muted">Avg Duration</p>
                   </div>
                   <div className="text-center">
-                    <p className="font-mono text-xl font-bold text-danger">3</p>
+                    <p className="font-mono text-xl font-bold text-danger">{summary.unattended}</p>
                     <p className="text-[10px] text-text-muted">Unattended</p>
                   </div>
                 </div>
@@ -402,9 +398,9 @@ export default function DashboardPage() {
                     Flagged Events
                   </p>
                   <div className="space-y-1.5 max-h-28 overflow-y-auto pr-1">
-                    {MOCK_FLAGGED_EVENTS.map((evt, i) => (
+                    {flaggedEvents.map((evt, i) => (
                       <div
-                        key={i}
+                        key={`${evt.label}-${i}`}
                         className="flex items-start gap-2 text-[11px] font-mono"
                       >
                         <span
@@ -452,16 +448,14 @@ export default function DashboardPage() {
 
                 {/* Bar comparison */}
                 <div className="space-y-3">
-                  <HorizontalBar
-                    label="Knorr Soup"
-                    pct={72}
-                    color="var(--color-accent)"
-                  />
-                  <HorizontalBar
-                    label="Maggi Noodles"
-                    pct={58}
-                    color="var(--color-accent-soft)"
-                  />
+                  {comparisonBars.map((item) => (
+                    <HorizontalBar
+                      key={item.label}
+                      label={item.label}
+                      pct={item.pct}
+                      color={item.color}
+                    />
+                  ))}
                 </div>
 
                 {/* Top sellers */}
@@ -470,9 +464,9 @@ export default function DashboardPage() {
                     Top Sellers Today
                   </p>
                   <div className="space-y-1.5">
-                    {MOCK_TOP_SELLERS.map((item, i) => (
+                    {TOP_SELLERS.map((item, i) => (
                       <div
-                        key={i}
+                        key={item.name}
                         className="flex items-center justify-between font-mono text-[11px]"
                       >
                         <span className="text-text">
@@ -481,7 +475,7 @@ export default function DashboardPage() {
                           </span>
                           {item.name}
                         </span>
-                        <span className="text-text-muted">{item.units}u</span>
+                        <span className="text-text-muted">{item.units}{i === 2 ? "" : "%"}</span>
                       </div>
                     ))}
                   </div>
@@ -520,7 +514,7 @@ export default function DashboardPage() {
                       Peak Hour
                     </p>
                     <p className="font-mono text-lg font-bold text-text">
-                      2:00 – 3:00 PM
+                      {summary.peakHour}
                     </p>
                   </div>
                   <div className="ml-auto text-right">
@@ -528,7 +522,7 @@ export default function DashboardPage() {
                       Density
                     </p>
                     <p className="font-mono text-lg font-bold text-danger">
-                      High
+                      {summary.density}
                     </p>
                   </div>
                 </div>
