@@ -18,6 +18,8 @@ from pathlib import Path
 import cv2
 import numpy as np
 
+OUTPUT_DIR = Path(__file__).resolve().parent / "output"
+
 
 def compute_ssim(frame1: np.ndarray, frame2: np.ndarray) -> float:
     """Compute Structural Similarity Index (SSIM) between two frames.
@@ -167,13 +169,13 @@ def main():
         "samples": results,
     }
 
-    out_path = Path("output") / "video_similarity.json"
+    out_path = OUTPUT_DIR / "video_similarity.json"
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(json.dumps(output, indent=2))
     print(f"\nJSON saved to {out_path}")
 
     # Save CSV
-    csv_path = Path("output") / "video_similarity.csv"
+    csv_path = OUTPUT_DIR / "video_similarity.csv"
     with open(csv_path, "w", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=["sample", "timestamp_s", "mse", "ssim"])
         writer.writeheader()

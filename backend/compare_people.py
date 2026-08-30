@@ -18,6 +18,10 @@ from pathlib import Path
 import cv2
 from ultralytics import YOLO
 
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+MODEL_PATH = PROJECT_ROOT / "backend" / "yolov8n.pt"
+OUTPUT_DIR = PROJECT_ROOT / "backend" / "output"
+
 
 def get_video_info(video_path: str) -> tuple:
     cap = cv2.VideoCapture(video_path)
@@ -63,7 +67,7 @@ def main():
 
     # Load YOLO
     print("Loading YOLOv8n...")
-    model = YOLO("yolov8n.pt")
+    model = YOLO(str(MODEL_PATH))
 
     # Generate frame indices (every Nth frame)
     frame_indices = list(range(0, common_frames, frame_interval))
@@ -146,15 +150,14 @@ def main():
         "samples": results,
     }
 
-    out_dir = Path("output")
-    out_dir.mkdir(parents=True, exist_ok=True)
+    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
-    json_path = out_dir / "people_comparison.json"
+    json_path = OUTPUT_DIR / "people_comparison.json"
     json_path.write_text(json.dumps(output, indent=2))
     print(f"\nJSON saved to {json_path}")
 
     # Save CSV
-    csv_path = out_dir / "people_comparison.csv"
+    csv_path = OUTPUT_DIR / "people_comparison.csv"
     with open(csv_path, "w", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=["sample", "frame", "timestamp_s", "v1_count", "v2_count", "diff", "verdict"])
         writer.writeheader()

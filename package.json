@@ -3,10 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "eslint"
+    "dev": "PYTHON_BIN=./.venv/bin/python next dev frontend",
+    "build": "PYTHON_BIN=./.venv/bin/python next build frontend",
+    "start": "PYTHON_BIN=./.venv/bin/python next start frontend",
+    "lint": "eslint frontend --config ./eslint.config.mjs"
   },
   "dependencies": {
     "jspdf": "^4.2.1",

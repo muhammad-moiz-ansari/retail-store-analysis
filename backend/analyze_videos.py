@@ -14,6 +14,10 @@ import cv2
 import numpy as np
 from ultralytics import YOLO
 
+BACKEND_DIR = Path(__file__).resolve().parent
+MODEL_PATH = BACKEND_DIR / "yolov8n.pt"
+OUTPUT_DIR = BACKEND_DIR / "output"
+
 
 def extract_frames(video_path: str, every_n: int = 30):
     """Extract every Nth frame from a video."""
@@ -241,13 +245,13 @@ def main():
     video2_path = sys.argv[2]
 
     # Create output dirs
-    base_dir = Path("output")
+    base_dir = OUTPUT_DIR
     (base_dir / Path(video1_path).stem).mkdir(parents=True, exist_ok=True)
     (base_dir / Path(video2_path).stem).mkdir(parents=True, exist_ok=True)
 
     # Load YOLO model
     print("Loading YOLOv8n...")
-    model = YOLO("yolov8n.pt")
+    model = YOLO(str(MODEL_PATH))
 
     # Analyze both videos
     results1 = analyze_video(video1_path, base_dir / Path(video1_path).stem, model)

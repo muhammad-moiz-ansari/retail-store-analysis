@@ -31,6 +31,7 @@ export default function ComparePeoplePage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [result, setResult] = useState<ComparisonResult | null>(null);
+  const [outputLog, setOutputLog] = useState("");
 
   const summary = useMemo(() => {
     if (!result) return null;
@@ -49,20 +50,65 @@ export default function ComparePeoplePage() {
     event.preventDefault();
     setLoading(true);
     setError("");
+    setOutputLog("");
+    setResult(null);
 
     try {
-      const res = await fetch("/api/compare-people", {
+      const response = await fetch("/api/compare-people", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ video1, video2, frameInterval: 30 }),
       });
 
-      const payload = await res.json();
-      if (!res.ok) {
-        throw new Error(payload.error || "Comparison failed");
+      if (!response.ok || !response.body) {
+        const payload = await response.json().catch(() => ({}));
+        const message = payload.error || "Comparison failed";
+        setOutputLog(payload.output || message);
+        throw new Error(message);
       }
 
-      setResult(payload.data);
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let partial = "";
+
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+
+        partial += decoder.decode(value, { stream: true });
+
+        const chunks = partial.split("\n\n");
+        partial = chunks.pop() ?? "";
+
+        for (const chunk of chunks) {
+          const lines = chunk.split("\n").filter(Boolean);
+          const eventLine = lines.find((line) => line.startsWith("event:"));
+          const dataLine = lines.find((line) => line.startsWith("data:"));
+
+          if (!eventLine || !dataLine) continue;
+
+          const event = eventLine.replace("event:", "").trim();
+          const payload = JSON.parse(dataLine.replace("data:", "").trim()) as {
+            text?: string;
+            data?: ComparisonResult;
+            message?: string;
+            output?: string;
+          };
+
+          if (event === "log" && payload.text) {
+            setOutputLog((prev) => `${prev}${payload.text}`);
+          }
+
+          if (event === "result" && payload.data) {
+            setResult(payload.data);
+          }
+
+          if (event === "error") {
+            setError(payload.message || "Comparison failed");
+            setOutputLog((prev) => `${prev}${payload.output || payload.message || ""}`);
+          }
+        }
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unexpected error");
       setResult(null);
@@ -125,6 +171,15 @@ export default function ComparePeoplePage() {
         </div>
       )}
 
+      {outputLog && (
+        <section className="mt-6 rounded-xl border border-border-soft bg-surface p-4">
+          <h2 className="mb-3 font-heading text-lg font-bold text-text">Terminal output</h2>
+          <pre className="max-h-80 overflow-auto whitespace-pre-wrap break-words font-mono text-xs leading-6 text-text-muted">
+            {outputLog}
+          </pre>
+        </section>
+      )}
+
       {summary && (
         <section className="mt-8 space-y-6">
           <div className="grid gap-4 md:grid-cols-4">
@@ -161,7 +216,7 @@ export default function ComparePeoplePage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {result?.samples.slice(0, 15).map((sample) => (
+                  {result?.samples.map((sample) => (
                     <tr key={sample.sample} className="border-b border-border-soft/70">
                       <td className="px-3 py-2 text-text">{sample.sample}</td>
                       <td className="px-3 py-2 text-text">{sample.timestamp_s.toFixed(1)}</td>

@@ -7,6 +7,24 @@ function normalizeVideoPath(input: string) {
   return path.resolve(input.trim());
 }
 
+function resolveRepoRoot() {
+  const cwd = process.cwd();
+  const candidates = [cwd, path.resolve(cwd, ".."), path.resolve(cwd, "..", "..")];
+
+  for (const candidate of candidates) {
+    const backendDir = path.join(candidate, "backend");
+    const frontendDir = path.join(candidate, "frontend");
+    if (fs.stat(candidate).then(() => true).catch(() => false) && path.basename(candidate) === "retail-store-analysis") {
+      return candidate;
+    }
+    if (fs.existsSync(path.join(candidate, "package.json")) && fs.existsSync(backendDir) && fs.existsSync(frontendDir)) {
+      return candidate;
+    }
+  }
+
+  return cwd;
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -21,8 +39,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const root = path.resolve(process.cwd(), "..");
-    const outputPath = path.join(root, "output", "people_comparison.json");
+    const repoRoot = resolveRepoRoot();
+    const backendRoot = path.join(repoRoot, "backend");
+    const outputPath = path.join(backendRoot, "output", "people_comparison.json");
     const normalizedVideo1 = normalizeVideoPath(video1);
     const normalizedVideo2 = normalizeVideoPath(video2);
 
@@ -39,51 +58,110 @@ export async function POST(request: NextRequest) {
         existingVideo2 === normalizedVideo2 &&
         existingInterval === frameInterval
       ) {
-        return NextResponse.json({ data: cached });
+        const stream = new ReadableStream({
+          start(controller) {
+            const encoder = new TextEncoder();
+            const send = (event: string, payload: Record<string, unknown>) => {
+              controller.enqueue(encoder.encode(`event: ${event}\ndata: ${JSON.stringify(payload)}\n\n`));
+            };
+
+            send("log", { text: "Using cached comparison result.\n" });
+            send("result", { data: cached });
+            send("done", {});
+            controller.close();
+          },
+        });
+
+        return new Response(stream, {
+          headers: {
+            "Content-Type": "text/event-stream; charset=utf-8",
+            "Cache-Control": "no-cache, no-transform",
+            Connection: "keep-alive",
+          },
+        });
       }
     } catch {
       // No cached result yet; continue to process the input videos.
     }
 
-    const script = path.join(root, "compare_people.py");
-    const pythonExecutable = path.join(root, ".venv", "bin", "python");
+    const script = path.join(backendRoot, "compare_people.py");
+    const pythonExecutable = process.env.PYTHON_BIN || "python3";
 
-    const result = await new Promise<{ stdout: string; stderr: string; code: number | null }>((resolve, reject) => {
-      const child = spawn(pythonExecutable, [script, video1, video2, String(frameInterval)], {
-        cwd: root,
-      });
+    const stream = new ReadableStream({
+      start(controller) {
+        const encoder = new TextEncoder();
+        const send = (event: string, payload: Record<string, unknown>) => {
+          controller.enqueue(encoder.encode(`event: ${event}\ndata: ${JSON.stringify(payload)}\n\n`));
+        };
 
-      let stdout = "";
-      let stderr = "";
+        const child = spawn(pythonExecutable, ["-u", script, video1, video2, String(frameInterval)], {
+          cwd: repoRoot,
+          env: {
+            ...process.env,
+            PYTHONUNBUFFERED: "1",
+          },
+        });
 
-      child.stdout.on("data", (chunk) => {
-        stdout += chunk.toString();
-      });
+        let stdout = "";
+        let stderr = "";
 
-      child.stderr.on("data", (chunk) => {
-        stderr += chunk.toString();
-      });
+        child.stdout.on("data", (chunk) => {
+          const text = chunk.toString();
+          stdout += text;
+          process.stdout.write(text);
+          send("log", { text });
+        });
 
-      child.on("error", (error) => {
-        reject(error);
-      });
+        child.stderr.on("data", (chunk) => {
+          const text = chunk.toString();
+          stderr += text;
+          process.stderr.write(text);
+          send("log", { text });
+        });
 
-      child.on("close", (code) => {
-        resolve({ stdout, stderr, code });
-      });
+        child.on("error", (error) => {
+          const message = error instanceof Error ? error.message : "Unexpected error";
+          process.stderr.write(`${message}\n`);
+          send("error", { message });
+          controller.close();
+        });
+
+        child.on("close", async (code) => {
+          const combinedOutput = [stdout, stderr].filter(Boolean).join("\n").trim();
+
+          if (code !== 0) {
+            send("error", {
+              message: stderr || "Video comparison failed.",
+              output: combinedOutput || "No output was produced.",
+            });
+            send("done", {});
+            controller.close();
+            return;
+          }
+
+          try {
+            const file = await fs.readFile(outputPath, "utf-8");
+            const data = JSON.parse(file);
+            send("result", { data, output: combinedOutput || "No output was produced." });
+            send("done", {});
+            controller.close();
+          } catch (error) {
+            const message = error instanceof Error ? error.message : "Unexpected error";
+            send("error", { message, output: combinedOutput || "No output was produced." });
+            send("done", {});
+            controller.close();
+          }
+        });
+      },
     });
 
-    if (result.code !== 0) {
-      return NextResponse.json(
-        { error: result.stderr || "Video comparison failed." },
-        { status: 500 }
-      );
-    }
-
-    const file = await fs.readFile(outputPath, "utf-8");
-    const data = JSON.parse(file);
-
-    return NextResponse.json({ data });
+    return new Response(stream, {
+      headers: {
+        "Content-Type": "text/event-stream; charset=utf-8",
+        "Cache-Control": "no-cache, no-transform",
+        Connection: "keep-alive",
+      },
+    });
   } catch (error) {
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Unexpected error" },
