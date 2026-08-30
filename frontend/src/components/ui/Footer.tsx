@@ -3,18 +3,56 @@
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 
-const QUICK_LINKS = [
+type NavLink = {
+  label: string;
+  href: string;
+  managerOnly?: boolean;
+};
+
+// Unauthenticated (public) quick links
+const PUBLIC_QUICK_LINKS: NavLink[] = [
+  { label: "Home", href: "/" },
+  { label: "About", href: "/about" },
+];
+
+// Authenticated (dashboard) quick links
+const AUTHENTICATED_QUICK_LINKS: NavLink[] = [
   { label: "Home", href: "/dashboard" },
   { label: "Customer Info", href: "/customer-info" },
   { label: "Employee Info", href: "/employee-info" },
   { label: "Spatial Analytics", href: "/spatial-analytics" },
   { label: "Sales & Product Trends", href: "/sales-trends" },
   { label: "Reports & Exports", href: "/reports" },
+  { label: "Store Settings", href: "/settings", managerOnly: true },
   { label: "About", href: "/about" },
 ];
 
+/** Routes where the user is considered authenticated */
+const AUTHENTICATED_ROUTES = [
+  "/dashboard",
+  "/customer-info",
+  "/employee-info",
+  "/spatial-analytics",
+  "/sales-trends",
+  "/reports",
+  "/settings",
+];
+
 export function Footer() {
+  const pathname = usePathname();
+
+  // Determine if user is authenticated based on current route
+  const authenticated = AUTHENTICATED_ROUTES.some(
+    (route) => pathname === route || pathname.startsWith(route + "/")
+  );
+
+  // Select quick links based on auth state
+  // Note: For authenticated users, we're assuming Manager role for footer links
+  // since we don't have access to the actual role prop here
+  const quickLinks = authenticated ? AUTHENTICATED_QUICK_LINKS : PUBLIC_QUICK_LINKS;
+
   return (
     <footer className="bg-surface-alt border-t border-border-soft mt-auto">
       {/* ── Three-column content ── */}
@@ -39,7 +77,7 @@ export function Footer() {
               Quick Links
             </h4>
             <ul className="space-y-2">
-              {QUICK_LINKS.map((link) => (
+              {quickLinks.map((link) => (
                 <li key={link.href}>
                   <Link
                     href={link.href}

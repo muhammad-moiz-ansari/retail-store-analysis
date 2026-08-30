@@ -394,7 +394,7 @@ export default function ReportsPage() {
           >
             <RetroWindow title="AI-Generated Summary">
               <RetroCard
-                className="border-l-4 !border-l-accent-soft !shadow-lg p-8"
+                className="border-l-4 !border-l-accent-soft !shadow-lg p-6"
               >
                 {/* Header */}
                 <div className="space-y-2 mb-6 pb-4 border-b border-border-soft">
