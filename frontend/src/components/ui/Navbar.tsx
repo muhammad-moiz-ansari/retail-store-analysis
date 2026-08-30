@@ -3,15 +3,14 @@
 import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { Badge } from "./Badge";
 import { RetroButton } from "./RetroButton";
-import { useAuth } from "@/components/auth/AuthProvider";
 
 interface NavbarProps {
   /** Show role badge and Log Out button (for authenticated pages like /dashboard) */
   authenticated?: boolean;
-  /** User role - only used when authenticated */
+  /** User role — only used when authenticated */
   role?: "Manager" | "Employee";
 }
 
@@ -19,7 +18,6 @@ type NavLink = {
   label: string;
   href: string;
   managerOnly?: boolean;
-  employeeOnly?: boolean;
 };
 
 // Unauthenticated (public) nav links
@@ -40,15 +38,8 @@ const AUTHENTICATED_NAV_LINKS: NavLink[] = [
   { label: "About", href: "/about" },
 ];
 
-const EMPLOYEE_NAV_LINKS: NavLink[] = [
-  { label: "My Workspace", href: "/employee", employeeOnly: true },
-  { label: "About", href: "/about" },
-];
-
 export function Navbar({ authenticated = false, role = "Manager" }: NavbarProps) {
   const pathname = usePathname();
-  const router = useRouter();
-  const { signOut } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [indicatorStyle, setIndicatorStyle] = useState({ left: 0, width: 0 });
   const [showTransition, setShowTransition] = useState(false);
@@ -56,22 +47,10 @@ export function Navbar({ authenticated = false, role = "Manager" }: NavbarProps)
   const navbarRef = useRef<HTMLElement>(null);
 
   // Select link set based on auth state
-  const navLinks = !authenticated
-    ? PUBLIC_NAV_LINKS
-    : role === "Employee"
-      ? EMPLOYEE_NAV_LINKS
-      : AUTHENTICATED_NAV_LINKS;
-  const visibleLinks = navLinks.filter(
-    (link) =>
-      (!link.managerOnly || role === "Manager") &&
-      (!link.employeeOnly || role === "Employee")
-  );
-
-  function handleSignOut() {
-    signOut();
-    setMobileMenuOpen(false);
-    router.push("/");
-  }
+  const navLinks = authenticated ? AUTHENTICATED_NAV_LINKS : PUBLIC_NAV_LINKS;
+  const visibleLinks = authenticated
+    ? navLinks.filter((link) => !link.managerOnly || role === "Manager")
+    : navLinks;
 
   // Update sliding indicator position
   useEffect(() => {
@@ -123,7 +102,7 @@ export function Navbar({ authenticated = false, role = "Manager" }: NavbarProps)
       <div className="h-[52px] px-4 md:px-6 flex items-center justify-between">
         {/* ── Left: Logo + Wordmark ── */}
         <Link
-          href={authenticated ? (role === "Employee" ? "/employee" : "/dashboard") : "/"}
+          href={authenticated ? "/dashboard" : "/"}
           className="flex items-center gap-2.5 xl:w-[180px] w-auto shrink-0"
         >
           <NavLogo />
@@ -178,7 +157,7 @@ export function Navbar({ authenticated = false, role = "Manager" }: NavbarProps)
             <Badge variant={role === "Manager" ? "accent" : "neutral"}>
               {role}
             </Badge>
-            <RetroButton onClick={handleSignOut} variant="secondary" className="!px-3 !py-1.5 !text-xs">
+            <RetroButton variant="secondary" className="!px-3 !py-1.5 !text-xs">
               Log Out
             </RetroButton>
           </div>
@@ -268,7 +247,7 @@ export function Navbar({ authenticated = false, role = "Manager" }: NavbarProps)
             <Badge variant={role === "Manager" ? "accent" : "neutral"}>
               {role}
             </Badge>
-            <RetroButton onClick={handleSignOut} variant="secondary" className="!px-3 !py-1.5 !text-xs">
+            <RetroButton variant="secondary" className="!px-3 !py-1.5 !text-xs">
               Log Out
             </RetroButton>
           </div>
