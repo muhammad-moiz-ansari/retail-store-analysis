@@ -14,7 +14,20 @@ interface NavbarProps {
   role?: "Manager" | "Employee";
 }
 
-const NAV_LINKS = [
+type NavLink = {
+  label: string;
+  href: string;
+  managerOnly?: boolean;
+};
+
+// Unauthenticated (public) nav links
+const PUBLIC_NAV_LINKS: NavLink[] = [
+  { label: "Home", href: "/" },
+  { label: "About", href: "/about" },
+];
+
+// Authenticated (dashboard) nav links
+const AUTHENTICATED_NAV_LINKS: NavLink[] = [
   { label: "Home", href: "/dashboard" },
   { label: "Customer Info", href: "/customer-info" },
   { label: "Employee Info", href: "/employee-info" },
@@ -33,9 +46,14 @@ export function Navbar({ authenticated = false, role = "Manager" }: NavbarProps)
   const linkRefs = useRef<(HTMLAnchorElement | null)[]>([]);
   const navbarRef = useRef<HTMLElement>(null);
 
+  // Select link set based on auth state
+  const navLinks = authenticated ? AUTHENTICATED_NAV_LINKS : PUBLIC_NAV_LINKS;
+  const visibleLinks = authenticated
+    ? navLinks.filter((link) => !link.managerOnly || role === "Manager")
+    : navLinks;
+
   // Update sliding indicator position
   useEffect(() => {
-    const visibleLinks = NAV_LINKS.filter((link) => !link.managerOnly || role === "Manager");
     const activeIndex = visibleLinks.findIndex((link) => pathname === link.href);
     if (activeIndex !== -1 && linkRefs.current[activeIndex]) {
       const activeLink = linkRefs.current[activeIndex];
@@ -51,9 +69,7 @@ export function Navbar({ authenticated = false, role = "Manager" }: NavbarProps)
         return () => clearTimeout(timer);
       }
     }
-  }, [pathname, role]);
-
-  const visibleLinks = NAV_LINKS.filter((link) => !link.managerOnly || role === "Manager");
+  }, [pathname, visibleLinks]);
 
   // Close mobile menu on outside click
   useEffect(() => {
@@ -86,7 +102,7 @@ export function Navbar({ authenticated = false, role = "Manager" }: NavbarProps)
       <div className="h-[52px] px-4 md:px-6 flex items-center justify-between">
         {/* ── Left: Logo + Wordmark ── */}
         <Link
-          href="/dashboard"
+          href={authenticated ? "/dashboard" : "/"}
           className="flex items-center gap-2.5 xl:w-[180px] w-auto shrink-0"
         >
           <NavLogo />
@@ -98,7 +114,7 @@ export function Navbar({ authenticated = false, role = "Manager" }: NavbarProps)
 
         {/* ── Center: Nav Links (desktop only) ── */}
         <nav className="hidden min-[1090px]:flex items-center justify-center flex-1 relative">
-          <div className="flex items-center gap-3 min-[1120px]:gap-4 min-[1292px]:gap-5 relative">    {/* Space between nav links */}
+          <div className="flex items-center gap-3 min-[1120px]:gap-4 min-[1292px]:gap-5 relative">
             {visibleLinks.map((link, index) => {
               const isActive = pathname === link.href;
               return (
@@ -134,15 +150,32 @@ export function Navbar({ authenticated = false, role = "Manager" }: NavbarProps)
           </div>
         </nav>
 
-        {/* ── Right: Auth Controls (desktop only - always visible) ── */}
-        <div className="hidden min-[1090px]:flex items-center gap-3 xl:w-[200px] w-auto justify-end shrink-0">
-          <Badge variant={role === "Manager" ? "accent" : "neutral"}>
-            {role}
-          </Badge>
-          <RetroButton variant="secondary" className="!px-3 !py-1.5 !text-xs">
-            Log Out
-          </RetroButton>
-        </div>
+        {/* ── Right: Auth Controls ── */}
+        {authenticated ? (
+          // Authenticated: Role Badge + Log Out
+          <div className="hidden min-[1090px]:flex items-center gap-3 xl:w-[200px] w-auto justify-end shrink-0">
+            <Badge variant={role === "Manager" ? "accent" : "neutral"}>
+              {role}
+            </Badge>
+            <RetroButton variant="secondary" className="!px-3 !py-1.5 !text-xs">
+              Log Out
+            </RetroButton>
+          </div>
+        ) : (
+          // Not authenticated: Sign In + Get Started
+          <div className="hidden min-[1090px]:flex items-center gap-3 xl:w-[200px] w-auto justify-end shrink-0">
+            <Link href="/login">
+              <RetroButton variant="secondary" className="!px-3 !py-1.5 !text-xs">
+                Sign In
+              </RetroButton>
+            </Link>
+            <Link href="/signup">
+              <RetroButton variant="primary" className="!px-3 !py-1.5 !text-xs">
+                Get Started
+              </RetroButton>
+            </Link>
+          </div>
+        )}
 
         {/* ── Right: Hamburger (mobile only) ── */}
         <button
@@ -208,15 +241,30 @@ export function Navbar({ authenticated = false, role = "Manager" }: NavbarProps)
           );
         })}
 
-        {/* Auth Controls (mobile - always visible) */}
-        <div className="py-3 px-5 border-t border-border-soft flex items-center justify-between gap-3">
-          <Badge variant={role === "Manager" ? "accent" : "neutral"}>
-            {role}
-          </Badge>
-          <RetroButton variant="secondary" className="!px-3 !py-1.5 !text-xs">
-            Log Out
-          </RetroButton>
-        </div>
+        {/* Auth Controls (mobile) */}
+        {authenticated ? (
+          <div className="py-3 px-5 border-t border-border-soft flex items-center justify-between gap-3">
+            <Badge variant={role === "Manager" ? "accent" : "neutral"}>
+              {role}
+            </Badge>
+            <RetroButton variant="secondary" className="!px-3 !py-1.5 !text-xs">
+              Log Out
+            </RetroButton>
+          </div>
+        ) : (
+          <div className="py-3 px-5 border-t border-border-soft flex flex-col gap-2">
+            <Link href="/login" className="w-full">
+              <RetroButton variant="secondary" className="!w-full !text-xs">
+                Sign In
+              </RetroButton>
+            </Link>
+            <Link href="/signup" className="w-full">
+              <RetroButton variant="primary" className="!w-full !text-xs">
+                Get Started
+              </RetroButton>
+            </Link>
+          </div>
+        )}
       </div>
     </header>
   );
