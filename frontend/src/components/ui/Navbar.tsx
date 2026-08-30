@@ -10,7 +10,7 @@ import { RetroButton } from "./RetroButton";
 interface NavbarProps {
   /** Show role badge and Log Out button (for authenticated pages like /dashboard) */
   authenticated?: boolean;
-  /** User role — only used when authenticated */
+  /** User role - only used when authenticated */
   role?: "Manager" | "Employee";
 }
 

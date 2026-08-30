@@ -55,7 +55,7 @@ export default function StyleGuidePage() {
       {/* Header */}
       <div className="space-y-1">
         <h1 className="font-heading text-3xl md:text-4xl font-bold text-text">
-          RetailPulse — Style Guide
+          RetailPulse - Style Guide
         </h1>
         <p className="font-body text-text-muted text-sm">
           Design system components · Elegant Retro OS
@@ -104,14 +104,14 @@ export default function StyleGuidePage() {
       <Section title="Typography">
         <div className="space-y-3 bg-surface border border-border-soft rounded-lg p-5">
           <p className="font-heading text-2xl font-bold">
-            Space Grotesk — Headings
+            Space Grotesk - Headings
           </p>
           <p className="font-body text-base">
-            Inter — Body text used across the UI. Highly readable at every
+            Inter - Body text used across the UI. Highly readable at every
             size.
           </p>
           <p className="font-mono text-sm text-text-muted">
-            JetBrains Mono — Stats, counters, timestamps, camera labels
+            JetBrains Mono - Stats, counters, timestamps, camera labels
           </p>
         </div>
       </Section>
@@ -132,7 +132,7 @@ export default function StyleGuidePage() {
                 2 alerts require attention
               </p>
               <p className="text-sm text-text-muted">
-                Unauthorized access detected — Camera 03, 14:32
+                Unauthorized access detected - Camera 03, 14:32
               </p>
             </div>
           </RetroWindow>
@@ -142,7 +142,7 @@ export default function StyleGuidePage() {
       {/* ─── CRTFrame ─── */}
       <Section title="CRTFrame">
         <div className="flex flex-wrap gap-6">
-          <CRTFrame label="CAM 01 — ENTRANCE" live>
+          <CRTFrame label="CAM 01 - ENTRANCE" live>
             <div className="w-64 h-40 bg-gradient-to-br from-neutral-800 to-neutral-900 flex items-center justify-center">
               <span className="text-neutral-500 font-mono text-s">
                 LIVE FEED
@@ -150,7 +150,7 @@ export default function StyleGuidePage() {
             </div>
           </CRTFrame>
 
-          <CRTFrame label="CAM 04 — CHECKOUT" live signal={false} />
+          <CRTFrame label="CAM 04 - CHECKOUT" live signal={false} />
         </div>
       </Section>
 
@@ -194,7 +194,7 @@ export default function StyleGuidePage() {
 
           <RetroCard>
             <p className="text-sm text-text-muted">
-              A card without a label — useful for generic content blocks.
+              A card without a label - useful for generic content blocks.
             </p>
           </RetroCard>
         </div>
@@ -212,7 +212,7 @@ export default function StyleGuidePage() {
 
       {/* ─── Combined Example ─── */}
       <Section title="Combined Example">
-        <RetroWindow title="Employee Overview — Store #014">
+        <RetroWindow title="Employee Overview - Store #014">
           <div className="space-y-4">
             <div className="flex items-center gap-3">
               <RetroInput

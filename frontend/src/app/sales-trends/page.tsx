@@ -198,7 +198,7 @@ export default function SalesTrendsPage() {
 
 function PageHeader() {
   return (
-    <RetroWindow title="Sales & Product Trends — POS Analytics">
+    <RetroWindow title="Sales & Product Trends - POS Analytics">
       <p className="font-mono text-xs text-text-muted mb-5 tracking-wide">
         {formatDate()}
       </p>
@@ -320,7 +320,7 @@ function SalesTrendSection() {
           </ResponsiveContainer>
         </div>
         <p className="text-[10px] text-text-muted mt-3 leading-relaxed">
-          Dual-axis overlay — left axis shows revenue (Rs.), right axis shows
+          Dual-axis overlay - left axis shows revenue (Rs.), right axis shows
           customer footfall count. Use the granularity toggle above to switch
           between Day / Week / Month / Year views.
         </p>
@@ -684,7 +684,7 @@ function AdditionalInsightsSection() {
               <div>
                 <p className="font-mono text-sm font-bold text-text">12:00 PM</p>
                 <p className="text-[10px] text-text-muted mt-0.5">
-                  52 visitors — highest foot traffic recorded at noon
+                  52 visitors - highest foot traffic recorded at noon
                 </p>
               </div>
             </div>
@@ -696,7 +696,7 @@ function AdditionalInsightsSection() {
               <div>
                 <p className="font-mono text-sm font-bold text-text">6:00 PM</p>
                 <p className="text-[10px] text-text-muted mt-0.5">
-                  {fmtPKR(28310)} — highest hourly revenue in the evening rush
+                  {fmtPKR(28310)} - highest hourly revenue in the evening rush
                 </p>
               </div>
             </div>
@@ -705,7 +705,7 @@ function AdditionalInsightsSection() {
               <p className="text-xs text-text leading-relaxed">
                 <span className="font-semibold">6-hour gap</span> between peak
                 footfall (12 PM) and peak sales (6 PM). Noon crowds browse but
-                don&apos;t convert — consider lunchtime promotions or checkout
+                don&apos;t convert - consider lunchtime promotions or checkout
                 speed improvements to capture this traffic.
               </p>
             </div>

@@ -77,7 +77,7 @@ export default function SignupPage() {
 
       {/* ── Signup window ── */}
       <RetroWindow
-        title="RetailPulse — Create Account"
+        title="RetailPulse - Create Account"
         className="w-full max-w-md relative z-10"
       >
         <form onSubmit={handleSubmit} className="space-y-5" noValidate>
