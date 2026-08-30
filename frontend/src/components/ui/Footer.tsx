@@ -4,6 +4,7 @@ import React from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
+import { useAuth } from "@/components/auth/AuthProvider";
 
 type NavLink = {
   label: string;
@@ -38,20 +39,26 @@ const AUTHENTICATED_ROUTES = [
   "/sales-trends",
   "/reports",
   "/settings",
+  "/employee",
 ];
 
 export function Footer() {
   const pathname = usePathname();
+  const { authenticated: hasSession, role } = useAuth();
 
   // Determine if user is authenticated based on current route
-  const authenticated = AUTHENTICATED_ROUTES.some(
+  const protectedRoute = AUTHENTICATED_ROUTES.some(
     (route) => pathname === route || pathname.startsWith(route + "/")
   );
 
-  // Select quick links based on auth state
-  // Note: For authenticated users, we're assuming Manager role for footer links
-  // since we don't have access to the actual role prop here
-  const quickLinks = authenticated ? AUTHENTICATED_QUICK_LINKS : PUBLIC_QUICK_LINKS;
+  const quickLinks = hasSession && protectedRoute
+    ? role === "Employee"
+      ? [
+          { label: "My Workspace", href: "/employee" },
+          { label: "About", href: "/about" },
+        ]
+      : AUTHENTICATED_QUICK_LINKS
+    : PUBLIC_QUICK_LINKS;
 
   return (
     <footer className="bg-surface-alt border-t border-border-soft mt-auto">

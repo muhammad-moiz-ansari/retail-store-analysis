@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Space_Grotesk, Inter, JetBrains_Mono } from "next/font/google";
 import { NavbarShell } from "@/components/ui/NavbarShell";
 import { Footer } from "@/components/ui";
+import { AuthProvider } from "@/components/auth/AuthProvider";
+import { RouteAccessGuard } from "@/components/auth/RouteAccessGuard";
 import "./globals.css";
 
 const spaceGrotesk = Space_Grotesk({
@@ -39,9 +41,13 @@ export default function RootLayout({
       className={`${spaceGrotesk.variable} ${inter.variable} ${jetbrainsMono.variable} h-full antialiased`}
     >
       <body suppressHydrationWarning className="min-h-full flex flex-col">
-        <NavbarShell />
-        <div className="flex-1">{children}</div>
-        <Footer />
+        <AuthProvider>
+          <NavbarShell />
+          <RouteAccessGuard>
+            <div className="flex-1">{children}</div>
+          </RouteAccessGuard>
+          <Footer />
+        </AuthProvider>
       </body>
     </html>
   );
