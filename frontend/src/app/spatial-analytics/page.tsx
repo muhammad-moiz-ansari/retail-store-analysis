@@ -19,18 +19,18 @@ import { RetroWindow, RetroCard, Badge } from "@/components/ui";
 
 const HEATMAP_ZONES = [
   { id: "entrance",  name: "Entrance Lobby",       heat: 20, count: 4,  avgStay: "1.2 min" },
-  { id: "aisle1",    name: "Aisle 1 — Snacks",     heat: 55, count: 9,  avgStay: "4.8 min" },
-  { id: "aisle2",    name: "Aisle 2 — Beverages",  heat: 40, count: 6,  avgStay: "3.5 min" },
-  { id: "aisle3",    name: "Aisle 3 — Household",  heat: 15, count: 2,  avgStay: "2.1 min" },
+  { id: "aisle1",    name: "Aisle 1 - Snacks",     heat: 55, count: 9,  avgStay: "4.8 min" },
+  { id: "aisle2",    name: "Aisle 2 - Beverages",  heat: 40, count: 6,  avgStay: "3.5 min" },
+  { id: "aisle3",    name: "Aisle 3 - Household",  heat: 15, count: 2,  avgStay: "2.1 min" },
   { id: "promo",     name: "Promo Display",         heat: 70, count: 8,  avgStay: "6.3 min" },
   { id: "checkout",  name: "Checkout Counter",      heat: 95, count: 11, avgStay: "3.9 min" },
 ];
 
 const ZONE_OCCUPANCY = [
   { zone: "Entrance Lobby",       count: 4,  capacityPct: 30,  status: "Normal" as const },
-  { zone: "Aisle 1 — Snacks",     count: 9,  capacityPct: 65,  status: "Busy" as const },
-  { zone: "Aisle 2 — Beverages",  count: 6,  capacityPct: 45,  status: "Normal" as const },
-  { zone: "Aisle 3 — Household",  count: 2,  capacityPct: 15,  status: "Normal" as const },
+  { zone: "Aisle 1 - Snacks",     count: 9,  capacityPct: 65,  status: "Busy" as const },
+  { zone: "Aisle 2 - Beverages",  count: 6,  capacityPct: 45,  status: "Normal" as const },
+  { zone: "Aisle 3 - Household",  count: 2,  capacityPct: 15,  status: "Normal" as const },
   { zone: "Promo Display",         count: 8,  capacityPct: 80,  status: "Busy" as const },
   { zone: "Checkout Counter",      count: 11, capacityPct: 95,  status: "Crowded" as const },
 ];
@@ -40,7 +40,7 @@ const ALERTS = [
     severity: "High" as const,
     headline: "Checkout congestion spilling into Aisle 3",
     description:
-      "Checkout queue has extended into Aisle 3 — Household, blocking normal aisle traffic.",
+      "Checkout queue has extended into Aisle 3 - Household, blocking normal aisle traffic.",
     duration: "12 min",
   },
   {
@@ -53,9 +53,9 @@ const ALERTS = [
 ];
 
 const CONVERSION_DATA = [
-  { zone: "Aisle 1 — Snacks",    walkedPast: 180, stopped: 97,  pct: 54 },
-  { zone: "Aisle 2 — Beverages", walkedPast: 150, stopped: 62,  pct: 41 },
-  { zone: "Aisle 3 — Household", walkedPast: 90,  stopped: 21,  pct: 23 },
+  { zone: "Aisle 1 - Snacks",    walkedPast: 180, stopped: 97,  pct: 54 },
+  { zone: "Aisle 2 - Beverages", walkedPast: 150, stopped: 62,  pct: 41 },
+  { zone: "Aisle 3 - Household", walkedPast: 90,  stopped: 21,  pct: 23 },
   { zone: "Promo Display",        walkedPast: 210, stopped: 148, pct: 70 },
   { zone: "Checkout Counter",     walkedPast: 140, stopped: 140, pct: 100 },
 ];
@@ -65,9 +65,9 @@ const CONVERSION_TABLE = [...CONVERSION_DATA].sort((a, b) => b.pct - a.pct);
 const POPULARITY_RANKING = [
   { rank: 1, zone: "Checkout Counter",      visits: 312, note: "" },
   { rank: 2, zone: "Promo Display",          visits: 210, note: "" },
-  { rank: 3, zone: "Aisle 1 — Snacks",      visits: 180, note: "" },
-  { rank: 4, zone: "Aisle 2 — Beverages",   visits: 150, note: "" },
-  { rank: 5, zone: "Aisle 3 — Household",   visits: 90,  note: "" },
+  { rank: 3, zone: "Aisle 1 - Snacks",      visits: 180, note: "" },
+  { rank: 4, zone: "Aisle 2 - Beverages",   visits: 150, note: "" },
+  { rank: 5, zone: "Aisle 3 - Household",   visits: 90,  note: "" },
   { rank: 6, zone: "Entrance Lobby",         visits: 64,  note: "pass-through only, not a stop zone" },
 ];
 
@@ -150,7 +150,7 @@ export default function SpatialAnalyticsPage() {
 
 function PageHeader() {
   return (
-    <RetroWindow title="Spatial Analytics — Live Store Map">
+    <RetroWindow title="Spatial Analytics - Live Store Map">
       <div className="flex items-center gap-2 mb-5">
         <span className="relative flex h-2.5 w-2.5">
           <span className="absolute inset-0 rounded-full bg-success animate-[pulse-dot_2s_ease-in-out_infinite]" />
@@ -189,7 +189,7 @@ function HeatmapSection() {
   return (
     <RetroWindow title="Store Heatmap">
       <div className="space-y-5">
-        {/* Heatmap grid — 3 cols on md+, 2 cols on small */}
+        {/* Heatmap grid - 3 cols on md+, 2 cols on small */}
         <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
           {/* Row 1: Entrance Lobby spans full width */}
           <HeatmapCell zone={HEATMAP_ZONES[0]} className="col-span-2 md:col-span-3 min-h-[80px]" />
@@ -348,7 +348,7 @@ function BottleneckAlertsSection() {
         <div className="flex items-center gap-3 py-6 px-4 rounded-lg bg-surface">
           <span className="text-xl">✅</span>
           <p className="font-body text-sm text-success font-medium">
-            No active bottlenecks — floor traffic is flowing normally.
+            No active bottlenecks - floor traffic is flowing normally.
           </p>
         </div>
       )}
@@ -430,7 +430,7 @@ function ConversionRateSection() {
         {/* Horizontal grouped bar chart */}
         <div>
           <p className="text-xs text-text-muted mb-4 font-body">
-            Walked Past vs. Stopped — per zone (today)
+            Walked Past vs. Stopped - per zone (today)
           </p>
           <div className="w-full h-[280px] md:h-[320px]">
             <ResponsiveContainer width="100%" height="100%">
@@ -458,7 +458,7 @@ function ConversionRateSection() {
           </div>
         </div>
 
-        {/* Conversion table — sorted by pct descending */}
+        {/* Conversion table - sorted by pct descending */}
         <div>
           <h3 className="font-heading text-sm font-semibold text-text mb-3">
             Conversion Table
@@ -569,7 +569,7 @@ function PopularityRankingSection() {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   CSS keyframes — injected via a style tag for the pulse animation
+   CSS keyframes - injected via a style tag for the pulse animation
    ═══════════════════════════════════════════════════════════════ */
 
 function PulseStyle() {

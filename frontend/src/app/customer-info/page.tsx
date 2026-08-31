@@ -142,7 +142,7 @@ export default function CustomerInfoPage() {
 
 function PageHeader() {
   return (
-    <RetroWindow title="Customer Info — Today's Overview">
+    <RetroWindow title="Customer Info - Today's Overview">
       <p className="font-mono text-xs text-text-muted mb-5 tracking-wide">
         {formatDate()}
       </p>
@@ -208,7 +208,7 @@ function TrafficFootfallSection() {
         </div>
 
         {/* Hourly Traffic Chart */}
-        <RetroCard label="Peak Crowd Density — Hourly Traffic">
+        <RetroCard label="Peak Crowd Density - Hourly Traffic">
           <div className="pt-4">
             <ResponsiveContainer width="100%" height={260}>
               <AreaChart data={HOURLY_TRAFFIC} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>

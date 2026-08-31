@@ -11,7 +11,7 @@ import {
 } from "@/components/ui";
 
 /* ═══════════════════════════════════════════════════════════════
-   Role gate — hardcoded to "Manager" to match NavbarShell.
+   Role gate - hardcoded to "Manager" to match NavbarShell.
    Employee users who navigate here directly see an access-denied
    screen instead of the settings content.
    ═══════════════════════════════════════════════════════════════ */
@@ -57,25 +57,25 @@ interface Account {
 
 const INITIAL_ZONES: Zone[] = [
   { id: "z1", name: "Entrance Lobby", type: "Entry/Exit", capacity: 15 },
-  { id: "z2", name: "Aisle 1 — Snacks", type: "Aisle", capacity: 10 },
-  { id: "z3", name: "Aisle 2 — Beverages", type: "Aisle", capacity: 10 },
-  { id: "z4", name: "Aisle 3 — Household", type: "Aisle", capacity: 12 },
+  { id: "z2", name: "Aisle 1 - Snacks", type: "Aisle", capacity: 10 },
+  { id: "z3", name: "Aisle 2 - Beverages", type: "Aisle", capacity: 10 },
+  { id: "z4", name: "Aisle 3 - Household", type: "Aisle", capacity: 12 },
   { id: "z5", name: "Promo Display", type: "Display", capacity: 8 },
   { id: "z6", name: "Checkout Counter", type: "Checkout", capacity: 20 },
 ];
 
 const INITIAL_CAMERAS: Camera[] = [
-  { id: "c1", name: "CAM 01 — ENTRANCE", zone: "Entrance Lobby", online: true },
-  { id: "c2", name: "CAM 02 — AISLE 1", zone: "Aisle 1 — Snacks", online: true },
-  { id: "c3", name: "CAM 03 — CHECKOUT", zone: "Checkout Counter", online: true },
+  { id: "c1", name: "CAM 01 - ENTRANCE", zone: "Entrance Lobby", online: true },
+  { id: "c2", name: "CAM 02 - AISLE 1", zone: "Aisle 1 - Snacks", online: true },
+  { id: "c3", name: "CAM 03 - CHECKOUT", zone: "Checkout Counter", online: true },
 ];
 
 const INITIAL_STAFF: StaffMember[] = [
-  { id: "s1", label: "Staff 01", zone: "Aisle 1 — Snacks", shift: "9 AM – 1 PM" },
+  { id: "s1", label: "Staff 01", zone: "Aisle 1 - Snacks", shift: "9 AM – 1 PM" },
   { id: "s2", label: "Staff 02", zone: "Checkout Counter", shift: "9 AM – 1 PM" },
   { id: "s3", label: "Staff 03", zone: "Promo Display", shift: "1 PM – 5 PM" },
-  { id: "s4", label: "Staff 04", zone: "Aisle 2 — Beverages", shift: "1 PM – 5 PM" },
-  { id: "s5", label: "Staff 05", zone: "Aisle 3 — Household", shift: "5 PM – 9 PM" },
+  { id: "s4", label: "Staff 04", zone: "Aisle 2 - Beverages", shift: "1 PM – 5 PM" },
+  { id: "s5", label: "Staff 05", zone: "Aisle 3 - Household", shift: "5 PM – 9 PM" },
 ];
 
 const INITIAL_ACCOUNTS: Account[] = [
@@ -142,7 +142,7 @@ function SettingsContent() {
   return (
     <main className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-6 md:py-8 space-y-8">
       {/* ── Page Header ── */}
-      <RetroWindow title="Store Settings — Configuration & Management">
+      <RetroWindow title="Store Settings - Configuration & Management">
         <div className="flex flex-wrap items-center gap-3">
           <Badge variant="accent">Manager Access</Badge>
           <span className="text-sm text-text-muted">
@@ -173,7 +173,7 @@ function SettingsContent() {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   Section 1 — Camera Management
+   Section 1 - Camera Management
    ═══════════════════════════════════════════════════════════════ */
 
 function CameraManagement({ zones }: { zones: Zone[] }) {
@@ -234,7 +234,7 @@ function CameraManagement({ zones }: { zones: Zone[] }) {
         <form onSubmit={handleAdd} className="pt-2 flex flex-col sm:flex-row items-end gap-3">
           <RetroInput
             label="Camera Name"
-            placeholder="e.g. CAM 04 — STOCKROOM"
+            placeholder="e.g. CAM 04 - STOCKROOM"
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
           />
@@ -264,7 +264,7 @@ function CameraManagement({ zones }: { zones: Zone[] }) {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   Section 2 — Zone Management
+   Section 2 - Zone Management
    ═══════════════════════════════════════════════════════════════ */
 
 function ZoneManagement({
@@ -412,7 +412,7 @@ function ZoneManagement({
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   Section 3 — Staff Shift Assignment
+   Section 3 - Staff Shift Assignment
    ═══════════════════════════════════════════════════════════════ */
 
 function StaffShifts({ zones }: { zones: Zone[] }) {
@@ -474,7 +474,7 @@ function StaffShifts({ zones }: { zones: Zone[] }) {
                       onChange={(e) => updateStaff(s.id, "zone", e.target.value)}
                       className="w-full min-w-[160px] rounded-md border-2 border-border-soft bg-surface px-2 py-1 font-body text-xs text-text shadow-[inset_1px_2px_4px_rgba(74,46,30,0.15)] focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/30 transition-colors"
                     >
-                      <option value="">— Select Zone —</option>
+                      <option value="">- Select Zone -</option>
                       {zones.map((z) => (
                         <option key={z.id} value={z.name}>
                           {z.name}
@@ -488,7 +488,7 @@ function StaffShifts({ zones }: { zones: Zone[] }) {
                       onChange={(e) => updateStaff(s.id, "shift", e.target.value)}
                       className="w-full min-w-[130px] rounded-md border-2 border-border-soft bg-surface px-2 py-1 font-body text-xs text-text shadow-[inset_1px_2px_4px_rgba(74,46,30,0.15)] focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/30 transition-colors"
                     >
-                      <option value="">— Select Shift —</option>
+                      <option value="">- Select Shift -</option>
                       {SHIFT_OPTIONS.map((sh) => (
                         <option key={sh} value={sh}>
                           {sh}
@@ -525,7 +525,7 @@ function StaffShifts({ zones }: { zones: Zone[] }) {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   Section 4 — Alert & Threshold Configuration
+   Section 4 - Alert & Threshold Configuration
    ═══════════════════════════════════════════════════════════════ */
 
 function AlertThresholds() {
@@ -558,7 +558,7 @@ function AlertThresholds() {
               onChange={(e) => setResponseTime(e.target.value)}
             />
             <p className="text-xs text-text-muted">
-              minutes — time to first approach
+              minutes - time to first approach
             </p>
             <p className="text-[10px] text-text-muted italic">
               Currently used as the target line on Employee Info.
@@ -650,7 +650,7 @@ function AlertThresholds() {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   Section 5 — User & Account Management
+   Section 5 - User & Account Management
    ═══════════════════════════════════════════════════════════════ */
 
 function AccountManagement() {
@@ -772,7 +772,7 @@ function AccountManagement() {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   Section 6 — Data & Privacy Settings
+   Section 6 - Data & Privacy Settings
    ═══════════════════════════════════════════════════════════════ */
 
 function DataPrivacy() {
@@ -787,7 +787,7 @@ function DataPrivacy() {
   return (
     <RetroWindow title="Data & Privacy">
       <div className="space-y-5">
-        {/* Anonymized tracking — locked ON */}
+        {/* Anonymized tracking - locked ON */}
         <RetroCard label="Anonymized Tracking">
           <div className="pt-2 flex items-start gap-3">
             {/* Locked toggle */}
@@ -799,7 +799,7 @@ function DataPrivacy() {
             </div>
             <div className="space-y-1">
               <p className="text-sm font-semibold text-text flex items-center gap-1.5">
-                🔒 Anonymized Customer Tracking — Always On
+                🔒 Anonymized Customer Tracking - Always On
               </p>
               <p className="text-xs text-text-muted leading-relaxed">
                 RetailPulse does not store facial recognition data or persistent
@@ -810,7 +810,7 @@ function DataPrivacy() {
           </div>
         </RetroCard>
 
-        {/* Data retention — configurable */}
+        {/* Data retention - configurable */}
         <RetroCard label="Data Retention">
           <div className="pt-2 space-y-2">
             <label className="block mb-1.5 font-heading text-xs font-semibold tracking-wide text-text-muted uppercase">

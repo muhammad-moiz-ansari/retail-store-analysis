@@ -71,9 +71,9 @@ const STAFF_IDLE = [
 ];
 
 const UNSTAFFED_ALERTS = [
-  { time: "10:15–10:57 AM", zone: "Aisle 2 — Beverages", duration: "42 min" },
+  { time: "10:15–10:57 AM", zone: "Aisle 2 - Beverages", duration: "42 min" },
   { time: "01:30–01:58 PM", zone: "Promo Display", duration: "28 min" },
-  { time: "03:45–04:22 PM", zone: "Aisle 1 — Snacks", duration: "37 min" },
+  { time: "03:45–04:22 PM", zone: "Aisle 1 - Snacks", duration: "37 min" },
 ];
 
 const HOURLY_DUAL = [
@@ -94,8 +94,8 @@ const HOURLY_DUAL = [
 
 const ZONE_BREAKDOWN = [
   { zone: "Entrance Lobby",     active: 82, idle: 18 },
-  { zone: "Aisle 1 — Snacks",   active: 61, idle: 39 },
-  { zone: "Aisle 2 — Beverages", active: 55, idle: 45 },
+  { zone: "Aisle 1 - Snacks",   active: 61, idle: 39 },
+  { zone: "Aisle 2 - Beverages", active: 55, idle: 45 },
   { zone: "Promo Display",       active: 70, idle: 30 },
   { zone: "Checkout Counter",    active: 91, idle: 9 },
 ];
@@ -158,7 +158,7 @@ export default function EmployeeInfoPage() {
 
 function PageHeader() {
   return (
-    <RetroWindow title="Employee Info — Staff Performance Today">
+    <RetroWindow title="Employee Info - Staff Performance Today">
       <p className="font-mono text-xs text-text-muted mb-5 tracking-wide">
         {formatDate()}
       </p>
@@ -211,7 +211,7 @@ function OverallPerformanceSection() {
             Today&apos;s Store Score
           </h3>
           <p className="text-xs text-text-muted mt-1 text-center max-w-[260px]">
-            Good — staff are engaging customers effectively.
+            Good - staff are engaging customers effectively.
           </p>
         </RetroCard>
 
@@ -250,7 +250,7 @@ function OverallPerformanceSection() {
           </div>
           <p className="text-[10px] text-text-muted mt-3 leading-relaxed">
             Scores are computed from: Approach Speed (30 pts max), Idle Time (25 pts max),
-            Interaction Duration (45 pts max). Used as manager decision-support — not an
+            Interaction Duration (45 pts max). Used as manager decision-support - not an
             automated verdict.
           </p>
         </RetroCard>
@@ -556,7 +556,7 @@ function IdleCoverageSection() {
         <RetroCard label="Unstaffed Zone Alerts">
           <div className="space-y-3">
             <p className="text-xs text-text-muted">
-              <span className="font-mono font-bold text-danger">3</span> coverage gaps today —
+              <span className="font-mono font-bold text-danger">3</span> coverage gaps today -
               totaling <span className="font-mono font-bold text-danger">1h 47m</span> of unstaffed floor time.
             </p>
 
@@ -651,7 +651,7 @@ function AdvancedChartsSection() {
               </LineChart>
             </ResponsiveContainer>
             <p className="text-[10px] text-text-muted mt-2 text-center">
-              Notice the inverse correlation — interactions dip when idle events rise during
+              Notice the inverse correlation - interactions dip when idle events rise during
               the midday lull (12 PM – 2 PM).
             </p>
           </div>
@@ -740,7 +740,7 @@ function InsightsSection() {
         <RetroCard label="Workload Distribution">
           <div className="space-y-4 py-2">
             <p className="text-xs text-text-muted">
-              Active hours per staff member — prolonged high activity may signal burnout risk.
+              Active hours per staff member - prolonged high activity may signal burnout risk.
             </p>
 
             <div className="space-y-3">
@@ -787,7 +787,7 @@ function InsightsSection() {
             </div>
 
             <p className="text-[10px] text-text-muted mt-2 leading-relaxed">
-              Workload flags are decision-support signals — consider rotation adjustments for
+              Workload flags are decision-support signals - consider rotation adjustments for
               staff flagged <span className="text-danger font-mono">High</span>.
             </p>
           </div>

@@ -64,7 +64,7 @@ export default function LoginPage() {
       />
 
       {/* ── Sign-in window ── */}
-      <RetroWindow title="RetailPulse — Sign In" className="w-full max-w-md relative z-10">
+      <RetroWindow title="RetailPulse - Sign In" className="w-full max-w-md relative z-10">
         <form onSubmit={handleSubmit} className="space-y-5" noValidate>
           {/* Logo */}
           <div className="flex justify-center pb-2">

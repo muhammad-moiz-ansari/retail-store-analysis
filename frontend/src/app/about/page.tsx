@@ -2,24 +2,24 @@ import React from "react";
 import { RetroWindow, RetroCard } from "@/components/ui";
 
 /* ═══════════════════════════════════════════════════════════════
-   About Page — /about
+   About Page - /about
    ═══════════════════════════════════════════════════════════════ */
 
 const VALUE_PROPS = [
   {
     label: "Customer Care",
     title: "Customer Care, Measured",
-    body: "Turn customer experience from a gut feeling into something your store can actually see and act on. RetailPulse tracks response times, flags unattended customers, and surfaces engagement quality — so you know exactly where service is strong and where it needs attention.",
+    body: "Turn customer experience from a gut feeling into something your store can actually see and act on. RetailPulse tracks response times, flags unattended customers, and surfaces engagement quality - so you know exactly where service is strong and where it needs attention.",
   },
   {
     label: "Oversight",
     title: "Effortless Oversight",
-    body: "Get clear visibility into staff performance and floor activity without asking anyone to sit and watch camera feeds all day. Managers see the information that matters — who's engaged, where gaps are forming, and how the floor is running — without the manual effort.",
+    body: "Get clear visibility into staff performance and floor activity without asking anyone to sit and watch camera feeds all day. Managers see the information that matters - who's engaged, where gaps are forming, and how the floor is running - without the manual effort.",
   },
   {
     label: "Insight",
     title: "Insight, Not Just Footage",
-    body: "Your security cameras are already a sunk cost. RetailPulse makes them earn their keep twice over — the same feeds used for loss prevention now answer \"how is my store actually doing,\" turning passive footage into an ongoing source of business intelligence.",
+    body: "Your security cameras are already a sunk cost. RetailPulse makes them earn their keep twice over - the same feeds used for loss prevention now answer \"how is my store actually doing,\" turning passive footage into an ongoing source of business intelligence.",
   },
 ];
 
@@ -28,7 +28,7 @@ const HOW_IT_WORKS = [
     step: "01",
     title: "Cameras Observe",
     description:
-      "Your existing security cameras capture the store floor as they always have — no new hardware, no extra installation, no disruption.",
+      "Your existing security cameras capture the store floor as they always have - no new hardware, no extra installation, no disruption.",
   },
   {
     step: "02",
@@ -40,13 +40,13 @@ const HOW_IT_WORKS = [
     step: "03",
     title: "Insights Are Summarised",
     description:
-      "Everything is distilled into a clear, at-a-glance dashboard — response times, flagged events, peak hours, and staff activity, all in one place.",
+      "Everything is distilled into a clear, at-a-glance dashboard - response times, flagged events, peak hours, and staff activity, all in one place.",
   },
   {
     step: "04",
     title: "Managers Act",
     description:
-      "Instead of guessing or relying on anecdotal reports, you make decisions backed by real signals from the floor — and you can spot problems before customers walk out.",
+      "Instead of guessing or relying on anecdotal reports, you make decisions backed by real signals from the floor - and you can spot problems before customers walk out.",
   },
 ];
 
@@ -66,7 +66,7 @@ export default function AboutPage() {
             </h1>
             <p className="text-text-muted leading-relaxed">
               RetailPulse converts a store&apos;s existing security camera infrastructure
-              into a customer care and staff performance analytics system — without
+              into a customer care and staff performance analytics system - without
               requiring a single piece of new hardware. If you can see the floor on a
               monitor, RetailPulse can tell you what&apos;s actually happening on it.
             </p>
