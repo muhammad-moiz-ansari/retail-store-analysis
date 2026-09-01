@@ -1,7 +1,8 @@
 "use client";
 
 import React from "react";
-import { Badge, RetroCard, RetroWindow } from "@/components/ui";
+import Link from "next/link";
+import { Badge, RetroButton, RetroCard, RetroWindow } from "@/components/ui";
 import {
   CartesianGrid,
   Line,
@@ -104,6 +105,9 @@ export default function EmployeeHomePage() {
                     </div>
                   ))}
                 </div>
+                <Link href="/my-performance" className="mt-6 inline-block">
+                  <RetroButton variant="secondary">View Full History →</RetroButton>
+                </Link>
               </RetroCard>
             </div>
 

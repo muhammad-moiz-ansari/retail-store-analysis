@@ -41,6 +41,7 @@ const AUTHENTICATED_ROUTES = [
   "/settings",
   "/employee",
   "/employee-home",
+  "/my-performance",
 ];
 
 export function Footer() {
@@ -56,6 +57,7 @@ export function Footer() {
     ? role === "Employee"
       ? [
           { label: "My Workspace", href: "/employee-home" },
+          { label: "My Performance", href: "/my-performance" },
           { label: "About", href: "/about" },
         ]
       : AUTHENTICATED_QUICK_LINKS

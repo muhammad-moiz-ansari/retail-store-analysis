@@ -42,6 +42,7 @@ const AUTHENTICATED_NAV_LINKS: NavLink[] = [
 
 const EMPLOYEE_NAV_LINKS: NavLink[] = [
   { label: "My Workspace", href: "/employee-home", employeeOnly: true },
+  { label: "My Performance", href: "/my-performance", employeeOnly: true },
   { label: "About", href: "/about" },
 ];
 

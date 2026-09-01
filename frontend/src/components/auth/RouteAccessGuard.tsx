@@ -13,7 +13,7 @@ const MANAGER_ROUTES = [
   "/reports",
   "/settings",
 ];
-const EMPLOYEE_ROUTES = ["/employee-home", "/employee"];
+const EMPLOYEE_ROUTES = ["/employee-home", "/my-performance", "/employee"];
 
 function matchesRoute(pathname: string, routes: string[]) {
   return routes.some((route) => pathname === route || pathname.startsWith(`${route}/`));
