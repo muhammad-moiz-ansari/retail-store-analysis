@@ -2,6 +2,15 @@
 
 import React from "react";
 import { Badge, RetroCard, RetroWindow } from "@/components/ui";
+import {
+  CartesianGrid,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 
 const SHIFT_OVERVIEW = [
   { label: "Shift", value: "9:00 AM – 6:00 PM", note: "Electronics floor" },
@@ -11,6 +20,22 @@ const SHIFT_OVERVIEW = [
     value: "12 customers",
     note: "4 flagged as strong engagement",
   },
+];
+
+const SCORE_BREAKDOWN = [
+  { label: "Approach Speed", score: 28, max: 30 },
+  { label: "Idle Time", score: 22, max: 25 },
+  { label: "Interaction Score", score: 37, max: 45 },
+];
+
+const WEEKLY_SCORES = [
+  { day: "Mon", score: 74 },
+  { day: "Tue", score: 79 },
+  { day: "Wed", score: 76 },
+  { day: "Thu", score: 81 },
+  { day: "Fri", score: 84 },
+  { day: "Sat", score: 85 },
+  { day: "Sun", score: 87 },
 ];
 
 export default function EmployeeHomePage() {
@@ -47,7 +72,134 @@ export default function EmployeeHomePage() {
             </RetroCard>
           ))}
         </section>
+
+        <section className="mt-12" aria-labelledby="performance-heading">
+          <RetroWindow title="My Performance">
+            <h2 id="performance-heading" className="sr-only">My Performance</h2>
+            <div className="grid gap-6 md:grid-cols-2">
+              <RetroCard className="flex flex-col items-center justify-center py-6 text-center">
+                <ScoreRing score={87} max={100} />
+                <h3 className="mt-4 font-heading text-base font-bold text-text">Today&apos;s Score</h3>
+                <p className="mt-1 max-w-sm text-sm leading-relaxed text-text-muted">
+                  Strong — you&apos;re approaching customers quickly and keeping interactions meaningful.
+                </p>
+              </RetroCard>
+
+              <RetroCard label="Score Breakdown" className="py-6">
+                <div className="space-y-5">
+                  {SCORE_BREAKDOWN.map((item) => (
+                    <div key={item.label}>
+                      <div className="flex items-baseline justify-between gap-4">
+                        <p className="font-heading text-sm font-semibold text-text">{item.label}</p>
+                        <p className="shrink-0 font-mono text-xs text-text-muted">
+                          {item.score} / {item.max}
+                        </p>
+                      </div>
+                      <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-border-soft/30">
+                        <div
+                          className="h-full rounded-full bg-accent"
+                          style={{ width: `${(item.score / item.max) * 100}%` }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </RetroCard>
+            </div>
+
+            <div className="mt-6 border-l-4 border-l-accent-soft bg-surface-alt/50 px-4 py-3 text-sm leading-relaxed text-text-muted">
+              This score reflects approach speed, idle time, and interaction duration from today&apos;s shift. It&apos;s a support tool for you and your manager — not an automatic judgment. Questions about your score? Talk to your floor lead.
+            </div>
+          </RetroWindow>
+        </section>
+
+        <section className="mt-12" aria-labelledby="trend-heading">
+          <RetroWindow title="Your Score This Week">
+            <h2 id="trend-heading" className="sr-only">Your Score This Week</h2>
+            <RetroCard>
+              <div className="h-[280px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={WEEKLY_SCORES} margin={{ top: 12, right: 12, left: -20, bottom: 0 }}>
+                    <CartesianGrid vertical={false} stroke="var(--color-border-soft)" strokeOpacity={0.25} />
+                    <XAxis
+                      dataKey="day"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: "var(--color-text-muted)", fontSize: 12, fontFamily: "var(--font-jetbrains-mono)" }}
+                    />
+                    <YAxis
+                      domain={[0, 100]}
+                      ticks={[0, 25, 50, 75, 100]}
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: "var(--color-text-muted)", fontSize: 12, fontFamily: "var(--font-jetbrains-mono)" }}
+                    />
+                    <Tooltip
+                      cursor={{ stroke: "var(--color-accent-soft)", strokeWidth: 1 }}
+                      contentStyle={{
+                        backgroundColor: "var(--color-surface)",
+                        border: "1px solid var(--color-border-soft)",
+                        borderRadius: "6px",
+                        color: "var(--color-text)",
+                        fontFamily: "var(--font-jetbrains-mono)",
+                        fontSize: "12px",
+                      }}
+                      formatter={(value) => [`${value} / 100`, "Score"]}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="score"
+                      stroke="var(--color-accent)"
+                      strokeWidth={3}
+                      dot={{ fill: "var(--color-accent)", r: 4 }}
+                      activeDot={{ r: 5 }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+              <p className="mt-4 font-mono text-xs font-semibold text-success">↑ 13 points since Monday — keep it up.</p>
+            </RetroCard>
+          </RetroWindow>
+        </section>
       </main>
+    </div>
+  );
+}
+
+function ScoreRing({ score, max }: { score: number; max: number }) {
+  const size = 160;
+  const strokeWidth = 12;
+  const radius = (size - strokeWidth) / 2;
+  const circumference = 2 * Math.PI * radius;
+
+  return (
+    <div className="relative" style={{ width: size, height: size }}>
+      <svg width={size} height={size} className="-rotate-90" aria-hidden="true">
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="none"
+          stroke="var(--color-border-soft)"
+          strokeWidth={strokeWidth}
+          strokeOpacity={0.3}
+        />
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="none"
+          stroke="var(--color-accent)"
+          strokeWidth={strokeWidth}
+          strokeLinecap="round"
+          strokeDasharray={circumference}
+          strokeDashoffset={circumference * (1 - score / max)}
+        />
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
+        <span className="font-mono text-4xl font-bold text-accent">{score}</span>
+        <span className="font-mono text-sm text-text-muted">/ {max}</span>
+      </div>
     </div>
   );
 }
