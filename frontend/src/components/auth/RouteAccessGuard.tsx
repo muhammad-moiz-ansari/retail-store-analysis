@@ -13,7 +13,7 @@ const MANAGER_ROUTES = [
   "/reports",
   "/settings",
 ];
-const EMPLOYEE_ROUTES = ["/employee"];
+const EMPLOYEE_ROUTES = ["/employee-home", "/employee"];
 
 function matchesRoute(pathname: string, routes: string[]) {
   return routes.some((route) => pathname === route || pathname.startsWith(`${route}/`));
@@ -32,7 +32,7 @@ export function RouteAccessGuard({ children }: { children: React.ReactNode }) {
     if (!authenticated) {
       router.replace("/login");
     } else if (needsManager && role !== "Manager") {
-      router.replace("/employee");
+      router.replace("/employee-home");
     } else if (needsEmployeeSession && role !== "Employee") {
       router.replace("/dashboard");
     }

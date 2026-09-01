@@ -6,7 +6,7 @@ import { Navbar } from "@/components/ui";
 import { useAuth } from "@/components/auth/AuthProvider";
 
 /** Routes where the user is considered authenticated (show role + Log Out) */
-const AUTHENTICATED_ROUTES = ["/dashboard", "/customer-info", "/employee-info", "/spatial-analytics", "/sales-trends", "/reports", "/settings", "/employee"];
+const AUTHENTICATED_ROUTES = ["/dashboard", "/customer-info", "/employee-info", "/spatial-analytics", "/sales-trends", "/reports", "/settings", "/employee", "/employee-home"];
 
 export function NavbarShell() {
   const pathname = usePathname();
