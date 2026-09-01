@@ -161,6 +161,47 @@ export default function EmployeeHomePage() {
             </RetroCard>
           </RetroWindow>
         </section>
+
+        <section className="mt-12" aria-label="Shift updates and zone assignment">
+          <div className="grid gap-6 md:grid-cols-2">
+            <RetroWindow title="Zone Assignment">
+              <div className="space-y-2">
+                <p className="font-heading text-lg font-semibold text-text">Electronics Floor</p>
+                <p className="text-sm text-text-muted">Assigned for this shift · 9:00 AM – 6:00 PM</p>
+                <div className="flex items-center gap-2 pt-3 text-sm text-text-muted">
+                  <span className="h-2 w-2 rounded-full bg-success" aria-hidden="true" />
+                  <span>Coverage status: <span className="font-medium text-success">Active</span></span>
+                </div>
+              </div>
+            </RetroWindow>
+
+            <RetroWindow title="Shift Updates">
+              <ul className="space-y-4">
+                <li className="flex gap-3 text-sm leading-relaxed text-text">
+                  <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" aria-hidden="true" />
+                  Keep the electronics demo table clear for the afternoon promotion.
+                </li>
+                <li className="flex gap-3 text-sm leading-relaxed text-text">
+                  <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" aria-hidden="true" />
+                  Ask a floor lead for assistance with returns over Rs. 10,000.
+                </li>
+                <li className="flex gap-3 text-sm leading-relaxed text-text">
+                  <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" aria-hidden="true" />
+                  Your break is scheduled for 2:30 PM.
+                </li>
+              </ul>
+            </RetroWindow>
+          </div>
+        </section>
+
+        <section className="mt-12" aria-label="Need help">
+          <RetroCard className="border-l-4 border-l-accent">
+            <p className="font-heading text-sm font-semibold text-text">Need help?</p>
+            <p className="mt-1 text-sm leading-relaxed text-text-muted">
+              Contact the floor lead for customer escalations, stock issues, or changes to your assigned area.
+            </p>
+          </RetroCard>
+        </section>
       </main>
     </div>
   );
