@@ -12,6 +12,7 @@ const MANAGER_ROUTES = [
   "/sales-trends",
   "/reports",
   "/settings",
+  "/alerts",
 ];
 const EMPLOYEE_ROUTES = ["/employee-home", "/my-performance", "/employee"];
 

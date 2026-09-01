@@ -175,7 +175,8 @@ export function Navbar({ authenticated = false, role = "Manager" }: NavbarProps)
         {/* ── Right: Auth Controls ── */}
         {authenticated ? (
           // Authenticated: Role Badge + Log Out
-          <div className="hidden min-[1090px]:flex items-center gap-3 xl:w-[200px] w-auto justify-end shrink-0">
+          <div className="hidden min-[1090px]:flex items-center gap-3 xl:w-[230px] w-auto justify-end shrink-0">
+            {role === "Manager" && <AlertsBell />}
             <Badge variant={role === "Manager" ? "accent" : "neutral"}>
               {role === "Employee" ? "Employee Access" : role}
             </Badge>
@@ -266,6 +267,7 @@ export function Navbar({ authenticated = false, role = "Manager" }: NavbarProps)
         {/* Auth Controls (mobile) */}
         {authenticated ? (
           <div className="py-3 px-5 border-t border-border-soft flex items-center justify-between gap-3">
+            {role === "Manager" && <AlertsBell />}
             <Badge variant={role === "Manager" ? "accent" : "neutral"}>
               {role === "Employee" ? "Employee Access" : role}
             </Badge>
@@ -289,6 +291,30 @@ export function Navbar({ authenticated = false, role = "Manager" }: NavbarProps)
         )}
       </div>
     </header>
+  );
+}
+
+function AlertsBell() {
+  return (
+    <Link
+      href="/alerts"
+      aria-label="View 5 active alerts"
+      className="relative flex h-9 w-9 items-center justify-center rounded-md border border-border bg-surface text-text transition-colors hover:bg-surface-alt"
+    >
+      <BellIcon />
+      <span className="absolute -right-2 -top-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-danger px-1 font-mono text-[9px] font-bold leading-none text-white">
+        5
+      </span>
+    </Link>
+  );
+}
+
+function BellIcon() {
+  return (
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" />
+      <path d="M10 21h4" />
+    </svg>
   );
 }
 

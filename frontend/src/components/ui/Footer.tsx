@@ -39,6 +39,7 @@ const AUTHENTICATED_ROUTES = [
   "/sales-trends",
   "/reports",
   "/settings",
+  "/alerts",
   "/employee",
   "/employee-home",
   "/my-performance",
