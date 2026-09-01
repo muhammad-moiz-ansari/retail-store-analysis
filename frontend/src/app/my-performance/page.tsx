@@ -82,18 +82,51 @@ const LAST_THIRTY_DAYS_SERIES = Array.from({ length: 30 }, (_, index) => {
   };
 });
 
+type DailyLog = {
+  date: string;
+  approach: number;
+  idle: number;
+  interaction: number;
+  total: number;
+  interactions: number;
+  shift: string;
+  zone: string;
+  flaggedMoments: string[];
+};
+
+const DAILY_LOGS: DailyLog[] = [
+  { date: "Aug 28", approach: 28, idle: 22, interaction: 37, total: 87, interactions: 14, shift: "9:00 AM – 6:00 PM", zone: "Electronics Floor", flaggedMoments: ["11:15 AM — 4m 20s idle, Electronics Floor"] },
+  { date: "Aug 27", approach: 26, idle: 20, interaction: 35, total: 81, interactions: 12, shift: "9:00 AM – 6:00 PM", zone: "Electronics Floor", flaggedMoments: ["2:40 PM — 3m 10s idle, Electronics Floor"] },
+  { date: "Aug 26", approach: 24, idle: 19, interaction: 32, total: 75, interactions: 11, shift: "9:00 AM – 6:00 PM", zone: "Mobile Accessories", flaggedMoments: ["4:05 PM — 5m 05s idle, Mobile Accessories"] },
+  { date: "Aug 25", approach: 29, idle: 23, interaction: 39, total: 91, interactions: 15, shift: "9:00 AM – 6:00 PM", zone: "Electronics Floor", flaggedMoments: [] },
+  { date: "Aug 24", approach: 27, idle: 21, interaction: 36, total: 84, interactions: 13, shift: "9:00 AM – 6:00 PM", zone: "Electronics Floor", flaggedMoments: ["1:20 PM — 3m 45s idle, Electronics Floor"] },
+  { date: "Aug 23", approach: 28, idle: 21, interaction: 36, total: 85, interactions: 14, shift: "10:00 AM – 7:00 PM", zone: "Electronics Floor", flaggedMoments: [] },
+  { date: "Aug 22", approach: 24, idle: 18, interaction: 32, total: 74, interactions: 10, shift: "10:00 AM – 7:00 PM", zone: "Home Appliances", flaggedMoments: ["12:10 PM — 4m 40s idle, Home Appliances", "4:30 PM — unattended customer alert, Home Appliances"] },
+  { date: "Aug 21", approach: 23, idle: 18, interaction: 31, total: 72, interactions: 9, shift: "9:00 AM – 6:00 PM", zone: "Home Appliances", flaggedMoments: ["3:05 PM — 4m 05s idle, Home Appliances"] },
+  { date: "Aug 20", approach: 25, idle: 19, interaction: 33, total: 77, interactions: 11, shift: "9:00 AM – 6:00 PM", zone: "Mobile Accessories", flaggedMoments: [] },
+  { date: "Aug 19", approach: 23, idle: 18, interaction: 31, total: 72, interactions: 9, shift: "10:00 AM – 7:00 PM", zone: "Electronics Floor", flaggedMoments: ["5:15 PM — 4m 30s idle, Electronics Floor"] },
+];
+
 function getSeries(dateRange: DateRange) {
   if (dateRange === "today") return TODAY_SERIES;
   if (dateRange === "last30") return LAST_THIRTY_DAYS_SERIES;
   return LAST_SEVEN_DAYS_SERIES;
 }
 
+function getDailyLogs(dateRange: DateRange) {
+  if (dateRange === "today") return DAILY_LOGS.slice(0, 1);
+  if (dateRange === "last30") return DAILY_LOGS;
+  return DAILY_LOGS.slice(0, 7);
+}
+
 export default function MyPerformancePage() {
   const [dateRange, setDateRange] = useState<DateRange>("last7");
   const [customFrom, setCustomFrom] = useState("");
   const [customTo, setCustomTo] = useState("");
+  const [expandedDate, setExpandedDate] = useState<string | null>(null);
   const summary = dateRange === "custom" ? PERIOD_SUMMARIES.last7 : PERIOD_SUMMARIES[dateRange];
   const series = getSeries(dateRange);
+  const dailyLogs = getDailyLogs(dateRange);
 
   return (
     <div className="min-h-screen bg-bg">
@@ -199,6 +232,91 @@ export default function MyPerformancePage() {
               </ChartFrame>
             </RetroCard>
           </RetroWindow>
+        </section>
+
+        <section aria-labelledby="daily-log-heading">
+          <RetroWindow title="Daily Log">
+            <h2 id="daily-log-heading" className="sr-only">Daily performance log</h2>
+            <RetroCard>
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[760px] text-sm">
+                  <thead>
+                    <tr className="border-b border-border-soft bg-surface-alt text-left">
+                      {['Date', 'Approach Speed', 'Idle Time', 'Interaction', 'Total', 'Interactions'].map((heading, index) => (
+                        <th key={heading} className={`px-3 py-2 font-mono text-[11px] font-semibold uppercase tracking-wider text-text-muted ${index > 0 ? 'text-right' : ''}`}>
+                          {heading}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {dailyLogs.map((log, index) => {
+                      const isExpanded = expandedDate === log.date;
+                      return (
+                        <React.Fragment key={log.date}>
+                          <tr
+                            role="button"
+                            tabIndex={0}
+                            aria-expanded={isExpanded}
+                            onClick={() => setExpandedDate(isExpanded ? null : log.date)}
+                            onKeyDown={(event) => {
+                              if (event.key === "Enter" || event.key === " ") {
+                                event.preventDefault();
+                                setExpandedDate(isExpanded ? null : log.date);
+                              }
+                            }}
+                            className={`cursor-pointer border-b border-border-soft/50 transition-colors hover:bg-surface ${index % 2 === 0 ? "bg-bg/30" : "bg-surface"}`}
+                          >
+                            <td className="px-3 py-3 font-mono text-text">{log.date}</td>
+                            <td className="px-3 py-3 text-right font-mono text-text-muted">{log.approach}</td>
+                            <td className="px-3 py-3 text-right font-mono text-text-muted">{log.idle}</td>
+                            <td className="px-3 py-3 text-right font-mono text-text-muted">{log.interaction}</td>
+                            <td className="px-3 py-3 text-right font-mono font-bold text-accent">{log.total}</td>
+                            <td className="px-3 py-3 text-right font-mono text-text-muted">{log.interactions}</td>
+                          </tr>
+                          <tr aria-hidden={!isExpanded}>
+                            <td colSpan={6} className="p-0">
+                              <div className={`overflow-hidden transition-all duration-300 ${isExpanded ? "max-h-64 border-b border-border-soft/50" : "max-h-0"}`}>
+                                <div className="grid gap-4 bg-surface-alt/40 px-4 py-4 sm:grid-cols-2">
+                                  <div>
+                                    <p className="font-mono text-[10px] font-semibold uppercase tracking-wider text-text-muted">Shift details</p>
+                                    <p className="mt-1 text-sm text-text"><span className="font-medium">Shift:</span> {log.shift}</p>
+                                    <p className="mt-1 text-sm text-text"><span className="font-medium">Zone:</span> {log.zone}</p>
+                                  </div>
+                                  <div>
+                                    <p className="font-mono text-[10px] font-semibold uppercase tracking-wider text-text-muted">Flagged moments</p>
+                                    {log.flaggedMoments.length > 0 ? (
+                                      <ul className="mt-2 space-y-2">
+                                        {log.flaggedMoments.map((moment) => (
+                                          <li key={moment} className="border-l-4 border-l-accent-soft bg-surface px-3 py-2 text-xs leading-relaxed text-text-muted">
+                                            {moment}
+                                          </li>
+                                        ))}
+                                      </ul>
+                                    ) : (
+                                      <p className="mt-1 text-sm text-text-muted">No flagged idle or unattended moments.</p>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            </td>
+                          </tr>
+                        </React.Fragment>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </RetroCard>
+          </RetroWindow>
+        </section>
+
+        <section aria-label="Performance data context">
+          <RetroCard className="border-l-4 border-l-accent-soft">
+            <p className="text-sm leading-relaxed text-text-muted">
+              Your performance data is visible only to you and your manager. If a number looks off, or a shift wasn&apos;t logged correctly, talk to your floor lead — this system supports conversations, it doesn&apos;t replace them.
+            </p>
+          </RetroCard>
         </section>
       </main>
     </div>
