@@ -533,6 +533,21 @@ export default function DashboardPage() {
               </div>
             </RetroWindow>
           </div>
+
+          <RetroCard className="mt-6 border-l-4 border-l-accent">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-heading text-sm font-semibold text-text">Compare people counts</p>
+                <p className="mt-1 text-sm text-text-muted">Analyze and compare people counts between two video feeds.</p>
+              </div>
+              <a
+                href="/compare-people"
+                className="ml-4 shrink-0 rounded-md bg-accent px-4 py-2 font-heading text-sm font-semibold text-surface hover:bg-accent-hover transition-colors"
+              >
+                Compare
+              </a>
+            </div>
+          </RetroCard>
         </section>
       </main>
 

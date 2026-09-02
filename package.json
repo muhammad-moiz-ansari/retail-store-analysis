@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "PYTHON_BIN=./.venv/bin/python next dev frontend",
-    "build": "PYTHON_BIN=./.venv/bin/python next build frontend",
-    "start": "PYTHON_BIN=./.venv/bin/python next start frontend",
+    "dev": "set \"PYTHON_BIN=python\" && next dev frontend",
+    "build": "set \"PYTHON_BIN=python\" && next build frontend",
+    "start": "set \"PYTHON_BIN=python\" && next start frontend",
     "lint": "eslint frontend --config ./eslint.config.mjs"
   },
   "dependencies": {

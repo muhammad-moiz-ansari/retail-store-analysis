@@ -4,14 +4,17 @@ import React, { useState, FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { RetroWindow, RetroInput, RetroButton, Logo } from "@/components/ui";
+import { useAuth, type UserRole } from "@/components/auth/AuthProvider";
 
 export default function LoginPage() {
   const router = useRouter();
+  const { signIn } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
   const [submitting, setSubmitting] = useState(false);
+  const [role, setRole] = useState<UserRole>("Employee");
 
   function validate() {
     const next: typeof errors = {};
@@ -35,7 +38,8 @@ export default function LoginPage() {
 
     // Simulate brief delay then navigate
     setTimeout(() => {
-      router.push("/dashboard");
+      signIn(role);
+      router.push(role === "Manager" ? "/dashboard" : "/employee");
     }, 400);
   }
 
@@ -96,6 +100,27 @@ export default function LoginPage() {
             helperText={errors.password}
             autoComplete="current-password"
           />
+
+          <div>
+            <span className="block mb-1.5 font-heading text-xs font-semibold tracking-wide text-text-muted uppercase">
+              Access level
+            </span>
+            <div className="flex overflow-hidden rounded-md border-2 border-border">
+              {(["Employee", "Manager"] as UserRole[]).map((option) => (
+                <button
+                  key={option}
+                  type="button"
+                  onClick={() => setRole(option)}
+                  className={`flex-1 px-4 py-2 font-heading text-sm font-semibold transition-colors ${role === option ? "bg-accent text-surface" : "bg-surface text-text hover:bg-surface-alt"}`}
+                >
+                  {option}
+                </button>
+              ))}
+            </div>
+            <p className="mt-1.5 text-xs text-text-muted">
+              Demo role selection for this frontend prototype.
+            </p>
+          </div>
 
           {/* Submit */}
           <RetroButton

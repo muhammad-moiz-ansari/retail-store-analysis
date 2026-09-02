@@ -1,6 +1,6 @@
 {
-  "video1": "/home/mosaq/HF_CAV_CV/ShopAssistant1cor.mp4",
-  "video2": "/home/mosaq/HF_CAV_CV/OneShopOneWait1cor.mp4",
+  "video1": "/home/mosaq/retail-store-analysis/backend/videos/ShopAssistant1cor.mp4",
+  "video2": "/home/mosaq/retail-store-analysis/backend/videos/OneShopOneWait1cor.mp4",
   "frame_interval": 30,
   "num_samples": 46,
   "valid_samples": 46,

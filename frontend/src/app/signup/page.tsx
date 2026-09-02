@@ -9,11 +9,13 @@ import {
   RetroButton,
   Logo,
 } from "@/components/ui";
+import { useAuth } from "@/components/auth/AuthProvider";
 
 type Role = "manager" | "employee";
 
 export default function SignupPage() {
   const router = useRouter();
+  const { signIn } = useAuth();
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -51,7 +53,9 @@ export default function SignupPage() {
     console.log("Signup →", { name, email, password, role });
 
     setTimeout(() => {
-      router.push("/dashboard");
+      const selectedRole = role === "manager" ? "Manager" : "Employee";
+      signIn(selectedRole);
+      router.push(selectedRole === "Manager" ? "/dashboard" : "/employee");
     }, 400);
   }
 
