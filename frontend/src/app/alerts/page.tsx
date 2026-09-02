@@ -165,13 +165,21 @@ export default function AlertsPage() {
 
 function AlertFeedCard({ alert }: { alert: Alert }) {
   const isResolved = alert.status === "resolved";
+  const severityLabel = alert.severity === "high" ? "HIGH" : alert.severity === "medium" ? "MEDIUM" : "LOW";
+
   return (
-    <RetroCard className={`${isResolved ? "opacity-60" : `border-l-4 ${SEVERITY_BARS[alert.severity]}`} transition-opacity duration-300`}>
+    <RetroCard
+      className={`${isResolved ? "opacity-60" : `border-l-4 ${SEVERITY_BARS[alert.severity]}`} transition-opacity duration-300`}
+      aria-label={`${severityLabel} alert: ${alert.title}`}
+    >
       <div className="flex flex-col gap-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <span className={`rounded-full border px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wider ${CATEGORY_STYLES[alert.category]}`}>
-            {alert.category}
-          </span>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className={`rounded-full border px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wider ${CATEGORY_STYLES[alert.category]}`}>
+              {alert.category}
+            </span>
+            {!isResolved && <span className="font-mono text-[10px] font-semibold uppercase tracking-wider text-text-muted">{severityLabel}</span>}
+          </div>
           <span className="font-mono text-xs text-text-muted">{alert.timestamp}</span>
         </div>
         <div>
@@ -184,7 +192,7 @@ function AlertFeedCard({ alert }: { alert: Alert }) {
           </p>
         ) : (
           <div className="flex flex-wrap items-center gap-4">
-            <RetroButton type="button" variant="secondary" className="!px-3 !py-1.5 !text-xs">Mark Resolved</RetroButton>
+            <RetroButton type="button" variant="secondary" className="!px-3 !py-1.5 !text-xs" aria-label={`Mark ${alert.title} as resolved`}>Mark Resolved</RetroButton>
             <Link href={alert.href} className="text-sm font-semibold text-accent underline underline-offset-2 transition-colors hover:text-accent-hover">
               View Details →
             </Link>
