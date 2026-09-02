@@ -54,6 +54,7 @@ const SEVERITY_BARS: Record<AlertSeverity, string> = {
 };
 
 export default function AlertsPage() {
+  const [alerts, setAlerts] = useState<Alert[]>(ALERTS);
   const [selectedCategories, setSelectedCategories] = useState<Category[]>(CATEGORIES);
   const [status, setStatus] = useState<Status>("active");
   const [sortOrder, setSortOrder] = useState<SortOrder>("recent");
@@ -66,7 +67,19 @@ export default function AlertsPage() {
     );
   }
 
-  const filteredAlerts = ALERTS
+  function markResolved(id: number) {
+    setAlerts((current) => current.map((alert) =>
+      alert.id === id ? { ...alert, status: "resolved", resolvedBy: "Staff 05" } : alert
+    ));
+  }
+
+  function clearFilters() {
+    setSelectedCategories(CATEGORIES);
+    setStatus("active");
+    setSortOrder("recent");
+  }
+
+  const filteredAlerts = alerts
     .filter((alert) => selectedCategories.includes(alert.category))
     .filter((alert) => status === "all" || alert.status === status)
     .sort((first, second) => {
@@ -155,7 +168,18 @@ export default function AlertsPage() {
         <section aria-labelledby="alert-feed-heading">
           <h2 id="alert-feed-heading" className="sr-only">Alert feed</h2>
           <div className="space-y-3">
-            {filteredAlerts.map((alert) => <AlertFeedCard key={alert.id} alert={alert} />)}
+            {filteredAlerts.length > 0 ? (
+              filteredAlerts.map((alert) => (
+                <AlertFeedCard key={alert.id} alert={alert} onResolve={markResolved} />
+              ))
+            ) : (
+              <RetroCard className="flex flex-col items-center justify-center gap-4 py-12 text-center">
+                <p className="font-heading text-base font-semibold text-text">No alerts match your current filters.</p>
+                <RetroButton type="button" variant="secondary" className="!px-3 !py-1.5 !text-xs" onClick={clearFilters}>
+                  Clear Filters
+                </RetroButton>
+              </RetroCard>
+            )}
           </div>
         </section>
       </main>
@@ -163,7 +187,7 @@ export default function AlertsPage() {
   );
 }
 
-function AlertFeedCard({ alert }: { alert: Alert }) {
+function AlertFeedCard({ alert, onResolve }: { alert: Alert; onResolve: (id: number) => void }) {
   const isResolved = alert.status === "resolved";
   const severityLabel = alert.severity === "high" ? "HIGH" : alert.severity === "medium" ? "MEDIUM" : "LOW";
 
@@ -192,7 +216,7 @@ function AlertFeedCard({ alert }: { alert: Alert }) {
           </p>
         ) : (
           <div className="flex flex-wrap items-center gap-4">
-            <RetroButton type="button" variant="secondary" className="!px-3 !py-1.5 !text-xs" aria-label={`Mark ${alert.title} as resolved`}>Mark Resolved</RetroButton>
+            <RetroButton type="button" variant="secondary" className="!px-3 !py-1.5 !text-xs" aria-label={`Mark ${alert.title} as resolved`} onClick={() => onResolve(alert.id)}>Mark Resolved</RetroButton>
             <Link href={alert.href} className="text-sm font-semibold text-accent underline underline-offset-2 transition-colors hover:text-accent-hover">
               View Details →
             </Link>
