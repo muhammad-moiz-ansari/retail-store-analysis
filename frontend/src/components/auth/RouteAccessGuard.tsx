@@ -15,6 +15,7 @@ const MANAGER_ROUTES = [
   "/alerts",
 ];
 const EMPLOYEE_ROUTES = ["/employee-home", "/my-performance", "/employee"];
+const SHARED_AUTHENTICATED_ROUTES = ["/profile"];
 
 function matchesRoute(pathname: string, routes: string[]) {
   return routes.some((route) => pathname === route || pathname.startsWith(`${route}/`));
@@ -26,7 +27,8 @@ export function RouteAccessGuard({ children }: { children: React.ReactNode }) {
   const { ready, authenticated, role } = useAuth();
   const needsManager = matchesRoute(pathname, MANAGER_ROUTES);
   const needsEmployeeSession = matchesRoute(pathname, EMPLOYEE_ROUTES);
-  const protectedRoute = needsManager || needsEmployeeSession;
+  const needsAuthenticatedSession = matchesRoute(pathname, SHARED_AUTHENTICATED_ROUTES);
+  const protectedRoute = needsManager || needsEmployeeSession || needsAuthenticatedSession;
 
   useEffect(() => {
     if (!ready || !protectedRoute) return;
@@ -43,7 +45,9 @@ export function RouteAccessGuard({ children }: { children: React.ReactNode }) {
     !protectedRoute ||
     (ready &&
       authenticated &&
-      ((needsManager && role === "Manager") || (needsEmployeeSession && role === "Employee")));
+      (needsAuthenticatedSession ||
+        (needsManager && role === "Manager") ||
+        (needsEmployeeSession && role === "Employee")));
 
   if (!mayView) {
     return <div className="flex-1 bg-bg" aria-live="polite" aria-label="Checking access" />;

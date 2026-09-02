@@ -51,6 +51,7 @@ export function Navbar({ authenticated = false, role = "Manager" }: NavbarProps)
   const router = useRouter();
   const { signOut } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [indicatorStyle, setIndicatorStyle] = useState({ left: 0, width: 0 });
   const [showTransition, setShowTransition] = useState(false);
   const linkRefs = useRef<(HTMLAnchorElement | null)[]>([]);
@@ -71,6 +72,7 @@ export function Navbar({ authenticated = false, role = "Manager" }: NavbarProps)
   function handleSignOut() {
     signOut();
     setMobileMenuOpen(false);
+    setProfileMenuOpen(false);
     router.push("/");
   }
 
@@ -177,9 +179,7 @@ export function Navbar({ authenticated = false, role = "Manager" }: NavbarProps)
           // Authenticated: Role Badge + Log Out
           <div className="hidden min-[1090px]:flex items-center gap-3 xl:w-[230px] w-auto justify-end shrink-0">
             {role === "Manager" && <AlertsBell />}
-            <Badge variant={role === "Manager" ? "accent" : "neutral"}>
-              {role === "Employee" ? "Employee Access" : role}
-            </Badge>
+            <ProfileMenu role={role} open={profileMenuOpen} onToggle={() => setProfileMenuOpen((open) => !open)} onSignOut={handleSignOut} />
             <RetroButton onClick={handleSignOut} variant="secondary" className="!px-3 !py-1.5 !text-xs">
               Log Out
             </RetroButton>
@@ -268,9 +268,7 @@ export function Navbar({ authenticated = false, role = "Manager" }: NavbarProps)
         {authenticated ? (
           <div className="py-3 px-5 border-t border-border-soft flex items-center justify-between gap-3">
             {role === "Manager" && <AlertsBell />}
-            <Badge variant={role === "Manager" ? "accent" : "neutral"}>
-              {role === "Employee" ? "Employee Access" : role}
-            </Badge>
+            <ProfileMenu role={role} open={profileMenuOpen} onToggle={() => setProfileMenuOpen((open) => !open)} onSignOut={handleSignOut} />
             <RetroButton onClick={handleSignOut} variant="secondary" className="!px-3 !py-1.5 !text-xs">
               Log Out
             </RetroButton>
@@ -306,6 +304,45 @@ function AlertsBell() {
         5
       </span>
     </Link>
+  );
+}
+
+function ProfileMenu({
+  role,
+  open,
+  onToggle,
+  onSignOut,
+}: {
+  role: "Manager" | "Employee";
+  open: boolean;
+  onToggle: () => void;
+  onSignOut: () => void;
+}) {
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-expanded={open}
+        aria-haspopup="menu"
+        aria-label="Open account menu"
+        className="cursor-pointer rounded-full focus:outline-none focus:ring-2 focus:ring-accent"
+      >
+        <Badge variant={role === "Manager" ? "accent" : "neutral"}>
+          {role === "Employee" ? "Employee Access" : role}
+        </Badge>
+      </button>
+      {open && (
+        <div className="absolute right-0 top-full z-50 mt-2 min-w-40 rounded-md border-2 border-border bg-surface p-1 shadow-[3px_3px_0px_rgba(74,46,30,0.25)]" role="menu">
+          <Link href="/profile" onClick={() => onToggle()} className="block rounded px-3 py-2 text-sm font-medium text-text hover:bg-surface-alt" role="menuitem">
+            Edit Profile
+          </Link>
+          <button type="button" onClick={onSignOut} className="block w-full cursor-pointer rounded px-3 py-2 text-left text-sm font-medium text-text hover:bg-surface-alt" role="menuitem">
+            Log Out
+          </button>
+        </div>
+      )}
+    </div>
   );
 }
 
