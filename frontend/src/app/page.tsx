@@ -97,7 +97,6 @@ export default function LandingPage() {
             <RetroCard>
               <p className="text-sm text-text leading-relaxed">
                 Managers can't tell if customers are actually being helped - or
-                Managers can't tell if customers are actually being helped - or
                 just wandering, unattended, until they leave.
               </p>
             </RetroCard>
@@ -140,7 +139,6 @@ export default function LandingPage() {
                 num: "01",
                 title: "Observe",
                 desc: "Existing CCTV cameras - entrance and floor - feed the system in real time.",
-                desc: "Existing CCTV cameras - entrance and floor - feed the system in real time.",
               },
               {
                 num: "02",
@@ -150,7 +148,6 @@ export default function LandingPage() {
               {
                 num: "03",
                 title: "Summarize",
-                desc: "Insights are organized into a live dashboard - no manual review of raw footage required.",
                 desc: "Insights are organized into a live dashboard - no manual review of raw footage required.",
               },
               {
@@ -248,7 +245,6 @@ export default function LandingPage() {
                   Spatial Analytics & Heatmaps
                 </h3>
                 <p className="text-sm text-text-muted leading-relaxed">
-                  Movement and zone insight - see where customers spend time
                   Movement and zone insight - see where customers spend time
                   and where they don't.
                 </p>
