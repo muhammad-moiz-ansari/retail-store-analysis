@@ -11,6 +11,8 @@ interface CRTFrameProps {
   videoSrc?: string;
   /** Whether the camera has a signal - false shows a retro "NO SIGNAL" screen (default true) */
   signal?: boolean;
+  /** Show video controls (play/pause, volume, etc) */
+  controls?: boolean;
   children?: React.ReactNode;
   className?: string;
 }
@@ -27,36 +29,30 @@ function NoSignalScreen() {
 }
 
 /** Autoplay-safe video player - works around React's muted attribute bug */
-function AutoplayVideo({ src, className }: { src: string; className?: string }) {
+function AutoplayVideo({ src, className, controls = false }: { src: string; className?: string; controls?: boolean }) {
   const ref = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
+    if (controls) return; // Don't autoplay when controls are shown
     const el = ref.current;
     if (!el) return;
 
-    // Explicitly set muted as a DOM property before trying to play.
     el.defaultMuted = true;
     el.muted = true;
 
-    // Some browsers need a slight delay or a distinct user interaction.
-    // Try to play immediately.
-    const attemptPlay = () => {
-      el.play().catch(error => {
-        console.warn("Video autoplay blocked:", error);
-      });
-    };
-
-    attemptPlay();
-  }, []);
+    el.play().catch(error => {
+      console.warn("Video autoplay blocked:", error);
+    });
+  }, [controls]);
 
   return (
     <video
       ref={ref}
-      autoPlay
-      loop
-      muted
+      autoPlay={!controls}
+      loop={!controls}
+      muted={!controls}
       playsInline
-      controls={false}
+      controls={controls}
       preload="auto"
       className={className}
       suppressHydrationWarning
@@ -71,6 +67,7 @@ export function CRTFrame({
   live = false,
   videoSrc,
   signal = true,
+  controls = false,
   children,
   className = "",
 }: CRTFrameProps) {
@@ -78,7 +75,7 @@ export function CRTFrame({
   const screenContent = !signal ? (
     <NoSignalScreen />
   ) : videoSrc ? (
-    <AutoplayVideo src={videoSrc} className="w-full aspect-video object-cover min-h-[160px]" />
+    <AutoplayVideo src={videoSrc} className="w-full aspect-video object-cover min-h-[160px]" controls={controls} />
   ) : (
     children
   );

@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useMemo, useState } from "react";
+import { CRTFrame } from "@/components/ui/CRTFrame";
 
 type ComparisonResult = {
   video1: string;
@@ -22,20 +23,36 @@ type ComparisonResult = {
   }>;
 };
 
-const defaultVideo1 = "/home/mosaq/HF_CAV_CV/ShopAssistant1cor.mp4";
-const defaultVideo2 = "/home/mosaq/HF_CAV_CV/OneShopOneWait1cor.mp4";
+const defaultVideo1 = "Camera A - Floor View";
+const defaultVideo2 = "Camera B - Checkout View";
+
+const sampleResult: ComparisonResult = {
+  video1: defaultVideo1,
+  video2: defaultVideo2,
+  frame_interval: 30,
+  num_samples: 5,
+  valid_samples: 5,
+  common_frames: 4500,
+  totals: { video1: 18, video2: 12 },
+  averages: { video1: 3.6, video2: 2.4 },
+  samples: [
+    { sample: 1, frame: 0, timestamp_s: 0.0, v1_count: 4, v2_count: 2, diff: 2, verdict: "V2 needs +2" },
+    { sample: 2, frame: 30, timestamp_s: 1.0, v1_count: 3, v2_count: 3, diff: 0, verdict: "Equal" },
+    { sample: 3, frame: 60, timestamp_s: 2.0, v1_count: 5, v2_count: 2, diff: 3, verdict: "V2 needs +3" },
+    { sample: 4, frame: 90, timestamp_s: 3.0, v1_count: 2, v2_count: 3, diff: -1, verdict: "V1 needs +1" },
+    { sample: 5, frame: 120, timestamp_s: 4.0, v1_count: 4, v2_count: 2, diff: 2, verdict: "V2 needs +2" },
+  ],
+};
 
 export default function ComparePeoplePage() {
   const [video1, setVideo1] = useState(defaultVideo1);
   const [video2, setVideo2] = useState(defaultVideo2);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [result, setResult] = useState<ComparisonResult | null>(null);
-  const [outputLog, setOutputLog] = useState("");
+  const [result, setResult] = useState<ComparisonResult>(sampleResult);
+  const [outputLog, setOutputLog] = useState("Showing sample output");
 
   const summary = useMemo(() => {
-    if (!result) return null;
-
     return {
       totalVideo1: result.totals.video1,
       totalVideo2: result.totals.video2,
@@ -50,71 +67,17 @@ export default function ComparePeoplePage() {
     event.preventDefault();
     setLoading(true);
     setError("");
-    setOutputLog("");
-    setResult(null);
 
-    try {
-      const response = await fetch("/api/compare-people", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ video1, video2, frameInterval: 30 }),
+    // Sample output for demo
+    setTimeout(() => {
+      setResult({
+        ...sampleResult,
+        video1,
+        video2,
       });
-
-      if (!response.ok || !response.body) {
-        const payload = await response.json().catch(() => ({}));
-        const message = payload.error || "Comparison failed";
-        setOutputLog(payload.output || message);
-        throw new Error(message);
-      }
-
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let partial = "";
-
-      while (true) {
-        const { value, done } = await reader.read();
-        if (done) break;
-
-        partial += decoder.decode(value, { stream: true });
-
-        const chunks = partial.split("\n\n");
-        partial = chunks.pop() ?? "";
-
-        for (const chunk of chunks) {
-          const lines = chunk.split("\n").filter(Boolean);
-          const eventLine = lines.find((line) => line.startsWith("event:"));
-          const dataLine = lines.find((line) => line.startsWith("data:"));
-
-          if (!eventLine || !dataLine) continue;
-
-          const event = eventLine.replace("event:", "").trim();
-          const payload = JSON.parse(dataLine.replace("data:", "").trim()) as {
-            text?: string;
-            data?: ComparisonResult;
-            message?: string;
-            output?: string;
-          };
-
-          if (event === "log" && payload.text) {
-            setOutputLog((prev) => `${prev}${payload.text}`);
-          }
-
-          if (event === "result" && payload.data) {
-            setResult(payload.data);
-          }
-
-          if (event === "error") {
-            setError(payload.message || "Comparison failed");
-            setOutputLog((prev) => `${prev}${payload.output || payload.message || ""}`);
-          }
-        }
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Unexpected error");
-      setResult(null);
-    } finally {
+      setOutputLog("Comparison completed (sample output)");
       setLoading(false);
-    }
+    }, 500);
   }
 
   return (
@@ -171,69 +134,63 @@ export default function ComparePeoplePage() {
         </div>
       )}
 
-      {outputLog && (
-        <section className="mt-6 rounded-xl border border-border-soft bg-surface p-4">
-          <h2 className="mb-3 font-heading text-lg font-bold text-text">Terminal output</h2>
-          <pre className="max-h-80 overflow-auto whitespace-pre-wrap break-words font-mono text-xs leading-6 text-text-muted">
-            {outputLog}
-          </pre>
-        </section>
-      )}
+      <section className="mt-8 space-y-6">
+        <div className="grid gap-4 md:grid-cols-2">
+          <CRTFrame label={result.video1} videoSrc="/videos/cam1.mp4" signal />
+          <CRTFrame label={result.video2} videoSrc="/videos/cam2.mp4" signal />
+        </div>
 
-      {summary && (
-        <section className="mt-8 space-y-6">
-          <div className="grid gap-4 md:grid-cols-4">
-            <div className="rounded-lg border border-border-soft bg-surface p-4">
-              <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-text-muted">Valid samples</div>
-              <div className="mt-2 text-2xl font-bold text-text">{summary.validSamples}</div>
-            </div>
-            <div className="rounded-lg border border-border-soft bg-surface p-4">
-              <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-text-muted">Video 1 total</div>
-              <div className="mt-2 text-2xl font-bold text-text">{summary.totalVideo1}</div>
-            </div>
-            <div className="rounded-lg border border-border-soft bg-surface p-4">
-              <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-text-muted">Video 2 total</div>
-              <div className="mt-2 text-2xl font-bold text-text">{summary.totalVideo2}</div>
-            </div>
-            <div className="rounded-lg border border-border-soft bg-surface p-4">
-              <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-text-muted">Common frames</div>
-              <div className="mt-2 text-2xl font-bold text-text">{summary.commonFrames}</div>
-            </div>
+        <div className="grid gap-4 md:grid-cols-4">
+          <div className="rounded-lg border border-border-soft bg-surface p-4">
+            <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-text-muted">Valid samples</div>
+            <div className="mt-2 text-2xl font-bold text-text">{summary.validSamples}</div>
           </div>
+          <div className="rounded-lg border border-border-soft bg-surface p-4">
+            <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-text-muted">Video 1 total</div>
+            <div className="mt-2 text-2xl font-bold text-text">{summary.totalVideo1}</div>
+          </div>
+          <div className="rounded-lg border border-border-soft bg-surface p-4">
+            <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-text-muted">Video 2 total</div>
+            <div className="mt-2 text-2xl font-bold text-text">{summary.totalVideo2}</div>
+          </div>
+          <div className="rounded-lg border border-border-soft bg-surface p-4">
+            <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-text-muted">Common frames</div>
+            <div className="mt-2 text-2xl font-bold text-text">{summary.commonFrames}</div>
+          </div>
+        </div>
 
-          <div className="rounded-xl border border-border-soft bg-surface p-4">
-            <h2 className="mb-4 font-heading text-lg font-bold text-text">Comparison output</h2>
-            <div className="overflow-x-auto">
-              <table className="min-w-full border-collapse text-left text-sm">
-                <thead>
-                  <tr className="border-b border-border-soft text-text-muted">
-                    <th className="px-3 py-2 font-mono text-[10px] uppercase tracking-[0.2em]">Sample</th>
-                    <th className="px-3 py-2 font-mono text-[10px] uppercase tracking-[0.2em]">Time (s)</th>
-                    <th className="px-3 py-2 font-mono text-[10px] uppercase tracking-[0.2em]">V1</th>
-                    <th className="px-3 py-2 font-mono text-[10px] uppercase tracking-[0.2em]">V2</th>
-                    <th className="px-3 py-2 font-mono text-[10px] uppercase tracking-[0.2em]">Diff</th>
-                    <th className="px-3 py-2 font-mono text-[10px] uppercase tracking-[0.2em]">Verdict</th>
+        <div className="rounded-xl border border-border-soft bg-surface p-4">
+          <h2 className="mb-4 font-heading text-lg font-bold text-text">Comparison output</h2>
+          <div className="overflow-x-auto">
+            <table className="min-w-full border-collapse text-left text-sm">
+              <thead>
+                <tr className="border-b border-border-soft text-text-muted">
+                  <th className="px-3 py-2 font-mono text-[10px] uppercase tracking-[0.2em]">Sample</th>
+                  <th className="px-3 py-2 font-mono text-[10px] uppercase tracking-[0.2em]">Time (s)</th>
+                  <th className="px-3 py-2 font-mono text-[10px] uppercase tracking-[0.2em]">V1</th>
+                  <th className="px-3 py-2 font-mono text-[10px] uppercase tracking-[0.2em]">V2</th>
+                  <th className="px-3 py-2 font-mono text-[10px] uppercase tracking-[0.2em]">Diff</th>
+                  <th className="px-3 py-2 font-mono text-[10px] uppercase tracking-[0.2em]">Verdict</th>
+                </tr>
+              </thead>
+              <tbody>
+                {result.samples.map((sample) => (
+                  <tr key={sample.sample} className="border-b border-border-soft/70">
+                    <td className="px-3 py-2 text-text">{sample.sample}</td>
+                    <td className="px-3 py-2 text-text">{sample.timestamp_s.toFixed(1)}</td>
+                    <td className="px-3 py-2 text-text">{sample.v1_count}</td>
+                    <td className="px-3 py-2 text-text">{sample.v2_count}</td>
+                    <td className={`px-3 py-2 font-semibold ${sample.diff > 0 ? "text-accent" : sample.diff < 0 ? "text-danger" : "text-text"}`}>
+                      {sample.diff}
+                    </td>
+                    <td className="px-3 py-2 text-text-muted">{sample.verdict}</td>
                   </tr>
-                </thead>
-                <tbody>
-                  {result?.samples.map((sample) => (
-                    <tr key={sample.sample} className="border-b border-border-soft/70">
-                      <td className="px-3 py-2 text-text">{sample.sample}</td>
-                      <td className="px-3 py-2 text-text">{sample.timestamp_s.toFixed(1)}</td>
-                      <td className="px-3 py-2 text-text">{sample.v1_count}</td>
-                      <td className="px-3 py-2 text-text">{sample.v2_count}</td>
-                      <td className={`px-3 py-2 font-semibold ${sample.diff > 0 ? "text-accent" : sample.diff < 0 ? "text-danger" : "text-text"}`}>
-                        {sample.diff}
-                      </td>
-                      <td className="px-3 py-2 text-text-muted">{sample.verdict}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                ))}
+              </tbody>
+            </table>
           </div>
-        </section>
-      )}
+        </div>
+      </section>
     </main>
   );
 }
