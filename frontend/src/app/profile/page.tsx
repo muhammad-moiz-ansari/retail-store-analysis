@@ -1,6 +1,7 @@
 "use client";
 
 import React, { type FormEvent, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Badge, RetroButton, RetroCard, RetroInput, RetroWindow } from "@/components/ui";
 import { useAuth } from "@/components/auth/AuthProvider";
 
@@ -20,7 +21,8 @@ const PROFILE_DATA = {
 } as const;
 
 export default function ProfilePage() {
-  const { role } = useAuth();
+  const router = useRouter();
+  const { role, signOut } = useAuth();
   const [photoNote, setPhotoNote] = useState(false);
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -33,7 +35,15 @@ export default function ProfilePage() {
   const [detailsSaved, setDetailsSaved] = useState(false);
   const [passwordSaved, setPasswordSaved] = useState(false);
   const [passwordError, setPasswordError] = useState("");
+  const [shiftUpdates, setShiftUpdates] = useState(true);
+  const [performanceSummary, setPerformanceSummary] = useState(true);
+  const [systemAlerts, setSystemAlerts] = useState(true);
   const profile = PROFILE_DATA[role === "Manager" ? "Manager" : "Employee"];
+
+  function handleLogout() {
+    signOut();
+    router.push("/");
+  }
 
   function handleDetailsSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -132,10 +142,43 @@ export default function ProfilePage() {
           {passwordSaved && <SuccessBanner>Password updated successfully.</SuccessBanner>}
         </form>
       </RetroWindow>
+
+      <RetroWindow title="Notifications">
+        <RetroCard>
+          <div className="divide-y divide-border-soft/50">
+            <PreferenceToggle label="Shift Updates" description="Get notified when your manager posts a shift update." checked={shiftUpdates} onChange={() => setShiftUpdates((value) => !value)} />
+            <PreferenceToggle label="Performance Summary" description="Weekly email summary of your performance score." checked={performanceSummary} onChange={() => setPerformanceSummary((value) => !value)} />
+            {role === "Manager" && <PreferenceToggle label="System Alerts" description="Get notified about active alerts requiring attention." checked={systemAlerts} onChange={() => setSystemAlerts((value) => !value)} />}
+          </div>
+        </RetroCard>
+      </RetroWindow>
+
+      <RetroWindow title="Danger Zone" titleBarClassName="bg-danger/10">
+        <RetroCard className="border-danger">
+          <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm text-text">Signing out will end your current session.</p>
+            <RetroButton type="button" variant="secondary" className="!border-danger !text-danger hover:!bg-danger/10" onClick={handleLogout}>Log Out</RetroButton>
+          </div>
+        </RetroCard>
+      </RetroWindow>
     </main>
   );
 }
 
 function SuccessBanner({ children }: { children: React.ReactNode }) {
   return <div className="border-l-4 border-success bg-success/10 px-4 py-3 font-mono text-xs font-semibold text-success">{children}</div>;
+}
+
+function PreferenceToggle({ label, description, checked, onChange }: { label: string; description: string; checked: boolean; onChange: () => void }) {
+  return (
+    <div className="flex items-center justify-between gap-5 py-4 first:pt-0 last:pb-0">
+      <div>
+        <p className="font-heading text-sm font-semibold text-text">{label}</p>
+        <p className="mt-1 text-xs text-text-muted">{description}</p>
+      </div>
+      <button type="button" role="switch" aria-checked={checked} aria-label={`${label}: ${checked ? "on" : "off"}`} onClick={onChange} className={`relative h-6 w-11 shrink-0 rounded border-2 border-border-soft transition-colors ${checked ? "bg-accent" : "bg-border-soft"}`}>
+        <span className={`absolute top-0.5 h-4 w-4 rounded-sm bg-surface transition-transform ${checked ? "translate-x-5" : "translate-x-0.5"}`} />
+      </button>
+    </div>
+  );
 }
