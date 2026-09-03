@@ -21,6 +21,11 @@ function formatDuration(seconds) {
   return `${String(minutes).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
 }
 
+function computeRatio(employees, customers) {
+  if (customers === 0) return employees > 0 ? Infinity : 0;
+  return employees / customers;
+}
+
 function buildDashboardData(peopleData, similarityData) {
   const totals = peopleData?.totals ?? {};
   const averages = peopleData?.averages ?? {};
@@ -34,27 +39,53 @@ function buildDashboardData(peopleData, similarityData) {
   const avgSimilarity = Number(similarityData?.avg_ssim ?? 0);
   const avgMse = Number(similarityData?.avg_mse ?? 0);
 
+  // Aggregate employee/customer totals across all samples
+  let totalV1Employees = 0;
+  let totalV1Customers = 0;
+  let totalV2Employees = 0;
+  let totalV2Customers = 0;
+  let movementEvents = 0;
+
+  samples.forEach((s) => {
+    totalV1Employees += s.v1_employees ?? 0;
+    totalV1Customers += s.v1_customers ?? 0;
+    totalV2Employees += s.v2_employees ?? 0;
+    totalV2Customers += s.v2_customers ?? 0;
+    if (s.verdict && !s.verdict.startsWith("No movement")) {
+      movementEvents++;
+    }
+  });
+
+  const avgV1Ratio = computeRatio(
+    totalV1Employees / Math.max(samples.length, 1),
+    totalV1Customers / Math.max(samples.length, 1)
+  );
+  const avgV2Ratio = computeRatio(
+    totalV2Employees / Math.max(samples.length, 1),
+    totalV2Customers / Math.max(samples.length, 1)
+  );
+
   const floorAInteractions = samples.slice(0, 3).map((sample, index) => ({
-    employee: index % 2 === 0 ? "Employee A" : "Employee B",
+    employee: `Employee ${String.fromCharCode(65 + (index % 4))}`,
     customer: "Customer",
     duration: formatDuration(sample.timestamp_s ?? 0),
-    zone: sample.v2_count >= sample.v1_count ? "Zone 2" : "Zone 1",
+    zone: sample.v2_count >= sample.v1_count ? "Aisle 2" : "Aisle 1",
     time: formatClock(sample.timestamp_s ?? 0),
   }));
 
   const floorBInteractions = samples.slice(3, 6).map((sample, index) => ({
-    employee: index % 2 === 0 ? "Employee C" : "Employee D",
+    employee: `Employee ${String.fromCharCode(65 + 4 + (index % 4))}`,
     customer: "Customer",
     duration: formatDuration(sample.timestamp_s ?? 0),
-    zone: sample.v2_count >= sample.v1_count ? "Zone 4" : "Zone 3",
+    zone: sample.v2_count >= sample.v1_count ? "Aisle 2" : "Aisle 1",
     time: formatClock(sample.timestamp_s ?? 0),
   }));
 
   const flaggedEvents = samples
-    .filter((sample) => Math.abs(Number(sample.diff ?? 0)) >= 2)
-    .slice(0, 3)
+    .filter((sample) => sample.verdict && !sample.verdict.startsWith("No movement"))
+    .slice(0, 5)
     .map((sample) => ({
-      label: sample.verdict || "Traffic imbalance detected",
+      label: sample.verdict,
       time: formatClock(sample.timestamp_s ?? 0),
       severity: Math.abs(Number(sample.diff ?? 0)) >= 4 ? "danger" : "accent",
     }));
@@ -81,6 +112,13 @@ function buildDashboardData(peopleData, similarityData) {
     similarityPercent,
     peakHour: peakSample.timestamp > 0 ? `${formatClock(peakSample.timestamp - 30)} – ${formatClock(peakSample.timestamp + 30)}` : "0:00 – 0:30",
     density: crowdImbalancePercent > 60 ? "High" : crowdImbalancePercent > 35 ? "Medium" : "Low",
+    employees: { aisle1: totalV1Employees, aisle2: totalV2Employees },
+    customers: { aisle1: totalV1Customers, aisle2: totalV2Customers },
+    ratios: {
+      aisle1: isFinite(avgV1Ratio) ? avgV1Ratio.toFixed(2) : "N/A",
+      aisle2: isFinite(avgV2Ratio) ? avgV2Ratio.toFixed(2) : "N/A",
+    },
+    movementEvents,
   };
 
   const comparisonBars = [

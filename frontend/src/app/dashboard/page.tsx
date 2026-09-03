@@ -15,7 +15,7 @@ const { summary, floorAInteractions, floorBInteractions, flaggedEvents, comparis
 const TOP_SELLERS = [
   { name: "Traffic similarity", units: Math.round(summary.similarityPercent) },
   { name: "Net inside", units: summary.netInside },
-  { name: "Density", units: summary.density },
+  { name: "Movement events", units: summary.movementEvents ?? 0 },
 ];
 
 /* ═══════════════════════════════════════════════════════════════
@@ -376,19 +376,19 @@ export default function DashboardPage() {
                 <div className="grid grid-cols-3 gap-2">
                   <div className="text-center">
                     <p className="font-mono text-xl font-bold text-text">
-                      {summary.avgResponse}
+                      {summary.employees?.aisle1 ?? 0}
                     </p>
-                    <p className="text-[10px] text-text-muted">Avg Response</p>
+                    <p className="text-[10px] text-text-muted">Aisle 1 Staff</p>
                   </div>
                   <div className="text-center">
                     <p className="font-mono text-xl font-bold text-text">
-                      {summary.avgDuration}
+                      {summary.employees?.aisle2 ?? 0}
                     </p>
-                    <p className="text-[10px] text-text-muted">Avg Duration</p>
+                    <p className="text-[10px] text-text-muted">Aisle 2 Staff</p>
                   </div>
                   <div className="text-center">
-                    <p className="font-mono text-xl font-bold text-danger">{summary.unattended}</p>
-                    <p className="text-[10px] text-text-muted">Unattended</p>
+                    <p className="font-mono text-xl font-bold text-danger">{summary.movementEvents ?? 0}</p>
+                    <p className="text-[10px] text-text-muted">Movements</p>
                   </div>
                 </div>
 
@@ -398,7 +398,7 @@ export default function DashboardPage() {
                     Flagged Events
                   </p>
                   <div className="space-y-1.5 max-h-28 overflow-y-auto pr-1">
-                    {flaggedEvents.map((evt, i) => (
+                    {flaggedEvents.map((evt: { label: string; severity: string; time: string }, i: number) => (
                       <div
                         key={`${evt.label}-${i}`}
                         className="flex items-start gap-2 text-[11px] font-mono"
@@ -537,14 +537,18 @@ export default function DashboardPage() {
           <RetroCard className="mt-6 border-l-4 border-l-accent">
             <div className="flex items-center justify-between">
               <div>
-                <p className="font-heading text-sm font-semibold text-text">Compare people counts</p>
-                <p className="mt-1 text-sm text-text-muted">Analyze and compare people counts between two video feeds.</p>
+                <p className="font-heading text-sm font-semibold text-text">Compare aisle ratios</p>
+                <p className="mt-1 text-sm text-text-muted">Analyze employee-to-customer ratios and optimize staff allocation.</p>
+                <div className="mt-2 flex gap-4 font-mono text-[10px] text-text-muted">
+                  <span>Aisle 1: {summary.employees?.aisle1 ?? 0} emp / {summary.customers?.aisle1 ?? 0} cust</span>
+                  <span>Aisle 2: {summary.employees?.aisle2 ?? 0} emp / {summary.customers?.aisle2 ?? 0} cust</span>
+                </div>
               </div>
               <a
                 href="/compare-people"
                 className="ml-4 shrink-0 rounded-md bg-accent px-4 py-2 font-heading text-sm font-semibold text-surface hover:bg-accent-hover transition-colors"
               >
-                Compare
+                Analyze
               </a>
             </div>
           </RetroCard>
