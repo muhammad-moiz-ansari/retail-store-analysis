@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { spawn } from "node:child_process";
 import path from "node:path";
 import fs from "node:fs/promises";
+import fsSync from "node:fs";
 
 function normalizeVideoPath(input: string) {
   return path.resolve(input.trim());
@@ -12,12 +13,12 @@ function resolveRepoRoot() {
   const candidates = [cwd, path.resolve(cwd, ".."), path.resolve(cwd, "..", "..")];
 
   for (const candidate of candidates) {
-    const backendDir = path.join(candidate, "backend");
-    const frontendDir = path.join(candidate, "frontend");
-    if (fs.stat(candidate).then(() => true).catch(() => false) && path.basename(candidate) === "retail-store-analysis") {
+    if (path.basename(candidate) === "retail-store-analysis" && fsSync.existsSync(candidate)) {
       return candidate;
     }
-    if (fs.existsSync(path.join(candidate, "package.json")) && fs.existsSync(backendDir) && fs.existsSync(frontendDir)) {
+    const backendDir = path.join(candidate, "backend");
+    const frontendDir = path.join(candidate, "frontend");
+    if (fsSync.existsSync(path.join(candidate, "package.json")) && fsSync.existsSync(backendDir) && fsSync.existsSync(frontendDir)) {
       return candidate;
     }
   }
