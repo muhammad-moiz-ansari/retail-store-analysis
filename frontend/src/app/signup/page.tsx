@@ -55,7 +55,7 @@ export default function SignupPage() {
     setTimeout(() => {
       const selectedRole = role === "manager" ? "Manager" : "Employee";
       signIn(selectedRole);
-      router.push(selectedRole === "Manager" ? "/dashboard" : "/employee");
+      router.push(selectedRole === "Manager" ? "/dashboard" : "/employee-home");
     }, 400);
   }
 

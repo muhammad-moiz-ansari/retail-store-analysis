@@ -41,7 +41,8 @@ const AUTHENTICATED_NAV_LINKS: NavLink[] = [
 ];
 
 const EMPLOYEE_NAV_LINKS: NavLink[] = [
-  { label: "My Workspace", href: "/employee", employeeOnly: true },
+  { label: "My Workspace", href: "/employee-home", employeeOnly: true },
+  { label: "My Performance", href: "/my-performance", employeeOnly: true },
   { label: "About", href: "/about" },
 ];
 
@@ -50,6 +51,7 @@ export function Navbar({ authenticated = false, role = "Manager" }: NavbarProps)
   const router = useRouter();
   const { signOut } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [indicatorStyle, setIndicatorStyle] = useState({ left: 0, width: 0 });
   const [showTransition, setShowTransition] = useState(false);
   const linkRefs = useRef<(HTMLAnchorElement | null)[]>([]);
@@ -70,6 +72,7 @@ export function Navbar({ authenticated = false, role = "Manager" }: NavbarProps)
   function handleSignOut() {
     signOut();
     setMobileMenuOpen(false);
+    setProfileMenuOpen(false);
     router.push("/");
   }
 
@@ -123,7 +126,7 @@ export function Navbar({ authenticated = false, role = "Manager" }: NavbarProps)
       <div className="h-[52px] px-4 md:px-6 flex items-center justify-between">
         {/* ── Left: Logo + Wordmark ── */}
         <Link
-          href={authenticated ? (role === "Employee" ? "/employee" : "/dashboard") : "/"}
+          href={authenticated ? (role === "Employee" ? "/employee-home" : "/dashboard") : "/"}
           className="flex items-center gap-2.5 xl:w-[180px] w-auto shrink-0"
         >
           <NavLogo />
@@ -174,10 +177,9 @@ export function Navbar({ authenticated = false, role = "Manager" }: NavbarProps)
         {/* ── Right: Auth Controls ── */}
         {authenticated ? (
           // Authenticated: Role Badge + Log Out
-          <div className="hidden min-[1090px]:flex items-center gap-3 xl:w-[200px] w-auto justify-end shrink-0">
-            <Badge variant={role === "Manager" ? "accent" : "neutral"}>
-              {role}
-            </Badge>
+          <div className="hidden min-[1090px]:flex items-center gap-3 xl:w-[230px] w-auto justify-end shrink-0">
+            {role === "Manager" && <AlertsBell />}
+            <ProfileMenu role={role} open={profileMenuOpen} onToggle={() => setProfileMenuOpen((open) => !open)} onSignOut={handleSignOut} />
             <RetroButton onClick={handleSignOut} variant="secondary" className="!px-3 !py-1.5 !text-xs">
               Log Out
             </RetroButton>
@@ -265,9 +267,8 @@ export function Navbar({ authenticated = false, role = "Manager" }: NavbarProps)
         {/* Auth Controls (mobile) */}
         {authenticated ? (
           <div className="py-3 px-5 border-t border-border-soft flex items-center justify-between gap-3">
-            <Badge variant={role === "Manager" ? "accent" : "neutral"}>
-              {role}
-            </Badge>
+            {role === "Manager" && <AlertsBell />}
+            <ProfileMenu role={role} open={profileMenuOpen} onToggle={() => setProfileMenuOpen((open) => !open)} onSignOut={handleSignOut} />
             <RetroButton onClick={handleSignOut} variant="secondary" className="!px-3 !py-1.5 !text-xs">
               Log Out
             </RetroButton>
@@ -288,6 +289,69 @@ export function Navbar({ authenticated = false, role = "Manager" }: NavbarProps)
         )}
       </div>
     </header>
+  );
+}
+
+function AlertsBell() {
+  return (
+    <Link
+      href="/alerts"
+      aria-label="View 5 active alerts"
+      className="relative flex h-9 w-9 items-center justify-center rounded-md border border-border bg-surface text-text transition-colors hover:bg-surface-alt"
+    >
+      <BellIcon />
+      <span className="absolute -right-2 -top-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-danger px-1 font-mono text-[9px] font-bold leading-none text-white">
+        5
+      </span>
+    </Link>
+  );
+}
+
+function ProfileMenu({
+  role,
+  open,
+  onToggle,
+  onSignOut,
+}: {
+  role: "Manager" | "Employee";
+  open: boolean;
+  onToggle: () => void;
+  onSignOut: () => void;
+}) {
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-expanded={open}
+        aria-haspopup="menu"
+        aria-label="Open account menu"
+        className="cursor-pointer rounded-full focus:outline-none focus:ring-2 focus:ring-accent"
+      >
+        <Badge variant={role === "Manager" ? "accent" : "neutral"}>
+          {role === "Employee" ? "Employee Access" : role}
+        </Badge>
+      </button>
+      {open && (
+        <div className="absolute right-0 top-full z-50 mt-2 min-w-40 rounded-md border-2 border-border bg-surface p-1 shadow-[3px_3px_0px_rgba(74,46,30,0.25)]" role="menu">
+          <Link href="/profile" onClick={() => onToggle()} className="block rounded px-3 py-2 text-sm font-medium text-text hover:bg-surface-alt" role="menuitem">
+            Edit Profile
+          </Link>
+          <button type="button" onClick={onSignOut} className="block w-full cursor-pointer rounded px-3 py-2 text-left text-sm font-medium text-text hover:bg-surface-alt" role="menuitem">
+            Log Out
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function BellIcon() {
+  return (
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" />
+      <path d="M10 21h4" />
+    </svg>
   );
 }
 

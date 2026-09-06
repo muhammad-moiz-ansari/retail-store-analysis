@@ -39,7 +39,7 @@ export default function LoginPage() {
     // Simulate brief delay then navigate
     setTimeout(() => {
       signIn(role);
-      router.push(role === "Manager" ? "/dashboard" : "/employee");
+      router.push(role === "Manager" ? "/dashboard" : "/employee-home");
     }, 400);
   }
 

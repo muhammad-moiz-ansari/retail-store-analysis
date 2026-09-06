@@ -39,7 +39,10 @@ const AUTHENTICATED_ROUTES = [
   "/sales-trends",
   "/reports",
   "/settings",
+  "/alerts",
   "/employee",
+  "/employee-home",
+  "/my-performance",
 ];
 
 export function Footer() {
@@ -54,7 +57,8 @@ export function Footer() {
   const quickLinks = hasSession && protectedRoute
     ? role === "Employee"
       ? [
-          { label: "My Workspace", href: "/employee" },
+          { label: "My Workspace", href: "/employee-home" },
+          { label: "My Performance", href: "/my-performance" },
           { label: "About", href: "/about" },
         ]
       : AUTHENTICATED_QUICK_LINKS

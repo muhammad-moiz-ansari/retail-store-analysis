@@ -6,6 +6,7 @@ interface RetroWindowProps {
   /** When true, the close (red) button fires onClose */
   onClose?: () => void;
   className?: string;
+  titleBarClassName?: string;
 }
 
 export function RetroWindow({
@@ -13,6 +14,7 @@ export function RetroWindow({
   children,
   onClose,
   className = "",
+  titleBarClassName = "",
 }: RetroWindowProps) {
   return (
     <div
@@ -20,7 +22,7 @@ export function RetroWindow({
       style={{ boxShadow: "4px 4px 0px rgba(74, 46, 30, 0.25)" }}
     >
       {/* ── Title bar ── */}
-      <div className="flex items-center justify-between bg-surface-alt px-4 py-2 border-b-2 border-border select-none">
+      <div className={`flex items-center justify-between bg-surface-alt px-4 py-2 border-b-2 border-border select-none ${titleBarClassName}`}>
         <span className="font-heading text-sm font-semibold text-text tracking-wide">
           {title}
         </span>
