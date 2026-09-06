@@ -336,7 +336,7 @@ export default function LandingPage() {
 
 /** Hero dashboard preview with graceful fallback */
 function HeroDashboardPreview() {
-  const [imgError, setImgError] = React.useState(false);
+  const [imgError, setImgError] = React.useState(true);
 
   if (imgError) {
     return (
@@ -360,7 +360,7 @@ function HeroDashboardPreview() {
 
 /** Small placeholder for dashboard preview in bento grid */
 function DashboardPreviewPlaceholder() {
-  const [imgError, setImgError] = React.useState(false);
+  const [imgError, setImgError] = React.useState(true);
 
   if (imgError) {
     return <p className="text-xs text-text-muted font-mono">Preview</p>;
