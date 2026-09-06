@@ -352,7 +352,6 @@ export default function ComparePeoplePage() {
   const [error, setError] = useState("");
   const [result, setResult] = useState<ComparisonResult>(sampleResult);
   const [activeTab, setActiveTab] = useState<"overview" | "samples">("overview");
-  const [logs, setLogs] = useState<string[]>([]);
 
   const summary = useMemo(() => {
     return {
@@ -369,53 +368,10 @@ export default function ComparePeoplePage() {
     event.preventDefault();
     setLoading(true);
     setError("");
-    setLogs([]);
-
-    try {
-      const res = await fetch("/api/compare-people", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ video1, video2, frameInterval: 30 }),
-      });
-
-      if (!res.ok) {
-        const json = await res.json().catch(() => null);
-        throw new Error(json?.error || `Request failed (${res.status})`);
-      }
-
-      const reader = res.body!.getReader();
-      const decoder = new TextDecoder();
-      let buffer = "";
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        buffer += decoder.decode(value, { stream: true });
-
-        const lines = buffer.split("\n");
-        buffer = lines.pop() || "";
-
-        let eventType = "";
-        for (const line of lines) {
-          if (line.startsWith("event: ")) {
-            eventType = line.slice(7).trim();
-          } else if (line.startsWith("data: ")) {
-            const payload = JSON.parse(line.slice(6));
-            if (eventType === "log") {
-              setLogs((prev) => [...prev, payload.text]);
-            } else if (eventType === "result") {
-              setResult(payload.data);
-            } else if (eventType === "error") {
-              throw new Error(payload.message);
-            }
-          }
-        }
-      }
-    } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "Something went wrong");
-    } finally {
+    setTimeout(() => {
+      setResult({ ...sampleResult, video1, video2 });
       setLoading(false);
-    }
+    }, 500);
   }
 
   function renderAisleTable(aisles: AisleData[], label: string) {
@@ -500,15 +456,6 @@ export default function ComparePeoplePage() {
 
       {error && (
         <div className="mt-6 rounded-md border border-danger/40 bg-danger/10 p-4 text-sm text-text">{error}</div>
-      )}
-
-      {logs.length > 0 && (
-        <div className="mt-6 rounded-lg border border-border-soft bg-bg p-4">
-          <h3 className="mb-2 font-mono text-[10px] uppercase tracking-[0.2em] text-text-muted">Processing log</h3>
-          <pre className="max-h-48 overflow-y-auto whitespace-pre-wrap font-mono text-xs text-text-muted">
-            {logs.join("")}
-          </pre>
-        </div>
       )}
 
       <section className="mt-8 space-y-6">
