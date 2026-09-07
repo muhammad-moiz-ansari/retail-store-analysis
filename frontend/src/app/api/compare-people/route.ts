@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { spawn } from "node:child_process";
 import path from "node:path";
-import fs from "node:fs/promises";
+import fs from "node:fs";
+import { readFile } from "node:fs/promises";
 
 function normalizeVideoPath(input: string) {
   return path.resolve(input.trim());
@@ -14,7 +15,7 @@ function resolveRepoRoot() {
   for (const candidate of candidates) {
     const backendDir = path.join(candidate, "backend");
     const frontendDir = path.join(candidate, "frontend");
-    if (fs.stat(candidate).then(() => true).catch(() => false) && path.basename(candidate) === "retail-store-analysis") {
+    if (fs.existsSync(candidate) && path.basename(candidate) === "retail-store-analysis") {
       return candidate;
     }
     if (fs.existsSync(path.join(candidate, "package.json")) && fs.existsSync(backendDir) && fs.existsSync(frontendDir)) {
@@ -46,17 +47,19 @@ export async function POST(request: NextRequest) {
     const normalizedVideo2 = normalizeVideoPath(video2);
 
     try {
-      const existing = await fs.readFile(outputPath, "utf-8");
+      const existing = await readFile(outputPath, "utf-8");
       const cached = JSON.parse(existing);
 
       const existingVideo1 = cached?.video1 ? normalizeVideoPath(String(cached.video1)) : "";
       const existingVideo2 = cached?.video2 ? normalizeVideoPath(String(cached.video2)) : "";
       const existingInterval = Number(cached?.frame_interval ?? 30);
+      const existingCountMode = String(cached?.count_mode ?? "");
 
       if (
         existingVideo1 === normalizedVideo1 &&
         existingVideo2 === normalizedVideo2 &&
-        existingInterval === frameInterval
+        existingInterval === frameInterval &&
+        existingCountMode === "unique_local_tracks"
       ) {
         const stream = new ReadableStream({
           start(controller) {
@@ -140,7 +143,7 @@ export async function POST(request: NextRequest) {
           }
 
           try {
-            const file = await fs.readFile(outputPath, "utf-8");
+            const file = await readFile(outputPath, "utf-8");
             const data = JSON.parse(file);
             send("result", { data, output: combinedOutput || "No output was produced." });
             send("done", {});

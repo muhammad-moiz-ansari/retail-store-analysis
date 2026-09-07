@@ -10,7 +10,15 @@ import {
 } from "@/components/ui";
 import { defaultDashboardData } from "@/lib/dashboard-data";
 
-const { summary, floorAInteractions, floorBInteractions, flaggedEvents, comparisonBars } = defaultDashboardData;
+type FlaggedEvent = {
+  label: string;
+  time: string;
+  severity: "danger" | "accent";
+};
+
+const { summary, floorAInteractions, floorBInteractions, flaggedEvents, comparisonBars } = defaultDashboardData as typeof defaultDashboardData & {
+  flaggedEvents: FlaggedEvent[];
+};
 
 const TOP_SELLERS = [
   { name: "Traffic similarity", units: Math.round(summary.similarityPercent) },
@@ -398,7 +406,7 @@ export default function DashboardPage() {
                     Flagged Events
                   </p>
                   <div className="space-y-1.5 max-h-28 overflow-y-auto pr-1">
-                    {flaggedEvents.map((evt, i) => (
+                    {flaggedEvents.map((evt: FlaggedEvent, i: number) => (
                       <div
                         key={`${evt.label}-${i}`}
                         className="flex items-start gap-2 text-[11px] font-mono"

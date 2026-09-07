@@ -3,10 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "set \"PYTHON_BIN=python\" && next dev frontend",
-    "build": "set \"PYTHON_BIN=python\" && next build frontend",
-    "start": "set \"PYTHON_BIN=python\" && next start frontend",
-    "lint": "eslint frontend --config ./eslint.config.mjs"
+    "dev": "PYTHON_BIN=./.venv/bin/python next dev frontend",
+    "build": "PYTHON_BIN=./.venv/bin/python next build frontend",
+    "start": "PYTHON_BIN=./.venv/bin/python next start frontend",
+    "lint": "eslint frontend --config frontend/eslint.config.mjs"
   },
   "dependencies": {
     "jspdf": "^4.2.1",
@@ -20,7 +20,6 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "cross-env": "^10.1.0",
     "eslint": "^9",
     "eslint-config-next": "16.3.3",
     "tailwindcss": "^4",

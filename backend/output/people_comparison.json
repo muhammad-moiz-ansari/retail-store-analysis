@@ -1,43 +1,48 @@
 {
-  "video1": "/home/mosaq/retail-store-analysis/backend/videos/ShopAssistant1cor.mp4",
-  "video2": "/home/mosaq/retail-store-analysis/backend/videos/OneShopOneWait1cor.mp4",
+  "count_mode": "unique_local_tracks",
+  "video1": "backend/videos/cam1.mp4",
+  "video2": "backend/videos/cam2.mp4",
   "frame_interval": 30,
-  "num_samples": 46,
-  "valid_samples": 46,
-  "common_frames": 1377,
-  "fps1": 25.0,
-  "fps2": 25.0,
+  "num_samples": 15,
+  "valid_samples": 15,
+  "common_frames": 450,
+  "fps1": 30.0,
+  "fps2": 30.0,
   "totals": {
-    "video1": 57,
-    "video2": 169
+    "video1": 2,
+    "video2": 1
   },
   "averages": {
-    "video1": 1.24,
-    "video2": 3.67
+    "video1": 0.67,
+    "video2": 0.73
+  },
+  "occupancy": {
+    "video1_peak": 2,
+    "video2_peak": 1
   },
   "samples": [
     {
       "sample": 1,
       "frame": 0,
       "timestamp_s": 0.0,
+      "v1_count": 0,
+      "v2_count": 1,
+      "diff": -1,
+      "verdict": "V1 needs +1"
+    },
+    {
+      "sample": 2,
+      "frame": 30,
+      "timestamp_s": 1.0,
       "v1_count": 1,
       "v2_count": 1,
       "diff": 0,
       "verdict": "Equal"
     },
     {
-      "sample": 2,
-      "frame": 30,
-      "timestamp_s": 1.2,
-      "v1_count": 2,
-      "v2_count": 0,
-      "diff": 2,
-      "verdict": "V2 needs +2"
-    },
-    {
       "sample": 3,
       "frame": 60,
-      "timestamp_s": 2.4,
+      "timestamp_s": 2.0,
       "v1_count": 1,
       "v2_count": 1,
       "diff": 0,
@@ -46,389 +51,110 @@
     {
       "sample": 4,
       "frame": 90,
-      "timestamp_s": 3.6,
-      "v1_count": 3,
-      "v2_count": 2,
-      "diff": 1,
-      "verdict": "V2 needs +1"
+      "timestamp_s": 3.0,
+      "v1_count": 1,
+      "v2_count": 1,
+      "diff": 0,
+      "verdict": "Equal"
     },
     {
       "sample": 5,
       "frame": 120,
-      "timestamp_s": 4.8,
-      "v1_count": 3,
-      "v2_count": 3,
+      "timestamp_s": 4.0,
+      "v1_count": 1,
+      "v2_count": 1,
       "diff": 0,
       "verdict": "Equal"
     },
     {
       "sample": 6,
       "frame": 150,
-      "timestamp_s": 6.0,
-      "v1_count": 3,
-      "v2_count": 3,
+      "timestamp_s": 5.0,
+      "v1_count": 1,
+      "v2_count": 1,
       "diff": 0,
       "verdict": "Equal"
     },
     {
       "sample": 7,
       "frame": 180,
-      "timestamp_s": 7.2,
-      "v1_count": 2,
-      "v2_count": 2,
+      "timestamp_s": 6.0,
+      "v1_count": 1,
+      "v2_count": 1,
       "diff": 0,
       "verdict": "Equal"
     },
     {
       "sample": 8,
       "frame": 210,
-      "timestamp_s": 8.4,
-      "v1_count": 2,
-      "v2_count": 4,
-      "diff": -2,
-      "verdict": "V1 needs +2"
+      "timestamp_s": 7.0,
+      "v1_count": 1,
+      "v2_count": 1,
+      "diff": 0,
+      "verdict": "Equal"
     },
     {
       "sample": 9,
       "frame": 240,
-      "timestamp_s": 9.6,
+      "timestamp_s": 8.0,
       "v1_count": 2,
-      "v2_count": 5,
-      "diff": -3,
-      "verdict": "V1 needs +3"
+      "v2_count": 1,
+      "diff": 1,
+      "verdict": "V2 needs +1"
     },
     {
       "sample": 10,
       "frame": 270,
-      "timestamp_s": 10.8,
-      "v1_count": 2,
-      "v2_count": 5,
-      "diff": -3,
-      "verdict": "V1 needs +3"
+      "timestamp_s": 9.0,
+      "v1_count": 1,
+      "v2_count": 1,
+      "diff": 0,
+      "verdict": "Equal"
     },
     {
       "sample": 11,
       "frame": 300,
-      "timestamp_s": 12.0,
-      "v1_count": 2,
-      "v2_count": 5,
-      "diff": -3,
-      "verdict": "V1 needs +3"
+      "timestamp_s": 10.0,
+      "v1_count": 0,
+      "v2_count": 1,
+      "diff": -1,
+      "verdict": "V1 needs +1"
     },
     {
       "sample": 12,
       "frame": 330,
-      "timestamp_s": 13.2,
-      "v1_count": 5,
-      "v2_count": 3,
-      "diff": 2,
-      "verdict": "V2 needs +2"
+      "timestamp_s": 11.0,
+      "v1_count": 0,
+      "v2_count": 0,
+      "diff": 0,
+      "verdict": "Equal"
     },
     {
       "sample": 13,
       "frame": 360,
-      "timestamp_s": 14.4,
-      "v1_count": 3,
-      "v2_count": 3,
+      "timestamp_s": 12.0,
+      "v1_count": 0,
+      "v2_count": 0,
       "diff": 0,
       "verdict": "Equal"
     },
     {
       "sample": 14,
       "frame": 390,
-      "timestamp_s": 15.6,
-      "v1_count": 3,
-      "v2_count": 3,
+      "timestamp_s": 13.0,
+      "v1_count": 0,
+      "v2_count": 0,
       "diff": 0,
       "verdict": "Equal"
     },
     {
       "sample": 15,
       "frame": 420,
-      "timestamp_s": 16.8,
-      "v1_count": 2,
-      "v2_count": 3,
-      "diff": -1,
-      "verdict": "V1 needs +1"
-    },
-    {
-      "sample": 16,
-      "frame": 450,
-      "timestamp_s": 18.0,
-      "v1_count": 2,
-      "v2_count": 3,
-      "diff": -1,
-      "verdict": "V1 needs +1"
-    },
-    {
-      "sample": 17,
-      "frame": 480,
-      "timestamp_s": 19.2,
-      "v1_count": 2,
-      "v2_count": 4,
-      "diff": -2,
-      "verdict": "V1 needs +2"
-    },
-    {
-      "sample": 18,
-      "frame": 510,
-      "timestamp_s": 20.4,
-      "v1_count": 2,
-      "v2_count": 4,
-      "diff": -2,
-      "verdict": "V1 needs +2"
-    },
-    {
-      "sample": 19,
-      "frame": 540,
-      "timestamp_s": 21.6,
-      "v1_count": 2,
-      "v2_count": 4,
-      "diff": -2,
-      "verdict": "V1 needs +2"
-    },
-    {
-      "sample": 20,
-      "frame": 570,
-      "timestamp_s": 22.8,
-      "v1_count": 1,
-      "v2_count": 4,
-      "diff": -3,
-      "verdict": "V1 needs +3"
-    },
-    {
-      "sample": 21,
-      "frame": 600,
-      "timestamp_s": 24.0,
-      "v1_count": 1,
-      "v2_count": 3,
-      "diff": -2,
-      "verdict": "V1 needs +2"
-    },
-    {
-      "sample": 22,
-      "frame": 630,
-      "timestamp_s": 25.2,
+      "timestamp_s": 14.0,
       "v1_count": 0,
-      "v2_count": 3,
-      "diff": -3,
-      "verdict": "V1 needs +3"
-    },
-    {
-      "sample": 23,
-      "frame": 660,
-      "timestamp_s": 26.4,
-      "v1_count": 1,
-      "v2_count": 3,
-      "diff": -2,
-      "verdict": "V1 needs +2"
-    },
-    {
-      "sample": 24,
-      "frame": 690,
-      "timestamp_s": 27.6,
-      "v1_count": 0,
-      "v2_count": 3,
-      "diff": -3,
-      "verdict": "V1 needs +3"
-    },
-    {
-      "sample": 25,
-      "frame": 720,
-      "timestamp_s": 28.8,
-      "v1_count": 0,
-      "v2_count": 4,
-      "diff": -4,
-      "verdict": "V1 needs +4"
-    },
-    {
-      "sample": 26,
-      "frame": 750,
-      "timestamp_s": 30.0,
-      "v1_count": 0,
-      "v2_count": 4,
-      "diff": -4,
-      "verdict": "V1 needs +4"
-    },
-    {
-      "sample": 27,
-      "frame": 780,
-      "timestamp_s": 31.2,
-      "v1_count": 0,
-      "v2_count": 4,
-      "diff": -4,
-      "verdict": "V1 needs +4"
-    },
-    {
-      "sample": 28,
-      "frame": 810,
-      "timestamp_s": 32.4,
-      "v1_count": 0,
-      "v2_count": 5,
-      "diff": -5,
-      "verdict": "V1 needs +5"
-    },
-    {
-      "sample": 29,
-      "frame": 840,
-      "timestamp_s": 33.6,
-      "v1_count": 0,
-      "v2_count": 4,
-      "diff": -4,
-      "verdict": "V1 needs +4"
-    },
-    {
-      "sample": 30,
-      "frame": 870,
-      "timestamp_s": 34.8,
-      "v1_count": 0,
-      "v2_count": 3,
-      "diff": -3,
-      "verdict": "V1 needs +3"
-    },
-    {
-      "sample": 31,
-      "frame": 900,
-      "timestamp_s": 36.0,
-      "v1_count": 0,
-      "v2_count": 5,
-      "diff": -5,
-      "verdict": "V1 needs +5"
-    },
-    {
-      "sample": 32,
-      "frame": 930,
-      "timestamp_s": 37.2,
-      "v1_count": 0,
-      "v2_count": 4,
-      "diff": -4,
-      "verdict": "V1 needs +4"
-    },
-    {
-      "sample": 33,
-      "frame": 960,
-      "timestamp_s": 38.4,
-      "v1_count": 0,
-      "v2_count": 4,
-      "diff": -4,
-      "verdict": "V1 needs +4"
-    },
-    {
-      "sample": 34,
-      "frame": 990,
-      "timestamp_s": 39.6,
-      "v1_count": 0,
-      "v2_count": 4,
-      "diff": -4,
-      "verdict": "V1 needs +4"
-    },
-    {
-      "sample": 35,
-      "frame": 1020,
-      "timestamp_s": 40.8,
-      "v1_count": 0,
-      "v2_count": 5,
-      "diff": -5,
-      "verdict": "V1 needs +5"
-    },
-    {
-      "sample": 36,
-      "frame": 1050,
-      "timestamp_s": 42.0,
-      "v1_count": 0,
-      "v2_count": 4,
-      "diff": -4,
-      "verdict": "V1 needs +4"
-    },
-    {
-      "sample": 37,
-      "frame": 1080,
-      "timestamp_s": 43.2,
-      "v1_count": 1,
-      "v2_count": 4,
-      "diff": -3,
-      "verdict": "V1 needs +3"
-    },
-    {
-      "sample": 38,
-      "frame": 1110,
-      "timestamp_s": 44.4,
-      "v1_count": 1,
-      "v2_count": 3,
-      "diff": -2,
-      "verdict": "V1 needs +2"
-    },
-    {
-      "sample": 39,
-      "frame": 1140,
-      "timestamp_s": 45.6,
-      "v1_count": 1,
-      "v2_count": 4,
-      "diff": -3,
-      "verdict": "V1 needs +3"
-    },
-    {
-      "sample": 40,
-      "frame": 1170,
-      "timestamp_s": 46.8,
-      "v1_count": 1,
-      "v2_count": 4,
-      "diff": -3,
-      "verdict": "V1 needs +3"
-    },
-    {
-      "sample": 41,
-      "frame": 1200,
-      "timestamp_s": 48.0,
-      "v1_count": 0,
-      "v2_count": 5,
-      "diff": -5,
-      "verdict": "V1 needs +5"
-    },
-    {
-      "sample": 42,
-      "frame": 1230,
-      "timestamp_s": 49.2,
-      "v1_count": 0,
-      "v2_count": 5,
-      "diff": -5,
-      "verdict": "V1 needs +5"
-    },
-    {
-      "sample": 43,
-      "frame": 1260,
-      "timestamp_s": 50.4,
-      "v1_count": 1,
-      "v2_count": 5,
-      "diff": -4,
-      "verdict": "V1 needs +4"
-    },
-    {
-      "sample": 44,
-      "frame": 1290,
-      "timestamp_s": 51.6,
-      "v1_count": 1,
-      "v2_count": 6,
-      "diff": -5,
-      "verdict": "V1 needs +5"
-    },
-    {
-      "sample": 45,
-      "frame": 1320,
-      "timestamp_s": 52.8,
-      "v1_count": 1,
-      "v2_count": 5,
-      "diff": -4,
-      "verdict": "V1 needs +4"
-    },
-    {
-      "sample": 46,
-      "frame": 1350,
-      "timestamp_s": 54.0,
-      "v1_count": 3,
-      "v2_count": 4,
-      "diff": -1,
-      "verdict": "V1 needs +1"
+      "v2_count": 0,
+      "diff": 0,
+      "verdict": "Equal"
     }
   ]
 }

@@ -198,6 +198,29 @@ To fit within the project timeline and available hardware (no dedicated GPU), th
 - **Real-time dashboard** as the primary deliverable (currently offline/batch processing)
 - **Expanded agent layer** - additional reasoning agents (anomaly detection, natural-language querying over store data)
 
+### Camera Handoff MVP
+
+The repository now includes an experimental, CPU-oriented offline handoff pipeline for the two supplied camera videos:
+
+```text
+cam1 right-side exit  ->  cam2 left-side entry
+```
+
+Each camera is processed independently with YOLO and local ByteTrack IDs. The pipeline emits directional boundary events, filters candidates by the synchronized time window, compares lightweight HSV/shape appearance descriptors, and reports `confirmed`, `uncertain`, or `unmatched` associations. Confirmed associations receive a stable Master ID for that run.
+
+Run it from the repository root with:
+
+```bash
+./.venv/bin/python backend/camera_handoff.py \
+    --cam1 backend/videos/cam1.mp4 \
+    --cam2 backend/videos/cam2.mp4 \
+    --sample-every 5
+```
+
+The result is written to `backend/output/camera_handoff.json`. The frontend exposes the same batch process at `/camera-handoff` through `/api/camera-handoff`, with configurable normalized boundaries and timing thresholds.
+
+This is not yet full multi-camera Re-ID. Homography, a third camera, pretrained Re-ID embeddings, timestamp offsets, and real-time guarantees remain future work. Direction and appearance are evidence rather than proof, so the output intentionally preserves uncertain and unmatched cases.
+
 ## Team
 
 | Name | Role |
