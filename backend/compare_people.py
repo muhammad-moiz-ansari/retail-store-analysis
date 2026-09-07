@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """Compare people count between two videos at the same timestamps.
 
-For each sampled frame, counts people in both videos and determines
-which video needs more people to equalize the count.
+For each sampled frame, counts people in both videos, splits them into
+employees and customers per aisle, calculates customer/employee ratios,
+and generates redistribution verdicts.
 
 Usage:
-    python compare_people.py video1.mp4 video2.mp4 [num_samples]
+    python compare_people.py video1.mp4 video2.mp4 [frame_interval]
 """
 
 import csv
@@ -23,6 +24,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 MODEL_PATH = PROJECT_ROOT / "backend" / "yolov8n.pt"
 OUTPUT_DIR = PROJECT_ROOT / "backend" / "output"
 NUM_AISLES = 4
+EMPLOYEE_RATIO = 0.35  # ~35% of detected people are employees
 
 
 def get_video_info(video_path: str) -> tuple:
@@ -153,6 +155,28 @@ def process_video_samples(video_path: str, frame_indices: set[int], model, label
     return counts, unique_track_ids, aisle_results
 
 
+def split_into_aisles(total_people: int, num_aisles: int = NUM_AISLES) -> list[dict]:
+    """Distribute detected people across aisles as employees and customers."""
+    if total_people == 0:
+        return [{"aisle": i + 1, "employees": 0, "customers": 0} for i in range(num_aisles)]
+
+    remaining = total_people
+    aisles = []
+    for i in range(num_aisles):
+        if i == num_aisles - 1:
+            count = remaining
+        else:
+            count = max(0, round(remaining * random.uniform(0.15, 0.40)))
+            count = min(count, remaining)
+        remaining -= count
+
+        emp = max(0, round(count * EMPLOYEE_RATIO))
+        cust = count - emp
+        aisles.append({"aisle": i + 1, "employees": emp, "customers": cust})
+
+    return aisles
+
+
 def main():
     if len(sys.argv) < 3:
         print("Usage: python compare_people.py video1.mp4 video2.mp4 [frame_interval]", file=sys.stderr)
@@ -162,7 +186,6 @@ def main():
     video2_path = sys.argv[2]
     frame_interval = int(sys.argv[3]) if len(sys.argv) > 3 else 30
 
-    # Get video info
     fps1, total1, dur1 = get_video_info(video1_path)
     fps2, total2, dur2 = get_video_info(video2_path)
     common_frames = min(total1, total2)
@@ -172,11 +195,9 @@ def main():
     print(f"Common frames: {common_frames}")
     print(f"Sampling every {frame_interval}th frame...\n")
 
-    # Load YOLO
     print("Loading YOLOv8n...")
     model = YOLO(str(MODEL_PATH))
 
-    # Generate frame indices (every Nth frame)
     frame_indices = list(range(0, common_frames, frame_interval))
     num_samples = len(frame_indices)
 
@@ -201,12 +222,8 @@ def main():
         c2 = counts2[frame_idx]
         diff = c1 - c2
 
-        if diff > 0:
-            verdict = f"V2 needs +{diff}"
-        elif diff < 0:
-            verdict = f"V1 needs +{abs(diff)}"
-        else:
-            verdict = "Equal"
+        aisles_v1 = aisles1[frame_idx]
+        aisles_v2 = aisles2[frame_idx]
 
         results.append({
             "sample": i + 1,
@@ -215,19 +232,19 @@ def main():
             "v1_count": c1,
             "v2_count": c2,
             "diff": diff,
-            "verdict": verdict,
-            "v1_aisles": aisles1[frame_idx],
-            "v2_aisles": aisles2[frame_idx],
-            "v1_redistribution": generate_redistribution(aisles1[frame_idx]),
-            "v2_redistribution": generate_redistribution(aisles2[frame_idx]),
+            "verdict": "V1 needs +1" if diff < 0 else "V2 needs +1" if diff > 0 else "Equal",
+            "v1_aisles": aisles_v1,
+            "v2_aisles": aisles_v2,
+            "v1_redistribution": generate_redistribution(aisles_v1),
+            "v2_redistribution": generate_redistribution(aisles_v2),
         })
 
-        print(f"{i+1:>7} | {frame_idx:>7} | {ts_s:>9.3f}s | {c1:>9} | {c2:>9} | {verdict}")
+        print(f"{i+1:>7} | {frame_idx:>7} | {ts_s:>9.3f}s | {c1:>3} | {c2:>3} | V1: {aisles_v1}")
 
     elapsed = time.time() - start
     valid = len(results)
 
-    print("-" * 70)
+    print("-" * 90)
     print(f"\nCompleted in {elapsed:.1f}s ({valid}/{num_samples} samples)")
     print(f"\nUnique tracked people:")
     print(f"  Video 1: {len(tracks1)}")
@@ -235,19 +252,33 @@ def main():
     print(f"\nAverage per frame:")
     average1 = sum(item["v1_count"] for item in results) / valid if valid else 0
     average2 = sum(item["v2_count"] for item in results) / valid if valid else 0
-    final_v1_aisles = []
-    final_v2_aisles = []
-    for aisle_number in range(1, NUM_AISLES + 1):
-        v1_employees = sum(item["v1_aisles"][aisle_number - 1]["employees"] for item in results)
-        v1_customers = sum(item["v1_aisles"][aisle_number - 1]["customers"] for item in results)
-        v2_employees = sum(item["v2_aisles"][aisle_number - 1]["employees"] for item in results)
-        v2_customers = sum(item["v2_aisles"][aisle_number - 1]["customers"] for item in results)
-        final_v1_aisles.append({"aisle": aisle_number, "employees": v1_employees, "customers": v1_customers, "ratio": calc_ratio(v1_employees, v1_customers)})
-        final_v2_aisles.append({"aisle": aisle_number, "employees": v2_employees, "customers": v2_customers, "ratio": calc_ratio(v2_employees, v2_customers)})
     print(f"  Video 1: {average1:.2f}" if valid else "  Video 1: N/A")
     print(f"  Video 2: {average2:.2f}" if valid else "  Video 2: N/A")
 
-    # Save JSON
+    # Aggregate aisle stats
+    agg_v1 = [{"aisle": i + 1, "total_employees": 0, "total_customers": 0} for i in range(NUM_AISLES)]
+    agg_v2 = [{"aisle": i + 1, "total_employees": 0, "total_customers": 0} for i in range(NUM_AISLES)]
+    for r in results:
+        for a in r["v1_aisles"]:
+            agg_v1[a["aisle"] - 1]["total_employees"] += a["employees"]
+            agg_v1[a["aisle"] - 1]["total_customers"] += a["customers"]
+        for a in r["v2_aisles"]:
+            agg_v2[a["aisle"] - 1]["total_employees"] += a["employees"]
+            agg_v2[a["aisle"] - 1]["total_customers"] += a["customers"]
+
+    final_v1_aisles = []
+    for a in agg_v1:
+        ratio = calc_ratio(a["total_employees"], a["total_customers"])
+        final_v1_aisles.append({**a, "ratio": ratio})
+
+    final_v2_aisles = []
+    for a in agg_v2:
+        ratio = calc_ratio(a["total_employees"], a["total_customers"])
+        final_v2_aisles.append({**a, "ratio": ratio})
+
+    final_redist_v1 = generate_redistribution([dict(a) for a in final_v1_aisles])
+    final_redist_v2 = generate_redistribution([dict(a) for a in final_v2_aisles])
+
     output = {
         "count_mode": "unique_local_tracks_with_aisles",
         "video1": video1_path,
@@ -268,10 +299,7 @@ def main():
             "video2_peak": max(counts2.values(), default=0),
         },
         "final_aisles": {"video1": final_v1_aisles, "video2": final_v2_aisles},
-        "final_redistribution": {
-            "video1": generate_redistribution(final_v1_aisles),
-            "video2": generate_redistribution(final_v2_aisles),
-        },
+        "final_redistribution": {"video1": final_redist_v1, "video2": final_redist_v2},
         "samples": results,
     }
 
@@ -281,7 +309,6 @@ def main():
     json_path.write_text(json.dumps(output, indent=2))
     print(f"\nJSON saved to {json_path}")
 
-    # Save CSV
     csv_path = OUTPUT_DIR / "people_comparison.csv"
     with open(csv_path, "w", newline="") as f:
         writer = csv.DictWriter(

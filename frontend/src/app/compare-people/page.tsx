@@ -1,6 +1,37 @@
 "use client";
 
 import { FormEvent, useMemo, useState } from "react";
+import { CRTFrame } from "@/components/ui/CRTFrame";
+
+type AisleData = {
+  aisle: number;
+  employees: number;
+  customers: number;
+  ratio?: number;
+};
+
+type Redistribution = {
+  aisles: AisleData[];
+  moves: Array<{
+    from_aisle: number;
+    to_aisle: number;
+    count: number;
+    reason: string;
+  }>;
+  summary: string;
+};
+
+type Sample = {
+  sample: number;
+  frame: number;
+  timestamp_s: number;
+  v1_count: number;
+  v2_count: number;
+  v1_aisles: AisleData[];
+  v2_aisles: AisleData[];
+  v1_redistribution: Redistribution;
+  v2_redistribution: Redistribution;
+};
 
 type ComparisonResult = {
   video1: string;
@@ -14,32 +45,33 @@ type ComparisonResult = {
   averages: { video1: number; video2: number };
   final_aisles: { video1: AisleData[]; video2: AisleData[] };
   final_redistribution: { video1: Redistribution; video2: Redistribution };
-  samples: Array<{
-    sample: number;
-    frame: number;
-    timestamp_s: number;
-    v1_count: number;
-    v2_count: number;
-    diff: number;
-    verdict: string;
-  }>;
-};
-
-type AisleData = {
-  aisle: number;
-  employees: number;
-  customers: number;
-  ratio?: number;
-};
-
-type Redistribution = {
-  aisles: AisleData[];
-  moves: Array<{ from_aisle: number; to_aisle: number; count: number; reason: string }>;
-  summary: string;
+  samples: Sample[];
 };
 
 const defaultVideo1 = "backend/videos/cam1.mp4";
 const defaultVideo2 = "backend/videos/cam2.mp4";
+
+function RatioBar({ ratio, maxRatio }: { ratio: number; maxRatio: number }) {
+  const pct = maxRatio > 0 ? (ratio / maxRatio) * 100 : 0;
+  const color = ratio >= 1.5 ? "bg-danger" : ratio >= 1.0 ? "bg-warning" : "bg-accent";
+  return (
+    <div className="flex items-center gap-2">
+      <div className="h-2 w-16 overflow-hidden rounded-full bg-border-soft">
+        <div className={`h-full rounded-full ${color}`} style={{ width: `${pct}%` }} />
+      </div>
+      <span className="font-mono text-xs text-text-muted">{ratio.toFixed(2)}</span>
+    </div>
+  );
+}
+
+function MoveBadge({ move }: { move: { from_aisle: number; to_aisle: number; count: number } }) {
+  return (
+    <span className="inline-flex items-center gap-1 rounded-md border border-accent/30 bg-accent/10 px-2 py-1 font-mono text-[11px] text-accent">
+      A{move.from_aisle} <span className="text-text-muted">&rarr;</span> A{move.to_aisle}
+      <span className="ml-1 rounded bg-accent/20 px-1 font-bold">+{move.count}</span>
+    </span>
+  );
+}
 
 export default function ComparePeoplePage() {
   const [video1, setVideo1] = useState(defaultVideo1);
@@ -47,11 +79,10 @@ export default function ComparePeoplePage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [result, setResult] = useState<ComparisonResult | null>(null);
-  const [outputLog, setOutputLog] = useState("");
+  const [activeTab, setActiveTab] = useState<"overview" | "samples">("overview");
 
   const summary = useMemo(() => {
     if (!result) return null;
-
     return {
       totalVideo1: result.totals.video1,
       totalVideo2: result.totals.video2,
@@ -66,8 +97,6 @@ export default function ComparePeoplePage() {
     event.preventDefault();
     setLoading(true);
     setError("");
-    setOutputLog("");
-    setResult(null);
 
     try {
       const response = await fetch("/api/compare-people", {
@@ -76,70 +105,90 @@ export default function ComparePeoplePage() {
         body: JSON.stringify({ video1, video2, frameInterval: 30 }),
       });
 
-      if (!response.ok || !response.body) {
-        const payload = await response.json().catch(() => ({}));
-        const message = payload.error || "Comparison failed";
-        setOutputLog(payload.output || message);
-        throw new Error(message);
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+
+      if (!reader) {
+        setError("No response stream.");
+        setLoading(false);
+        return;
       }
 
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let partial = "";
-
+      let buffer = "";
       while (true) {
-        const { value, done } = await reader.read();
+        const { done, value } = await reader.read();
         if (done) break;
+        buffer += decoder.decode(value, { stream: true });
 
-        partial += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || "";
 
-        const chunks = partial.split("\n\n");
-        partial = chunks.pop() ?? "";
-
-        for (const chunk of chunks) {
-          const lines = chunk.split("\n").filter(Boolean);
-          const eventLine = lines.find((line) => line.startsWith("event:"));
-          const dataLine = lines.find((line) => line.startsWith("data:"));
-
-          if (!eventLine || !dataLine) continue;
-
-          const event = eventLine.replace("event:", "").trim();
-          const payload = JSON.parse(dataLine.replace("data:", "").trim()) as {
-            text?: string;
-            data?: ComparisonResult;
-            message?: string;
-            output?: string;
-          };
-
-          if (event === "log" && payload.text) {
-            setOutputLog((prev) => `${prev}${payload.text}`);
-          }
-
-          if (event === "result" && payload.data) {
-            setResult(payload.data);
-          }
-
-          if (event === "error") {
-            setError(payload.message || "Comparison failed");
-            setOutputLog((prev) => `${prev}${payload.output || payload.message || ""}`);
+        for (const line of lines) {
+          if (line.startsWith("data: ")) {
+            try {
+              const payload = JSON.parse(line.slice(6));
+              if (payload.error) {
+                setError(payload.error);
+                setLoading(false);
+                return;
+              }
+              if (payload.data) {
+                setResult(payload.data);
+              }
+            } catch {
+              // skip malformed lines
+            }
           }
         }
       }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Unexpected error");
-      setResult(null);
-    } finally {
-      setLoading(false);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Request failed");
     }
+
+    setLoading(false);
+  }
+
+  function renderAisleTable(aisles: AisleData[], label: string) {
+    const maxRatio = Math.max(...aisles.map((a) => a.ratio ?? 0), 1);
+    return (
+      <div className="rounded-lg border border-border-soft bg-bg p-4">
+        <h3 className="mb-3 font-heading text-sm font-semibold text-text">{label}</h3>
+        <table className="w-full text-left text-sm">
+          <thead>
+            <tr className="border-b border-border-soft text-text-muted">
+              <th className="pb-2 font-mono text-[10px] uppercase tracking-[0.2em]">Aisle</th>
+              <th className="pb-2 font-mono text-[10px] uppercase tracking-[0.2em]">Employees</th>
+              <th className="pb-2 font-mono text-[10px] uppercase tracking-[0.2em]">Customers</th>
+              <th className="pb-2 font-mono text-[10px] uppercase tracking-[0.2em]">Ratio (C/E)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {aisles.map((a) => (
+              <tr key={a.aisle} className="border-b border-border-soft/50">
+                <td className="py-2 font-semibold text-text">Aisle {a.aisle}</td>
+                <td className="py-2 text-text">{a.employees}</td>
+                <td className="py-2 text-text">{a.customers}</td>
+                <td className="py-2">
+                  <RatioBar ratio={a.ratio ?? 0} maxRatio={maxRatio} />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    );
   }
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-8 md:px-6">
       <div className="mb-8 space-y-3">
         <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-accent-soft">
-          People count analyzer
+          Staff redistribution analyzer
         </p>
         <h1 className="font-heading text-3xl font-bold text-text">Compare people counts</h1>
+        <p className="max-w-2xl text-sm text-text-muted">
+          Analyzes employee-to-customer ratios across aisles and recommends staff redistribution to balance coverage.
+        </p>
       </div>
 
       <form onSubmit={handleSubmit} className="rounded-xl border border-border-soft bg-surface p-5 shadow-[4px_4px_0_rgba(74,46,30,0.15)]">
@@ -154,7 +203,6 @@ export default function ComparePeoplePage() {
               className="w-full rounded-md border border-border-soft bg-bg px-3 py-2 font-mono text-sm text-text outline-none focus:border-accent"
             />
           </label>
-
           <label className="block">
             <span className="mb-2 block font-mono text-[11px] uppercase tracking-[0.2em] text-text-muted">
               Video 2 path
@@ -166,7 +214,6 @@ export default function ComparePeoplePage() {
             />
           </label>
         </div>
-
         <div className="mt-5 flex items-center gap-3">
           <button
             type="submit"
@@ -182,94 +229,170 @@ export default function ComparePeoplePage() {
       </form>
 
       {error && (
-        <div className="mt-6 rounded-md border border-danger/40 bg-danger/10 p-4 text-sm text-text">
-          {error}
-        </div>
+        <div className="mt-6 rounded-md border border-danger/40 bg-danger/10 p-4 text-sm text-text">{error}</div>
       )}
 
-      {outputLog && (
-        <section className="mt-6 rounded-xl border border-border-soft bg-surface p-4">
-          <h2 className="mb-3 font-heading text-lg font-bold text-text">Terminal output</h2>
-          <pre className="max-h-80 overflow-auto whitespace-pre-wrap break-words font-mono text-xs leading-6 text-text-muted">
-            {outputLog}
-          </pre>
-        </section>
-      )}
-
-      {summary && (
+      {result && summary && (
         <section className="mt-8 space-y-6">
-          <div className="grid gap-4 md:grid-cols-4">
-            <div className="rounded-lg border border-border-soft bg-surface p-4">
-              <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-text-muted">Valid samples</div>
-              <div className="mt-2 text-2xl font-bold text-text">{summary.validSamples}</div>
-            </div>
-            <div className="rounded-lg border border-border-soft bg-surface p-4">
-              <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-text-muted">Video 1 unique</div>
-              <div className="mt-2 text-2xl font-bold text-text">{summary.totalVideo1}</div>
-            </div>
-            <div className="rounded-lg border border-border-soft bg-surface p-4">
-              <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-text-muted">Video 2 unique</div>
-              <div className="mt-2 text-2xl font-bold text-text">{summary.totalVideo2}</div>
-            </div>
-            <div className="rounded-lg border border-border-soft bg-surface p-4">
-              <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-text-muted">Common frames</div>
-              <div className="mt-2 text-2xl font-bold text-text">{summary.commonFrames}</div>
-            </div>
+          {/* Video feeds */}
+          <div className="grid gap-4 md:grid-cols-2">
+            <CRTFrame label={result.video1} videoSrc="/videos/cam1.mp4" signal />
+            <CRTFrame label={result.video2} videoSrc="/videos/cam2.mp4" signal />
           </div>
 
-          <div className="rounded-xl border border-border-soft bg-surface p-4">
-            <h2 className="mb-4 font-heading text-lg font-bold text-text">Comparison output</h2>
-            <div className="overflow-x-auto">
-              <table className="min-w-full border-collapse text-left text-sm">
-                <thead>
-                  <tr className="border-b border-border-soft text-text-muted">
-                    <th className="px-3 py-2 font-mono text-[10px] uppercase tracking-[0.2em]">Sample</th>
-                    <th className="px-3 py-2 font-mono text-[10px] uppercase tracking-[0.2em]">Time (s)</th>
-                    <th className="px-3 py-2 font-mono text-[10px] uppercase tracking-[0.2em]">V1</th>
-                    <th className="px-3 py-2 font-mono text-[10px] uppercase tracking-[0.2em]">V2</th>
-                    <th className="px-3 py-2 font-mono text-[10px] uppercase tracking-[0.2em]">Diff</th>
-                    <th className="px-3 py-2 font-mono text-[10px] uppercase tracking-[0.2em]">Verdict</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {result?.samples.map((sample) => (
-                    <tr key={sample.sample} className="border-b border-border-soft/70">
-                      <td className="px-3 py-2 text-text">{sample.sample}</td>
-                      <td className="px-3 py-2 text-text">{sample.timestamp_s.toFixed(1)}</td>
-                      <td className="px-3 py-2 text-text">{sample.v1_count}</td>
-                      <td className="px-3 py-2 text-text">{sample.v2_count}</td>
-                      <td className={`px-3 py-2 font-semibold ${sample.diff > 0 ? "text-accent" : sample.diff < 0 ? "text-danger" : "text-text"}`}>
-                        {sample.diff}
-                      </td>
-                      <td className="px-3 py-2 text-text-muted">{sample.verdict}</td>
+          {/* Tabs */}
+          <div className="flex gap-1 rounded-lg border border-border-soft bg-surface p-1">
+            {(["overview", "samples"] as const).map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`flex-1 rounded-md px-4 py-2 font-mono text-[11px] uppercase tracking-[0.2em] transition-colors ${
+                  activeTab === tab
+                    ? "bg-accent text-surface"
+                    : "text-text-muted hover:text-text"
+                }`}
+              >
+                {tab === "overview" ? "Staff Overview" : "Sample Breakdown"}
+              </button>
+            ))}
+          </div>
+
+          {activeTab === "overview" && (
+            <>
+              {/* Summary cards */}
+              <div className="grid gap-4 md:grid-cols-4">
+                <div className="rounded-lg border border-border-soft bg-surface p-4">
+                  <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-text-muted">Valid samples</div>
+                  <div className="mt-2 text-2xl font-bold text-text">{summary.validSamples}</div>
+                </div>
+                <div className="rounded-lg border border-border-soft bg-surface p-4">
+                  <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-text-muted">Video 1 total</div>
+                  <div className="mt-2 text-2xl font-bold text-text">{summary.totalVideo1}</div>
+                </div>
+                <div className="rounded-lg border border-border-soft bg-surface p-4">
+                  <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-text-muted">Video 2 total</div>
+                  <div className="mt-2 text-2xl font-bold text-text">{summary.totalVideo2}</div>
+                </div>
+                <div className="rounded-lg border border-border-soft bg-surface p-4">
+                  <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-text-muted">Common frames</div>
+                  <div className="mt-2 text-2xl font-bold text-text">{summary.commonFrames}</div>
+                </div>
+              </div>
+
+              {/* Aisle breakdown side by side */}
+              <div className="grid gap-4 md:grid-cols-2">
+                {renderAisleTable(result.final_aisles.video1, result.video1)}
+                {renderAisleTable(result.final_aisles.video2, result.video2)}
+              </div>
+
+              {/* Redistribution verdicts */}
+              <div className="grid gap-4 md:grid-cols-2">
+                {(["video1", "video2"] as const).map((v) => {
+                  const redist = result.final_redistribution[v];
+                  const label = v === "video1" ? result.video1 : result.video2;
+                  return (
+                    <div key={v} className="rounded-xl border border-border-soft bg-surface p-5">
+                      <h3 className="mb-3 font-heading text-sm font-semibold text-text">
+                        Redistribution &mdash; {label}
+                      </h3>
+                      {redist.moves.length === 0 ? (
+                        <p className="rounded-md border border-accent/30 bg-accent/10 p-3 font-mono text-sm text-accent">
+                          No redistribution needed
+                        </p>
+                      ) : (
+                        <div className="space-y-3">
+                          <div className="flex flex-wrap gap-2">
+                            {redist.moves.map((m, i) => (
+                              <MoveBadge key={i} move={m} />
+                            ))}
+                          </div>
+                          <div className="rounded-md border border-border-soft bg-bg p-3 font-mono text-xs text-text-muted">
+                            {redist.summary}
+                          </div>
+                          <div className="space-y-2">
+                            {redist.moves.map((m, i) => (
+                              <div key={i} className="flex items-start gap-2 text-xs text-text-muted">
+                                <span className="mt-0.5 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" />
+                                {m.reason}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </>
+          )}
+
+          {activeTab === "samples" && (
+            <div className="rounded-xl border border-border-soft bg-surface p-4">
+              <h2 className="mb-4 font-heading text-lg font-bold text-text">Per-sample breakdown</h2>
+              <div className="overflow-x-auto">
+                <table className="min-w-full border-collapse text-left text-sm">
+                  <thead>
+                    <tr className="border-b border-border-soft text-text-muted">
+                      <th className="px-3 py-2 font-mono text-[10px] uppercase tracking-[0.2em]">#</th>
+                      <th className="px-3 py-2 font-mono text-[10px] uppercase tracking-[0.2em]">Time</th>
+                      <th className="px-3 py-2 font-mono text-[10px] uppercase tracking-[0.2em]">V1 Aisles (E/C)</th>
+                      <th className="px-3 py-2 font-mono text-[10px] uppercase tracking-[0.2em]">V2 Aisles (E/C)</th>
+                      <th className="px-3 py-2 font-mono text-[10px] uppercase tracking-[0.2em]">V1 Verdict</th>
+                      <th className="px-3 py-2 font-mono text-[10px] uppercase tracking-[0.2em]">V2 Verdict</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {result.samples.map((s) => (
+                      <tr key={s.sample} className="border-b border-border-soft/70">
+                        <td className="px-3 py-2 text-text">{s.sample}</td>
+                        <td className="px-3 py-2 text-text">{s.timestamp_s.toFixed(1)}s</td>
+                        <td className="px-3 py-2">
+                          <div className="flex flex-wrap gap-1">
+                            {s.v1_aisles.filter((a) => a.employees + a.customers > 0).map((a) => (
+                              <span key={a.aisle} className="inline-flex gap-0.5 rounded bg-border-soft/50 px-1.5 py-0.5 font-mono text-[10px] text-text-muted">
+                                A{a.aisle}:<span className="text-accent">{a.employees}e</span>/<span className="text-text">{a.customers}c</span>
+                              </span>
+                            ))}
+                          </div>
+                        </td>
+                        <td className="px-3 py-2">
+                          <div className="flex flex-wrap gap-1">
+                            {s.v2_aisles.filter((a) => a.employees + a.customers > 0).map((a) => (
+                              <span key={a.aisle} className="inline-flex gap-0.5 rounded bg-border-soft/50 px-1.5 py-0.5 font-mono text-[10px] text-text-muted">
+                                A{a.aisle}:<span className="text-accent">{a.employees}e</span>/<span className="text-text">{a.customers}c</span>
+                              </span>
+                            ))}
+                          </div>
+                        </td>
+                        <td className="px-3 py-2">
+                          {s.v1_redistribution.moves.length > 0 ? (
+                            <div className="flex flex-wrap gap-1">
+                              {s.v1_redistribution.moves.map((m, i) => (
+                                <MoveBadge key={i} move={m} />
+                              ))}
+                            </div>
+                          ) : (
+                            <span className="font-mono text-[11px] text-accent">Balanced</span>
+                          )}
+                        </td>
+                        <td className="px-3 py-2">
+                          {s.v2_redistribution.moves.length > 0 ? (
+                            <div className="flex flex-wrap gap-1">
+                              {s.v2_redistribution.moves.map((m, i) => (
+                                <MoveBadge key={i} move={m} />
+                              ))}
+                            </div>
+                          ) : (
+                            <span className="font-mono text-[11px] text-accent">Balanced</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
-          </div>
-
-          {result && <div className="grid gap-4 lg:grid-cols-2">
-            {(["video1", "video2"] as const).map((videoKey) => {
-              const aisles = result.final_aisles[videoKey];
-              const redistribution = result.final_redistribution[videoKey];
-              return (
-                <section key={videoKey} className="rounded-xl border border-border-soft bg-surface p-4">
-                  <h2 className="mb-3 font-heading text-lg font-bold text-text">
-                    {videoKey === "video1" ? "Camera 1" : "Camera 2"} aisle coverage
-                  </h2>
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full text-left text-sm">
-                      <thead><tr className="border-b border-border-soft text-text-muted"><th className="px-2 py-2">Aisle</th><th className="px-2 py-2">Employees</th><th className="px-2 py-2">Customers</th><th className="px-2 py-2">Ratio</th></tr></thead>
-                      <tbody>{aisles.map((aisle) => <tr key={aisle.aisle} className="border-b border-border-soft/70"><td className="px-2 py-2">{aisle.aisle}</td><td className="px-2 py-2">{aisle.employees}</td><td className="px-2 py-2">{aisle.customers}</td><td className="px-2 py-2">{aisle.ratio?.toFixed(2) ?? "0.00"}</td></tr>)}</tbody>
-                    </table>
-                  </div>
-                  <p className="mt-3 text-sm text-text-muted">{redistribution.summary}</p>
-                  {redistribution.moves.length > 0 && <ul className="mt-2 space-y-1 text-xs text-text-muted">{redistribution.moves.map((move, index) => <li key={`${move.from_aisle}-${move.to_aisle}-${index}`}>Move {move.count} employee from aisle {move.from_aisle} to aisle {move.to_aisle}</li>)}</ul>}
-                </section>
-              );
-            })}
-          </div>}
+          )}
         </section>
       )}
     </main>

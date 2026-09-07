@@ -22,115 +22,35 @@
   },
   "final_aisles": {
     "video1": [
-      {
-        "aisle": 1,
-        "employees": 0,
-        "customers": 1,
-        "ratio": 1.0
-      },
-      {
-        "aisle": 2,
-        "employees": 0,
-        "customers": 2,
-        "ratio": 2.0
-      },
-      {
-        "aisle": 3,
-        "employees": 0,
-        "customers": 3,
-        "ratio": 3.0
-      },
-      {
-        "aisle": 4,
-        "employees": 0,
-        "customers": 4,
-        "ratio": 4.0
-      }
+      { "aisle": 1, "total_employees": 0, "total_customers": 1, "ratio": 1.0 },
+      { "aisle": 2, "total_employees": 0, "total_customers": 2, "ratio": 2.0 },
+      { "aisle": 3, "total_employees": 0, "total_customers": 3, "ratio": 3.0 },
+      { "aisle": 4, "total_employees": 0, "total_customers": 4, "ratio": 4.0 }
     ],
     "video2": [
-      {
-        "aisle": 1,
-        "employees": 0,
-        "customers": 4,
-        "ratio": 4.0
-      },
-      {
-        "aisle": 2,
-        "employees": 3,
-        "customers": 2,
-        "ratio": 0.67
-      },
-      {
-        "aisle": 3,
-        "employees": 1,
-        "customers": 0,
-        "ratio": 0.0
-      },
-      {
-        "aisle": 4,
-        "employees": 1,
-        "customers": 0,
-        "ratio": 0.0
-      }
+      { "aisle": 1, "total_employees": 0, "total_customers": 4, "ratio": 4.0 },
+      { "aisle": 2, "total_employees": 3, "total_customers": 2, "ratio": 0.67 },
+      { "aisle": 3, "total_employees": 1, "total_customers": 0, "ratio": 0.0 },
+      { "aisle": 4, "total_employees": 1, "total_customers": 0, "ratio": 0.0 }
     ]
   },
   "final_redistribution": {
     "video1": {
       "aisles": [
-        {
-          "aisle": 1,
-          "employees": 0,
-          "customers": 1,
-          "ratio": 1.0
-        },
-        {
-          "aisle": 2,
-          "employees": 0,
-          "customers": 2,
-          "ratio": 2.0
-        },
-        {
-          "aisle": 3,
-          "employees": 0,
-          "customers": 3,
-          "ratio": 3.0
-        },
-        {
-          "aisle": 4,
-          "employees": 0,
-          "customers": 4,
-          "ratio": 4.0
-        }
+        { "aisle": 1, "employees": 0, "customers": 1, "ratio": 1.0 },
+        { "aisle": 2, "employees": 0, "customers": 2, "ratio": 2.0 },
+        { "aisle": 3, "employees": 0, "customers": 3, "ratio": 3.0 },
+        { "aisle": 4, "employees": 0, "customers": 4, "ratio": 4.0 }
       ],
       "moves": [],
       "summary": "No redistribution needed"
     },
     "video2": {
       "aisles": [
-        {
-          "aisle": 1,
-          "employees": 0,
-          "customers": 4,
-          "ratio": 4.0
-        },
-        {
-          "aisle": 2,
-          "employees": 3,
-          "customers": 2,
-          "ratio": 0.67
-        },
-        {
-          "aisle": 3,
-          "employees": 1,
-          "customers": 0,
-          "ratio": 0.0
-        },
-        {
-          "aisle": 4,
-          "employees": 1,
-          "customers": 0,
-          "ratio": 0.0
-        }
+        { "aisle": 1, "employees": 0, "customers": 4, "ratio": 4.0 },
+        { "aisle": 2, "employees": 3, "customers": 2, "ratio": 0.67 },
+        { "aisle": 3, "employees": 1, "customers": 0, "ratio": 0.0 },
+        { "aisle": 4, "employees": 1, "customers": 0, "ratio": 0.0 }
       ],
       "moves": [],
       "summary": "No redistribution needed"
@@ -146,117 +66,19 @@
       "diff": -1,
       "verdict": "V1 needs +1",
       "v1_aisles": [
-        {
-          "aisle": 1,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        },
-        {
-          "aisle": 2,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        },
-        {
-          "aisle": 3,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        },
-        {
-          "aisle": 4,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        }
+        { "aisle": 1, "employees": 0, "customers": 0, "ratio": 0.0 },
+        { "aisle": 2, "employees": 0, "customers": 0, "ratio": 0.0 },
+        { "aisle": 3, "employees": 0, "customers": 0, "ratio": 0.0 },
+        { "aisle": 4, "employees": 0, "customers": 0, "ratio": 0.0 }
       ],
       "v2_aisles": [
-        {
-          "aisle": 1,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        },
-        {
-          "aisle": 2,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        },
-        {
-          "aisle": 3,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        },
-        {
-          "aisle": 4,
-          "employees": 1,
-          "customers": 0,
-          "ratio": 0.0
-        }
+        { "aisle": 1, "employees": 0, "customers": 0, "ratio": 0.0 },
+        { "aisle": 2, "employees": 0, "customers": 0, "ratio": 0.0 },
+        { "aisle": 3, "employees": 1, "customers": 0, "ratio": 0.0 },
+        { "aisle": 4, "employees": 0, "customers": 0, "ratio": 0.0 }
       ],
-      "v1_redistribution": {
-        "aisles": [
-          {
-            "aisle": 1,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          },
-          {
-            "aisle": 2,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          },
-          {
-            "aisle": 3,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          },
-          {
-            "aisle": 4,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          }
-        ],
-        "moves": [],
-        "summary": "No redistribution needed"
-      },
-      "v2_redistribution": {
-        "aisles": [
-          {
-            "aisle": 1,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          },
-          {
-            "aisle": 2,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          },
-          {
-            "aisle": 3,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          },
-          {
-            "aisle": 4,
-            "employees": 1,
-            "customers": 0,
-            "ratio": 0.0
-          }
-        ],
-        "moves": [],
-        "summary": "No redistribution needed"
-      }
+      "v1_redistribution": { "aisles": [], "moves": [], "summary": "No redistribution needed" },
+      "v2_redistribution": { "aisles": [], "moves": [], "summary": "No redistribution needed" }
     },
     {
       "sample": 2,
@@ -267,117 +89,19 @@
       "diff": 0,
       "verdict": "Equal",
       "v1_aisles": [
-        {
-          "aisle": 1,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        },
-        {
-          "aisle": 2,
-          "employees": 0,
-          "customers": 1,
-          "ratio": 1.0
-        },
-        {
-          "aisle": 3,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        },
-        {
-          "aisle": 4,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        }
+        { "aisle": 1, "employees": 0, "customers": 0, "ratio": 0.0 },
+        { "aisle": 2, "employees": 0, "customers": 1, "ratio": 1.0 },
+        { "aisle": 3, "employees": 0, "customers": 0, "ratio": 0.0 },
+        { "aisle": 4, "employees": 0, "customers": 0, "ratio": 0.0 }
       ],
       "v2_aisles": [
-        {
-          "aisle": 1,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        },
-        {
-          "aisle": 2,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        },
-        {
-          "aisle": 3,
-          "employees": 1,
-          "customers": 0,
-          "ratio": 0.0
-        },
-        {
-          "aisle": 4,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        }
+        { "aisle": 1, "employees": 0, "customers": 0, "ratio": 0.0 },
+        { "aisle": 2, "employees": 0, "customers": 0, "ratio": 0.0 },
+        { "aisle": 3, "employees": 1, "customers": 0, "ratio": 0.0 },
+        { "aisle": 4, "employees": 0, "customers": 0, "ratio": 0.0 }
       ],
-      "v1_redistribution": {
-        "aisles": [
-          {
-            "aisle": 1,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          },
-          {
-            "aisle": 2,
-            "employees": 0,
-            "customers": 1,
-            "ratio": 1.0
-          },
-          {
-            "aisle": 3,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          },
-          {
-            "aisle": 4,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          }
-        ],
-        "moves": [],
-        "summary": "No redistribution needed"
-      },
-      "v2_redistribution": {
-        "aisles": [
-          {
-            "aisle": 1,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          },
-          {
-            "aisle": 2,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          },
-          {
-            "aisle": 3,
-            "employees": 1,
-            "customers": 0,
-            "ratio": 0.0
-          },
-          {
-            "aisle": 4,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          }
-        ],
-        "moves": [],
-        "summary": "No redistribution needed"
-      }
+      "v1_redistribution": { "aisles": [], "moves": [], "summary": "No redistribution needed" },
+      "v2_redistribution": { "aisles": [], "moves": [], "summary": "No redistribution needed" }
     },
     {
       "sample": 3,
@@ -388,117 +112,19 @@
       "diff": 0,
       "verdict": "Equal",
       "v1_aisles": [
-        {
-          "aisle": 1,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        },
-        {
-          "aisle": 2,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        },
-        {
-          "aisle": 3,
-          "employees": 0,
-          "customers": 1,
-          "ratio": 1.0
-        },
-        {
-          "aisle": 4,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        }
+        { "aisle": 1, "employees": 0, "customers": 0, "ratio": 0.0 },
+        { "aisle": 2, "employees": 0, "customers": 0, "ratio": 0.0 },
+        { "aisle": 3, "employees": 0, "customers": 1, "ratio": 1.0 },
+        { "aisle": 4, "employees": 0, "customers": 0, "ratio": 0.0 }
       ],
       "v2_aisles": [
-        {
-          "aisle": 1,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        },
-        {
-          "aisle": 2,
-          "employees": 1,
-          "customers": 0,
-          "ratio": 0.0
-        },
-        {
-          "aisle": 3,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        },
-        {
-          "aisle": 4,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        }
+        { "aisle": 1, "employees": 0, "customers": 0, "ratio": 0.0 },
+        { "aisle": 2, "employees": 1, "customers": 0, "ratio": 0.0 },
+        { "aisle": 3, "employees": 0, "customers": 0, "ratio": 0.0 },
+        { "aisle": 4, "employees": 0, "customers": 0, "ratio": 0.0 }
       ],
-      "v1_redistribution": {
-        "aisles": [
-          {
-            "aisle": 1,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          },
-          {
-            "aisle": 2,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          },
-          {
-            "aisle": 3,
-            "employees": 0,
-            "customers": 1,
-            "ratio": 1.0
-          },
-          {
-            "aisle": 4,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          }
-        ],
-        "moves": [],
-        "summary": "No redistribution needed"
-      },
-      "v2_redistribution": {
-        "aisles": [
-          {
-            "aisle": 1,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          },
-          {
-            "aisle": 2,
-            "employees": 1,
-            "customers": 0,
-            "ratio": 0.0
-          },
-          {
-            "aisle": 3,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          },
-          {
-            "aisle": 4,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          }
-        ],
-        "moves": [],
-        "summary": "No redistribution needed"
-      }
+      "v1_redistribution": { "aisles": [], "moves": [], "summary": "No redistribution needed" },
+      "v2_redistribution": { "aisles": [], "moves": [], "summary": "No redistribution needed" }
     },
     {
       "sample": 4,
@@ -509,117 +135,19 @@
       "diff": 0,
       "verdict": "Equal",
       "v1_aisles": [
-        {
-          "aisle": 1,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        },
-        {
-          "aisle": 2,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        },
-        {
-          "aisle": 3,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        },
-        {
-          "aisle": 4,
-          "employees": 0,
-          "customers": 1,
-          "ratio": 1.0
-        }
+        { "aisle": 1, "employees": 0, "customers": 0, "ratio": 0.0 },
+        { "aisle": 2, "employees": 0, "customers": 0, "ratio": 0.0 },
+        { "aisle": 3, "employees": 0, "customers": 0, "ratio": 0.0 },
+        { "aisle": 4, "employees": 0, "customers": 1, "ratio": 1.0 }
       ],
       "v2_aisles": [
-        {
-          "aisle": 1,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        },
-        {
-          "aisle": 2,
-          "employees": 0,
-          "customers": 1,
-          "ratio": 1.0
-        },
-        {
-          "aisle": 3,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        },
-        {
-          "aisle": 4,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        }
+        { "aisle": 1, "employees": 0, "customers": 0, "ratio": 0.0 },
+        { "aisle": 2, "employees": 0, "customers": 1, "ratio": 1.0 },
+        { "aisle": 3, "employees": 0, "customers": 0, "ratio": 0.0 },
+        { "aisle": 4, "employees": 0, "customers": 0, "ratio": 0.0 }
       ],
-      "v1_redistribution": {
-        "aisles": [
-          {
-            "aisle": 1,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          },
-          {
-            "aisle": 2,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          },
-          {
-            "aisle": 3,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          },
-          {
-            "aisle": 4,
-            "employees": 0,
-            "customers": 1,
-            "ratio": 1.0
-          }
-        ],
-        "moves": [],
-        "summary": "No redistribution needed"
-      },
-      "v2_redistribution": {
-        "aisles": [
-          {
-            "aisle": 1,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          },
-          {
-            "aisle": 2,
-            "employees": 0,
-            "customers": 1,
-            "ratio": 1.0
-          },
-          {
-            "aisle": 3,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          },
-          {
-            "aisle": 4,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          }
-        ],
-        "moves": [],
-        "summary": "No redistribution needed"
-      }
+      "v1_redistribution": { "aisles": [], "moves": [], "summary": "No redistribution needed" },
+      "v2_redistribution": { "aisles": [], "moves": [], "summary": "No redistribution needed" }
     },
     {
       "sample": 5,
@@ -630,117 +158,19 @@
       "diff": 0,
       "verdict": "Equal",
       "v1_aisles": [
-        {
-          "aisle": 1,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        },
-        {
-          "aisle": 2,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        },
-        {
-          "aisle": 3,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        },
-        {
-          "aisle": 4,
-          "employees": 0,
-          "customers": 1,
-          "ratio": 1.0
-        }
+        { "aisle": 1, "employees": 0, "customers": 0, "ratio": 0.0 },
+        { "aisle": 2, "employees": 0, "customers": 0, "ratio": 0.0 },
+        { "aisle": 3, "employees": 0, "customers": 0, "ratio": 0.0 },
+        { "aisle": 4, "employees": 0, "customers": 1, "ratio": 1.0 }
       ],
       "v2_aisles": [
-        {
-          "aisle": 1,
-          "employees": 0,
-          "customers": 1,
-          "ratio": 1.0
-        },
-        {
-          "aisle": 2,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        },
-        {
-          "aisle": 3,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        },
-        {
-          "aisle": 4,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        }
+        { "aisle": 1, "employees": 0, "customers": 1, "ratio": 1.0 },
+        { "aisle": 2, "employees": 0, "customers": 0, "ratio": 0.0 },
+        { "aisle": 3, "employees": 0, "customers": 0, "ratio": 0.0 },
+        { "aisle": 4, "employees": 0, "customers": 0, "ratio": 0.0 }
       ],
-      "v1_redistribution": {
-        "aisles": [
-          {
-            "aisle": 1,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          },
-          {
-            "aisle": 2,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          },
-          {
-            "aisle": 3,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          },
-          {
-            "aisle": 4,
-            "employees": 0,
-            "customers": 1,
-            "ratio": 1.0
-          }
-        ],
-        "moves": [],
-        "summary": "No redistribution needed"
-      },
-      "v2_redistribution": {
-        "aisles": [
-          {
-            "aisle": 1,
-            "employees": 0,
-            "customers": 1,
-            "ratio": 1.0
-          },
-          {
-            "aisle": 2,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          },
-          {
-            "aisle": 3,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          },
-          {
-            "aisle": 4,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          }
-        ],
-        "moves": [],
-        "summary": "No redistribution needed"
-      }
+      "v1_redistribution": { "aisles": [], "moves": [], "summary": "No redistribution needed" },
+      "v2_redistribution": { "aisles": [], "moves": [], "summary": "No redistribution needed" }
     },
     {
       "sample": 6,
@@ -751,117 +181,19 @@
       "diff": 0,
       "verdict": "Equal",
       "v1_aisles": [
-        {
-          "aisle": 1,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        },
-        {
-          "aisle": 2,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        },
-        {
-          "aisle": 3,
-          "employees": 0,
-          "customers": 1,
-          "ratio": 1.0
-        },
-        {
-          "aisle": 4,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        }
+        { "aisle": 1, "employees": 0, "customers": 0, "ratio": 0.0 },
+        { "aisle": 2, "employees": 0, "customers": 0, "ratio": 0.0 },
+        { "aisle": 3, "employees": 0, "customers": 1, "ratio": 1.0 },
+        { "aisle": 4, "employees": 0, "customers": 0, "ratio": 0.0 }
       ],
       "v2_aisles": [
-        {
-          "aisle": 1,
-          "employees": 0,
-          "customers": 1,
-          "ratio": 1.0
-        },
-        {
-          "aisle": 2,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        },
-        {
-          "aisle": 3,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        },
-        {
-          "aisle": 4,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        }
+        { "aisle": 1, "employees": 0, "customers": 1, "ratio": 1.0 },
+        { "aisle": 2, "employees": 0, "customers": 0, "ratio": 0.0 },
+        { "aisle": 3, "employees": 0, "customers": 0, "ratio": 0.0 },
+        { "aisle": 4, "employees": 0, "customers": 0, "ratio": 0.0 }
       ],
-      "v1_redistribution": {
-        "aisles": [
-          {
-            "aisle": 1,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          },
-          {
-            "aisle": 2,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          },
-          {
-            "aisle": 3,
-            "employees": 0,
-            "customers": 1,
-            "ratio": 1.0
-          },
-          {
-            "aisle": 4,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          }
-        ],
-        "moves": [],
-        "summary": "No redistribution needed"
-      },
-      "v2_redistribution": {
-        "aisles": [
-          {
-            "aisle": 1,
-            "employees": 0,
-            "customers": 1,
-            "ratio": 1.0
-          },
-          {
-            "aisle": 2,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          },
-          {
-            "aisle": 3,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          },
-          {
-            "aisle": 4,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          }
-        ],
-        "moves": [],
-        "summary": "No redistribution needed"
-      }
+      "v1_redistribution": { "aisles": [], "moves": [], "summary": "No redistribution needed" },
+      "v2_redistribution": { "aisles": [], "moves": [], "summary": "No redistribution needed" }
     },
     {
       "sample": 7,
@@ -872,117 +204,19 @@
       "diff": 0,
       "verdict": "Equal",
       "v1_aisles": [
-        {
-          "aisle": 1,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        },
-        {
-          "aisle": 2,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        },
-        {
-          "aisle": 3,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        },
-        {
-          "aisle": 4,
-          "employees": 0,
-          "customers": 1,
-          "ratio": 1.0
-        }
+        { "aisle": 1, "employees": 0, "customers": 0, "ratio": 0.0 },
+        { "aisle": 2, "employees": 0, "customers": 0, "ratio": 0.0 },
+        { "aisle": 3, "employees": 0, "customers": 0, "ratio": 0.0 },
+        { "aisle": 4, "employees": 0, "customers": 1, "ratio": 1.0 }
       ],
       "v2_aisles": [
-        {
-          "aisle": 1,
-          "employees": 0,
-          "customers": 1,
-          "ratio": 1.0
-        },
-        {
-          "aisle": 2,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        },
-        {
-          "aisle": 3,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        },
-        {
-          "aisle": 4,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        }
+        { "aisle": 1, "employees": 0, "customers": 1, "ratio": 1.0 },
+        { "aisle": 2, "employees": 0, "customers": 0, "ratio": 0.0 },
+        { "aisle": 3, "employees": 0, "customers": 0, "ratio": 0.0 },
+        { "aisle": 4, "employees": 0, "customers": 0, "ratio": 0.0 }
       ],
-      "v1_redistribution": {
-        "aisles": [
-          {
-            "aisle": 1,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          },
-          {
-            "aisle": 2,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          },
-          {
-            "aisle": 3,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          },
-          {
-            "aisle": 4,
-            "employees": 0,
-            "customers": 1,
-            "ratio": 1.0
-          }
-        ],
-        "moves": [],
-        "summary": "No redistribution needed"
-      },
-      "v2_redistribution": {
-        "aisles": [
-          {
-            "aisle": 1,
-            "employees": 0,
-            "customers": 1,
-            "ratio": 1.0
-          },
-          {
-            "aisle": 2,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          },
-          {
-            "aisle": 3,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          },
-          {
-            "aisle": 4,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          }
-        ],
-        "moves": [],
-        "summary": "No redistribution needed"
-      }
+      "v1_redistribution": { "aisles": [], "moves": [], "summary": "No redistribution needed" },
+      "v2_redistribution": { "aisles": [], "moves": [], "summary": "No redistribution needed" }
     },
     {
       "sample": 8,
@@ -993,117 +227,19 @@
       "diff": 0,
       "verdict": "Equal",
       "v1_aisles": [
-        {
-          "aisle": 1,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        },
-        {
-          "aisle": 2,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        },
-        {
-          "aisle": 3,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        },
-        {
-          "aisle": 4,
-          "employees": 0,
-          "customers": 1,
-          "ratio": 1.0
-        }
+        { "aisle": 1, "employees": 0, "customers": 0, "ratio": 0.0 },
+        { "aisle": 2, "employees": 0, "customers": 0, "ratio": 0.0 },
+        { "aisle": 3, "employees": 0, "customers": 0, "ratio": 0.0 },
+        { "aisle": 4, "employees": 0, "customers": 1, "ratio": 1.0 }
       ],
       "v2_aisles": [
-        {
-          "aisle": 1,
-          "employees": 0,
-          "customers": 1,
-          "ratio": 1.0
-        },
-        {
-          "aisle": 2,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        },
-        {
-          "aisle": 3,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        },
-        {
-          "aisle": 4,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        }
+        { "aisle": 1, "employees": 0, "customers": 1, "ratio": 1.0 },
+        { "aisle": 2, "employees": 0, "customers": 0, "ratio": 0.0 },
+        { "aisle": 3, "employees": 0, "customers": 0, "ratio": 0.0 },
+        { "aisle": 4, "employees": 0, "customers": 0, "ratio": 0.0 }
       ],
-      "v1_redistribution": {
-        "aisles": [
-          {
-            "aisle": 1,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          },
-          {
-            "aisle": 2,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          },
-          {
-            "aisle": 3,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          },
-          {
-            "aisle": 4,
-            "employees": 0,
-            "customers": 1,
-            "ratio": 1.0
-          }
-        ],
-        "moves": [],
-        "summary": "No redistribution needed"
-      },
-      "v2_redistribution": {
-        "aisles": [
-          {
-            "aisle": 1,
-            "employees": 0,
-            "customers": 1,
-            "ratio": 1.0
-          },
-          {
-            "aisle": 2,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          },
-          {
-            "aisle": 3,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          },
-          {
-            "aisle": 4,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          }
-        ],
-        "moves": [],
-        "summary": "No redistribution needed"
-      }
+      "v1_redistribution": { "aisles": [], "moves": [], "summary": "No redistribution needed" },
+      "v2_redistribution": { "aisles": [], "moves": [], "summary": "No redistribution needed" }
     },
     {
       "sample": 9,
@@ -1114,117 +250,19 @@
       "diff": 1,
       "verdict": "V2 needs +1",
       "v1_aisles": [
-        {
-          "aisle": 1,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        },
-        {
-          "aisle": 2,
-          "employees": 0,
-          "customers": 1,
-          "ratio": 1.0
-        },
-        {
-          "aisle": 3,
-          "employees": 0,
-          "customers": 1,
-          "ratio": 1.0
-        },
-        {
-          "aisle": 4,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        }
+        { "aisle": 1, "employees": 0, "customers": 0, "ratio": 0.0 },
+        { "aisle": 2, "employees": 0, "customers": 1, "ratio": 1.0 },
+        { "aisle": 3, "employees": 0, "customers": 1, "ratio": 1.0 },
+        { "aisle": 4, "employees": 0, "customers": 0, "ratio": 0.0 }
       ],
       "v2_aisles": [
-        {
-          "aisle": 1,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        },
-        {
-          "aisle": 2,
-          "employees": 0,
-          "customers": 1,
-          "ratio": 1.0
-        },
-        {
-          "aisle": 3,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        },
-        {
-          "aisle": 4,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        }
+        { "aisle": 1, "employees": 0, "customers": 0, "ratio": 0.0 },
+        { "aisle": 2, "employees": 0, "customers": 1, "ratio": 1.0 },
+        { "aisle": 3, "employees": 0, "customers": 0, "ratio": 0.0 },
+        { "aisle": 4, "employees": 0, "customers": 0, "ratio": 0.0 }
       ],
-      "v1_redistribution": {
-        "aisles": [
-          {
-            "aisle": 1,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          },
-          {
-            "aisle": 2,
-            "employees": 0,
-            "customers": 1,
-            "ratio": 1.0
-          },
-          {
-            "aisle": 3,
-            "employees": 0,
-            "customers": 1,
-            "ratio": 1.0
-          },
-          {
-            "aisle": 4,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          }
-        ],
-        "moves": [],
-        "summary": "No redistribution needed"
-      },
-      "v2_redistribution": {
-        "aisles": [
-          {
-            "aisle": 1,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          },
-          {
-            "aisle": 2,
-            "employees": 0,
-            "customers": 1,
-            "ratio": 1.0
-          },
-          {
-            "aisle": 3,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          },
-          {
-            "aisle": 4,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          }
-        ],
-        "moves": [],
-        "summary": "No redistribution needed"
-      }
+      "v1_redistribution": { "aisles": [], "moves": [], "summary": "No redistribution needed" },
+      "v2_redistribution": { "aisles": [], "moves": [], "summary": "No redistribution needed" }
     },
     {
       "sample": 10,
@@ -1235,117 +273,19 @@
       "diff": 0,
       "verdict": "Equal",
       "v1_aisles": [
-        {
-          "aisle": 1,
-          "employees": 0,
-          "customers": 1,
-          "ratio": 1.0
-        },
-        {
-          "aisle": 2,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        },
-        {
-          "aisle": 3,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        },
-        {
-          "aisle": 4,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        }
+        { "aisle": 1, "employees": 0, "customers": 1, "ratio": 1.0 },
+        { "aisle": 2, "employees": 0, "customers": 0, "ratio": 0.0 },
+        { "aisle": 3, "employees": 0, "customers": 0, "ratio": 0.0 },
+        { "aisle": 4, "employees": 0, "customers": 0, "ratio": 0.0 }
       ],
       "v2_aisles": [
-        {
-          "aisle": 1,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        },
-        {
-          "aisle": 2,
-          "employees": 1,
-          "customers": 0,
-          "ratio": 0.0
-        },
-        {
-          "aisle": 3,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        },
-        {
-          "aisle": 4,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        }
+        { "aisle": 1, "employees": 0, "customers": 0, "ratio": 0.0 },
+        { "aisle": 2, "employees": 1, "customers": 0, "ratio": 0.0 },
+        { "aisle": 3, "employees": 0, "customers": 0, "ratio": 0.0 },
+        { "aisle": 4, "employees": 0, "customers": 0, "ratio": 0.0 }
       ],
-      "v1_redistribution": {
-        "aisles": [
-          {
-            "aisle": 1,
-            "employees": 0,
-            "customers": 1,
-            "ratio": 1.0
-          },
-          {
-            "aisle": 2,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          },
-          {
-            "aisle": 3,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          },
-          {
-            "aisle": 4,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          }
-        ],
-        "moves": [],
-        "summary": "No redistribution needed"
-      },
-      "v2_redistribution": {
-        "aisles": [
-          {
-            "aisle": 1,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          },
-          {
-            "aisle": 2,
-            "employees": 1,
-            "customers": 0,
-            "ratio": 0.0
-          },
-          {
-            "aisle": 3,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          },
-          {
-            "aisle": 4,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          }
-        ],
-        "moves": [],
-        "summary": "No redistribution needed"
-      }
+      "v1_redistribution": { "aisles": [], "moves": [], "summary": "No redistribution needed" },
+      "v2_redistribution": { "aisles": [], "moves": [], "summary": "No redistribution needed" }
     },
     {
       "sample": 11,
@@ -1356,117 +296,19 @@
       "diff": -1,
       "verdict": "V1 needs +1",
       "v1_aisles": [
-        {
-          "aisle": 1,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        },
-        {
-          "aisle": 2,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        },
-        {
-          "aisle": 3,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        },
-        {
-          "aisle": 4,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        }
+        { "aisle": 1, "employees": 0, "customers": 0, "ratio": 0.0 },
+        { "aisle": 2, "employees": 0, "customers": 0, "ratio": 0.0 },
+        { "aisle": 3, "employees": 0, "customers": 0, "ratio": 0.0 },
+        { "aisle": 4, "employees": 0, "customers": 0, "ratio": 0.0 }
       ],
       "v2_aisles": [
-        {
-          "aisle": 1,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        },
-        {
-          "aisle": 2,
-          "employees": 1,
-          "customers": 0,
-          "ratio": 0.0
-        },
-        {
-          "aisle": 3,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        },
-        {
-          "aisle": 4,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        }
+        { "aisle": 1, "employees": 0, "customers": 0, "ratio": 0.0 },
+        { "aisle": 2, "employees": 1, "customers": 0, "ratio": 0.0 },
+        { "aisle": 3, "employees": 0, "customers": 0, "ratio": 0.0 },
+        { "aisle": 4, "employees": 0, "customers": 0, "ratio": 0.0 }
       ],
-      "v1_redistribution": {
-        "aisles": [
-          {
-            "aisle": 1,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          },
-          {
-            "aisle": 2,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          },
-          {
-            "aisle": 3,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          },
-          {
-            "aisle": 4,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          }
-        ],
-        "moves": [],
-        "summary": "No redistribution needed"
-      },
-      "v2_redistribution": {
-        "aisles": [
-          {
-            "aisle": 1,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          },
-          {
-            "aisle": 2,
-            "employees": 1,
-            "customers": 0,
-            "ratio": 0.0
-          },
-          {
-            "aisle": 3,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          },
-          {
-            "aisle": 4,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          }
-        ],
-        "moves": [],
-        "summary": "No redistribution needed"
-      }
+      "v1_redistribution": { "aisles": [], "moves": [], "summary": "No redistribution needed" },
+      "v2_redistribution": { "aisles": [], "moves": [], "summary": "No redistribution needed" }
     },
     {
       "sample": 12,
@@ -1477,117 +319,19 @@
       "diff": 0,
       "verdict": "Equal",
       "v1_aisles": [
-        {
-          "aisle": 1,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        },
-        {
-          "aisle": 2,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        },
-        {
-          "aisle": 3,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        },
-        {
-          "aisle": 4,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        }
+        { "aisle": 1, "employees": 0, "customers": 0, "ratio": 0.0 },
+        { "aisle": 2, "employees": 0, "customers": 0, "ratio": 0.0 },
+        { "aisle": 3, "employees": 0, "customers": 0, "ratio": 0.0 },
+        { "aisle": 4, "employees": 0, "customers": 0, "ratio": 0.0 }
       ],
       "v2_aisles": [
-        {
-          "aisle": 1,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        },
-        {
-          "aisle": 2,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        },
-        {
-          "aisle": 3,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        },
-        {
-          "aisle": 4,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        }
+        { "aisle": 1, "employees": 0, "customers": 0, "ratio": 0.0 },
+        { "aisle": 2, "employees": 0, "customers": 0, "ratio": 0.0 },
+        { "aisle": 3, "employees": 0, "customers": 0, "ratio": 0.0 },
+        { "aisle": 4, "employees": 0, "customers": 0, "ratio": 0.0 }
       ],
-      "v1_redistribution": {
-        "aisles": [
-          {
-            "aisle": 1,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          },
-          {
-            "aisle": 2,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          },
-          {
-            "aisle": 3,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          },
-          {
-            "aisle": 4,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          }
-        ],
-        "moves": [],
-        "summary": "No redistribution needed"
-      },
-      "v2_redistribution": {
-        "aisles": [
-          {
-            "aisle": 1,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          },
-          {
-            "aisle": 2,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          },
-          {
-            "aisle": 3,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          },
-          {
-            "aisle": 4,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          }
-        ],
-        "moves": [],
-        "summary": "No redistribution needed"
-      }
+      "v1_redistribution": { "aisles": [], "moves": [], "summary": "No redistribution needed" },
+      "v2_redistribution": { "aisles": [], "moves": [], "summary": "No redistribution needed" }
     },
     {
       "sample": 13,
@@ -1598,117 +342,19 @@
       "diff": 0,
       "verdict": "Equal",
       "v1_aisles": [
-        {
-          "aisle": 1,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        },
-        {
-          "aisle": 2,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        },
-        {
-          "aisle": 3,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        },
-        {
-          "aisle": 4,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        }
+        { "aisle": 1, "employees": 0, "customers": 0, "ratio": 0.0 },
+        { "aisle": 2, "employees": 0, "customers": 0, "ratio": 0.0 },
+        { "aisle": 3, "employees": 0, "customers": 0, "ratio": 0.0 },
+        { "aisle": 4, "employees": 0, "customers": 0, "ratio": 0.0 }
       ],
       "v2_aisles": [
-        {
-          "aisle": 1,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        },
-        {
-          "aisle": 2,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        },
-        {
-          "aisle": 3,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        },
-        {
-          "aisle": 4,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        }
+        { "aisle": 1, "employees": 0, "customers": 0, "ratio": 0.0 },
+        { "aisle": 2, "employees": 0, "customers": 0, "ratio": 0.0 },
+        { "aisle": 3, "employees": 0, "customers": 0, "ratio": 0.0 },
+        { "aisle": 4, "employees": 0, "customers": 0, "ratio": 0.0 }
       ],
-      "v1_redistribution": {
-        "aisles": [
-          {
-            "aisle": 1,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          },
-          {
-            "aisle": 2,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          },
-          {
-            "aisle": 3,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          },
-          {
-            "aisle": 4,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          }
-        ],
-        "moves": [],
-        "summary": "No redistribution needed"
-      },
-      "v2_redistribution": {
-        "aisles": [
-          {
-            "aisle": 1,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          },
-          {
-            "aisle": 2,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          },
-          {
-            "aisle": 3,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          },
-          {
-            "aisle": 4,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          }
-        ],
-        "moves": [],
-        "summary": "No redistribution needed"
-      }
+      "v1_redistribution": { "aisles": [], "moves": [], "summary": "No redistribution needed" },
+      "v2_redistribution": { "aisles": [], "moves": [], "summary": "No redistribution needed" }
     },
     {
       "sample": 14,
@@ -1719,117 +365,19 @@
       "diff": 0,
       "verdict": "Equal",
       "v1_aisles": [
-        {
-          "aisle": 1,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        },
-        {
-          "aisle": 2,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        },
-        {
-          "aisle": 3,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        },
-        {
-          "aisle": 4,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        }
+        { "aisle": 1, "employees": 0, "customers": 0, "ratio": 0.0 },
+        { "aisle": 2, "employees": 0, "customers": 0, "ratio": 0.0 },
+        { "aisle": 3, "employees": 0, "customers": 0, "ratio": 0.0 },
+        { "aisle": 4, "employees": 0, "customers": 0, "ratio": 0.0 }
       ],
       "v2_aisles": [
-        {
-          "aisle": 1,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        },
-        {
-          "aisle": 2,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        },
-        {
-          "aisle": 3,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        },
-        {
-          "aisle": 4,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        }
+        { "aisle": 1, "employees": 0, "customers": 0, "ratio": 0.0 },
+        { "aisle": 2, "employees": 0, "customers": 0, "ratio": 0.0 },
+        { "aisle": 3, "employees": 0, "customers": 0, "ratio": 0.0 },
+        { "aisle": 4, "employees": 0, "customers": 0, "ratio": 0.0 }
       ],
-      "v1_redistribution": {
-        "aisles": [
-          {
-            "aisle": 1,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          },
-          {
-            "aisle": 2,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          },
-          {
-            "aisle": 3,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          },
-          {
-            "aisle": 4,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          }
-        ],
-        "moves": [],
-        "summary": "No redistribution needed"
-      },
-      "v2_redistribution": {
-        "aisles": [
-          {
-            "aisle": 1,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          },
-          {
-            "aisle": 2,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          },
-          {
-            "aisle": 3,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          },
-          {
-            "aisle": 4,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          }
-        ],
-        "moves": [],
-        "summary": "No redistribution needed"
-      }
+      "v1_redistribution": { "aisles": [], "moves": [], "summary": "No redistribution needed" },
+      "v2_redistribution": { "aisles": [], "moves": [], "summary": "No redistribution needed" }
     },
     {
       "sample": 15,
@@ -1840,117 +388,19 @@
       "diff": 0,
       "verdict": "Equal",
       "v1_aisles": [
-        {
-          "aisle": 1,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        },
-        {
-          "aisle": 2,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        },
-        {
-          "aisle": 3,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        },
-        {
-          "aisle": 4,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        }
+        { "aisle": 1, "employees": 0, "customers": 0, "ratio": 0.0 },
+        { "aisle": 2, "employees": 0, "customers": 0, "ratio": 0.0 },
+        { "aisle": 3, "employees": 0, "customers": 0, "ratio": 0.0 },
+        { "aisle": 4, "employees": 0, "customers": 0, "ratio": 0.0 }
       ],
       "v2_aisles": [
-        {
-          "aisle": 1,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        },
-        {
-          "aisle": 2,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        },
-        {
-          "aisle": 3,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        },
-        {
-          "aisle": 4,
-          "employees": 0,
-          "customers": 0,
-          "ratio": 0.0
-        }
+        { "aisle": 1, "employees": 0, "customers": 0, "ratio": 0.0 },
+        { "aisle": 2, "employees": 0, "customers": 0, "ratio": 0.0 },
+        { "aisle": 3, "employees": 0, "customers": 0, "ratio": 0.0 },
+        { "aisle": 4, "employees": 0, "customers": 0, "ratio": 0.0 }
       ],
-      "v1_redistribution": {
-        "aisles": [
-          {
-            "aisle": 1,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          },
-          {
-            "aisle": 2,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          },
-          {
-            "aisle": 3,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          },
-          {
-            "aisle": 4,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          }
-        ],
-        "moves": [],
-        "summary": "No redistribution needed"
-      },
-      "v2_redistribution": {
-        "aisles": [
-          {
-            "aisle": 1,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          },
-          {
-            "aisle": 2,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          },
-          {
-            "aisle": 3,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          },
-          {
-            "aisle": 4,
-            "employees": 0,
-            "customers": 0,
-            "ratio": 0.0
-          }
-        ],
-        "moves": [],
-        "summary": "No redistribution needed"
-      }
+      "v1_redistribution": { "aisles": [], "moves": [], "summary": "No redistribution needed" },
+      "v2_redistribution": { "aisles": [], "moves": [], "summary": "No redistribution needed" }
     }
   ]
 }

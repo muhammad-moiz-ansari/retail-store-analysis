@@ -9,7 +9,6 @@ import { Badge } from "@/components/ui/Badge";
 import { RetroWindow } from "@/components/ui/RetroWindow";
 
 export default function LandingPage() {
-  // Smooth scroll to section
   const scrollToSection = (id: string) => {
     const element = document.getElementById(id);
     if (element) {
@@ -23,28 +22,18 @@ export default function LandingPage() {
       <section className="w-full px-4 md:px-6 lg:px-8 py-20 md:py-24 lg:py-28">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-            {/* Left Column: Text Content */}
             <div className="space-y-6">
-              {/* Eyebrow Badge */}
               <Badge variant="accent" className="!text-[10px] !px-3 !py-1">
                 AI-POWERED RETAIL ANALYTICS
               </Badge>
-
-              {/* Headline */}
               <h1 className="font-heading text-4xl md:text-5xl lg:text-[52px] font-bold text-text leading-[1.1]">
                 Store Intelligence for Retail Teams - Without New Hardware
-                Store Intelligence for Retail Teams - Without New Hardware
               </h1>
-
-              {/* Sub-headline */}
               <p className="text-lg text-text-muted max-w-[480px] leading-relaxed">
                 RetailPulse turns your existing CCTV into a live system for
                 customer engagement, staff performance, and store analytics -
-                customer engagement, staff performance, and store analytics -
                 no new cameras, no new hardware.
               </p>
-
-              {/* CTA Row */}
               <div className="flex flex-col sm:flex-row gap-3 pt-2">
                 <Link href="/signup">
                   <RetroButton variant="primary" className="!px-6 !py-3 !text-base">
@@ -64,14 +53,11 @@ export default function LandingPage() {
                   </RetroButton>
                 </Link>
               </div>
-
-              {/* Trust Line */}
               <p className="text-sm text-text-muted pt-2">
                 Built for single-store and multi-store retail operations.
               </p>
             </div>
 
-            {/* Right Column: Hero Visual */}
             <div className="flex justify-center lg:justify-end">
               <RetroWindow
                 title="Dashboard Preview"
@@ -87,16 +73,13 @@ export default function LandingPage() {
       {/* ══ PROBLEM / AGITATE SECTION ══ */}
       <section className="w-full bg-surface-alt px-4 md:px-6 lg:px-8 py-16 md:py-20">
         <div className="max-w-4xl mx-auto text-center space-y-8">
-          {/* Section Heading */}
           <h2 className="font-heading text-3xl md:text-4xl font-bold text-text">
             Most Retail Cameras Only Watch for Theft
           </h2>
-
-          {/* Problem Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4">
             <RetroCard>
               <p className="text-sm text-text leading-relaxed">
-                Managers can't tell if customers are actually being helped - or
+                Managers can&apos;t tell if customers are actually being helped - or
                 just wandering, unattended, until they leave.
               </p>
             </RetroCard>
@@ -113,8 +96,6 @@ export default function LandingPage() {
               </p>
             </RetroCard>
           </div>
-
-          {/* Transition Line */}
           <p className="font-heading text-xl md:text-2xl font-medium text-accent pt-6">
             RetailPulse turns that same footage into a live, actionable signal.
           </p>
@@ -127,34 +108,15 @@ export default function LandingPage() {
         className="w-full px-4 md:px-6 lg:px-8 py-16 md:py-20 scroll-mt-16"
       >
         <div className="max-w-6xl mx-auto">
-          {/* Title */}
           <h2 className="font-heading text-3xl md:text-4xl font-bold text-text text-center mb-12">
             How It Works
           </h2>
-
-          {/* Four-Step Flow */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 relative">
             {[
-              {
-                num: "01",
-                title: "Observe",
-                desc: "Existing CCTV cameras - entrance and floor - feed the system in real time.",
-              },
-              {
-                num: "02",
-                title: "Analyze",
-                desc: "AI agents track footfall, staff-customer engagement, and movement patterns automatically.",
-              },
-              {
-                num: "03",
-                title: "Summarize",
-                desc: "Insights are organized into a live dashboard - no manual review of raw footage required.",
-              },
-              {
-                num: "04",
-                title: "Act",
-                desc: "Managers see what's working and what needs attention, backed by data instead of guesswork.",
-              },
+              { num: "01", title: "Observe", desc: "Existing CCTV cameras - entrance and floor - feed the system in real time." },
+              { num: "02", title: "Analyze", desc: "AI agents track footfall, staff-customer engagement, and movement patterns automatically." },
+              { num: "03", title: "Summarize", desc: "Insights are organized into a live dashboard - no manual review of raw footage required." },
+              { num: "04", title: "Act", desc: "Managers see what&apos;s working and what needs attention, backed by data instead of guesswork." },
             ].map((step, i) => (
               <div key={step.num} className="relative">
                 <RetroCard className="h-full">
@@ -170,7 +132,6 @@ export default function LandingPage() {
                     </p>
                   </div>
                 </RetroCard>
-                {/* Connector line (desktop only) */}
                 {i < 3 && (
                   <div
                     className="hidden lg:block absolute top-1/2 -right-3 w-6 h-px border-t border-dashed border-border-soft"
@@ -186,14 +147,10 @@ export default function LandingPage() {
       {/* ══ PRODUCT CAPABILITIES (BENTO GRID) ══ */}
       <section className="w-full bg-surface-alt px-4 md:px-6 lg:px-8 py-16 md:py-20">
         <div className="max-w-6xl mx-auto">
-          {/* Title */}
           <h2 className="font-heading text-3xl md:text-4xl font-bold text-text text-center mb-12">
             One Dashboard. Every Signal.
           </h2>
-
-          {/* Bento Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {/* Large Feature Card - spans 2 columns on desktop */}
             <div className="lg:col-span-2">
               <RetroCard className="h-full">
                 <div className="space-y-4">
@@ -201,7 +158,6 @@ export default function LandingPage() {
                     Live Camera Dashboard
                   </h3>
                   <p className="text-sm text-text-muted leading-relaxed">
-                    Real-time CCTV feed with overlaid insights - see customer
                     Real-time CCTV feed with overlaid insights - see customer
                     movement, staff engagement, and zone activity as it happens.
                   </p>
@@ -212,14 +168,12 @@ export default function LandingPage() {
               </RetroCard>
             </div>
 
-            {/* Standard Feature Cards */}
             <RetroCard>
               <div className="space-y-3">
                 <h3 className="font-heading text-lg font-semibold text-text">
                   Customer Info Analytics
                 </h3>
                 <p className="text-sm text-text-muted leading-relaxed">
-                  Footfall, engagement, trajectory insights - understand who
                   Footfall, engagement, trajectory insights - understand who
                   walks in and what they do.
                 </p>
@@ -233,7 +187,6 @@ export default function LandingPage() {
                 </h3>
                 <p className="text-sm text-text-muted leading-relaxed">
                   Scoring, leaderboard, coverage alerts - fair metrics based on
-                  Scoring, leaderboard, coverage alerts - fair metrics based on
                   objective activity data.
                 </p>
               </div>
@@ -242,11 +195,11 @@ export default function LandingPage() {
             <RetroCard>
               <div className="space-y-3">
                 <h3 className="font-heading text-lg font-semibold text-text">
-                  Spatial Analytics & Heatmaps
+                  Spatial Analytics &amp; Heatmaps
                 </h3>
                 <p className="text-sm text-text-muted leading-relaxed">
                   Movement and zone insight - see where customers spend time
-                  and where they don't.
+                  and where they don&apos;t.
                 </p>
               </div>
             </RetroCard>
@@ -254,10 +207,9 @@ export default function LandingPage() {
             <RetroCard>
               <div className="space-y-3">
                 <h3 className="font-heading text-lg font-semibold text-text">
-                  Sales & Product Trends
+                  Sales &amp; Product Trends
                 </h3>
                 <p className="text-sm text-text-muted leading-relaxed">
-                  POS-driven trend data - connect sales performance to customer
                   POS-driven trend data - connect sales performance to customer
                   behavior patterns.
                 </p>
@@ -267,11 +219,10 @@ export default function LandingPage() {
             <RetroCard>
               <div className="space-y-3">
                 <h3 className="font-heading text-lg font-semibold text-text">
-                  AI Reports & Exports
+                  AI Reports &amp; Exports
                 </h3>
                 <p className="text-sm text-text-muted leading-relaxed">
                   One-click PDF summaries generated by the Insight Narration
-                  agent - ready to share.
                   agent - ready to share.
                 </p>
               </div>
@@ -283,12 +234,9 @@ export default function LandingPage() {
       {/* ══ WHO IT'S FOR SECTION ══ */}
       <section className="w-full px-4 md:px-6 lg:px-8 py-16 md:py-20">
         <div className="max-w-4xl mx-auto">
-          {/* Title */}
           <h2 className="font-heading text-3xl md:text-4xl font-bold text-text text-center mb-12">
             Built for Your Team
           </h2>
-
-          {/* Two Persona Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <RetroCard>
               <div className="space-y-4">
@@ -309,7 +257,6 @@ export default function LandingPage() {
                   Employees
                 </h3>
                 <p className="text-sm text-text leading-relaxed">
-                  A fair, transparent view of performance metrics - built on
                   A fair, transparent view of performance metrics - built on
                   objective activity data, not subjective judgment.
                 </p>
@@ -342,7 +289,6 @@ export default function LandingPage() {
   );
 }
 
-/** Hero dashboard preview with graceful fallback */
 function HeroDashboardPreview() {
   const [imgError, setImgError] = React.useState(false);
 
@@ -366,7 +312,6 @@ function HeroDashboardPreview() {
   );
 }
 
-/** Small placeholder for dashboard preview in bento grid */
 function DashboardPreviewPlaceholder() {
   const [imgError, setImgError] = React.useState(false);
 
