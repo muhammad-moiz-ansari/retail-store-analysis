@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
         existingVideo1 === normalizedVideo1 &&
         existingVideo2 === normalizedVideo2 &&
         existingInterval === frameInterval &&
-        existingCountMode === "unique_local_tracks"
+        existingCountMode === "unique_local_tracks_with_aisles"
       ) {
         const stream = new ReadableStream({
           start(controller) {

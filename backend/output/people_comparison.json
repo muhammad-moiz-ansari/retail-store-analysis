@@ -1,5 +1,5 @@
 {
-  "count_mode": "unique_local_tracks",
+  "count_mode": "unique_local_tracks_with_aisles",
   "video1": "backend/videos/cam1.mp4",
   "video2": "backend/videos/cam2.mp4",
   "frame_interval": 30,
@@ -20,6 +20,122 @@
     "video1_peak": 2,
     "video2_peak": 1
   },
+  "final_aisles": {
+    "video1": [
+      {
+        "aisle": 1,
+        "employees": 0,
+        "customers": 1,
+        "ratio": 1.0
+      },
+      {
+        "aisle": 2,
+        "employees": 0,
+        "customers": 2,
+        "ratio": 2.0
+      },
+      {
+        "aisle": 3,
+        "employees": 0,
+        "customers": 3,
+        "ratio": 3.0
+      },
+      {
+        "aisle": 4,
+        "employees": 0,
+        "customers": 4,
+        "ratio": 4.0
+      }
+    ],
+    "video2": [
+      {
+        "aisle": 1,
+        "employees": 0,
+        "customers": 4,
+        "ratio": 4.0
+      },
+      {
+        "aisle": 2,
+        "employees": 3,
+        "customers": 2,
+        "ratio": 0.67
+      },
+      {
+        "aisle": 3,
+        "employees": 1,
+        "customers": 0,
+        "ratio": 0.0
+      },
+      {
+        "aisle": 4,
+        "employees": 1,
+        "customers": 0,
+        "ratio": 0.0
+      }
+    ]
+  },
+  "final_redistribution": {
+    "video1": {
+      "aisles": [
+        {
+          "aisle": 1,
+          "employees": 0,
+          "customers": 1,
+          "ratio": 1.0
+        },
+        {
+          "aisle": 2,
+          "employees": 0,
+          "customers": 2,
+          "ratio": 2.0
+        },
+        {
+          "aisle": 3,
+          "employees": 0,
+          "customers": 3,
+          "ratio": 3.0
+        },
+        {
+          "aisle": 4,
+          "employees": 0,
+          "customers": 4,
+          "ratio": 4.0
+        }
+      ],
+      "moves": [],
+      "summary": "No redistribution needed"
+    },
+    "video2": {
+      "aisles": [
+        {
+          "aisle": 1,
+          "employees": 0,
+          "customers": 4,
+          "ratio": 4.0
+        },
+        {
+          "aisle": 2,
+          "employees": 3,
+          "customers": 2,
+          "ratio": 0.67
+        },
+        {
+          "aisle": 3,
+          "employees": 1,
+          "customers": 0,
+          "ratio": 0.0
+        },
+        {
+          "aisle": 4,
+          "employees": 1,
+          "customers": 0,
+          "ratio": 0.0
+        }
+      ],
+      "moves": [],
+      "summary": "No redistribution needed"
+    }
+  },
   "samples": [
     {
       "sample": 1,
@@ -28,7 +144,119 @@
       "v1_count": 0,
       "v2_count": 1,
       "diff": -1,
-      "verdict": "V1 needs +1"
+      "verdict": "V1 needs +1",
+      "v1_aisles": [
+        {
+          "aisle": 1,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        },
+        {
+          "aisle": 2,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        },
+        {
+          "aisle": 3,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        },
+        {
+          "aisle": 4,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        }
+      ],
+      "v2_aisles": [
+        {
+          "aisle": 1,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        },
+        {
+          "aisle": 2,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        },
+        {
+          "aisle": 3,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        },
+        {
+          "aisle": 4,
+          "employees": 1,
+          "customers": 0,
+          "ratio": 0.0
+        }
+      ],
+      "v1_redistribution": {
+        "aisles": [
+          {
+            "aisle": 1,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          },
+          {
+            "aisle": 2,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          },
+          {
+            "aisle": 3,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          },
+          {
+            "aisle": 4,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          }
+        ],
+        "moves": [],
+        "summary": "No redistribution needed"
+      },
+      "v2_redistribution": {
+        "aisles": [
+          {
+            "aisle": 1,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          },
+          {
+            "aisle": 2,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          },
+          {
+            "aisle": 3,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          },
+          {
+            "aisle": 4,
+            "employees": 1,
+            "customers": 0,
+            "ratio": 0.0
+          }
+        ],
+        "moves": [],
+        "summary": "No redistribution needed"
+      }
     },
     {
       "sample": 2,
@@ -37,7 +265,119 @@
       "v1_count": 1,
       "v2_count": 1,
       "diff": 0,
-      "verdict": "Equal"
+      "verdict": "Equal",
+      "v1_aisles": [
+        {
+          "aisle": 1,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        },
+        {
+          "aisle": 2,
+          "employees": 0,
+          "customers": 1,
+          "ratio": 1.0
+        },
+        {
+          "aisle": 3,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        },
+        {
+          "aisle": 4,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        }
+      ],
+      "v2_aisles": [
+        {
+          "aisle": 1,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        },
+        {
+          "aisle": 2,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        },
+        {
+          "aisle": 3,
+          "employees": 1,
+          "customers": 0,
+          "ratio": 0.0
+        },
+        {
+          "aisle": 4,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        }
+      ],
+      "v1_redistribution": {
+        "aisles": [
+          {
+            "aisle": 1,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          },
+          {
+            "aisle": 2,
+            "employees": 0,
+            "customers": 1,
+            "ratio": 1.0
+          },
+          {
+            "aisle": 3,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          },
+          {
+            "aisle": 4,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          }
+        ],
+        "moves": [],
+        "summary": "No redistribution needed"
+      },
+      "v2_redistribution": {
+        "aisles": [
+          {
+            "aisle": 1,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          },
+          {
+            "aisle": 2,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          },
+          {
+            "aisle": 3,
+            "employees": 1,
+            "customers": 0,
+            "ratio": 0.0
+          },
+          {
+            "aisle": 4,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          }
+        ],
+        "moves": [],
+        "summary": "No redistribution needed"
+      }
     },
     {
       "sample": 3,
@@ -46,7 +386,119 @@
       "v1_count": 1,
       "v2_count": 1,
       "diff": 0,
-      "verdict": "Equal"
+      "verdict": "Equal",
+      "v1_aisles": [
+        {
+          "aisle": 1,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        },
+        {
+          "aisle": 2,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        },
+        {
+          "aisle": 3,
+          "employees": 0,
+          "customers": 1,
+          "ratio": 1.0
+        },
+        {
+          "aisle": 4,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        }
+      ],
+      "v2_aisles": [
+        {
+          "aisle": 1,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        },
+        {
+          "aisle": 2,
+          "employees": 1,
+          "customers": 0,
+          "ratio": 0.0
+        },
+        {
+          "aisle": 3,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        },
+        {
+          "aisle": 4,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        }
+      ],
+      "v1_redistribution": {
+        "aisles": [
+          {
+            "aisle": 1,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          },
+          {
+            "aisle": 2,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          },
+          {
+            "aisle": 3,
+            "employees": 0,
+            "customers": 1,
+            "ratio": 1.0
+          },
+          {
+            "aisle": 4,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          }
+        ],
+        "moves": [],
+        "summary": "No redistribution needed"
+      },
+      "v2_redistribution": {
+        "aisles": [
+          {
+            "aisle": 1,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          },
+          {
+            "aisle": 2,
+            "employees": 1,
+            "customers": 0,
+            "ratio": 0.0
+          },
+          {
+            "aisle": 3,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          },
+          {
+            "aisle": 4,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          }
+        ],
+        "moves": [],
+        "summary": "No redistribution needed"
+      }
     },
     {
       "sample": 4,
@@ -55,7 +507,119 @@
       "v1_count": 1,
       "v2_count": 1,
       "diff": 0,
-      "verdict": "Equal"
+      "verdict": "Equal",
+      "v1_aisles": [
+        {
+          "aisle": 1,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        },
+        {
+          "aisle": 2,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        },
+        {
+          "aisle": 3,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        },
+        {
+          "aisle": 4,
+          "employees": 0,
+          "customers": 1,
+          "ratio": 1.0
+        }
+      ],
+      "v2_aisles": [
+        {
+          "aisle": 1,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        },
+        {
+          "aisle": 2,
+          "employees": 0,
+          "customers": 1,
+          "ratio": 1.0
+        },
+        {
+          "aisle": 3,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        },
+        {
+          "aisle": 4,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        }
+      ],
+      "v1_redistribution": {
+        "aisles": [
+          {
+            "aisle": 1,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          },
+          {
+            "aisle": 2,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          },
+          {
+            "aisle": 3,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          },
+          {
+            "aisle": 4,
+            "employees": 0,
+            "customers": 1,
+            "ratio": 1.0
+          }
+        ],
+        "moves": [],
+        "summary": "No redistribution needed"
+      },
+      "v2_redistribution": {
+        "aisles": [
+          {
+            "aisle": 1,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          },
+          {
+            "aisle": 2,
+            "employees": 0,
+            "customers": 1,
+            "ratio": 1.0
+          },
+          {
+            "aisle": 3,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          },
+          {
+            "aisle": 4,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          }
+        ],
+        "moves": [],
+        "summary": "No redistribution needed"
+      }
     },
     {
       "sample": 5,
@@ -64,7 +628,119 @@
       "v1_count": 1,
       "v2_count": 1,
       "diff": 0,
-      "verdict": "Equal"
+      "verdict": "Equal",
+      "v1_aisles": [
+        {
+          "aisle": 1,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        },
+        {
+          "aisle": 2,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        },
+        {
+          "aisle": 3,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        },
+        {
+          "aisle": 4,
+          "employees": 0,
+          "customers": 1,
+          "ratio": 1.0
+        }
+      ],
+      "v2_aisles": [
+        {
+          "aisle": 1,
+          "employees": 0,
+          "customers": 1,
+          "ratio": 1.0
+        },
+        {
+          "aisle": 2,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        },
+        {
+          "aisle": 3,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        },
+        {
+          "aisle": 4,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        }
+      ],
+      "v1_redistribution": {
+        "aisles": [
+          {
+            "aisle": 1,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          },
+          {
+            "aisle": 2,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          },
+          {
+            "aisle": 3,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          },
+          {
+            "aisle": 4,
+            "employees": 0,
+            "customers": 1,
+            "ratio": 1.0
+          }
+        ],
+        "moves": [],
+        "summary": "No redistribution needed"
+      },
+      "v2_redistribution": {
+        "aisles": [
+          {
+            "aisle": 1,
+            "employees": 0,
+            "customers": 1,
+            "ratio": 1.0
+          },
+          {
+            "aisle": 2,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          },
+          {
+            "aisle": 3,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          },
+          {
+            "aisle": 4,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          }
+        ],
+        "moves": [],
+        "summary": "No redistribution needed"
+      }
     },
     {
       "sample": 6,
@@ -73,7 +749,119 @@
       "v1_count": 1,
       "v2_count": 1,
       "diff": 0,
-      "verdict": "Equal"
+      "verdict": "Equal",
+      "v1_aisles": [
+        {
+          "aisle": 1,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        },
+        {
+          "aisle": 2,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        },
+        {
+          "aisle": 3,
+          "employees": 0,
+          "customers": 1,
+          "ratio": 1.0
+        },
+        {
+          "aisle": 4,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        }
+      ],
+      "v2_aisles": [
+        {
+          "aisle": 1,
+          "employees": 0,
+          "customers": 1,
+          "ratio": 1.0
+        },
+        {
+          "aisle": 2,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        },
+        {
+          "aisle": 3,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        },
+        {
+          "aisle": 4,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        }
+      ],
+      "v1_redistribution": {
+        "aisles": [
+          {
+            "aisle": 1,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          },
+          {
+            "aisle": 2,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          },
+          {
+            "aisle": 3,
+            "employees": 0,
+            "customers": 1,
+            "ratio": 1.0
+          },
+          {
+            "aisle": 4,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          }
+        ],
+        "moves": [],
+        "summary": "No redistribution needed"
+      },
+      "v2_redistribution": {
+        "aisles": [
+          {
+            "aisle": 1,
+            "employees": 0,
+            "customers": 1,
+            "ratio": 1.0
+          },
+          {
+            "aisle": 2,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          },
+          {
+            "aisle": 3,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          },
+          {
+            "aisle": 4,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          }
+        ],
+        "moves": [],
+        "summary": "No redistribution needed"
+      }
     },
     {
       "sample": 7,
@@ -82,7 +870,119 @@
       "v1_count": 1,
       "v2_count": 1,
       "diff": 0,
-      "verdict": "Equal"
+      "verdict": "Equal",
+      "v1_aisles": [
+        {
+          "aisle": 1,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        },
+        {
+          "aisle": 2,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        },
+        {
+          "aisle": 3,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        },
+        {
+          "aisle": 4,
+          "employees": 0,
+          "customers": 1,
+          "ratio": 1.0
+        }
+      ],
+      "v2_aisles": [
+        {
+          "aisle": 1,
+          "employees": 0,
+          "customers": 1,
+          "ratio": 1.0
+        },
+        {
+          "aisle": 2,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        },
+        {
+          "aisle": 3,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        },
+        {
+          "aisle": 4,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        }
+      ],
+      "v1_redistribution": {
+        "aisles": [
+          {
+            "aisle": 1,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          },
+          {
+            "aisle": 2,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          },
+          {
+            "aisle": 3,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          },
+          {
+            "aisle": 4,
+            "employees": 0,
+            "customers": 1,
+            "ratio": 1.0
+          }
+        ],
+        "moves": [],
+        "summary": "No redistribution needed"
+      },
+      "v2_redistribution": {
+        "aisles": [
+          {
+            "aisle": 1,
+            "employees": 0,
+            "customers": 1,
+            "ratio": 1.0
+          },
+          {
+            "aisle": 2,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          },
+          {
+            "aisle": 3,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          },
+          {
+            "aisle": 4,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          }
+        ],
+        "moves": [],
+        "summary": "No redistribution needed"
+      }
     },
     {
       "sample": 8,
@@ -91,7 +991,119 @@
       "v1_count": 1,
       "v2_count": 1,
       "diff": 0,
-      "verdict": "Equal"
+      "verdict": "Equal",
+      "v1_aisles": [
+        {
+          "aisle": 1,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        },
+        {
+          "aisle": 2,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        },
+        {
+          "aisle": 3,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        },
+        {
+          "aisle": 4,
+          "employees": 0,
+          "customers": 1,
+          "ratio": 1.0
+        }
+      ],
+      "v2_aisles": [
+        {
+          "aisle": 1,
+          "employees": 0,
+          "customers": 1,
+          "ratio": 1.0
+        },
+        {
+          "aisle": 2,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        },
+        {
+          "aisle": 3,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        },
+        {
+          "aisle": 4,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        }
+      ],
+      "v1_redistribution": {
+        "aisles": [
+          {
+            "aisle": 1,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          },
+          {
+            "aisle": 2,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          },
+          {
+            "aisle": 3,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          },
+          {
+            "aisle": 4,
+            "employees": 0,
+            "customers": 1,
+            "ratio": 1.0
+          }
+        ],
+        "moves": [],
+        "summary": "No redistribution needed"
+      },
+      "v2_redistribution": {
+        "aisles": [
+          {
+            "aisle": 1,
+            "employees": 0,
+            "customers": 1,
+            "ratio": 1.0
+          },
+          {
+            "aisle": 2,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          },
+          {
+            "aisle": 3,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          },
+          {
+            "aisle": 4,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          }
+        ],
+        "moves": [],
+        "summary": "No redistribution needed"
+      }
     },
     {
       "sample": 9,
@@ -100,7 +1112,119 @@
       "v1_count": 2,
       "v2_count": 1,
       "diff": 1,
-      "verdict": "V2 needs +1"
+      "verdict": "V2 needs +1",
+      "v1_aisles": [
+        {
+          "aisle": 1,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        },
+        {
+          "aisle": 2,
+          "employees": 0,
+          "customers": 1,
+          "ratio": 1.0
+        },
+        {
+          "aisle": 3,
+          "employees": 0,
+          "customers": 1,
+          "ratio": 1.0
+        },
+        {
+          "aisle": 4,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        }
+      ],
+      "v2_aisles": [
+        {
+          "aisle": 1,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        },
+        {
+          "aisle": 2,
+          "employees": 0,
+          "customers": 1,
+          "ratio": 1.0
+        },
+        {
+          "aisle": 3,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        },
+        {
+          "aisle": 4,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        }
+      ],
+      "v1_redistribution": {
+        "aisles": [
+          {
+            "aisle": 1,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          },
+          {
+            "aisle": 2,
+            "employees": 0,
+            "customers": 1,
+            "ratio": 1.0
+          },
+          {
+            "aisle": 3,
+            "employees": 0,
+            "customers": 1,
+            "ratio": 1.0
+          },
+          {
+            "aisle": 4,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          }
+        ],
+        "moves": [],
+        "summary": "No redistribution needed"
+      },
+      "v2_redistribution": {
+        "aisles": [
+          {
+            "aisle": 1,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          },
+          {
+            "aisle": 2,
+            "employees": 0,
+            "customers": 1,
+            "ratio": 1.0
+          },
+          {
+            "aisle": 3,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          },
+          {
+            "aisle": 4,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          }
+        ],
+        "moves": [],
+        "summary": "No redistribution needed"
+      }
     },
     {
       "sample": 10,
@@ -109,7 +1233,119 @@
       "v1_count": 1,
       "v2_count": 1,
       "diff": 0,
-      "verdict": "Equal"
+      "verdict": "Equal",
+      "v1_aisles": [
+        {
+          "aisle": 1,
+          "employees": 0,
+          "customers": 1,
+          "ratio": 1.0
+        },
+        {
+          "aisle": 2,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        },
+        {
+          "aisle": 3,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        },
+        {
+          "aisle": 4,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        }
+      ],
+      "v2_aisles": [
+        {
+          "aisle": 1,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        },
+        {
+          "aisle": 2,
+          "employees": 1,
+          "customers": 0,
+          "ratio": 0.0
+        },
+        {
+          "aisle": 3,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        },
+        {
+          "aisle": 4,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        }
+      ],
+      "v1_redistribution": {
+        "aisles": [
+          {
+            "aisle": 1,
+            "employees": 0,
+            "customers": 1,
+            "ratio": 1.0
+          },
+          {
+            "aisle": 2,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          },
+          {
+            "aisle": 3,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          },
+          {
+            "aisle": 4,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          }
+        ],
+        "moves": [],
+        "summary": "No redistribution needed"
+      },
+      "v2_redistribution": {
+        "aisles": [
+          {
+            "aisle": 1,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          },
+          {
+            "aisle": 2,
+            "employees": 1,
+            "customers": 0,
+            "ratio": 0.0
+          },
+          {
+            "aisle": 3,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          },
+          {
+            "aisle": 4,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          }
+        ],
+        "moves": [],
+        "summary": "No redistribution needed"
+      }
     },
     {
       "sample": 11,
@@ -118,7 +1354,119 @@
       "v1_count": 0,
       "v2_count": 1,
       "diff": -1,
-      "verdict": "V1 needs +1"
+      "verdict": "V1 needs +1",
+      "v1_aisles": [
+        {
+          "aisle": 1,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        },
+        {
+          "aisle": 2,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        },
+        {
+          "aisle": 3,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        },
+        {
+          "aisle": 4,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        }
+      ],
+      "v2_aisles": [
+        {
+          "aisle": 1,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        },
+        {
+          "aisle": 2,
+          "employees": 1,
+          "customers": 0,
+          "ratio": 0.0
+        },
+        {
+          "aisle": 3,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        },
+        {
+          "aisle": 4,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        }
+      ],
+      "v1_redistribution": {
+        "aisles": [
+          {
+            "aisle": 1,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          },
+          {
+            "aisle": 2,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          },
+          {
+            "aisle": 3,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          },
+          {
+            "aisle": 4,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          }
+        ],
+        "moves": [],
+        "summary": "No redistribution needed"
+      },
+      "v2_redistribution": {
+        "aisles": [
+          {
+            "aisle": 1,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          },
+          {
+            "aisle": 2,
+            "employees": 1,
+            "customers": 0,
+            "ratio": 0.0
+          },
+          {
+            "aisle": 3,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          },
+          {
+            "aisle": 4,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          }
+        ],
+        "moves": [],
+        "summary": "No redistribution needed"
+      }
     },
     {
       "sample": 12,
@@ -127,7 +1475,119 @@
       "v1_count": 0,
       "v2_count": 0,
       "diff": 0,
-      "verdict": "Equal"
+      "verdict": "Equal",
+      "v1_aisles": [
+        {
+          "aisle": 1,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        },
+        {
+          "aisle": 2,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        },
+        {
+          "aisle": 3,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        },
+        {
+          "aisle": 4,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        }
+      ],
+      "v2_aisles": [
+        {
+          "aisle": 1,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        },
+        {
+          "aisle": 2,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        },
+        {
+          "aisle": 3,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        },
+        {
+          "aisle": 4,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        }
+      ],
+      "v1_redistribution": {
+        "aisles": [
+          {
+            "aisle": 1,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          },
+          {
+            "aisle": 2,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          },
+          {
+            "aisle": 3,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          },
+          {
+            "aisle": 4,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          }
+        ],
+        "moves": [],
+        "summary": "No redistribution needed"
+      },
+      "v2_redistribution": {
+        "aisles": [
+          {
+            "aisle": 1,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          },
+          {
+            "aisle": 2,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          },
+          {
+            "aisle": 3,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          },
+          {
+            "aisle": 4,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          }
+        ],
+        "moves": [],
+        "summary": "No redistribution needed"
+      }
     },
     {
       "sample": 13,
@@ -136,7 +1596,119 @@
       "v1_count": 0,
       "v2_count": 0,
       "diff": 0,
-      "verdict": "Equal"
+      "verdict": "Equal",
+      "v1_aisles": [
+        {
+          "aisle": 1,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        },
+        {
+          "aisle": 2,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        },
+        {
+          "aisle": 3,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        },
+        {
+          "aisle": 4,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        }
+      ],
+      "v2_aisles": [
+        {
+          "aisle": 1,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        },
+        {
+          "aisle": 2,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        },
+        {
+          "aisle": 3,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        },
+        {
+          "aisle": 4,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        }
+      ],
+      "v1_redistribution": {
+        "aisles": [
+          {
+            "aisle": 1,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          },
+          {
+            "aisle": 2,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          },
+          {
+            "aisle": 3,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          },
+          {
+            "aisle": 4,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          }
+        ],
+        "moves": [],
+        "summary": "No redistribution needed"
+      },
+      "v2_redistribution": {
+        "aisles": [
+          {
+            "aisle": 1,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          },
+          {
+            "aisle": 2,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          },
+          {
+            "aisle": 3,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          },
+          {
+            "aisle": 4,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          }
+        ],
+        "moves": [],
+        "summary": "No redistribution needed"
+      }
     },
     {
       "sample": 14,
@@ -145,7 +1717,119 @@
       "v1_count": 0,
       "v2_count": 0,
       "diff": 0,
-      "verdict": "Equal"
+      "verdict": "Equal",
+      "v1_aisles": [
+        {
+          "aisle": 1,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        },
+        {
+          "aisle": 2,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        },
+        {
+          "aisle": 3,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        },
+        {
+          "aisle": 4,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        }
+      ],
+      "v2_aisles": [
+        {
+          "aisle": 1,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        },
+        {
+          "aisle": 2,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        },
+        {
+          "aisle": 3,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        },
+        {
+          "aisle": 4,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        }
+      ],
+      "v1_redistribution": {
+        "aisles": [
+          {
+            "aisle": 1,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          },
+          {
+            "aisle": 2,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          },
+          {
+            "aisle": 3,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          },
+          {
+            "aisle": 4,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          }
+        ],
+        "moves": [],
+        "summary": "No redistribution needed"
+      },
+      "v2_redistribution": {
+        "aisles": [
+          {
+            "aisle": 1,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          },
+          {
+            "aisle": 2,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          },
+          {
+            "aisle": 3,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          },
+          {
+            "aisle": 4,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          }
+        ],
+        "moves": [],
+        "summary": "No redistribution needed"
+      }
     },
     {
       "sample": 15,
@@ -154,7 +1838,119 @@
       "v1_count": 0,
       "v2_count": 0,
       "diff": 0,
-      "verdict": "Equal"
+      "verdict": "Equal",
+      "v1_aisles": [
+        {
+          "aisle": 1,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        },
+        {
+          "aisle": 2,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        },
+        {
+          "aisle": 3,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        },
+        {
+          "aisle": 4,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        }
+      ],
+      "v2_aisles": [
+        {
+          "aisle": 1,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        },
+        {
+          "aisle": 2,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        },
+        {
+          "aisle": 3,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        },
+        {
+          "aisle": 4,
+          "employees": 0,
+          "customers": 0,
+          "ratio": 0.0
+        }
+      ],
+      "v1_redistribution": {
+        "aisles": [
+          {
+            "aisle": 1,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          },
+          {
+            "aisle": 2,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          },
+          {
+            "aisle": 3,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          },
+          {
+            "aisle": 4,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          }
+        ],
+        "moves": [],
+        "summary": "No redistribution needed"
+      },
+      "v2_redistribution": {
+        "aisles": [
+          {
+            "aisle": 1,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          },
+          {
+            "aisle": 2,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          },
+          {
+            "aisle": 3,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          },
+          {
+            "aisle": 4,
+            "employees": 0,
+            "customers": 0,
+            "ratio": 0.0
+          }
+        ],
+        "moves": [],
+        "summary": "No redistribution needed"
+      }
     }
   ]
 }

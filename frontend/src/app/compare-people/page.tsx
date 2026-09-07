@@ -12,6 +12,8 @@ type ComparisonResult = {
   count_mode?: string;
   totals: { video1: number; video2: number };
   averages: { video1: number; video2: number };
+  final_aisles: { video1: AisleData[]; video2: AisleData[] };
+  final_redistribution: { video1: Redistribution; video2: Redistribution };
   samples: Array<{
     sample: number;
     frame: number;
@@ -23,8 +25,21 @@ type ComparisonResult = {
   }>;
 };
 
-const defaultVideo1 = "/home/mosaq/HF_CAV_CV/ShopAssistant1cor.mp4";
-const defaultVideo2 = "/home/mosaq/HF_CAV_CV/OneShopOneWait1cor.mp4";
+type AisleData = {
+  aisle: number;
+  employees: number;
+  customers: number;
+  ratio?: number;
+};
+
+type Redistribution = {
+  aisles: AisleData[];
+  moves: Array<{ from_aisle: number; to_aisle: number; count: number; reason: string }>;
+  summary: string;
+};
+
+const defaultVideo1 = "backend/videos/cam1.mp4";
+const defaultVideo2 = "backend/videos/cam2.mp4";
 
 export default function ComparePeoplePage() {
   const [video1, setVideo1] = useState(defaultVideo1);
@@ -233,6 +248,28 @@ export default function ComparePeoplePage() {
               </table>
             </div>
           </div>
+
+          {result && <div className="grid gap-4 lg:grid-cols-2">
+            {(["video1", "video2"] as const).map((videoKey) => {
+              const aisles = result.final_aisles[videoKey];
+              const redistribution = result.final_redistribution[videoKey];
+              return (
+                <section key={videoKey} className="rounded-xl border border-border-soft bg-surface p-4">
+                  <h2 className="mb-3 font-heading text-lg font-bold text-text">
+                    {videoKey === "video1" ? "Camera 1" : "Camera 2"} aisle coverage
+                  </h2>
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full text-left text-sm">
+                      <thead><tr className="border-b border-border-soft text-text-muted"><th className="px-2 py-2">Aisle</th><th className="px-2 py-2">Employees</th><th className="px-2 py-2">Customers</th><th className="px-2 py-2">Ratio</th></tr></thead>
+                      <tbody>{aisles.map((aisle) => <tr key={aisle.aisle} className="border-b border-border-soft/70"><td className="px-2 py-2">{aisle.aisle}</td><td className="px-2 py-2">{aisle.employees}</td><td className="px-2 py-2">{aisle.customers}</td><td className="px-2 py-2">{aisle.ratio?.toFixed(2) ?? "0.00"}</td></tr>)}</tbody>
+                    </table>
+                  </div>
+                  <p className="mt-3 text-sm text-text-muted">{redistribution.summary}</p>
+                  {redistribution.moves.length > 0 && <ul className="mt-2 space-y-1 text-xs text-text-muted">{redistribution.moves.map((move, index) => <li key={`${move.from_aisle}-${move.to_aisle}-${index}`}>Move {move.count} employee from aisle {move.from_aisle} to aisle {move.to_aisle}</li>)}</ul>}
+                </section>
+              );
+            })}
+          </div>}
         </section>
       )}
     </main>
