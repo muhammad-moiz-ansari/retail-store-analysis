@@ -53,13 +53,15 @@ export async function POST(request: NextRequest) {
       const existingVideo1 = cached?.video1 ? normalizeVideoPath(String(cached.video1)) : "";
       const existingVideo2 = cached?.video2 ? normalizeVideoPath(String(cached.video2)) : "";
       const existingInterval = Number(cached?.frame_interval ?? 30);
-      const existingCountMode = String(cached?.count_mode ?? "");
+
+      const countMode = String(cached?.count_mode ?? "");
+      const matchesSchema = countMode === "ratio_verdict";
 
       if (
+        matchesSchema &&
         existingVideo1 === normalizedVideo1 &&
         existingVideo2 === normalizedVideo2 &&
-        existingInterval === frameInterval &&
-        existingCountMode === "unique_local_tracks_with_aisles"
+        existingInterval === frameInterval
       ) {
         const stream = new ReadableStream({
           start(controller) {

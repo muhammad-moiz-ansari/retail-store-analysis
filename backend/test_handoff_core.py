@@ -1,5 +1,6 @@
 import unittest
 
+from compare_people import build_ratio_verdict
 from handoff_core import HandoffConfig, boundary_side, crossing_direction, match_handoff_events
 
 
@@ -32,6 +33,11 @@ class HandoffCoreTests(unittest.TestCase):
             config,
         )
         self.assertEqual(matches[0]["status"], "unmatched")
+
+    def test_ratio_verdict_prefers_ratio_not_raw_difference(self):
+        self.assertIn("V2", build_ratio_verdict(3, 6))
+        self.assertIn("V1", build_ratio_verdict(6, 3))
+        self.assertIn("Balanced", build_ratio_verdict(2, 2))
 
 
 if __name__ == "__main__":
