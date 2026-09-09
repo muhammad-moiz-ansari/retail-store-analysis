@@ -28,19 +28,22 @@ export default function LoginPage() {
     return Object.keys(next).length === 0;
   }
 
-  function handleSubmit(e: FormEvent) {
+  async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     if (!validate()) return;
 
     setSubmitting(true);
-    // eslint-disable-next-line no-console
-    console.log("Login →", { email, password });
-
-    // Simulate brief delay then navigate
-    setTimeout(() => {
-      signIn(role);
+    try {
+      await signIn(role, { email, password });
       router.push(role === "Manager" ? "/dashboard" : "/employee-home");
-    }, 400);
+    } catch (error) {
+      setErrors((current) => ({
+        ...current,
+        password: error instanceof Error ? error.message : "Sign-in failed",
+      }));
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -118,7 +121,7 @@ export default function LoginPage() {
               ))}
             </div>
             <p className="mt-1.5 text-xs text-text-muted">
-              Demo role selection for this frontend prototype.
+              Demo access: choose a role and use any valid email with a 6+ character password.
             </p>
           </div>
 

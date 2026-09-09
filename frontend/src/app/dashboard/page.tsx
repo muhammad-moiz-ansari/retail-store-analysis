@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, FormEvent } from "react";
+import React, { useEffect, useState, FormEvent } from "react";
 import {
   RetroWindow,
   CRTFrame,
@@ -9,6 +9,8 @@ import {
   RetroCard,
 } from "@/components/ui";
 import { defaultDashboardData } from "@/lib/dashboard-data";
+import { fetchPosAnalytics } from "@/lib/pos/api";
+import type { PosAnalytics } from "@/lib/pos/types";
 
 type FlaggedEvent = {
   label: string;
@@ -16,15 +18,9 @@ type FlaggedEvent = {
   severity: "danger" | "accent";
 };
 
-const { summary, floorAInteractions, floorBInteractions, flaggedEvents, comparisonBars } = defaultDashboardData as typeof defaultDashboardData & {
+const { summary, floorAInteractions, floorBInteractions, flaggedEvents } = defaultDashboardData as typeof defaultDashboardData & {
   flaggedEvents: FlaggedEvent[];
 };
-
-const TOP_SELLERS = [
-  { name: "Traffic similarity", units: Math.round(summary.similarityPercent) },
-  { name: "Net inside", units: summary.netInside },
-  { name: "Movement events", units: summary.movementEvents ?? 0 },
-];
 
 /* ═══════════════════════════════════════════════════════════════
    Inline SVG icons (no external deps)
@@ -140,28 +136,63 @@ function EngagementCard({
   );
 }
 
-/** Horizontal bar comparison for product funnel */
-function HorizontalBar({
-  label,
-  pct,
-  color,
-}: {
-  label: string;
-  pct: number;
-  color: string;
-}) {
+function PosDashboardPanel() {
+  const [analytics, setAnalytics] = useState<PosAnalytics | null>(null);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    fetchPosAnalytics()
+      .then(setAnalytics)
+      .catch((loadError) => setError(loadError instanceof Error ? loadError.message : "POS analytics unavailable"));
+  }, []);
+
+  if (!analytics || analytics.products.length === 0) {
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center gap-2 text-text-muted">
+          <FunnelIcon />
+          <span className="font-heading text-xs font-semibold uppercase tracking-wider">Live POS</span>
+        </div>
+        <p className="text-sm leading-relaxed text-text-muted">
+          {error || "Import POS data to show revenue, conversion, and product recommendations here."}
+        </p>
+        <RetroButton variant="secondary" className="w-full !text-xs !py-1.5">View Sales Trends</RetroButton>
+      </div>
+    );
+  }
+
+  const conversion = analytics.conversion.conversion === null ? "NA" : `${(analytics.conversion.conversion * 100).toFixed(1)}%`;
+
   return (
-    <div className="space-y-1">
-      <div className="flex justify-between items-baseline">
-        <span className="font-mono text-xs text-text font-semibold">{label}</span>
-        <span className="font-mono text-[11px] text-text-muted">{pct}%</span>
+    <div className="space-y-4">
+      <div className="flex items-center gap-2 text-text-muted">
+        <FunnelIcon />
+        <span className="font-heading text-xs font-semibold uppercase tracking-wider">Live POS</span>
       </div>
-      <div className="h-3 rounded-sm bg-surface-alt border border-border-soft overflow-hidden">
-        <div
-          className="h-full rounded-sm transition-all duration-500"
-          style={{ width: `${pct}%`, backgroundColor: color }}
-        />
+      <div className="grid grid-cols-2 gap-2">
+        <div className="rounded-md border border-border-soft bg-surface-alt px-3 py-2">
+          <p className="font-mono text-[10px] uppercase tracking-wider text-text-muted">Net revenue</p>
+          <p className="font-mono text-lg font-bold text-text">Rs. {Math.round(analytics.kpis.net_revenue).toLocaleString("en-PK")}</p>
+        </div>
+        <div className="rounded-md border border-border-soft bg-surface-alt px-3 py-2">
+          <p className="font-mono text-[10px] uppercase tracking-wider text-text-muted">Conversion</p>
+          <p className="font-mono text-lg font-bold text-text">{conversion}</p>
+        </div>
       </div>
+      <div>
+        <p className="mb-2 font-heading text-[10px] font-semibold uppercase tracking-wider text-text-muted">Top products</p>
+        <div className="space-y-1.5">
+          {analytics.products.slice(0, 3).map((item, i) => (
+            <div key={item.sku_id} className="flex items-center justify-between font-mono text-[11px]">
+              <span className="text-text"><span className="mr-1.5 font-bold text-accent-soft">#{i + 1}</span>{item.sku_name}</span>
+              <span className="text-text-muted">{item.gross_units} units</span>
+            </div>
+          ))}
+        </div>
+      </div>
+      <p className="font-mono text-[10px] uppercase tracking-wider text-text-muted">
+        Run: {analytics.period.from} to {analytics.period.to}
+      </p>
     </div>
   );
 }
@@ -445,54 +476,7 @@ export default function DashboardPage() {
                 style={{ backgroundColor: "var(--color-accent-soft)" }}
               />
 
-              <div className="space-y-4">
-                {/* Icon + heading */}
-                <div className="flex items-center gap-2 text-text-muted">
-                  <FunnelIcon />
-                  <span className="font-heading text-xs font-semibold uppercase tracking-wider">
-                    Comparison
-                  </span>
-                </div>
-
-                {/* Bar comparison */}
-                <div className="space-y-3">
-                  {comparisonBars.map((item) => (
-                    <HorizontalBar
-                      key={item.label}
-                      label={item.label}
-                      pct={item.pct}
-                      color={item.color}
-                    />
-                  ))}
-                </div>
-
-                {/* Top sellers */}
-                <div>
-                  <p className="font-heading text-[10px] uppercase tracking-wider text-text-muted mb-2 font-semibold">
-                    Top Sellers Today
-                  </p>
-                  <div className="space-y-1.5">
-                    {TOP_SELLERS.map((item, i) => (
-                      <div
-                        key={item.name}
-                        className="flex items-center justify-between font-mono text-[11px]"
-                      >
-                        <span className="text-text">
-                          <span className="text-accent-soft font-bold mr-1.5">
-                            #{i + 1}
-                          </span>
-                          {item.name}
-                        </span>
-                        <span className="text-text-muted">{item.units}{i === 2 ? "" : "%"}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <RetroButton variant="secondary" className="w-full !text-xs !py-1.5">
-                  View Details
-                </RetroButton>
-              </div>
+              <PosDashboardPanel />
             </RetroWindow>
 
             {/* Panel 3: Trajectory & Heatmaps */}

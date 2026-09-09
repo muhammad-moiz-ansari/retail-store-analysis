@@ -1,716 +1,278 @@
 "use client";
 
-import React, { useState } from "react";
-import { RetroWindow, RetroCard, RetroButton, Badge } from "@/components/ui";
-import {
-  LineChart,
-  Line,
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  Legend,
-  BarChart,
-  Bar,
-} from "recharts";
+import React, { FormEvent, useEffect, useMemo, useState } from "react";
+import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Badge, RetroButton, RetroCard, RetroInput, RetroWindow } from "@/components/ui";
+import { fetchPosAnalytics, runPosAnalysis } from "@/lib/pos/api";
+import type { PosAnalytics, PosRecommendationStatus } from "@/lib/pos/types";
 
-/* ═══════════════════════════════════════════════════════════════
-   Mock Data
-   ═══════════════════════════════════════════════════════════════ */
+const COLORS = ["var(--color-accent)", "var(--color-success)", "var(--color-accent-soft)", "var(--color-danger)", "var(--color-text-muted)"];
 
-const DAILY_TREND = [
-  { time: "9 AM", revenue: 8420, footfall: 12 },
-  { time: "10 AM", revenue: 14360, footfall: 28 },
-  { time: "11 AM", revenue: 19780, footfall: 41 },
-  { time: "12 PM", revenue: 22140, footfall: 52 },
-  { time: "1 PM", revenue: 17930, footfall: 37 },
-  { time: "2 PM", revenue: 21560, footfall: 34 },
-  { time: "3 PM", revenue: 16240, footfall: 22 },
-  { time: "4 PM", revenue: 12890, footfall: 18 },
-  { time: "5 PM", revenue: 19470, footfall: 29 },
-  { time: "6 PM", revenue: 28310, footfall: 38 },
-  { time: "7 PM", revenue: 14820, footfall: 21 },
-  { time: "8 PM", revenue: 8400, footfall: 14 },
-];
-
-const WEEKLY_TREND = [
-  { time: "Mon", revenue: 142300, footfall: 187 },
-  { time: "Tue", revenue: 128760, footfall: 174 },
-  { time: "Wed", revenue: 156890, footfall: 213 },
-  { time: "Thu", revenue: 134210, footfall: 191 },
-  { time: "Fri", revenue: 178430, footfall: 256 },
-  { time: "Sat", revenue: 204580, footfall: 312 },
-  { time: "Sun", revenue: 167920, footfall: 247 },
-];
-
-const MONTHLY_TREND = [
-  { time: "Week 1", revenue: 432100, footfall: 1124 },
-  { time: "Week 2", revenue: 487350, footfall: 1267 },
-  { time: "Week 3", revenue: 512800, footfall: 1340 },
-  { time: "Week 4", revenue: 478920, footfall: 1198 },
-];
-
-const YEARLY_TREND = [
-  { time: "Jan", revenue: 1420300, footfall: 4210 },
-  { time: "Feb", revenue: 1387600, footfall: 3980 },
-  { time: "Mar", revenue: 1564200, footfall: 4560 },
-  { time: "Apr", revenue: 1498700, footfall: 4320 },
-  { time: "May", revenue: 1623400, footfall: 4810 },
-  { time: "Jun", revenue: 1712800, footfall: 5120 },
-  { time: "Jul", revenue: 1845600, footfall: 5470 },
-  { time: "Aug", revenue: 1784320, footfall: 5230 },
-];
-
-const TREND_DATA: Record<string, typeof DAILY_TREND> = {
-  Day: DAILY_TREND,
-  Week: WEEKLY_TREND,
-  Month: MONTHLY_TREND,
-  Year: YEARLY_TREND,
-};
-
-const KNORR_VS_MAGGI = {
-  knorr: {
-    name: "Knorr Noodles",
-    unitsSold: 142,
-    revenue: 28400,
-    avgPrice: 200,
-    trend: [
-      { day: "Mon", units: 18 },
-      { day: "Tue", units: 22 },
-      { day: "Wed", units: 16 },
-      { day: "Thu", units: 24 },
-      { day: "Fri", units: 20 },
-      { day: "Sat", units: 26 },
-      { day: "Sun", units: 16 },
-    ],
-  },
-  maggi: {
-    name: "Maggi Noodles",
-    unitsSold: 168,
-    revenue: 30240,
-    avgPrice: 180,
-    trend: [
-      { day: "Mon", units: 24 },
-      { day: "Tue", units: 20 },
-      { day: "Wed", units: 26 },
-      { day: "Thu", units: 22 },
-      { day: "Fri", units: 28 },
-      { day: "Sat", units: 30 },
-      { day: "Sun", units: 18 },
-    ],
-  },
-};
-
-const AB_CHART_DATA = KNORR_VS_MAGGI.knorr.trend.map((k, i) => ({
-  day: k.day,
-  knorr: k.units,
-  maggi: KNORR_VS_MAGGI.maggi.trend[i].units,
-}));
-
-const TOP_SELLERS = [
-  { rank: 1, name: "Maggi Noodles", category: "Snacks", units: 168 },
-  { rank: 2, name: "Coca-Cola 500ml", category: "Beverages", units: 154 },
-  { rank: 3, name: "Knorr Noodles", category: "Snacks", units: 142 },
-  { rank: 4, name: "Lay's Classic", category: "Snacks", units: 139 },
-  { rank: 5, name: "Nestlé Water 1.5L", category: "Beverages", units: 121 },
-];
-
-const HIGHEST_GROSSING = [
-  { rank: 1, name: "Maggi Noodles", category: "Snacks", revenue: 30240 },
-  { rank: 2, name: "Knorr Noodles", category: "Snacks", revenue: 28400 },
-  { rank: 3, name: "Surf Excel 1kg", category: "Household", revenue: 21840 },
-  { rank: 4, name: "Nestlé Water 1.5L", category: "Beverages", revenue: 18150 },
-  { rank: 5, name: "Coca-Cola 500ml", category: "Beverages", revenue: 15400 },
-];
-
-const CATEGORY_REVENUE = [
-  { name: "Snacks", value: 38, color: "var(--color-accent)" },
-  { name: "Beverages", value: 34, color: "var(--color-accent-soft)" },
-  { name: "Household", value: 28, color: "var(--color-success)" },
-];
-
-const FUNNEL_STAGES = [
-  { label: "Entered Store", value: 247, pct: 100, width: 100 },
-  { label: "Engaged with Products", value: 201, pct: 81, width: 75 },
-  { label: "Completed a Purchase", value: 168, pct: 68, width: 50 },
-];
-
-/* ═══════════════════════════════════════════════════════════════
-   Helpers
-   ═══════════════════════════════════════════════════════════════ */
-
-function formatDate(): string {
-  const d = new Date();
-  return d.toLocaleDateString("en-US", {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
+function todayISO() {
+  return new Date().toISOString().slice(0, 10);
 }
 
-function fmtPKR(n: number): string {
-  return `Rs. ${n.toLocaleString("en-PK")}`;
+function daysAgoISO(days: number) {
+  const date = new Date();
+  date.setDate(date.getDate() - days);
+  return date.toISOString().slice(0, 10);
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   Page
-   ═══════════════════════════════════════════════════════════════ */
+function fmtPKR(value: number) {
+  return `Rs. ${Math.round(value).toLocaleString("en-PK")}`;
+}
+
+function fmtPct(value: number | null) {
+  return value === null ? "Unavailable" : `${(value * 100).toFixed(1)}%`;
+}
+
+function statusVariant(status: PosRecommendationStatus) {
+  if (status === "RESTOCK") return "danger";
+  if (status === "HOLD") return "accent";
+  return "neutral";
+}
 
 export default function SalesTrendsPage() {
+  const [dateFrom, setDateFrom] = useState(daysAgoISO(6));
+  const [dateTo, setDateTo] = useState(todayISO());
+  const [horizon, setHorizon] = useState<7 | 30>(7);
+  const [analytics, setAnalytics] = useState<PosAnalytics | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [preview, setPreview] = useState<Record<string, unknown> | null>(null);
+  const [uploading, setUploading] = useState(false);
+
+  async function load(showSpinner = true) {
+    if (showSpinner) setLoading(true);
+    setError("");
+    try {
+      setAnalytics(await fetchPosAnalytics({ from: dateFrom, to: dateTo, horizon }));
+    } catch (loadError) {
+      setAnalytics(null);
+      setError(loadError instanceof Error ? loadError.message : "Could not load POS analytics");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    fetchPosAnalytics({ from: dateFrom, to: dateTo, horizon })
+      .then(setAnalytics)
+      .catch((loadError) => {
+        setAnalytics(null);
+        setError(loadError instanceof Error ? loadError.message : "Could not load POS analytics");
+      })
+      .finally(() => setLoading(false));
+  }, [dateFrom, dateTo, horizon]);
+
+  const chartData = useMemo(() => analytics?.conversion.buckets.map((bucket) => ({
+    period: bucket.period.slice(5),
+    entries: bucket.entries,
+    transactions: bucket.transactions,
+    conversion: bucket.conversion === null ? 0 : Number((bucket.conversion * 100).toFixed(1)),
+  })) || [], [analytics]);
+
+  async function handleAnalyze(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setError("");
+    try {
+      await runPosAnalysis({ from: dateFrom, to: dateTo, horizon });
+      await load();
+    } catch (analysisError) {
+      setError(analysisError instanceof Error ? analysisError.message : "Analysis failed");
+    }
+  }
+
+  async function submitImport(form: HTMLFormElement, mode: "preview" | "commit") {
+    const data = new FormData(form);
+    setUploading(true);
+    setError("");
+    try {
+      const response = await fetch(`/api/pos/import/${mode}`, { method: "POST", body: data });
+      const body = await response.json();
+      if (!response.ok || body.ok === false) throw new Error(body.error || body.errors?.[0]?.errors?.[0] || "Import failed");
+      setPreview(body);
+      if (mode === "commit") await load();
+    } catch (uploadError) {
+      setError(uploadError instanceof Error ? uploadError.message : "Import failed");
+    } finally {
+      setUploading(false);
+    }
+  }
+
   return (
-    <div className="bg-bg min-h-screen">
-      <main className="w-full max-w-[1280px] mx-auto px-4 md:px-6 lg:px-8 py-10 md:py-16 space-y-12 md:space-y-16">
-        {/* ── Page Header ── */}
-        <PageHeader />
+    <div className="min-h-screen bg-bg">
+      <main className="mx-auto w-full max-w-[1280px] space-y-8 px-4 py-8 md:px-6 md:py-12">
+        <RetroWindow title="Sales & Product Trends - Live POS Analytics">
+          <form onSubmit={handleAnalyze} className="grid gap-4 md:grid-cols-[1fr_1fr_auto_auto] md:items-end">
+            <RetroInput label="From" type="date" value={dateFrom} onChange={(event) => setDateFrom(event.target.value)} />
+            <RetroInput label="To" type="date" value={dateTo} onChange={(event) => setDateTo(event.target.value)} />
+            <label className="block">
+              <span className="mb-1.5 block font-heading text-xs font-semibold uppercase tracking-wide text-text-muted">Horizon</span>
+              <select value={horizon} onChange={(event) => setHorizon(Number(event.target.value) as 7 | 30)} className="h-[42px] rounded-md border-2 border-border bg-surface px-3 font-mono text-sm text-text">
+                <option value={7}>7 days</option>
+                <option value={30}>30 days</option>
+              </select>
+            </label>
+            <RetroButton type="submit" disabled={loading}>Run analysis</RetroButton>
+          </form>
+          <p className="mt-4 text-xs leading-relaxed text-text-muted">
+            Purchase conversion is completed sale transactions divided by entrance events over covered camera intervals.
+          </p>
+        </RetroWindow>
 
-        {/* ── Section 1: Sales Trend Timelines ── */}
-        <SalesTrendSection />
+        {error && (
+          <RetroWindow title="POS Status">
+            <p className="text-sm text-danger">{error}</p>
+            <p className="mt-2 text-xs text-text-muted">Start the POS service with `uvicorn backend.pos_service:app --host 127.0.0.1 --port 8011` and sign in as the configured manager.</p>
+          </RetroWindow>
+        )}
 
-        {/* ── Section 2: A/B Product Comparison ── */}
-        <ProductComparisonSection />
+        <ImportPanel uploading={uploading} preview={preview} onUpload={submitImport} />
 
-        {/* ── Section 3: Top Sellers vs Highest Grossing ── */}
-        <LeaderboardSection />
+        {!analytics || analytics.products.length === 0 ? (
+          <RetroWindow title="No POS Data Imported">
+            <p className="text-sm leading-relaxed text-text-muted">
+              Upload transactions, inventory, footfall, and opening-calendar CSV/XLSX data to unlock live KPIs, forecasts, recommendations, and cited assistant answers. No mock POS figures are shown here.
+            </p>
+          </RetroWindow>
+        ) : (
+          <>
+            <RunMeta analytics={analytics} />
+            <KpiGrid analytics={analytics} />
+            <div className="grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(340px,0.8fr)]">
+              <RetroWindow title="Entry-To-Transaction Conversion">
+                <div className="h-[280px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={chartData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border-soft)" />
+                      <XAxis dataKey="period" tick={{ fontSize: 11 }} />
+                      <YAxis tick={{ fontSize: 11 }} />
+                      <Tooltip />
+                      <Area type="monotone" dataKey="entries" stroke="var(--color-accent)" fill="var(--color-accent)" fillOpacity={0.12} />
+                      <Area type="monotone" dataKey="transactions" stroke="var(--color-success)" fill="var(--color-success)" fillOpacity={0.12} />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+              </RetroWindow>
 
-        {/* ── Category Revenue Breakdown ── */}
-        <CategoryBreakdownSection />
+              <RetroWindow title="Category Revenue Share">
+                <div className="h-[280px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie data={analytics.categories} dataKey="net_revenue" nameKey="category" innerRadius={52} outerRadius={90} paddingAngle={3}>
+                        {analytics.categories.map((category, index) => <Cell key={category.category} fill={COLORS[index % COLORS.length]} />)}
+                      </Pie>
+                      <Tooltip formatter={(value) => fmtPKR(Number(value))} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+              </RetroWindow>
+            </div>
 
-        {/* ── Section 4: Footfall-to-Purchase Conversion ── */}
-        <ConversionFunnelSection />
-
-        {/* ── Section 5: Additional Insights ── */}
-        <AdditionalInsightsSection />
+            <div className="grid gap-6 lg:grid-cols-2">
+              <Leaderboard analytics={analytics} />
+              <Recommendations analytics={analytics} />
+            </div>
+          </>
+        )}
       </main>
     </div>
   );
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   Page Header
-   ═══════════════════════════════════════════════════════════════ */
-
-function PageHeader() {
+function ImportPanel({ uploading, preview, onUpload }: { uploading: boolean; preview: Record<string, unknown> | null; onUpload: (form: HTMLFormElement, mode: "preview" | "commit") => Promise<void> }) {
+  const [form, setForm] = useState<HTMLFormElement | null>(null);
   return (
-    <RetroWindow title="Sales & Product Trends - POS Analytics">
-      <p className="font-mono text-xs text-text-muted mb-5 tracking-wide">
-        {formatDate()}
-      </p>
+    <RetroWindow title="Import POS Workbook Or CSV Files">
+      <form ref={setForm} className="grid gap-4 md:grid-cols-2 lg:grid-cols-[1fr_1fr_1fr_auto] lg:items-end" onSubmit={(event) => { event.preventDefault(); void onUpload(event.currentTarget, "preview"); }}>
+        <RetroInput label="Source" name="source" placeholder="main-pos-export" defaultValue="manual-upload" />
+        <RetroInput label="Coverage From" name="coverage_from" type="datetime-local" />
+        <RetroInput label="Coverage To" name="coverage_to" type="datetime-local" />
+        <label className="flex items-end gap-2 pb-2 text-sm text-text">
+          <input name="complete" type="checkbox" value="true" className="h-4 w-4" /> Complete export
+        </label>
+        <input name="files" type="file" accept=".csv,.xlsx" multiple required className="text-sm text-text-muted file:mr-3 file:rounded file:border file:border-border file:bg-surface-alt file:px-3 file:py-2 file:text-text md:col-span-2 lg:col-span-4" />
+        <div className="flex flex-wrap gap-2 md:col-span-2 lg:col-span-4">
+          <RetroButton type="submit" variant="secondary" disabled={uploading}>Preview</RetroButton>
+          <RetroButton type="button" disabled={uploading || !form} onClick={() => form && void onUpload(form, "commit")}>Commit import</RetroButton>
+          <a className="inline-flex items-center px-3 text-xs font-semibold text-accent underline underline-offset-2" href="/api/pos/templates">Template contract</a>
+        </div>
+      </form>
+      {preview && (
+        <pre className="mt-4 max-h-64 overflow-auto rounded border border-border-soft bg-bg p-3 text-xs text-text-muted">{JSON.stringify(preview, null, 2)}</pre>
+      )}
+    </RetroWindow>
+  );
+}
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <StatPill label="Revenue" value={fmtPKR(184320)} color="var(--color-accent)" />
-        <StatPill label="Transactions" value="168" color="var(--color-accent-soft)" />
-        <StatPill label="Avg. Basket" value={fmtPKR(1097)} color="var(--color-success)" />
+function RunMeta({ analytics }: { analytics: PosAnalytics }) {
+  return (
+    <div className="flex flex-wrap items-center gap-2 text-xs text-text-muted">
+      <Badge variant="neutral">{analytics.period.from} to {analytics.period.to}</Badge>
+      <Badge variant="neutral">{analytics.horizon}-day forecast</Badge>
+      <Badge variant={analytics.quality_flags.length ? "accent" : "success"}>{analytics.quality_flags.length ? analytics.quality_flags.join(", ") : "inputs passed basic quality checks"}</Badge>
+    </div>
+  );
+}
+
+function KpiGrid({ analytics }: { analytics: PosAnalytics }) {
+  const items = [
+    ["Net revenue", fmtPKR(analytics.kpis.net_revenue)],
+    ["Sale transactions", analytics.kpis.distinct_sale_transactions.toLocaleString("en-PK")],
+    ["Avg basket", fmtPKR(analytics.kpis.average_basket_value)],
+    ["Conversion", fmtPct(analytics.conversion.conversion)],
+  ];
+  return (
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      {items.map(([label, value]) => (
+        <RetroCard key={label} label={label}>
+          <p className="font-mono text-2xl font-bold text-text">{value}</p>
+        </RetroCard>
+      ))}
+    </div>
+  );
+}
+
+function Leaderboard({ analytics }: { analytics: PosAnalytics }) {
+  return (
+    <RetroWindow title="Product Performance">
+      <div className="h-[280px]">
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={analytics.products.slice(0, 8)} layout="vertical" margin={{ left: 24 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border-soft)" />
+            <XAxis type="number" tick={{ fontSize: 11 }} />
+            <YAxis dataKey="sku_name" type="category" width={120} tick={{ fontSize: 11 }} />
+            <Tooltip />
+            <Bar dataKey="gross_units" fill="var(--color-accent)" radius={[0, 4, 4, 0]} />
+          </BarChart>
+        </ResponsiveContainer>
       </div>
     </RetroWindow>
   );
 }
 
-function StatPill({
-  label,
-  value,
-  color,
-}: {
-  label: string;
-  value: string;
-  color: string;
-}) {
+function Recommendations({ analytics }: { analytics: PosAnalytics }) {
   return (
-    <RetroCard className="text-center">
-      <p className="font-mono text-2xl font-bold" style={{ color }}>
-        {value}
-      </p>
-      <p className="text-xs text-text-muted mt-1">{label}</p>
-    </RetroCard>
-  );
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   Section 1: Sales Trend Timelines
-   ═══════════════════════════════════════════════════════════════ */
-
-function SalesTrendSection() {
-  const [granularity, setGranularity] = useState<string>("Day");
-  const data = TREND_DATA[granularity];
-
-  return (
-    <RetroWindow title="Sales Trend Timelines">
-      {/* Granularity toggle */}
-      <div className="flex items-center gap-2 mb-6 flex-wrap">
-        {Object.keys(TREND_DATA).map((key) => (
-          <RetroButton
-            key={key}
-            variant={granularity === key ? "primary" : "secondary"}
-            className="!px-3 !py-1.5 !text-xs"
-            onClick={() => setGranularity(key)}
-          >
-            {key}
-          </RetroButton>
+    <RetroWindow title="Inventory Recommendations">
+      <div className="space-y-3">
+        {analytics.recommendations.slice(0, 6).map((rec) => (
+          <div key={rec.sku_id} className="rounded-md border border-border-soft bg-bg p-3">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="font-heading text-sm font-bold text-text">{rec.sku_name}</p>
+                <p className="mt-1 text-xs leading-relaxed text-text-muted">{rec.rule}</p>
+              </div>
+              <Badge variant={statusVariant(rec.status)}>{rec.status}</Badge>
+            </div>
+            <div className="mt-3 grid grid-cols-3 gap-2 font-mono text-[11px] text-text-muted">
+              <span>Order: <strong className="text-text">{rec.suggested_order_qty}</strong></span>
+              <span>On hand: <strong className="text-text">{rec.on_hand ?? "NA"}</strong></span>
+              <span>Confidence: <strong className="text-text">{rec.confidence}</strong></span>
+            </div>
+            {rec.warnings?.length ? <p className="mt-2 text-[11px] text-danger">{rec.warnings.join(", ")}</p> : null}
+          </div>
         ))}
-      </div>
-
-      <RetroCard label="Revenue vs Footfall">
-        <div className="h-[340px]">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={data} margin={{ top: 5, right: 10, bottom: 5, left: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border-soft)" opacity={0.4} />
-              <XAxis
-                dataKey="time"
-                tick={{ fill: "var(--color-text-muted)", fontSize: 11, fontFamily: "var(--font-mono)" }}
-                axisLine={{ stroke: "var(--color-border-soft)" }}
-                tickLine={false}
-              />
-              <YAxis
-                yAxisId="revenue"
-                tick={{ fill: "var(--color-text-muted)", fontSize: 11, fontFamily: "var(--font-mono)" }}
-                axisLine={false}
-                tickLine={false}
-                tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`}
-              />
-              <YAxis
-                yAxisId="footfall"
-                orientation="right"
-                tick={{ fill: "var(--color-text-muted)", fontSize: 11, fontFamily: "var(--font-mono)" }}
-                axisLine={false}
-                tickLine={false}
-              />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: "var(--color-surface)",
-                  border: "1px solid var(--color-border-soft)",
-                  borderRadius: 6,
-                  fontFamily: "var(--font-mono)",
-                  fontSize: 12,
-                }}
-                formatter={(value, name) => [
-                  name === "revenue" ? fmtPKR(value as number) : `${value} visitors`,
-                  name === "revenue" ? "Revenue" : "Footfall",
-                ]}
-              />
-              <Legend
-                wrapperStyle={{ fontSize: 11, fontFamily: "var(--font-mono)" }}
-              />
-              <Line
-                yAxisId="revenue"
-                type="monotone"
-                dataKey="revenue"
-                name="Revenue"
-                stroke="var(--color-accent)"
-                strokeWidth={2.5}
-                dot={{ r: 3, fill: "var(--color-accent)" }}
-                activeDot={{ r: 5 }}
-              />
-              <Line
-                yAxisId="footfall"
-                type="monotone"
-                dataKey="footfall"
-                name="Footfall"
-                stroke="var(--color-accent-soft)"
-                strokeWidth={2}
-                strokeDasharray="5 3"
-                dot={{ r: 3, fill: "var(--color-accent-soft)" }}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-        <p className="text-[10px] text-text-muted mt-3 leading-relaxed">
-          Dual-axis overlay - left axis shows revenue (Rs.), right axis shows
-          customer footfall count. Use the granularity toggle above to switch
-          between Day / Week / Month / Year views.
-        </p>
-      </RetroCard>
-    </RetroWindow>
-  );
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   Section 2: A/B Product Comparison
-   ═══════════════════════════════════════════════════════════════ */
-
-function ProductComparisonSection() {
-  const k = KNORR_VS_MAGGI.knorr;
-  const m = KNORR_VS_MAGGI.maggi;
-
-  return (
-    <RetroWindow title="A/B Product Comparison">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Stat cards */}
-        <div className="grid grid-cols-2 gap-4">
-          {/* Knorr */}
-          <RetroCard label="Knorr Noodles">
-            <div className="space-y-3">
-              <div>
-                <p className="font-mono text-lg font-bold text-accent">{k.unitsSold}</p>
-                <p className="text-[10px] text-text-muted">Units Sold</p>
-              </div>
-              <div>
-                <p className="font-mono text-lg font-bold text-accent">{fmtPKR(k.revenue)}</p>
-                <p className="text-[10px] text-text-muted">Revenue</p>
-              </div>
-              <div>
-                <p className="font-mono text-sm font-semibold text-text">{fmtPKR(k.avgPrice)}</p>
-                <p className="text-[10px] text-text-muted">Avg. Price</p>
-              </div>
-            </div>
-          </RetroCard>
-
-          {/* Maggi */}
-          <RetroCard label="Maggi Noodles">
-            <div className="space-y-3">
-              <div>
-                <p className="font-mono text-lg font-bold text-accent-soft">{m.unitsSold}</p>
-                <p className="text-[10px] text-text-muted">Units Sold</p>
-              </div>
-              <div>
-                <p className="font-mono text-lg font-bold text-accent-soft">{fmtPKR(m.revenue)}</p>
-                <p className="text-[10px] text-text-muted">Revenue</p>
-              </div>
-              <div>
-                <p className="font-mono text-sm font-semibold text-text">{fmtPKR(m.avgPrice)}</p>
-                <p className="text-[10px] text-text-muted">Avg. Price</p>
-              </div>
-            </div>
-          </RetroCard>
-        </div>
-
-        {/* Weekly comparison chart */}
-        <RetroCard label="Weekly Unit Sales">
-          <div className="h-[220px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={AB_CHART_DATA} margin={{ top: 5, right: 10, bottom: 5, left: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border-soft)" opacity={0.4} />
-                <XAxis
-                  dataKey="day"
-                  tick={{ fill: "var(--color-text-muted)", fontSize: 11, fontFamily: "var(--font-mono)" }}
-                  axisLine={{ stroke: "var(--color-border-soft)" }}
-                  tickLine={false}
-                />
-                <YAxis
-                  tick={{ fill: "var(--color-text-muted)", fontSize: 11, fontFamily: "var(--font-mono)" }}
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "var(--color-surface)",
-                    border: "1px solid var(--color-border-soft)",
-                    borderRadius: 6,
-                    fontFamily: "var(--font-mono)",
-                    fontSize: 12,
-                  }}
-                  formatter={(value) => [`${value} units`]}
-                />
-                <Legend wrapperStyle={{ fontSize: 11, fontFamily: "var(--font-mono)" }} />
-                <Bar dataKey="knorr" name="Knorr" fill="var(--color-accent)" radius={[3, 3, 0, 0]} />
-                <Bar dataKey="maggi" name="Maggi" fill="var(--color-accent-soft)" radius={[3, 3, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </RetroCard>
-      </div>
-
-      <div className="mt-4 flex items-center gap-3 flex-wrap">
-        <Badge variant="accent">Winner: Revenue</Badge>
-        <span className="text-xs text-text-muted">
-          Maggi leads in both units sold ({m.unitsSold} vs {k.unitsSold}) and
-          revenue ({fmtPKR(m.revenue)} vs {fmtPKR(k.revenue)}), but Knorr
-          commands a higher avg. price ({fmtPKR(k.avgPrice)} vs{" "}
-          {fmtPKR(m.avgPrice)}).
-        </span>
-      </div>
-    </RetroWindow>
-  );
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   Section 3: Top Sellers vs Highest Grossing
-   ═══════════════════════════════════════════════════════════════ */
-
-function LeaderboardSection() {
-  return (
-    <RetroWindow title="Top Sellers vs Highest Grossing">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Top sellers by units */}
-        <RetroCard label="Most Units Sold">
-          <div className="overflow-x-auto -mx-1">
-            <table className="w-full text-xs min-w-[320px]">
-              <thead>
-                <tr className="bg-surface-alt border-b border-border-soft">
-                  <th className="py-2 px-2 text-left font-mono uppercase text-text-muted tracking-wider">#</th>
-                  <th className="py-2 px-2 text-left font-mono uppercase text-text-muted tracking-wider">Product</th>
-                  <th className="py-2 px-2 text-left font-mono uppercase text-text-muted tracking-wider">Category</th>
-                  <th className="py-2 px-2 text-right font-mono uppercase text-text-muted tracking-wider">Units</th>
-                </tr>
-              </thead>
-              <tbody>
-                {TOP_SELLERS.map((row, i) => (
-                  <tr
-                    key={row.name}
-                    className={`border-b border-border-soft/40 ${
-                      i % 2 === 0 ? "bg-surface" : "bg-bg"
-                    } ${row.rank === 1 ? "border-l-3 border-l-accent-soft" : ""}`}
-                  >
-                    <td className="py-2 px-2 font-mono text-text-muted">{row.rank}</td>
-                    <td className="py-2 px-2 font-mono text-text">{row.name}</td>
-                    <td className="py-2 px-2 font-mono text-text-muted">{row.category}</td>
-                    <td className="py-2 px-2 text-right font-mono font-bold text-accent">{row.units}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </RetroCard>
-
-        {/* Highest grossing by revenue */}
-        <RetroCard label="Highest Revenue">
-          <div className="overflow-x-auto -mx-1">
-            <table className="w-full text-xs min-w-[320px]">
-              <thead>
-                <tr className="bg-surface-alt border-b border-border-soft">
-                  <th className="py-2 px-2 text-left font-mono uppercase text-text-muted tracking-wider">#</th>
-                  <th className="py-2 px-2 text-left font-mono uppercase text-text-muted tracking-wider">Product</th>
-                  <th className="py-2 px-2 text-left font-mono uppercase text-text-muted tracking-wider">Category</th>
-                  <th className="py-2 px-2 text-right font-mono uppercase text-text-muted tracking-wider">Revenue</th>
-                </tr>
-              </thead>
-              <tbody>
-                {HIGHEST_GROSSING.map((row, i) => (
-                  <tr
-                    key={row.name}
-                    className={`border-b border-border-soft/40 ${
-                      i % 2 === 0 ? "bg-surface" : "bg-bg"
-                    } ${row.rank === 1 ? "border-l-3 border-l-accent-soft" : ""}`}
-                  >
-                    <td className="py-2 px-2 font-mono text-text-muted">{row.rank}</td>
-                    <td className="py-2 px-2 font-mono text-text">{row.name}</td>
-                    <td className="py-2 px-2 font-mono text-text-muted">{row.category}</td>
-                    <td className="py-2 px-2 text-right font-mono font-bold text-accent">{fmtPKR(row.revenue)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </RetroCard>
-      </div>
-    </RetroWindow>
-  );
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   Category Revenue Breakdown (Bonus Section)
-   ═══════════════════════════════════════════════════════════════ */
-
-function CategoryBreakdownSection() {
-  return (
-    <RetroWindow title="Category Revenue Breakdown">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
-        {/* Donut chart */}
-        <RetroCard label="Revenue by Category">
-          <div className="h-[280px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={CATEGORY_REVENUE}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={100}
-                  paddingAngle={4}
-                  dataKey="value"
-                  stroke="none"
-                >
-                  {CATEGORY_REVENUE.map((entry) => (
-                    <Cell key={entry.name} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "var(--color-surface)",
-                    border: "1px solid var(--color-border-soft)",
-                    borderRadius: 6,
-                    fontFamily: "var(--font-mono)",
-                    fontSize: 12,
-                  }}
-                  formatter={(value) => [`${value}%`]}
-                />
-                <Legend
-                  wrapperStyle={{ fontSize: 11, fontFamily: "var(--font-mono)" }}
-                />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-        </RetroCard>
-
-        {/* Breakdown list */}
-        <RetroCard label="Share Details">
-          <div className="space-y-4">
-            {CATEGORY_REVENUE.map((cat) => (
-              <div key={cat.name}>
-                <div className="flex items-center justify-between mb-1">
-                  <span className="font-mono text-sm text-text">{cat.name}</span>
-                  <span className="font-mono text-sm font-bold" style={{ color: cat.color }}>
-                    {cat.value}%
-                  </span>
-                </div>
-                <div className="w-full h-2.5 bg-surface-alt rounded-full overflow-hidden">
-                  <div
-                    className="h-full rounded-full transition-all duration-500"
-                    style={{ width: `${cat.value}%`, backgroundColor: cat.color }}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-          <p className="text-[10px] text-text-muted mt-4 leading-relaxed">
-            Revenue split across major store categories. Snacks leads at 38%,
-            closely followed by Beverages at 34%.
-          </p>
-        </RetroCard>
-      </div>
-    </RetroWindow>
-  );
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   Section 4: Footfall-to-Purchase Conversion Funnel
-   ═══════════════════════════════════════════════════════════════ */
-
-function ConversionFunnelSection() {
-  return (
-    <RetroWindow title="Footfall-to-Purchase Conversion">
-      <RetroCard label="Conversion Funnel">
-        <div className="flex flex-col items-center gap-3 py-4">
-          {FUNNEL_STAGES.map((stage, i) => (
-            <div key={stage.label} className="w-full flex flex-col items-center">
-              <div
-                className="rounded-lg flex items-center justify-between px-5 py-3.5 transition-all duration-300"
-                style={{
-                  width: `${stage.width}%`,
-                  minWidth: 220,
-                  backgroundColor:
-                    i === 0
-                      ? "var(--color-accent)"
-                      : i === 1
-                        ? "var(--color-accent-soft)"
-                        : "var(--color-success)",
-                  color: i === 0 ? "var(--color-surface)" : "var(--color-text)",
-                }}
-              >
-                <span className="font-mono text-sm font-semibold">{stage.label}</span>
-                <span className="font-mono text-lg font-bold">{stage.value}</span>
-              </div>
-              {i < FUNNEL_STAGES.length - 1 && (
-                <div className="flex items-center gap-2 my-1.5">
-                  <svg width="12" height="16" viewBox="0 0 12 16" fill="none">
-                    <path d="M6 0v12M2 8l4 4 4-4" stroke="var(--color-text-muted)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                  <span className="font-mono text-[11px] text-text-muted">
-                    {FUNNEL_STAGES[i + 1].pct}% of total
-                  </span>
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4">
-          <div className="text-center p-3 bg-surface-alt rounded-md">
-            <p className="font-mono text-lg font-bold text-accent">81%</p>
-            <p className="text-[10px] text-text-muted mt-0.5">Engagement Rate</p>
-          </div>
-          <div className="text-center p-3 bg-surface-alt rounded-md">
-            <p className="font-mono text-lg font-bold text-accent-soft">84%</p>
-            <p className="text-[10px] text-text-muted mt-0.5">Engaged → Purchase</p>
-          </div>
-          <div className="text-center p-3 bg-surface-alt rounded-md">
-            <p className="font-mono text-lg font-bold text-success">68%</p>
-            <p className="text-[10px] text-text-muted mt-0.5">Overall Conversion</p>
-          </div>
-        </div>
-
-        <p className="text-[10px] text-text-muted mt-3 leading-relaxed">
-          Of the 247 visitors who entered the store, 201 (81%) engaged with
-          products and 168 (68%) completed a purchase. The 84% engagement-to-purchase
-          rate indicates strong intent among browsing customers.
-        </p>
-      </RetroCard>
-    </RetroWindow>
-  );
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   Section 5: Additional Insights
-   ═══════════════════════════════════════════════════════════════ */
-
-function AdditionalInsightsSection() {
-  return (
-    <RetroWindow title="Additional Insights">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Revenue per Visitor */}
-        <RetroCard label="Revenue per Visitor">
-          <div className="flex flex-col items-center py-6">
-            <p className="font-mono text-4xl font-bold text-accent">{fmtPKR(746)}</p>
-            <p className="text-xs text-text-muted mt-2">Average spend per visitor</p>
-            <div className="mt-4 space-y-2 w-full">
-              <div className="flex justify-between text-xs">
-                <span className="text-text-muted">Total Revenue</span>
-                <span className="font-mono text-text">{fmtPKR(184320)}</span>
-              </div>
-              <div className="flex justify-between text-xs">
-                <span className="text-text-muted">Total Visitors</span>
-                <span className="font-mono text-text">247</span>
-              </div>
-              <div className="flex justify-between text-xs border-t border-border-soft pt-2">
-                <span className="text-text-muted font-semibold">Revenue ÷ Visitors</span>
-                <span className="font-mono font-bold text-accent">{fmtPKR(746)}</span>
-              </div>
-            </div>
-          </div>
-        </RetroCard>
-
-        {/* Peak Mismatch */}
-        <RetroCard label="Peak Mismatch Analysis">
-          <div className="space-y-4 py-2">
-            <div className="flex items-start gap-3 p-3 bg-surface-alt rounded-md">
-              <div className="shrink-0 mt-0.5">
-                <Badge variant="accent">Footfall Peak</Badge>
-              </div>
-              <div>
-                <p className="font-mono text-sm font-bold text-text">12:00 PM</p>
-                <p className="text-[10px] text-text-muted mt-0.5">
-                  52 visitors - highest foot traffic recorded at noon
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-3 p-3 bg-surface-alt rounded-md">
-              <div className="shrink-0 mt-0.5">
-                <Badge variant="success">Sales Peak</Badge>
-              </div>
-              <div>
-                <p className="font-mono text-sm font-bold text-text">6:00 PM</p>
-                <p className="text-[10px] text-text-muted mt-0.5">
-                  {fmtPKR(28310)} - highest hourly revenue in the evening rush
-                </p>
-              </div>
-            </div>
-
-            <div className="p-3 bg-danger/10 border border-danger/20 rounded-md">
-              <p className="text-xs text-text leading-relaxed">
-                <span className="font-semibold">6-hour gap</span> between peak
-                footfall (12 PM) and peak sales (6 PM). Noon crowds browse but
-                don&apos;t convert - consider lunchtime promotions or checkout
-                speed improvements to capture this traffic.
-              </p>
-            </div>
-          </div>
-        </RetroCard>
       </div>
     </RetroWindow>
   );

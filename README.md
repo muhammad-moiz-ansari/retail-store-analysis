@@ -106,9 +106,10 @@ This architecture is visualized live in the app's **System Status** page, which 
 | PDF Export | jsPDF |
 | Computer Vision | YOLO-based detection (lightweight, non-GPU-dependent) |
 | Agent Orchestration | LangGraph |
+| POS Analytics API | FastAPI, SQLite |
 | Fonts | Space Grotesk (headings), Inter (body), JetBrains Mono (stats/data) |
 
-> **Note:** the current build is frontend-first - CV pipeline and agent orchestration are represented in the UI (System Status page) with mock data while the backend integration is developed in parallel.
+> **Note:** the CV pipeline and agent orchestration are still partly represented with prototype/demo data. The POS analytics pillar now has a local FastAPI + SQLite implementation for CSV/XLSX imports, deterministic metrics, forecasts, recommendations, and cited assistant evidence.
 
 ## Project Structure
 
@@ -148,6 +149,7 @@ retailpulse/
 ### Prerequisites
 - Node.js 18+
 - npm
+- Python 3.12+ with a virtual environment at `./.venv`
 
 ### Installation
 
@@ -155,15 +157,26 @@ retailpulse/
 git clone <repo-url>
 cd retailpulse
 npm install
+./.venv/bin/python -m pip install -r backend/requirements.txt
 ```
 
 ### Running locally
 
 ```bash
+npm run pos:api
 npm run dev
 ```
 
-The app will be available at `http://localhost:3000`.
+The POS API binds to `http://127.0.0.1:8011` and the app will be available at `http://localhost:3000`.
+
+Manager POS routes require a signed HttpOnly session cookie. In the local FYP demo, choosing Manager with any valid email and a 6+ character password creates that cookie. Configure these secrets before running:
+
+```bash
+export POS_SESSION_SECRET="change-me"
+export POS_INTERNAL_SECRET="local-dev-pos-secret"
+```
+
+Employee and Manager use the same demo credential rule. Manager still receives a server-signed session so POS APIs are not unlocked by changing localStorage alone.
 
 ### Build for production
 
@@ -181,10 +194,10 @@ To fit within the project timeline and available hardware (no dedicated GPU), th
 - Staff/customer classification (non-biometric, zone/appearance-based)
 - Engagement analytics (approach time, interaction duration, idle detection, unattended flagging, employee scoring)
 - Trajectory & spatial behavior (path tracking, zone dwell time, heatmaps, crowd density)
+- POS CSV/XLSX import, product performance, purchase conversion, 7/30-day demand forecasts, inventory recommendations, and cited POS assistant answers for a single local store
 
 **Explicitly descoped (see Future Work):**
 - Multi-camera identity linking (Global Master ID / cross-camera re-identification)
-- Direct POS integration for a live purchase-conversion funnel
 - Shelf-level product interaction detection
 - Long-term store layout / promotional-effectiveness evaluation
 
@@ -193,7 +206,7 @@ To fit within the project timeline and available hardware (no dedicated GPU), th
 - **Pilot deployment** with a real retail partner (e.g. Imtiaz, Punjab Cash & Carry, Max Mart) to validate against live store conditions
 - **Multi-store scaling** beyond the single-store prototype
 - **Multi-camera identity linking** for full cross-camera customer tracking
-- **POS integration** for a true footfall-to-purchase conversion funnel
+- **Direct live POS connector** beyond CSV/XLSX import
 - **Shelf-level interaction detection**
 - **Real-time dashboard** as the primary deliverable (currently offline/batch processing)
 - **Expanded agent layer** - additional reasoning agents (anomaly detection, natural-language querying over store data)

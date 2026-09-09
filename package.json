@@ -6,7 +6,8 @@
     "dev": "PYTHON_BIN=./.venv/bin/python next dev frontend",
     "build": "PYTHON_BIN=./.venv/bin/python next build frontend",
     "start": "PYTHON_BIN=./.venv/bin/python next start frontend",
-    "lint": "eslint frontend --config frontend/eslint.config.mjs"
+    "lint": "eslint frontend --config frontend/eslint.config.mjs",
+    "pos:api": "PYTHONPATH=. ./.venv/bin/uvicorn backend.pos_service:app --host 127.0.0.1 --port 8011"
   },
   "dependencies": {
     "jspdf": "^4.2.1",
