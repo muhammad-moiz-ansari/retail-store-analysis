@@ -507,8 +507,14 @@ def parse_import_payload(files: list[tuple[str, bytes]], source: str) -> dict[st
 
 def preview_import(files: list[tuple[str, bytes]], metadata: dict[str, Any]) -> dict[str, Any]:
     source = str(metadata.get("source") or "manual-upload").strip()
-    parsed = parse_import_payload(files, source)
+    metadata_errors = validate_import_metadata(metadata)
+    try:
+        parsed = parse_import_payload(files, source)
+    except (ValueError, RuntimeError) as exc:
+        parsed = {}
+        metadata_errors.append({"row": 0, "errors": [str(exc)]})
     errors = [err for sheet in parsed.values() for err in sheet.errors]
+    errors.extend(metadata_errors)
     warnings = [warn for sheet in parsed.values() for warn in sheet.warnings]
     return {
         "ok": not errors,
@@ -538,8 +544,13 @@ def commit_import(conn: sqlite3.Connection, files: list[tuple[str, bytes]], meta
     coverage_from = metadata.get("coverage_from")
     coverage_to = metadata.get("coverage_to")
     complete = 1 if metadata.get("complete") else 0
-    parsed = parse_import_payload(files, source)
+    metadata_errors = validate_import_metadata(metadata)
+    try:
+        parsed = parse_import_payload(files, source)
+    except (ValueError, RuntimeError) as exc:
+        return {"ok": False, "errors": [{"row": 0, "errors": [str(exc)]}]}
     errors = [err for sheet in parsed.values() for err in sheet.errors]
+    errors.extend(metadata_errors)
     if errors:
         return {"ok": False, "errors": errors[:100]}
     import_id = str(uuid.uuid4())
@@ -610,6 +621,32 @@ def commit_import(conn: sqlite3.Connection, files: list[tuple[str, bytes]], meta
     dataset_version = dataset_version_for(conn)
     job = create_analysis_run(conn, None, None, 7)
     return {"ok": True, "import_id": import_id, "row_count": row_count, "dataset_version": dataset_version, "job_id": job["id"]}
+
+
+def validate_import_metadata(metadata: dict[str, Any]) -> list[dict[str, Any]]:
+    """Validate provenance before any rows can be committed.
+
+    A source and covered period are required for reproducible analytics.  The
+    complete flag is explicit because missing open-day sales cannot otherwise
+    be interpreted as zero demand.
+    """
+    errors: list[str] = []
+    if not str(metadata.get("source") or "").strip():
+        errors.append("source is required")
+    coverage_from = metadata.get("coverage_from")
+    coverage_to = metadata.get("coverage_to")
+    if not coverage_from or not coverage_to:
+        errors.append("coverage_from and coverage_to are required")
+    else:
+        try:
+            start, end = parse_timestamp(coverage_from, "coverage_from"), parse_timestamp(coverage_to, "coverage_to")
+            if end < start:
+                errors.append("coverage_to must be on or after coverage_from")
+        except ValueError as exc:
+            errors.append(str(exc))
+    if "complete" not in metadata:
+        errors.append("complete must be explicitly true or false")
+    return [{"row": 0, "errors": errors}] if errors else []
 
 
 def dataset_version_for(conn: sqlite3.Connection) -> str:
@@ -837,8 +874,11 @@ def category_share(products: list[dict[str, Any]]) -> list[dict[str, Any]]:
 
 
 def conversion_metrics(conn: sqlite3.Connection, date_from: str, date_to: str) -> dict[str, Any]:
+    # SQLite's date() converts offset timestamps to UTC, which can move events
+    # across a local business-day boundary.  Compare the normalized local date
+    # prefix instead; all timestamps are stored in APP_TZ by the importer.
     entries = conn.execute(
-        "SELECT COUNT(*) AS c FROM footfall_events WHERE direction='in' AND date(timestamp) BETWEEN ? AND ?",
+        "SELECT COUNT(*) AS c FROM footfall_events WHERE direction='in' AND substr(timestamp, 1, 10) BETWEEN ? AND ?",
         (date_from, date_to),
     ).fetchone()["c"]
     coverage = conn.execute(
@@ -856,7 +896,7 @@ def conversion_metrics(conn: sqlite3.Connection, date_from: str, date_to: str) -
         flags.append("conversion_above_100_percent")
     daily = []
     for day in date_range_days(date_from, date_to):
-        day_entries = conn.execute("SELECT COUNT(*) AS c FROM footfall_events WHERE direction='in' AND date(timestamp)=?", (day,)).fetchone()["c"]
+        day_entries = conn.execute("SELECT COUNT(*) AS c FROM footfall_events WHERE direction='in' AND substr(timestamp, 1, 10)=?", (day,)).fetchone()["c"]
         day_txs = transaction_metrics(conn, day, day)["distinct_sale_transactions"]
         daily.append({"period": day, "entries": day_entries, "transactions": day_txs, "conversion": None if not day_entries else round(day_txs / day_entries, 4)})
     return {"entries": entries, "transactions": txs, "conversion": None if ratio is None else round(ratio, 4), "flags": flags, "buckets": daily, "definition": "completed sale transactions divided by entry events; not identified visitor purchase rate"}

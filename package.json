@@ -6,12 +6,14 @@
     "dev": "PYTHON_BIN=./.venv/bin/python next dev frontend",
     "build": "PYTHON_BIN=./.venv/bin/python next build frontend",
     "start": "PYTHON_BIN=./.venv/bin/python next start frontend",
+    "dev:all": "node scripts/run-dev.mjs",
     "lint": "eslint frontend --config frontend/eslint.config.mjs",
-    "pos:api": "PYTHONPATH=. ./.venv/bin/uvicorn backend.pos_service:app --host 127.0.0.1 --port 8011"
+    "pos:api": "PYTHONPATH=. ./.venv/bin/uvicorn backend.pos_service:app --host 127.0.0.1 --port 8011",
+    "backend:api": "PYTHONPATH=. ./.venv/bin/uvicorn backend.app:app --host 127.0.0.1 --port 8011"
   },
   "dependencies": {
     "jspdf": "^4.2.1",
-    "next": "16.3.3",
+    "next": "15.5.25",
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "recharts": "^3.10.1"
@@ -22,7 +24,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
-    "eslint-config-next": "16.3.3",
+    "eslint-config-next": "15.5.25",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

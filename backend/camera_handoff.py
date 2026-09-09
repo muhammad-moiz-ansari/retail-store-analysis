@@ -14,7 +14,10 @@ import time
 from pathlib import Path
 from typing import Any
 
-from handoff_core import HandoffConfig, crossing_direction, match_handoff_events, normalized_x
+try:
+    from .handoff_core import HandoffConfig, crossing_direction, match_handoff_events, normalized_x
+except ImportError:
+    from handoff_core import HandoffConfig, crossing_direction, match_handoff_events, normalized_x
 
 
 def appearance_descriptor(frame: Any, bbox: list[int]) -> list[float]:

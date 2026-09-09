@@ -167,7 +167,21 @@ npm run pos:api
 npm run dev
 ```
 
+To start the frontend and the unified backend together with one command, use:
+
+```bash
+npm run dev:all
+```
+
+This starts Next.js on `http://localhost:3000` and FastAPI on
+`http://127.0.0.1:8011`. Press Ctrl+C once to stop both processes.
+
 The POS API binds to `http://127.0.0.1:8011` and the app will be available at `http://localhost:3000`.
+For the complete local backend (POS plus camera handoff jobs), run
+`npm run backend:api`; it exposes `/pos/*` and `/camera/*` from the same
+localhost service. Camera jobs are queued and can be polled at
+`/camera/jobs/{id}`. Both services require their internal secret header when
+called directly; the Next.js proxy supplies it server-side.
 
 Manager POS routes require a signed HttpOnly session cookie. In the local FYP demo, choosing Manager with any valid email and a 6+ character password creates that cookie. Configure these secrets before running:
 

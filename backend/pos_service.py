@@ -41,7 +41,15 @@ async def uploaded(files: list[UploadFile]) -> list[tuple[str, bytes]]:
 
 
 def metadata_from_form(metadata: str | None, source: str | None, coverage_from: str | None, coverage_to: str | None, complete: bool | None) -> dict:
-    data = json.loads(metadata) if metadata else {}
+    if metadata:
+        try:
+            data = json.loads(metadata)
+        except json.JSONDecodeError as exc:
+            raise HTTPException(status_code=400, detail=f"metadata must be valid JSON: {exc.msg}") from exc
+        if not isinstance(data, dict):
+            raise HTTPException(status_code=400, detail="metadata must be a JSON object")
+    else:
+        data = {}
     if source is not None:
         data["source"] = source
     if coverage_from is not None:
