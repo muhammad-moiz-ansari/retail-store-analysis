@@ -10,6 +10,7 @@ const MANAGER_ROUTES = [
   "/employee-info",
   "/spatial-analytics",
   "/sales-trends",
+  "/pos-info",
   "/reports",
   "/settings",
 ];
