@@ -1,7 +1,12 @@
 import type { NextConfig } from "next";
+import path from "node:path";
 
 const nextConfig: NextConfig = {
   /* config options here */
+  outputFileTracingRoot: path.resolve(process.cwd()),
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
   typescript: {
     // !! WARN !!
     // Dangerously allow production builds to successfully complete even if

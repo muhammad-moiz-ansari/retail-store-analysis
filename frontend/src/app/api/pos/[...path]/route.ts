@@ -2,7 +2,7 @@ import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 import { POS_SESSION_COOKIE, verifyManagerSession } from "@/lib/pos-auth";
 
-const SERVICE_URL = process.env.POS_SERVICE_URL || "http://127.0.0.1:8011";
+const SERVICE_URL = process.env.POS_SERVICE_URL || "http://127.0.0.1:8011/pos";
 const INTERNAL_SECRET = process.env.POS_INTERNAL_SECRET || "local-dev-pos-secret";
 
 type Ctx = {
@@ -57,4 +57,3 @@ export async function GET(request: NextRequest, ctx: Ctx) {
 export async function POST(request: NextRequest, ctx: Ctx) {
   return proxy(request, ctx);
 }
-

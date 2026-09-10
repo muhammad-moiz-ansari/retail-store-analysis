@@ -9,19 +9,15 @@ import {
   RetroButton,
   Logo,
 } from "@/components/ui";
-import { useAuth } from "@/components/auth/AuthProvider";
-
-type Role = "manager" | "employee";
 
 export default function SignupPage() {
   const router = useRouter();
-  const { signIn } = useAuth();
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [token, setToken] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
-  const [role, setRole] = useState<Role>("employee");
   const [errors, setErrors] = useState<Record<string, string | undefined>>({});
   const [submitting, setSubmitting] = useState(false);
 
@@ -31,6 +27,7 @@ export default function SignupPage() {
     if (!email.trim()) next.email = "Email is required";
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
       next.email = "Enter a valid email address";
+    if (!token.trim()) next.token = "Invite token is required";
     if (!password) next.password = "Password is required";
     else if (password.length < 6)
       next.password = "Must be at least 6 characters";
@@ -44,19 +41,28 @@ export default function SignupPage() {
     setErrors((p) => ({ ...p, [field]: undefined }));
   }
 
-  function handleSubmit(e: FormEvent) {
+  async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     if (!validate()) return;
 
     setSubmitting(true);
-    // eslint-disable-next-line no-console
-    console.log("Signup →", { name, email, password, role });
-
-    setTimeout(() => {
-      const selectedRole = role === "manager" ? "Manager" : "Employee";
-      signIn(selectedRole);
-      router.push(selectedRole === "Manager" ? "/dashboard" : "/employee-home");
-    }, 400);
+    try {
+      const response = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, token, password }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || "Signup failed");
+      router.push(data.role === "Manager" ? "/dashboard" : "/employee-home");
+    } catch (error) {
+      setErrors((current) => ({
+        ...current,
+        token: error instanceof Error ? error.message : "Signup failed",
+      }));
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -120,6 +126,20 @@ export default function SignupPage() {
             autoComplete="email"
           />
 
+          <RetroInput
+            label="Invite Token"
+            type="text"
+            placeholder="Paste the token from your manager"
+            value={token}
+            onChange={(e) => {
+              setToken(e.target.value);
+              clearError("token");
+            }}
+            error={!!errors.token}
+            helperText={errors.token}
+            autoComplete="one-time-code"
+          />
+
           {/* Password */}
           <RetroInput
             label="Password"
@@ -149,40 +169,6 @@ export default function SignupPage() {
             helperText={errors.confirm}
             autoComplete="new-password"
           />
-
-          {/* ── Role selector (retro segmented toggle) ── */}
-          <div>
-            <span className="block mb-1.5 font-heading text-xs font-semibold tracking-wide text-text-muted uppercase">
-              Role
-            </span>
-            <div className="flex rounded-md overflow-hidden border-2 border-border">
-              <button
-                type="button"
-                onClick={() => setRole("manager")}
-                className={[
-                  "flex-1 px-4 py-2 font-heading text-sm font-semibold tracking-wide transition-colors cursor-pointer select-none",
-                  role === "manager"
-                    ? "bg-accent text-surface"
-                    : "bg-surface text-text hover:bg-surface-alt",
-                ].join(" ")}
-              >
-                Manager
-              </button>
-              <div className="w-[2px] bg-border" />
-              <button
-                type="button"
-                onClick={() => setRole("employee")}
-                className={[
-                  "flex-1 px-4 py-2 font-heading text-sm font-semibold tracking-wide transition-colors cursor-pointer select-none",
-                  role === "employee"
-                    ? "bg-accent text-surface"
-                    : "bg-surface text-text hover:bg-surface-alt",
-                ].join(" ")}
-              >
-                Employee
-              </button>
-            </div>
-          </div>
 
           {/* Submit */}
           <RetroButton

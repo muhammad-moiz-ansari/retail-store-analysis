@@ -1,8 +1,12 @@
 import { spawn } from "node:child_process";
 import process from "node:process";
+import nextEnv from "@next/env";
 
 const isWindows = process.platform === "win32";
 const root = process.cwd();
+
+nextEnv.loadEnvConfig(root, true);
+
 const python = process.env.PYTHON_BIN || (isWindows ? ".venv\\Scripts\\python.exe" : ".venv/bin/python");
 
 function start(label, command, args, env = {}) {
@@ -20,7 +24,10 @@ function start(label, command, args, env = {}) {
 }
 
 const backend = start("backend", python, ["-m", "uvicorn", "backend.app:app", "--host", "127.0.0.1", "--port", "8011"], { PYTHONPATH: root });
-const frontend = start("frontend", process.execPath, ["node_modules/next/dist/bin/next", "dev", "frontend"]);
+const frontend = start("frontend", process.execPath, ["node_modules/next/dist/bin/next", "dev", "frontend"], {
+  NEXT_TELEMETRY_DISABLED: "1",
+  NODE_OPTIONS: process.env.FRONTEND_NODE_OPTIONS || process.env.NODE_OPTIONS || "--max-old-space-size=768",
+});
 const children = [backend, frontend];
 let stopping = false;
 

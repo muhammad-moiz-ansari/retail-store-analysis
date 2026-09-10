@@ -141,9 +141,13 @@ function PosDashboardPanel() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    fetchPosAnalytics()
-      .then(setAnalytics)
-      .catch((loadError) => setError(loadError instanceof Error ? loadError.message : "POS analytics unavailable"));
+    const timeoutId = window.setTimeout(() => {
+      fetchPosAnalytics()
+        .then(setAnalytics)
+        .catch((loadError) => setError(loadError instanceof Error ? loadError.message : "POS analytics unavailable"));
+    }, 150);
+
+    return () => window.clearTimeout(timeoutId);
   }, []);
 
   if (!analytics || analytics.products.length === 0) {

@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState, FormEvent } from "react";
+import React, { useEffect, useState, FormEvent } from "react";
 import Link from "next/link";
+import { useAuth } from "@/components/auth/AuthProvider";
 import {
   RetroWindow,
   RetroCard,
@@ -16,8 +17,6 @@ import {
    screen instead of the settings content.
    ═══════════════════════════════════════════════════════════════ */
 
-const CURRENT_ROLE: "Manager" | "Employee" = "Manager";
-
 /* ═══════════════════════════════════════════════════════════════
    Types
    ═══════════════════════════════════════════════════════════════ */
@@ -26,6 +25,7 @@ interface Camera {
   id: string;
   name: string;
   zone: string;
+  zoneId?: string;
   online: boolean;
 }
 
@@ -34,13 +34,17 @@ interface Zone {
   name: string;
   type: "Entry/Exit" | "Aisle" | "Display" | "Checkout";
   capacity: number;
+  minStaff?: number;
 }
 
 interface StaffMember {
   id: string;
+  userId?: string;
   label: string;
   zone: string;
+  zoneId?: string;
   shift: string;
+  available?: boolean;
 }
 
 interface Account {
@@ -50,6 +54,29 @@ interface Account {
   role: "Manager" | "Employee";
   active: boolean;
 }
+
+interface SettingsSnapshot {
+  zones: Zone[];
+  cameras: Camera[];
+  staff: StaffMember[];
+  accounts: Account[];
+  thresholds: {
+    responseTimeMinutes?: number;
+    unattendedWaitMinutes?: number;
+    crowdDensityPercent?: number;
+    notifyMode?: "any" | "senior";
+    dispatchPaused?: boolean;
+  };
+  privacy: {
+    retentionDays?: number;
+  };
+}
+
+type SaveSettings = (
+  path: string,
+  init: RequestInit,
+  fallbackMessage?: string
+) => Promise<SettingsSnapshot & { invitation?: { token: string; email: string; role: string; expiresAt: string } }>;
 
 /* ═══════════════════════════════════════════════════════════════
    Initial mock data
@@ -89,21 +116,26 @@ const ZONE_TYPE_OPTIONS: Zone["type"][] = ["Entry/Exit", "Aisle", "Display", "Ch
 const RETENTION_OPTIONS = ["30 days", "60 days", "90 days"];
 
 /* ═══════════════════════════════════════════════════════════════
-   Helpers
-   ═══════════════════════════════════════════════════════════════ */
-
-let nextId = 100;
-function uid() {
-  return `_${++nextId}`;
-}
-
-/* ═══════════════════════════════════════════════════════════════
    Page Component
    ═══════════════════════════════════════════════════════════════ */
 
 export default function SettingsPage() {
   /* ── Role guard ── */
-  if (CURRENT_ROLE !== "Manager") {
+  const { ready, role } = useAuth();
+
+  if (!ready) {
+    return (
+      <div className="min-h-[70vh] flex items-center justify-center px-4">
+        <RetroWindow title="Loading Settings" className="w-full max-w-md">
+          <p className="font-body text-sm text-text-muted text-center">
+            Loading your manager session...
+          </p>
+        </RetroWindow>
+      </div>
+    );
+  }
+
+  if (role !== "Manager") {
     return <AccessRestricted />;
   }
 
@@ -137,7 +169,55 @@ function AccessRestricted() {
 
 function SettingsContent() {
   /* ── Shared zone state (used by Cameras, Zones, and Staff) ── */
-  const [zones, setZones] = useState<Zone[]>(INITIAL_ZONES);
+  const [snapshot, setSnapshot] = useState<SettingsSnapshot>({
+    zones: INITIAL_ZONES,
+    cameras: INITIAL_CAMERAS,
+    staff: INITIAL_STAFF,
+    accounts: INITIAL_ACCOUNTS,
+    thresholds: {
+      responseTimeMinutes: 2,
+      unattendedWaitMinutes: 3,
+      crowdDensityPercent: 85,
+      notifyMode: "any",
+    },
+    privacy: { retentionDays: 60 },
+  });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  async function loadSettings() {
+    setError("");
+    const response = await fetch("/api/backend/settings", { cache: "no-store" });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(data.error || data.detail || "Unable to load settings");
+    }
+    setSnapshot(data);
+  }
+
+  async function saveSettings(
+    path: string,
+    init: RequestInit,
+    fallbackMessage = "Settings update failed"
+  ) {
+    setError("");
+    const response = await fetch(`/api/backend/${path}`, {
+      ...init,
+      headers: { "Content-Type": "application/json", ...(init.headers || {}) },
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(data.error || data.detail || fallbackMessage);
+    }
+    setSnapshot(data);
+    return data;
+  }
+
+  useEffect(() => {
+    loadSettings()
+      .catch((err) => setError(err instanceof Error ? err.message : "Unable to load settings"))
+      .finally(() => setLoading(false));
+  }, []);
 
   return (
     <main className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-6 md:py-8 space-y-8">
@@ -146,28 +226,49 @@ function SettingsContent() {
         <div className="flex flex-wrap items-center gap-3">
           <Badge variant="accent">Manager Access</Badge>
           <span className="text-sm text-text-muted">
-            Changes here affect what staff and customers see across the dashboard.
+            Changes here are saved to the RetailPulse demo backend.
           </span>
         </div>
       </RetroWindow>
 
+      {(loading || error) && (
+        <RetroWindow title="Backend Connection">
+          <p className={`text-sm ${error ? "text-danger" : "text-text-muted"}`}>
+            {error || "Loading saved store configuration..."}
+          </p>
+        </RetroWindow>
+      )}
+
       {/* ── Section 1: Camera Management ── */}
-      <CameraManagement zones={zones} />
+      <CameraManagement
+        zones={snapshot.zones}
+        cameras={snapshot.cameras}
+        saveSettings={saveSettings}
+      />
 
       {/* ── Section 2: Zone Management ── */}
-      <ZoneManagement zones={zones} setZones={setZones} />
+      <ZoneManagement
+        zones={snapshot.zones}
+        saveSettings={saveSettings}
+        setSnapshot={setSnapshot}
+      />
 
       {/* ── Section 3: Staff Shift Assignment ── */}
-      <StaffShifts zones={zones} />
+      <StaffShifts
+        zones={snapshot.zones}
+        staff={snapshot.staff}
+        saveSettings={saveSettings}
+        setSnapshot={setSnapshot}
+      />
 
       {/* ── Section 4: Alert & Threshold Configuration ── */}
-      <AlertThresholds />
+      <AlertThresholds thresholds={snapshot.thresholds} saveSettings={saveSettings} />
 
       {/* ── Section 5: User & Account Management ── */}
-      <AccountManagement />
+      <AccountManagement accounts={snapshot.accounts} saveSettings={saveSettings} />
 
       {/* ── Section 6: Data & Privacy Settings ── */}
-      <DataPrivacy />
+      <DataPrivacy privacy={snapshot.privacy} saveSettings={saveSettings} />
     </main>
   );
 }
@@ -176,25 +277,57 @@ function SettingsContent() {
    Section 1 - Camera Management
    ═══════════════════════════════════════════════════════════════ */
 
-function CameraManagement({ zones }: { zones: Zone[] }) {
-  const [cameras, setCameras] = useState<Camera[]>(INITIAL_CAMERAS);
+function CameraManagement({
+  zones,
+  cameras,
+  saveSettings,
+}: {
+  zones: Zone[];
+  cameras: Camera[];
+  saveSettings: SaveSettings;
+}) {
   const [newName, setNewName] = useState("");
-  const [newZone, setNewZone] = useState(zones[0]?.name ?? "");
+  const [newZone, setNewZone] = useState(zones[0]?.id ?? "");
+  const [saving, setSaving] = useState("");
+  const [error, setError] = useState("");
 
-  function handleRemove(id: string) {
-    if (window.confirm("Remove this camera from the system?")) {
-      setCameras((prev) => prev.filter((c) => c.id !== id));
+  useEffect(() => {
+    if (!newZone && zones[0]?.id) setNewZone(zones[0].id);
+  }, [newZone, zones]);
+
+  async function handleRemove(id: string) {
+    if (!window.confirm("Remove this camera from the system?")) return;
+    setSaving(id);
+    setError("");
+    try {
+      await saveSettings(`settings/cameras/${id}`, { method: "DELETE" }, "Camera removal failed");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Camera removal failed");
+    } finally {
+      setSaving("");
     }
   }
 
-  function handleAdd(e: FormEvent) {
+  async function handleAdd(e: FormEvent) {
     e.preventDefault();
     if (!newName.trim()) return;
-    setCameras((prev) => [
-      ...prev,
-      { id: uid(), name: newName.trim(), zone: newZone, online: false },
-    ]);
-    setNewName("");
+    setSaving("new");
+    setError("");
+    try {
+      await saveSettings(
+        "settings/cameras",
+        {
+          method: "POST",
+          body: JSON.stringify({ name: newName.trim(), zoneId: newZone }),
+        },
+        "Camera creation failed"
+      );
+      setNewName("");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Camera creation failed");
+    } finally {
+      setSaving("");
+    }
   }
 
   return (
@@ -214,9 +347,10 @@ function CameraManagement({ zones }: { zones: Zone[] }) {
                 <RetroButton
                   variant="danger"
                   className="!px-2.5 !py-1 !text-xs"
+                  disabled={saving === cam.id}
                   onClick={() => handleRemove(cam.id)}
                 >
-                  Remove
+                  {saving === cam.id ? "Removing..." : "Remove"}
                 </RetroButton>
               </div>
             </div>
@@ -248,16 +382,17 @@ function CameraManagement({ zones }: { zones: Zone[] }) {
               className="w-full rounded-md border-2 border-border-soft bg-surface px-3 py-2 font-body text-sm text-text shadow-[inset_1px_2px_4px_rgba(74,46,30,0.15)] focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/30 transition-colors"
             >
               {zones.map((z) => (
-                <option key={z.id} value={z.name}>
+                <option key={z.id} value={z.id}>
                   {z.name}
                 </option>
               ))}
             </select>
           </div>
-          <RetroButton type="submit" variant="primary" className="shrink-0">
-            Add Camera
+          <RetroButton type="submit" variant="primary" className="shrink-0" disabled={saving === "new"}>
+            {saving === "new" ? "Adding..." : "Add Camera"}
           </RetroButton>
         </form>
+        {error && <p className="mt-3 text-sm font-semibold text-danger">{error}</p>}
       </RetroCard>
     </RetroWindow>
   );
@@ -269,43 +404,69 @@ function CameraManagement({ zones }: { zones: Zone[] }) {
 
 function ZoneManagement({
   zones,
-  setZones,
+  saveSettings,
+  setSnapshot,
 }: {
   zones: Zone[];
-  setZones: React.Dispatch<React.SetStateAction<Zone[]>>;
+  saveSettings: SaveSettings;
+  setSnapshot: React.Dispatch<React.SetStateAction<SettingsSnapshot>>;
 }) {
   const [savedRows, setSavedRows] = useState<Record<string, boolean>>({});
   const [newZoneName, setNewZoneName] = useState("");
   const [newZoneType, setNewZoneType] = useState<Zone["type"]>("Aisle");
   const [newZoneCap, setNewZoneCap] = useState("10");
+  const [error, setError] = useState("");
 
   function handleCapacityChange(id: string, value: number) {
-    setZones((prev) =>
-      prev.map((z) => (z.id === id ? { ...z, capacity: value } : z))
-    );
+    setSnapshot((prev) => ({
+      ...prev,
+      zones: prev.zones.map((z) => (z.id === id ? { ...z, capacity: value } : z)),
+    }));
   }
 
-  function handleSaveRow(id: string) {
-    setSavedRows((prev) => ({ ...prev, [id]: true }));
-    setTimeout(() => {
-      setSavedRows((prev) => ({ ...prev, [id]: false }));
-    }, 1500);
+  async function handleSaveRow(zone: Zone) {
+    setError("");
+    try {
+      await saveSettings(
+        `settings/zones/${zone.id}`,
+        {
+          method: "PATCH",
+          body: JSON.stringify({ capacity: zone.capacity, minStaff: zone.minStaff ?? 0 }),
+        },
+        "Zone update failed"
+      );
+      setSavedRows((prev) => ({ ...prev, [zone.id]: true }));
+      setTimeout(() => {
+        setSavedRows((prev) => ({ ...prev, [zone.id]: false }));
+      }, 1500);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Zone update failed");
+    }
   }
 
-  function handleAddZone(e: FormEvent) {
+  async function handleAddZone(e: FormEvent) {
     e.preventDefault();
     if (!newZoneName.trim()) return;
-    setZones((prev) => [
-      ...prev,
-      {
-        id: uid(),
-        name: newZoneName.trim(),
-        type: newZoneType,
-        capacity: parseInt(newZoneCap) || 10,
-      },
-    ]);
-    setNewZoneName("");
-    setNewZoneCap("10");
+    setError("");
+    try {
+      await saveSettings(
+        "settings/zones",
+        {
+          method: "POST",
+          body: JSON.stringify({
+            name: newZoneName.trim(),
+            type: newZoneType,
+            capacity: parseInt(newZoneCap) || 10,
+            minStaff: 0,
+          }),
+        },
+        "Zone creation failed"
+      );
+      setNewZoneName("");
+      setNewZoneCap("10");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Zone creation failed");
+    }
   }
 
   return (
@@ -353,7 +514,7 @@ function ZoneManagement({
                     <RetroButton
                       variant="secondary"
                       className="!px-2.5 !py-1 !text-xs"
-                      onClick={() => handleSaveRow(zone.id)}
+                      onClick={() => handleSaveRow(zone)}
                     >
                       {savedRows[zone.id] ? (
                         <span className="text-success">✓ Saved</span>
@@ -406,6 +567,7 @@ function ZoneManagement({
             Add Zone
           </RetroButton>
         </form>
+        {error && <p className="mt-3 text-sm font-semibold text-danger">{error}</p>}
       </RetroCard>
     </RetroWindow>
   );
@@ -415,30 +577,69 @@ function ZoneManagement({
    Section 3 - Staff Shift Assignment
    ═══════════════════════════════════════════════════════════════ */
 
-function StaffShifts({ zones }: { zones: Zone[] }) {
-  const [staff, setStaff] = useState<StaffMember[]>(INITIAL_STAFF);
+function StaffShifts({
+  zones,
+  staff,
+  saveSettings,
+  setSnapshot,
+}: {
+  zones: Zone[];
+  staff: StaffMember[];
+  saveSettings: SaveSettings;
+  setSnapshot: React.Dispatch<React.SetStateAction<SettingsSnapshot>>;
+}) {
   const [savedRows, setSavedRows] = useState<Record<string, boolean>>({});
+  const [error, setError] = useState("");
 
   function updateStaff(id: string, field: "zone" | "shift", value: string) {
-    setStaff((prev) =>
-      prev.map((s) => (s.id === id ? { ...s, [field]: value } : s))
-    );
-  }
-
-  function handleSaveRow(id: string) {
-    setSavedRows((prev) => ({ ...prev, [id]: true }));
-    setTimeout(() => {
-      setSavedRows((prev) => ({ ...prev, [id]: false }));
-    }, 1500);
-  }
-
-  function handleAddStaff() {
-    const nextNum = staff.length + 1;
-    const label = `Staff ${String(nextNum).padStart(2, "0")}`;
-    setStaff((prev) => [
+    setSnapshot((prev) => ({
       ...prev,
-      { id: uid(), label, zone: "", shift: "" },
-    ]);
+      staff: prev.staff.map((s) =>
+        s.id === id
+          ? {
+              ...s,
+              [field]: value,
+              ...(field === "zone" ? { zoneId: value, zone: zones.find((zone) => zone.id === value)?.name || "" } : {}),
+            }
+          : s
+      ),
+    }));
+  }
+
+  async function handleSaveRow(member: StaffMember) {
+    setError("");
+    try {
+      await saveSettings(
+        `settings/rosters/${member.id}`,
+        {
+          method: "PATCH",
+          body: JSON.stringify({ zoneId: member.zoneId || null, shift: member.shift, available: member.available ?? true }),
+        },
+        "Roster update failed"
+      );
+      setSavedRows((prev) => ({ ...prev, [member.id]: true }));
+      setTimeout(() => {
+        setSavedRows((prev) => ({ ...prev, [member.id]: false }));
+      }, 1500);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Roster update failed");
+    }
+  }
+
+  async function handleAddStaff() {
+    setError("");
+    try {
+      await saveSettings(
+        "settings/rosters",
+        {
+          method: "POST",
+          body: JSON.stringify({ zoneId: zones[0]?.id || null, shift: SHIFT_OPTIONS[0] }),
+        },
+        "Roster creation failed"
+      );
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Roster creation failed");
+    }
   }
 
   return (
@@ -470,13 +671,13 @@ function StaffShifts({ zones }: { zones: Zone[] }) {
                   </td>
                   <td className="py-2.5 pr-4">
                     <select
-                      value={s.zone}
+                      value={s.zoneId || ""}
                       onChange={(e) => updateStaff(s.id, "zone", e.target.value)}
                       className="w-full min-w-[160px] rounded-md border-2 border-border-soft bg-surface px-2 py-1 font-body text-xs text-text shadow-[inset_1px_2px_4px_rgba(74,46,30,0.15)] focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/30 transition-colors"
                     >
                       <option value="">- Select Zone -</option>
                       {zones.map((z) => (
-                        <option key={z.id} value={z.name}>
+                        <option key={z.id} value={z.id}>
                           {z.name}
                         </option>
                       ))}
@@ -500,7 +701,7 @@ function StaffShifts({ zones }: { zones: Zone[] }) {
                     <RetroButton
                       variant="secondary"
                       className="!px-2.5 !py-1 !text-xs"
-                      onClick={() => handleSaveRow(s.id)}
+                      onClick={() => handleSaveRow(s)}
                     >
                       {savedRows[s.id] ? (
                         <span className="text-success">✓ Saved</span>
@@ -518,6 +719,7 @@ function StaffShifts({ zones }: { zones: Zone[] }) {
           <RetroButton variant="primary" onClick={handleAddStaff}>
             Add Staff Member
           </RetroButton>
+          {error && <p className="mt-3 text-sm font-semibold text-danger">{error}</p>}
         </div>
       </RetroCard>
     </RetroWindow>
@@ -528,16 +730,51 @@ function StaffShifts({ zones }: { zones: Zone[] }) {
    Section 4 - Alert & Threshold Configuration
    ═══════════════════════════════════════════════════════════════ */
 
-function AlertThresholds() {
-  const [responseTime, setResponseTime] = useState("2");
-  const [waitThreshold, setWaitThreshold] = useState("3");
-  const [crowdDensity, setCrowdDensity] = useState("85");
-  const [notifyMode, setNotifyMode] = useState<"any" | "senior">("any");
+function AlertThresholds({
+  thresholds,
+  saveSettings,
+}: {
+  thresholds: SettingsSnapshot["thresholds"];
+  saveSettings: SaveSettings;
+}) {
+  const [responseTime, setResponseTime] = useState(String(thresholds.responseTimeMinutes ?? 2));
+  const [waitThreshold, setWaitThreshold] = useState(String(thresholds.unattendedWaitMinutes ?? 3));
+  const [crowdDensity, setCrowdDensity] = useState(String(thresholds.crowdDensityPercent ?? 85));
+  const [notifyMode, setNotifyMode] = useState<"any" | "senior">(thresholds.notifyMode ?? "any");
+  const [dispatchPaused, setDispatchPaused] = useState(Boolean(thresholds.dispatchPaused));
   const [saved, setSaved] = useState(false);
+  const [error, setError] = useState("");
 
-  function handleSave() {
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+  useEffect(() => {
+    setResponseTime(String(thresholds.responseTimeMinutes ?? 2));
+    setWaitThreshold(String(thresholds.unattendedWaitMinutes ?? 3));
+    setCrowdDensity(String(thresholds.crowdDensityPercent ?? 85));
+    setNotifyMode(thresholds.notifyMode ?? "any");
+    setDispatchPaused(Boolean(thresholds.dispatchPaused));
+  }, [thresholds]);
+
+  async function handleSave() {
+    setError("");
+    try {
+      await saveSettings(
+        "settings/thresholds",
+        {
+          method: "PUT",
+          body: JSON.stringify({
+            responseTimeMinutes: parseInt(responseTime) || 2,
+            unattendedWaitMinutes: parseInt(waitThreshold) || 3,
+            crowdDensityPercent: parseInt(crowdDensity) || 85,
+            notifyMode,
+            dispatchPaused,
+          }),
+        },
+        "Threshold update failed"
+      );
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Threshold update failed");
+    }
   }
 
   return (
@@ -634,6 +871,21 @@ function AlertThresholds() {
         </div>
       </RetroCard>
 
+      <RetroCard label="Automatic Dispatch" className="mb-5">
+        <label className="pt-2 flex items-center gap-3 text-sm font-semibold text-text">
+          <input
+            type="checkbox"
+            checked={dispatchPaused}
+            onChange={(e) => setDispatchPaused(e.target.checked)}
+            className="h-4 w-4 accent-[var(--color-accent)]"
+          />
+          Pause automatic staff dispatch
+        </label>
+        <p className="mt-2 text-xs text-text-muted">
+          When paused, orchestration events create alerts without assigning staff tasks.
+        </p>
+      </RetroCard>
+
       {/* Save button */}
       <div className="flex items-center gap-3">
         <RetroButton variant="primary" onClick={handleSave}>
@@ -644,6 +896,7 @@ function AlertThresholds() {
             ✓ Thresholds saved
           </span>
         )}
+        {error && <span className="text-sm font-semibold text-danger">{error}</span>}
       </div>
     </RetroWindow>
   );
@@ -653,24 +906,53 @@ function AlertThresholds() {
    Section 5 - User & Account Management
    ═══════════════════════════════════════════════════════════════ */
 
-function AccountManagement() {
-  const [accounts, setAccounts] = useState<Account[]>(INITIAL_ACCOUNTS);
+function AccountManagement({
+  accounts,
+  saveSettings,
+}: {
+  accounts: Account[];
+  saveSettings: SaveSettings;
+}) {
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState<"Manager" | "Employee">("Employee");
   const [inviteMsg, setInviteMsg] = useState("");
+  const [error, setError] = useState("");
 
-  function handleDeactivate(id: string) {
-    setAccounts((prev) =>
-      prev.map((a) => (a.id === id ? { ...a, active: false } : a))
-    );
+  async function handleDeactivate(id: string) {
+    setError("");
+    try {
+      await saveSettings(
+        `accounts/${id}`,
+        { method: "PATCH", body: JSON.stringify({ active: false }) },
+        "Account update failed"
+      );
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Account update failed");
+    }
   }
 
-  function handleInvite(e: FormEvent) {
+  async function handleInvite(e: FormEvent) {
     e.preventDefault();
     if (!inviteEmail.trim()) return;
-    setInviteMsg(`Invite sent to ${inviteEmail.trim()}`);
-    setInviteEmail("");
-    setTimeout(() => setInviteMsg(""), 3000);
+    setError("");
+    try {
+      const data = await saveSettings(
+        "accounts/invitations",
+        {
+          method: "POST",
+          body: JSON.stringify({ email: inviteEmail.trim(), role: inviteRole }),
+        },
+        "Invitation failed"
+      );
+      setInviteMsg(
+        data.invitation
+          ? `Invite token for ${data.invitation.email}: ${data.invitation.token}`
+          : `Invite created for ${inviteEmail.trim()}`
+      );
+      setInviteEmail("");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Invitation failed");
+    }
   }
 
   return (
@@ -766,6 +1048,7 @@ function AccountManagement() {
             ✓ {inviteMsg}
           </p>
         )}
+        {error && <p className="mt-3 text-sm font-semibold text-danger">{error}</p>}
       </RetroCard>
     </RetroWindow>
   );
@@ -775,13 +1058,37 @@ function AccountManagement() {
    Section 6 - Data & Privacy Settings
    ═══════════════════════════════════════════════════════════════ */
 
-function DataPrivacy() {
-  const [retention, setRetention] = useState("60 days");
+function DataPrivacy({
+  privacy,
+  saveSettings,
+}: {
+  privacy: SettingsSnapshot["privacy"];
+  saveSettings: SaveSettings;
+}) {
+  const [retention, setRetention] = useState(`${privacy.retentionDays ?? 60} days`);
   const [saved, setSaved] = useState(false);
+  const [error, setError] = useState("");
 
-  function handleSave() {
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+  useEffect(() => {
+    setRetention(`${privacy.retentionDays ?? 60} days`);
+  }, [privacy]);
+
+  async function handleSave() {
+    setError("");
+    try {
+      await saveSettings(
+        "settings/privacy",
+        {
+          method: "PUT",
+          body: JSON.stringify({ retentionDays: parseInt(retention) || 60 }),
+        },
+        "Privacy update failed"
+      );
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Privacy update failed");
+    }
   }
 
   return (
@@ -843,6 +1150,7 @@ function DataPrivacy() {
               ✓ Privacy settings saved
             </span>
           )}
+          {error && <span className="text-sm font-semibold text-danger">{error}</span>}
         </div>
       </div>
     </RetroWindow>

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { spawn } from "node:child_process";
+import fs from "node:fs";
 import path from "node:path";
 
 function resolveRepoRoot() {
@@ -9,7 +10,6 @@ function resolveRepoRoot() {
     const backendDir = path.join(candidate, "backend");
     const frontendDir = path.join(candidate, "frontend");
     try {
-      const fs = require("node:fs");
       if (fs.existsSync(path.join(candidate, "package.json")) && fs.existsSync(backendDir) && fs.existsSync(frontendDir)) {
         return candidate;
       }
