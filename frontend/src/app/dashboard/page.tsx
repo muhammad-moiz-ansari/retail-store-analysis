@@ -12,6 +12,31 @@ import { defaultDashboardData } from "@/lib/dashboard-data";
 
 const { summary, floorAInteractions, floorBInteractions, flaggedEvents, comparisonBars } = defaultDashboardData;
 
+const managerCameraVideos = {
+  cam1: "/api/videos/cam1_tracked.mp4",
+  cam2: "/api/videos/cam2_tracked.mp4",
+  cam3: "/api/videos/cam2_tracked.mp4",
+};
+
+const dummyChatMessages = [
+  {
+    text: "How are the camera models performing today?",
+    isUser: true,
+  },
+  {
+    text: "Camera 1 is classified as correct at 82% confidence. Camera 2 is at 54% confidence, so its latest classification should be reviewed. The CV model tracked 11 people across both feeds.",
+    isUser: false,
+  },
+  {
+    text: "What action should I take?",
+    isUser: true,
+  },
+  {
+    text: "Keep entrance coverage unchanged and review Camera 2 before reallocating staff. Dummy forecast: Floor A traffic may rise 14% in the next hour.",
+    isUser: false,
+  },
+];
+
 const TOP_SELLERS = [
   { name: "Traffic similarity", units: Math.round(summary.similarityPercent) },
   { name: "Net inside", units: summary.netInside },
@@ -248,8 +273,8 @@ function AIAgentBar() {
   const [query, setQuery] = useState("");
   const [messages, setMessages] = useState<
     { text: string; isUser: boolean }[]
-  >([]);
-  const [expanded, setExpanded] = useState(false);
+  >(dummyChatMessages);
+  const [expanded, setExpanded] = useState(true);
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -259,7 +284,10 @@ function AIAgentBar() {
     setMessages((prev) => [
       ...prev,
       { text: userMsg, isUser: true },
-      { text: "Analyzing store data…", isUser: false },
+      {
+        text: "Dummy analysis: traffic is stable, Camera 1 confidence is 82%, and Camera 2 confidence is 54%. Review Camera 2 before taking action.",
+        isUser: false,
+      },
     ]);
     setQuery("");
     setExpanded(true);
@@ -270,16 +298,18 @@ function AIAgentBar() {
       {/* Expandable chat area */}
       {expanded && messages.length > 0 && (
         <div className="max-w-5xl mx-auto px-4 md:px-6">
-          <div className="bg-surface border border-border-soft border-b-0 rounded-t-lg px-4 py-3 max-h-52 overflow-y-auto space-y-2">
+          <div id="manager-ai-chat" className="bg-surface border border-border-soft border-b-0 rounded-t-lg px-4 py-3 max-h-52 overflow-y-auto space-y-2">
             <div className="flex items-center justify-between mb-1">
               <span className="font-mono text-[10px] text-text-muted uppercase tracking-widest">
                 AI Assistant
               </span>
               <button
+                type="button"
                 onClick={() => setExpanded(false)}
+                aria-label="Minimize chat"
                 className="font-mono text-[10px] text-text-muted hover:text-text cursor-pointer"
               >
-                ▾ Collapse
+                ▾ Minimize
               </button>
             </div>
             {messages.map((m, i) => (
@@ -302,6 +332,15 @@ function AIAgentBar() {
           <RetroButton type="submit" variant="primary" className="shrink-0">
             Ask
           </RetroButton>
+          <button
+            type="button"
+            onClick={() => setExpanded((current) => !current)}
+            aria-expanded={expanded}
+            aria-controls="manager-ai-chat"
+            className="shrink-0 rounded-md border border-border-soft bg-surface px-3 py-2 font-mono text-[10px] uppercase text-text-muted transition-colors hover:border-accent hover:text-text"
+          >
+            {expanded ? "Minimize chat" : "Show chat"}
+          </button>
         </div>
       </form>
     </div>
@@ -330,19 +369,19 @@ export default function DashboardPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* CAM 01 - Entrance */}
             <div>
-              <CRTFrame label="CAM 01 - ENTRANCE" live signal={false} className="w-full" />
+              <CRTFrame label="CAM 01 - ENTRANCE" live videoSrc={managerCameraVideos.cam1} className="w-full" />
               <FootfallCard inCount={summary.footfallIn} outCount={summary.footfallOut} netInside={summary.netInside} />
             </div>
 
             {/* CAM 02 - Floor A */}
             <div>
-              <CRTFrame label="CAM 02 - FLOOR A" live videoSrc="/videos/cam1.mp4" className="w-full" />
+              <CRTFrame label="CAM 02 - FLOOR A" live videoSrc={managerCameraVideos.cam2} className="w-full" />
               <EngagementCard interactions={floorAInteractions} />
             </div>
 
             {/* CAM 03 - Floor B */}
             <div>
-              <CRTFrame label="CAM 03 - FLOOR B" live signal={false} className="w-full" />
+              <CRTFrame label="CAM 03 - FLOOR B" live videoSrc={managerCameraVideos.cam3} className="w-full" />
               <EngagementCard interactions={floorBInteractions} />
             </div>
           </div>
@@ -429,8 +468,8 @@ export default function DashboardPage() {
               </div>
             </RetroWindow>
 
-            {/* Panel 2: Product & POS Funnel */}
-            <RetroWindow title="Product & POS Funnel" className="relative">
+            {/* Panel 2: Product Funnel */}
+            <RetroWindow title="Product Funnel" className="relative">
               {/* Accent stripe */}
               <div
                 className="absolute left-0 top-0 bottom-0 w-1 rounded-l-lg"

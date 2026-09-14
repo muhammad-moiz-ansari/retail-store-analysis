@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useEffect, useState } from "react";
 
 interface CRTFrameProps {
   /** Camera / source label shown on the bottom plaque */
@@ -31,33 +31,68 @@ function NoSignalScreen() {
 /** Autoplay-safe video player - works around React's muted attribute bug */
 function AutoplayVideo({ src, className, controls = false }: { src: string; className?: string; controls?: boolean }) {
   const ref = useRef<HTMLVideoElement>(null);
+  const [isVisible, setIsVisible] = useState(false);
+  const [shouldLoad, setShouldLoad] = useState(false);
 
   useEffect(() => {
-    if (controls) return; // Don't autoplay when controls are shown
     const el = ref.current;
     if (!el) return;
+
+    if (!("IntersectionObserver" in window)) {
+      const timer = setTimeout(() => {
+        setIsVisible(true);
+        setShouldLoad(true);
+      }, 0);
+      return () => clearTimeout(timer);
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsVisible(entry.isIntersecting);
+        if (entry.isIntersecting) setShouldLoad(true);
+      },
+      { rootMargin: "200px 0px", threshold: 0.01 }
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || !shouldLoad) return;
+
+    el.load();
+  }, [shouldLoad]);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || !shouldLoad || controls) return;
 
     el.defaultMuted = true;
     el.muted = true;
 
-    el.play().catch(error => {
-      console.warn("Video autoplay blocked:", error);
-    });
-  }, [controls]);
+    if (isVisible) {
+      el.play().catch(error => {
+        console.warn("Video autoplay blocked:", error);
+      });
+    } else {
+      el.pause();
+    }
+  }, [controls, isVisible, shouldLoad]);
 
   return (
     <video
       ref={ref}
-      autoPlay={!controls}
       loop={!controls}
       muted={!controls}
       playsInline
       controls={controls}
-      preload="auto"
+      preload={shouldLoad ? "metadata" : "none"}
       className={className}
       suppressHydrationWarning
     >
-      <source src={src} type="video/mp4" />
+      {shouldLoad && <source src={src} type="video/mp4" />}
     </video>
   );
 }

@@ -9,9 +9,6 @@ const MANAGER_ROUTES = [
   "/customer-info",
   "/employee-info",
   "/spatial-analytics",
-  "/sales-trends",
-  "/pos-info",
-  "/reports",
   "/settings",
 ];
 const EMPLOYEE_ROUTES = ["/employee"];

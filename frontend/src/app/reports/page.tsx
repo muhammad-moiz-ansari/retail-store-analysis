@@ -2,7 +2,6 @@
 
 import React, { useState } from "react";
 import { RetroWindow, RetroCard, RetroButton, Badge } from "@/components/ui";
-import jsPDF from "jspdf";
 
 type DateRangeOption = "last7" | "last30" | "thisMonth" | "custom";
 
@@ -82,7 +81,8 @@ export default function ReportsPage() {
 
   const [isExporting, setIsExporting] = useState(false);
 
-  const generatePDF = () => {
+  const generatePDF = async () => {
+    const { default: jsPDF } = await import("jspdf");
     const doc = new jsPDF({
       orientation: "portrait",
       unit: "mm",
@@ -245,12 +245,13 @@ export default function ReportsPage() {
     doc.save(filename);
   };
 
-  const handleExport = () => {
+  const handleExport = async () => {
     setIsExporting(true);
-    setTimeout(() => {
-      generatePDF();
+    try {
+      await generatePDF();
+    } finally {
       setIsExporting(false);
-    }, 800);
+    }
   };
 
   const getDateRangeDisplay = () => {

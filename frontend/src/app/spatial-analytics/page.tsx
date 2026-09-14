@@ -8,9 +8,8 @@ import {
   YAxis,
   Tooltip,
   ResponsiveContainer,
-  Cell,
   Legend,
-} from "recharts";
+} from "@/components/charts/LazyRecharts";
 import { RetroWindow, RetroCard, Badge } from "@/components/ui";
 
 /* ═══════════════════════════════════════════════════════════════

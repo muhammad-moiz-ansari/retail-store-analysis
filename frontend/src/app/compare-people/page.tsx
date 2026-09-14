@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useMemo, useState } from "react";
+import { Badge } from "@/components/ui/Badge";
 import { CRTFrame } from "@/components/ui/CRTFrame";
 
 type AisleData = {
@@ -47,8 +48,27 @@ type ComparisonResult = {
   samples: Sample[];
 };
 
-const defaultVideo1 = "Camera A - Floor View";
-const defaultVideo2 = "Camera B - Checkout View";
+const defaultVideo1 = "/home/mosaq/retail-store-analysis/backend/videos/cam1_tracked.mp4";
+const defaultVideo2 = "/home/mosaq/retail-store-analysis/backend/videos/cam2_tracked.mp4";
+const displayedVideo1 = "/api/videos/cam1_tracked.mp4";
+const displayedVideo2 = "/api/videos/cam2_tracked.mp4";
+const classificationConfidenceThreshold = 0.6;
+const dummyModelConfidences = {
+  video1: 0.82,
+  video2: 0.54,
+};
+const dummyProcessingSummaries = [
+  {
+    source: "CV model",
+    confidence: "68% average confidence",
+    summary: "Tracked 11 people across both camera feeds. Camera 1 passed validation; Camera 2 has one low-confidence classification that needs review.",
+  },
+  {
+    source: "LLM",
+    confidence: "91% summary confidence",
+    summary: "Customer traffic is concentrated around Floor A. Keep current entrance coverage and review the flagged Camera 2 classification before moving staff.",
+  },
+];
 
 const sampleResult: ComparisonResult = {
   video1: defaultVideo1,
@@ -345,6 +365,21 @@ function MoveBadge({ move }: { move: { from_aisle: number; to_aisle: number; cou
   );
 }
 
+function ModelConfidenceStatus({ confidence }: { confidence: number }) {
+  const isCorrect = confidence > classificationConfidenceThreshold;
+
+  return (
+    <div className="mt-2 flex items-center justify-between gap-3 px-1">
+      <span className="font-mono text-xs text-text-muted">
+        Model confidence: {(confidence * 100).toFixed(0)}%
+      </span>
+      <Badge variant={isCorrect ? "success" : "danger"}>
+        {isCorrect ? "Classified as correct" : "There's an issue"}
+      </Badge>
+    </div>
+  );
+}
+
 export default function ComparePeoplePage() {
   const [video1, setVideo1] = useState(defaultVideo1);
   const [video2, setVideo2] = useState(defaultVideo2);
@@ -461,8 +496,26 @@ export default function ComparePeoplePage() {
       <section className="mt-8 space-y-6">
         {/* Video feeds */}
         <div className="grid gap-4 md:grid-cols-2">
-          <CRTFrame label={result.video1} videoSrc="/videos/cam1.mp4" signal />
-          <CRTFrame label={result.video2} videoSrc="/videos/cam2.mp4" signal />
+          <div>
+            <CRTFrame label={result.video1} videoSrc={displayedVideo1} signal />
+            <ModelConfidenceStatus confidence={dummyModelConfidences.video1} />
+          </div>
+          <div>
+            <CRTFrame label={result.video2} videoSrc={displayedVideo2} signal />
+            <ModelConfidenceStatus confidence={dummyModelConfidences.video2} />
+          </div>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-2">
+          {dummyProcessingSummaries.map((item) => (
+            <div key={item.source} className="border-l-4 border-l-accent bg-surface px-4 py-3">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <h2 className="font-heading text-sm font-semibold text-text">{item.source} processing summary</h2>
+                <Badge variant="neutral">{item.confidence}</Badge>
+              </div>
+              <p className="mt-2 text-sm leading-relaxed text-text-muted">{item.summary}</p>
+            </div>
+          ))}
         </div>
 
         {/* Tabs */}

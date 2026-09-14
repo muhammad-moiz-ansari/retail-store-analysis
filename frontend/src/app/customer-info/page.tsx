@@ -15,7 +15,7 @@ import {
   Cell,
   BarChart,
   Bar,
-} from "recharts";
+} from "@/components/charts/LazyRecharts";
 
 /* ═══════════════════════════════════════════════════════════════
    Mock data

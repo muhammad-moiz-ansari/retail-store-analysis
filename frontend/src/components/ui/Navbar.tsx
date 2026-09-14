@@ -34,9 +34,6 @@ const AUTHENTICATED_NAV_LINKS: NavLink[] = [
   { label: "Customer Info", href: "/customer-info" },
   { label: "Employee Info", href: "/employee-info" },
   { label: "Spatial Analytics", href: "/spatial-analytics" },
-  { label: "Sales & Product Trends", href: "/sales-trends" },
-  { label: "POS Assistant", href: "/pos-info" },
-  { label: "Reports & Exports", href: "/reports" },
   { label: "Store Settings", href: "/settings", managerOnly: true },
   { label: "About", href: "/about" },
 ];

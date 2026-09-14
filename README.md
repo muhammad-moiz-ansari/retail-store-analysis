@@ -79,7 +79,7 @@ This architecture is visualized live in the app's **System Status** page, which 
 - **Customer Info** - traffic/footfall metrics, service quality (attended vs. unattended ratio, response time, interaction duration), spatial behavior (dwell time, shopper behavior split, top paths)
 - **Employee Info** - store-wide staff score, activity leaderboard, responsiveness charts, idle time and floor coverage, zone-by-zone performance
 - **Spatial Analytics** - heatmaps and movement pattern analysis
-- **Sales & Product Trends** - POS-driven product and category performance
+- **Sales & Product Trends** - Store-driven product and category performance
 - **Reports & Exports** - configurable report builder with AI-generated narrative summaries, exported as a downloadable PDF (via jsPDF)
 - **Alerts & Notifications** - unified, filterable feed of active/resolved system alerts (unattended customers, unstaffed zones, idle spikes, traffic anomalies)
 - **System Status** - live agent pipeline visualization, per-agent health, and activity log
@@ -184,7 +184,7 @@ To fit within the project timeline and available hardware (no dedicated GPU), th
 
 **Explicitly descoped (see Future Work):**
 - Multi-camera identity linking (Global Master ID / cross-camera re-identification)
-- Direct POS integration for a live purchase-conversion funnel
+- Direct sales integration for a live purchase-conversion funnel
 - Shelf-level product interaction detection
 - Long-term store layout / promotional-effectiveness evaluation
 
@@ -193,7 +193,7 @@ To fit within the project timeline and available hardware (no dedicated GPU), th
 - **Pilot deployment** with a real retail partner (e.g. Imtiaz, Punjab Cash & Carry, Max Mart) to validate against live store conditions
 - **Multi-store scaling** beyond the single-store prototype
 - **Multi-camera identity linking** for full cross-camera customer tracking
-- **POS integration** for a true footfall-to-purchase conversion funnel
+- **Sales integration** for a true footfall-to-purchase conversion funnel
 - **Shelf-level interaction detection**
 - **Real-time dashboard** as the primary deliverable (currently offline/batch processing)
 - **Expanded agent layer** - additional reasoning agents (anomaly detection, natural-language querying over store data)

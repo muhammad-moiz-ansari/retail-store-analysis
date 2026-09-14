@@ -17,7 +17,7 @@ import {
   PieChart,
   Pie,
   Cell,
-} from "recharts";
+} from "@/components/charts/LazyRecharts";
 
 /* ═══════════════════════════════════════════════════════════════
    Mock data

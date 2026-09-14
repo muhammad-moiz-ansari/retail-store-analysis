@@ -5,8 +5,6 @@ import { RetroWindow, RetroCard, RetroButton, Badge } from "@/components/ui";
 import {
   LineChart,
   Line,
-  AreaChart,
-  Area,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -18,7 +16,7 @@ import {
   Legend,
   BarChart,
   Bar,
-} from "recharts";
+} from "@/components/charts/LazyRecharts";
 
 /* ═══════════════════════════════════════════════════════════════
    Mock Data
@@ -198,7 +196,7 @@ export default function SalesTrendsPage() {
 
 function PageHeader() {
   return (
-    <RetroWindow title="Sales & Product Trends - POS Analytics">
+    <RetroWindow title="Sales & Product Trends">
       <p className="font-mono text-xs text-text-muted mb-5 tracking-wide">
         {formatDate()}
       </p>
