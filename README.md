@@ -53,7 +53,10 @@ Camera Feeds
 Detection Agent          - person detection per frame (YOLO-based)
     │
     ▼
-Classification Agent     - staff vs. customer classification (zone/appearance heuristic, non-biometric)
+Tracking / Re-ID         - local tracks reconciled to anonymous Global Person IDs
+    │
+    ▼
+Role Registry            - UNKNOWN by default; employee registration or customer-entry rules
     │
     ▼
 Engagement Agent         - interaction duration, approach time, idle detection
@@ -205,13 +208,14 @@ To fit within the project timeline and available hardware (no dedicated GPU), th
 
 **In scope:**
 - Footfall counting (entrance camera)
-- Staff/customer classification (non-biometric, zone/appearance-based)
+- Anonymous Global Person IDs with persistent, provenance-bearing roles
+- Employee registration and configured customer-entry/context rules
 - Engagement analytics (approach time, interaction duration, idle detection, unattended flagging, employee scoring)
 - Trajectory & spatial behavior (path tracking, zone dwell time, heatmaps, crowd density)
 - POS CSV/XLSX import, product performance, purchase conversion, 7/30-day demand forecasts, inventory recommendations, and cited POS assistant answers for a single local store
 
 **Explicitly descoped (see Future Work):**
-- Multi-camera identity linking (Global Master ID / cross-camera re-identification)
+- Production-grade, open-world multi-camera Re-ID beyond the current directional handoff MVP
 - Shelf-level product interaction detection
 - Long-term store layout / promotional-effectiveness evaluation
 
@@ -219,7 +223,7 @@ To fit within the project timeline and available hardware (no dedicated GPU), th
 
 - **Pilot deployment** with a real retail partner (e.g. Imtiaz, Punjab Cash & Carry, Max Mart) to validate against live store conditions
 - **Multi-store scaling** beyond the single-store prototype
-- **Multi-camera identity linking** for full cross-camera customer tracking
+- **Production-grade multi-camera identity linking** for open-world customer tracking
 - **Direct live POS connector** beyond CSV/XLSX import
 - **Shelf-level interaction detection**
 - **Real-time dashboard** as the primary deliverable (currently offline/batch processing)
@@ -233,7 +237,7 @@ The repository now includes an experimental, CPU-oriented offline handoff pipeli
 cam1 right-side exit  ->  cam2 left-side entry
 ```
 
-Each camera is processed independently with YOLO and local ByteTrack IDs. The pipeline emits directional boundary events, filters candidates by the synchronized time window, compares lightweight HSV/shape appearance descriptors, and reports `confirmed`, `uncertain`, or `unmatched` associations. Confirmed associations receive a stable Master ID for that run.
+Each camera is processed independently with YOLO and local ByteTrack IDs. The pipeline emits directional boundary events, filters candidates by the synchronized time window, compares lightweight appearance descriptors, and reports `confirmed`, `uncertain`, or `unmatched` associations. Every track receives an anonymous Global Person ID. A confirmed association binds both local tracks to the same persistent Global Person ID; uncertain matches are never merged.
 
 Run it from the repository root with:
 
@@ -246,7 +250,39 @@ Run it from the repository root with:
 
 The result is written to `backend/output/camera_handoff.json`. The frontend exposes the same batch process at `/camera-handoff` through `/api/camera-handoff`, with configurable normalized boundaries and timing thresholds.
 
-This is not yet full multi-camera Re-ID. Homography, a third camera, pretrained Re-ID embeddings, timestamp offsets, and real-time guarantees remain future work. Direction and appearance are evidence rather than proof, so the output intentionally preserves uncertain and unmatched cases.
+Role resolution is deliberately separate from appearance. New Global Person IDs are
+`unknown`. A manager can register an observed ID as an employee through
+`PUT /camera/people/{global_person_id}/role`; configured entry rules are the only
+automatic path from `unknown` to `customer`. An employee role is retained when
+Re-ID links that person to another camera. Example handoff configuration:
+
+```json
+{
+  "store_id": "store-001",
+  "customer_entry_rules": [
+    {
+      "name": "public-door",
+      "camera_id": "cam2",
+      "event": "boundary_crossing",
+      "boundary": "left",
+      "direction": "left"
+    }
+  ]
+}
+```
+
+Employee registration accepts `employee` and the corrective reset `unknown`, but
+not `customer`:
+
+```json
+{
+  "role": "employee",
+  "assigned_by": "manager-console",
+  "reason": "Start-of-shift registration"
+}
+```
+
+This is not yet full open-world multi-camera Re-ID. Homography, a third camera, a production Re-ID gallery/embedding model, timestamp offsets, and real-time guarantees remain future work. Direction and appearance are identity evidence rather than role evidence, so the output intentionally preserves uncertain and unmatched cases.
 
 ## Team
 

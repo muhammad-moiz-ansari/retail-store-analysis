@@ -8,3 +8,6 @@ fastapi
 uvicorn
 python-multipart
 openpyxl
+av>=18,<19
+scipy>=1.13,<2
+lap>=0.5.12

@@ -1,0 +1,18 @@
+{
+  "store_id": "store-001",
+  "customer_entry_rules": [
+    {
+      "name": "public-door-boundary",
+      "camera_id": "cam2",
+      "event": "boundary_crossing",
+      "boundary": "left",
+      "direction": "left"
+    },
+    {
+      "name": "entrance-zone-first-seen",
+      "camera_id": "entrance",
+      "event": "first_seen",
+      "zone": "Customer Entrance"
+    }
+  ]
+}
