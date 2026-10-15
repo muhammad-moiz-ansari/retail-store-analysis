@@ -16,6 +16,13 @@ class InteractionConfig:
     bib_hsv_lower: tuple[int, int, int] = (20, 70, 70)
     bib_hsv_upper: tuple[int, int, int] = (40, 255, 255)
     bib_min_coverage: float = 0.04
+    # Normalised (x1, y1, x2, y2) regions reserved for staff workstations,
+    # counters, tills, or stock-room doors. They must be calibrated per camera.
+    staff_zones: tuple[tuple[float, float, float, float], ...] = ()
+    stationary_distance_px: float = 18.0
+    staff_zone_dwell_seconds: float = 12.0
+    role_smoothing: float = 0.65
+    employee_score_threshold: float = 0.60
     confidence: float = 0.35
     tracker: str = "bytetrack.yaml"
     interaction_distance_px: float = 180.0

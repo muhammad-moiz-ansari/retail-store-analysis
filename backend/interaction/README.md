@@ -4,6 +4,17 @@ This is a standalone prototype. It does not alter or mount itself into the exist
 
 It detects people with the project YOLO model, assigns persistent IDs using ByteTrack, labels each tracked person as an employee or customer, and records sustained employee/customer proximity as an interaction.
 
+## Employee-identification evidence
+
+The module combines signals over a ByteTrack ID rather than trusting one frame:
+
+- **Bib / uniform appearance**: the custom role model is the primary signal. The HSV bib fallback is intended only for early experiments.
+- **Time in a staff-only zone**: a configured checkout, counter, stock-room, or service-desk region gradually raises staff confidence.
+- **Stationary work behaviour**: remaining at a configured work zone reinforces the score; it never classifies someone by itself.
+- **Temporal smoothing**: confidence is smoothed across frames to reduce one-frame misclassifications and lighting changes.
+
+Customer dwell time in ordinary aisles is deliberately not used as employee evidence. Configure `staff_zones` using normalised coordinates `(x1, y1, x2, y2)` after camera calibration. This prevents the common error of calling a browsing customer an employee simply because they pause for a long time.
+
 ## Bib-labelled dataset
 
 Train a small YOLO role model from the existing bib-labelled dataset with labels such as `employee`, `customer`, or `bib`. Supply the generated weight file at runtime:
