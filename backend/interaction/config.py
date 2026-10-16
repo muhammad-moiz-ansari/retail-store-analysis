@@ -22,7 +22,8 @@ class InteractionConfig:
     stationary_distance_px: float = 18.0
     staff_zone_dwell_seconds: float = 12.0
     role_smoothing: float = 0.65
-    employee_score_threshold: float = 0.60
+    employee_score_threshold: float = 0.45
+    role_hold_seconds: float = 3.0
     confidence: float = 0.35
     tracker: str = "bytetrack.yaml"
     interaction_distance_px: float = 180.0

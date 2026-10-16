@@ -15,7 +15,7 @@ class TrackedPerson:
     confidence: float
     role: Role
     role_confidence: float
-    role_evidence: dict[str, float] | None = None
+    role_evidence: dict | None = None
 
     @property
     def center(self) -> tuple[float, float]:

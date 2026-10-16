@@ -12,7 +12,7 @@ def test_yellow_bib_is_primary_employee_evidence() -> None:
     role, score, evidence = classifier.classify(frame, (0, 0, 80, 120), 1, 0.0)
     assert role == "employee"
     assert score >= 0.60
-    assert evidence["visual_employee_score"] > 0
+    assert evidence["factors"]["bib_colour"] > 0
 
 
 def test_staff_zone_alone_does_not_label_a_customer_as_employee() -> None:
@@ -23,3 +23,17 @@ def test_staff_zone_alone_does_not_label_a_customer_as_employee() -> None:
     role, _, evidence = classifier.classify(frame, (0, 0, 20, 100), 1, 2.0)
     assert role == "customer"
     assert evidence["staff_zone_dwell_seconds"] == 2.0
+
+
+def test_role_flicker_shorter_than_hold_is_ignored_but_sustained_change_switches() -> None:
+    config = InteractionConfig(role_mode="bib_color", role_smoothing=0.0, role_hold_seconds=3.0)
+    classifier = RoleClassifier(config)
+    yellow = np.full((120, 80, 3), (0, 255, 255), dtype=np.uint8)
+    grey = np.full((120, 80, 3), (128, 128, 128), dtype=np.uint8)
+    box = (0, 0, 80, 120)
+    assert classifier.classify(yellow, box, 1, 0.0)[0] == "employee"
+    assert classifier.classify(grey, box, 1, 1.0)[0] == "employee"  # flicker starts
+    assert classifier.classify(yellow, box, 1, 2.0)[0] == "employee"  # flicker over, pending reset
+    for t in (3.0, 4.0, 5.0):
+        assert classifier.classify(grey, box, 1, t)[0] == "employee"  # held < 3 s
+    assert classifier.classify(grey, box, 1, 6.0)[0] == "customer"  # held 3 s -> switch

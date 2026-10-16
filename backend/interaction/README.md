@@ -25,9 +25,13 @@ python -m backend.interaction.cli path\to\footage.mp4 --roles path\to\best.pt --
 
 Without `--roles`, classification falls back to the configured yellow-bib HSV range. Update `bib_hsv_lower` and `bib_hsv_upper` in an `InteractionConfig` instance to match the real bib colour and lighting.
 
+## Customer/employee agent
+
+`cust_emp_classifier.py` (`CustEmpClassifier`) weighs each factor and decides the role. Weights: YOLO role model 0.55 (signed: `+conf` for employee, `-conf` for customer), bib colour 0.30, staff-zone dwell 0.10, stationary 0.05; employee when the score is >= 0.45. Without a role model, the YOLO weight moves to bib colour. Per frame the score is smoothed; per person the agent averages each factor over every observed frame and makes a final decision.
+
 ## Output
 
-The CLI writes an annotated video plus a JSON file. Each JSON interaction includes employee and customer ByteTrack IDs, duration, image-plane distance, and active state. Pixel distances must be calibrated per camera before treating them as physical distance.
+The CLI writes an annotated video, `<output>.detections.json` (every processed frame: ByteTrack ID, bbox, detection confidence, per-frame role and factor evidence), `<output>.people.json` (one entry per ByteTrack ID: factors, weighted contributions, score, final role), plus a JSON file of interactions. Each JSON interaction includes employee and customer ByteTrack IDs, duration, image-plane distance, and active state. Pixel distances must be calibrated per camera before treating them as physical distance.
 
 ## Optional service
 
