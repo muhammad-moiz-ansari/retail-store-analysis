@@ -1,0 +1,1883 @@
+{
+  "video": "video_dataset",
+  "fps": 30.0,
+  "total_frames": 2140,
+  "sampled_frames": 72,
+  "every_n_frames": 30,
+  "stats": {
+    "min_people": 0,
+    "max_people": 4,
+    "avg_people": 1.21
+  },
+  "frames": [
+    {
+      "frame": 0,
+      "timestamp": "0:00.00",
+      "people_count": 0,
+      "people": [],
+      "distances": []
+    },
+    {
+      "frame": 30,
+      "timestamp": "0:01.00",
+      "people_count": 0,
+      "people": [],
+      "distances": []
+    },
+    {
+      "frame": 60,
+      "timestamp": "0:02.00",
+      "people_count": 0,
+      "people": [],
+      "distances": []
+    },
+    {
+      "frame": 90,
+      "timestamp": "0:03.00",
+      "people_count": 0,
+      "people": [],
+      "distances": []
+    },
+    {
+      "frame": 120,
+      "timestamp": "0:04.00",
+      "people_count": 1,
+      "people": [
+        {
+          "bbox": [
+            416,
+            392,
+            639,
+            639
+          ],
+          "center": [
+            527,
+            515
+          ],
+          "confidence": 0.94
+        }
+      ],
+      "distances": []
+    },
+    {
+      "frame": 150,
+      "timestamp": "0:05.00",
+      "people_count": 1,
+      "people": [
+        {
+          "bbox": [
+            344,
+            347,
+            527,
+            640
+          ],
+          "center": [
+            435,
+            493
+          ],
+          "confidence": 0.96
+        }
+      ],
+      "distances": []
+    },
+    {
+      "frame": 180,
+      "timestamp": "0:06.00",
+      "people_count": 1,
+      "people": [
+        {
+          "bbox": [
+            345,
+            334,
+            481,
+            640
+          ],
+          "center": [
+            413,
+            487
+          ],
+          "confidence": 0.966
+        }
+      ],
+      "distances": []
+    },
+    {
+      "frame": 210,
+      "timestamp": "0:07.00",
+      "people_count": 1,
+      "people": [
+        {
+          "bbox": [
+            308,
+            321,
+            392,
+            638
+          ],
+          "center": [
+            350,
+            479
+          ],
+          "confidence": 0.928
+        }
+      ],
+      "distances": []
+    },
+    {
+      "frame": 240,
+      "timestamp": "0:08.00",
+      "people_count": 1,
+      "people": [
+        {
+          "bbox": [
+            213,
+            316,
+            308,
+            639
+          ],
+          "center": [
+            260,
+            477
+          ],
+          "confidence": 0.943
+        }
+      ],
+      "distances": []
+    },
+    {
+      "frame": 270,
+      "timestamp": "0:09.00",
+      "people_count": 1,
+      "people": [
+        {
+          "bbox": [
+            151,
+            312,
+            261,
+            640
+          ],
+          "center": [
+            206,
+            476
+          ],
+          "confidence": 0.956
+        }
+      ],
+      "distances": []
+    },
+    {
+      "frame": 300,
+      "timestamp": "0:10.00",
+      "people_count": 1,
+      "people": [
+        {
+          "bbox": [
+            151,
+            305,
+            249,
+            639
+          ],
+          "center": [
+            200,
+            472
+          ],
+          "confidence": 0.952
+        }
+      ],
+      "distances": []
+    },
+    {
+      "frame": 330,
+      "timestamp": "0:11.00",
+      "people_count": 1,
+      "people": [
+        {
+          "bbox": [
+            128,
+            311,
+            249,
+            639
+          ],
+          "center": [
+            188,
+            475
+          ],
+          "confidence": 0.956
+        }
+      ],
+      "distances": []
+    },
+    {
+      "frame": 360,
+      "timestamp": "0:12.00",
+      "people_count": 1,
+      "people": [
+        {
+          "bbox": [
+            110,
+            301,
+            214,
+            639
+          ],
+          "center": [
+            162,
+            470
+          ],
+          "confidence": 0.935
+        }
+      ],
+      "distances": []
+    },
+    {
+      "frame": 390,
+      "timestamp": "0:13.00",
+      "people_count": 1,
+      "people": [
+        {
+          "bbox": [
+            136,
+            294,
+            248,
+            609
+          ],
+          "center": [
+            192,
+            451
+          ],
+          "confidence": 0.958
+        }
+      ],
+      "distances": []
+    },
+    {
+      "frame": 420,
+      "timestamp": "0:14.00",
+      "people_count": 1,
+      "people": [
+        {
+          "bbox": [
+            162,
+            288,
+            258,
+            592
+          ],
+          "center": [
+            210,
+            440
+          ],
+          "confidence": 0.969
+        }
+      ],
+      "distances": []
+    },
+    {
+      "frame": 450,
+      "timestamp": "0:15.00",
+      "people_count": 1,
+      "people": [
+        {
+          "bbox": [
+            186,
+            283,
+            278,
+            559
+          ],
+          "center": [
+            232,
+            421
+          ],
+          "confidence": 0.957
+        }
+      ],
+      "distances": []
+    },
+    {
+      "frame": 480,
+      "timestamp": "0:16.00",
+      "people_count": 1,
+      "people": [
+        {
+          "bbox": [
+            176,
+            267,
+            256,
+            542
+          ],
+          "center": [
+            216,
+            404
+          ],
+          "confidence": 0.96
+        }
+      ],
+      "distances": []
+    },
+    {
+      "frame": 510,
+      "timestamp": "0:17.00",
+      "people_count": 1,
+      "people": [
+        {
+          "bbox": [
+            144,
+            259,
+            217,
+            544
+          ],
+          "center": [
+            180,
+            401
+          ],
+          "confidence": 0.95
+        }
+      ],
+      "distances": []
+    },
+    {
+      "frame": 540,
+      "timestamp": "0:18.00",
+      "people_count": 1,
+      "people": [
+        {
+          "bbox": [
+            129,
+            265,
+            225,
+            561
+          ],
+          "center": [
+            177,
+            413
+          ],
+          "confidence": 0.968
+        }
+      ],
+      "distances": []
+    },
+    {
+      "frame": 570,
+      "timestamp": "0:19.00",
+      "people_count": 3,
+      "people": [
+        {
+          "bbox": [
+            128,
+            264,
+            233,
+            585
+          ],
+          "center": [
+            180,
+            424
+          ],
+          "confidence": 0.965
+        },
+        {
+          "bbox": [
+            559,
+            354,
+            639,
+            639
+          ],
+          "center": [
+            599,
+            496
+          ],
+          "confidence": 0.614
+        },
+        {
+          "bbox": [
+            591,
+            354,
+            640,
+            638
+          ],
+          "center": [
+            615,
+            496
+          ],
+          "confidence": 0.335
+        }
+      ],
+      "distances": [
+        {
+          "from": 1,
+          "to": 2,
+          "pixels": 425.1
+        },
+        {
+          "from": 1,
+          "to": 3,
+          "pixels": 440.9
+        },
+        {
+          "from": 2,
+          "to": 3,
+          "pixels": 16.0
+        }
+      ]
+    },
+    {
+      "frame": 600,
+      "timestamp": "0:20.00",
+      "people_count": 2,
+      "people": [
+        {
+          "bbox": [
+            100,
+            253,
+            211,
+            597
+          ],
+          "center": [
+            155,
+            425
+          ],
+          "confidence": 0.964
+        },
+        {
+          "bbox": [
+            369,
+            278,
+            563,
+            638
+          ],
+          "center": [
+            466,
+            458
+          ],
+          "confidence": 0.964
+        }
+      ],
+      "distances": [
+        {
+          "from": 1,
+          "to": 2,
+          "pixels": 312.7
+        }
+      ]
+    },
+    {
+      "frame": 630,
+      "timestamp": "0:21.00",
+      "people_count": 2,
+      "people": [
+        {
+          "bbox": [
+            349,
+            252,
+            498,
+            640
+          ],
+          "center": [
+            423,
+            446
+          ],
+          "confidence": 0.972
+        },
+        {
+          "bbox": [
+            100,
+            251,
+            191,
+            617
+          ],
+          "center": [
+            145,
+            434
+          ],
+          "confidence": 0.955
+        }
+      ],
+      "distances": [
+        {
+          "from": 1,
+          "to": 2,
+          "pixels": 278.3
+        }
+      ]
+    },
+    {
+      "frame": 660,
+      "timestamp": "0:22.00",
+      "people_count": 2,
+      "people": [
+        {
+          "bbox": [
+            118,
+            253,
+            208,
+            618
+          ],
+          "center": [
+            163,
+            435
+          ],
+          "confidence": 0.954
+        },
+        {
+          "bbox": [
+            348,
+            244,
+            458,
+            640
+          ],
+          "center": [
+            403,
+            442
+          ],
+          "confidence": 0.952
+        }
+      ],
+      "distances": [
+        {
+          "from": 1,
+          "to": 2,
+          "pixels": 240.1
+        }
+      ]
+    },
+    {
+      "frame": 690,
+      "timestamp": "0:23.00",
+      "people_count": 2,
+      "people": [
+        {
+          "bbox": [
+            128,
+            250,
+            211,
+            613
+          ],
+          "center": [
+            169,
+            431
+          ],
+          "confidence": 0.952
+        },
+        {
+          "bbox": [
+            366,
+            235,
+            463,
+            633
+          ],
+          "center": [
+            414,
+            434
+          ],
+          "confidence": 0.946
+        }
+      ],
+      "distances": [
+        {
+          "from": 1,
+          "to": 2,
+          "pixels": 245.0
+        }
+      ]
+    },
+    {
+      "frame": 720,
+      "timestamp": "0:24.00",
+      "people_count": 2,
+      "people": [
+        {
+          "bbox": [
+            154,
+            259,
+            244,
+            621
+          ],
+          "center": [
+            199,
+            440
+          ],
+          "confidence": 0.946
+        },
+        {
+          "bbox": [
+            401,
+            244,
+            492,
+            640
+          ],
+          "center": [
+            446,
+            442
+          ],
+          "confidence": 0.94
+        }
+      ],
+      "distances": [
+        {
+          "from": 1,
+          "to": 2,
+          "pixels": 247.0
+        }
+      ]
+    },
+    {
+      "frame": 750,
+      "timestamp": "0:25.00",
+      "people_count": 2,
+      "people": [
+        {
+          "bbox": [
+            182,
+            279,
+            281,
+            603
+          ],
+          "center": [
+            231,
+            441
+          ],
+          "confidence": 0.948
+        },
+        {
+          "bbox": [
+            427,
+            275,
+            518,
+            638
+          ],
+          "center": [
+            472,
+            456
+          ],
+          "confidence": 0.944
+        }
+      ],
+      "distances": [
+        {
+          "from": 1,
+          "to": 2,
+          "pixels": 241.5
+        }
+      ]
+    },
+    {
+      "frame": 780,
+      "timestamp": "0:26.00",
+      "people_count": 2,
+      "people": [
+        {
+          "bbox": [
+            409,
+            298,
+            532,
+            640
+          ],
+          "center": [
+            470,
+            469
+          ],
+          "confidence": 0.968
+        },
+        {
+          "bbox": [
+            231,
+            286,
+            325,
+            572
+          ],
+          "center": [
+            278,
+            429
+          ],
+          "confidence": 0.963
+        }
+      ],
+      "distances": [
+        {
+          "from": 1,
+          "to": 2,
+          "pixels": 196.1
+        }
+      ]
+    },
+    {
+      "frame": 810,
+      "timestamp": "0:27.00",
+      "people_count": 2,
+      "people": [
+        {
+          "bbox": [
+            254,
+            258,
+            337,
+            498
+          ],
+          "center": [
+            295,
+            378
+          ],
+          "confidence": 0.959
+        },
+        {
+          "bbox": [
+            454,
+            280,
+            578,
+            639
+          ],
+          "center": [
+            516,
+            459
+          ],
+          "confidence": 0.949
+        }
+      ],
+      "distances": [
+        {
+          "from": 1,
+          "to": 2,
+          "pixels": 235.4
+        }
+      ]
+    },
+    {
+      "frame": 840,
+      "timestamp": "0:28.00",
+      "people_count": 2,
+      "people": [
+        {
+          "bbox": [
+            440,
+            260,
+            565,
+            640
+          ],
+          "center": [
+            502,
+            450
+          ],
+          "confidence": 0.96
+        },
+        {
+          "bbox": [
+            253,
+            239,
+            315,
+            456
+          ],
+          "center": [
+            284,
+            347
+          ],
+          "confidence": 0.943
+        }
+      ],
+      "distances": [
+        {
+          "from": 1,
+          "to": 2,
+          "pixels": 241.1
+        }
+      ]
+    },
+    {
+      "frame": 870,
+      "timestamp": "0:29.00",
+      "people_count": 2,
+      "people": [
+        {
+          "bbox": [
+            439,
+            270,
+            567,
+            639
+          ],
+          "center": [
+            503,
+            454
+          ],
+          "confidence": 0.961
+        },
+        {
+          "bbox": [
+            256,
+            249,
+            338,
+            470
+          ],
+          "center": [
+            297,
+            359
+          ],
+          "confidence": 0.956
+        }
+      ],
+      "distances": [
+        {
+          "from": 1,
+          "to": 2,
+          "pixels": 226.9
+        }
+      ]
+    },
+    {
+      "frame": 900,
+      "timestamp": "0:30.00",
+      "people_count": 2,
+      "people": [
+        {
+          "bbox": [
+            452,
+            282,
+            570,
+            638
+          ],
+          "center": [
+            511,
+            460
+          ],
+          "confidence": 0.959
+        },
+        {
+          "bbox": [
+            234,
+            271,
+            317,
+            526
+          ],
+          "center": [
+            275,
+            398
+          ],
+          "confidence": 0.956
+        }
+      ],
+      "distances": [
+        {
+          "from": 1,
+          "to": 2,
+          "pixels": 244.0
+        }
+      ]
+    },
+    {
+      "frame": 930,
+      "timestamp": "0:31.00",
+      "people_count": 2,
+      "people": [
+        {
+          "bbox": [
+            210,
+            290,
+            308,
+            590
+          ],
+          "center": [
+            259,
+            440
+          ],
+          "confidence": 0.965
+        },
+        {
+          "bbox": [
+            360,
+            285,
+            508,
+            639
+          ],
+          "center": [
+            434,
+            462
+          ],
+          "confidence": 0.942
+        }
+      ],
+      "distances": [
+        {
+          "from": 1,
+          "to": 2,
+          "pixels": 176.4
+        }
+      ]
+    },
+    {
+      "frame": 960,
+      "timestamp": "0:32.00",
+      "people_count": 2,
+      "people": [
+        {
+          "bbox": [
+            355,
+            291,
+            531,
+            638
+          ],
+          "center": [
+            443,
+            464
+          ],
+          "confidence": 0.963
+        },
+        {
+          "bbox": [
+            225,
+            301,
+            332,
+            640
+          ],
+          "center": [
+            278,
+            470
+          ],
+          "confidence": 0.939
+        }
+      ],
+      "distances": [
+        {
+          "from": 1,
+          "to": 2,
+          "pixels": 165.1
+        }
+      ]
+    },
+    {
+      "frame": 990,
+      "timestamp": "0:33.00",
+      "people_count": 2,
+      "people": [
+        {
+          "bbox": [
+            488,
+            321,
+            587,
+            639
+          ],
+          "center": [
+            537,
+            480
+          ],
+          "confidence": 0.95
+        },
+        {
+          "bbox": [
+            244,
+            341,
+            325,
+            639
+          ],
+          "center": [
+            284,
+            490
+          ],
+          "confidence": 0.938
+        }
+      ],
+      "distances": [
+        {
+          "from": 1,
+          "to": 2,
+          "pixels": 253.2
+        }
+      ]
+    },
+    {
+      "frame": 1020,
+      "timestamp": "0:34.00",
+      "people_count": 2,
+      "people": [
+        {
+          "bbox": [
+            423,
+            352,
+            512,
+            639
+          ],
+          "center": [
+            467,
+            495
+          ],
+          "confidence": 0.958
+        },
+        {
+          "bbox": [
+            248,
+            382,
+            342,
+            639
+          ],
+          "center": [
+            295,
+            510
+          ],
+          "confidence": 0.919
+        }
+      ],
+      "distances": [
+        {
+          "from": 1,
+          "to": 2,
+          "pixels": 172.7
+        }
+      ]
+    },
+    {
+      "frame": 1050,
+      "timestamp": "0:35.00",
+      "people_count": 2,
+      "people": [
+        {
+          "bbox": [
+            381,
+            349,
+            449,
+            616
+          ],
+          "center": [
+            415,
+            482
+          ],
+          "confidence": 0.951
+        },
+        {
+          "bbox": [
+            312,
+            392,
+            399,
+            640
+          ],
+          "center": [
+            355,
+            516
+          ],
+          "confidence": 0.92
+        }
+      ],
+      "distances": [
+        {
+          "from": 1,
+          "to": 2,
+          "pixels": 69.0
+        }
+      ]
+    },
+    {
+      "frame": 1080,
+      "timestamp": "0:36.00",
+      "people_count": 2,
+      "people": [
+        {
+          "bbox": [
+            316,
+            389,
+            418,
+            639
+          ],
+          "center": [
+            367,
+            514
+          ],
+          "confidence": 0.94
+        },
+        {
+          "bbox": [
+            315,
+            340,
+            376,
+            471
+          ],
+          "center": [
+            345,
+            405
+          ],
+          "confidence": 0.932
+        }
+      ],
+      "distances": [
+        {
+          "from": 1,
+          "to": 2,
+          "pixels": 111.2
+        }
+      ]
+    },
+    {
+      "frame": 1110,
+      "timestamp": "0:37.00",
+      "people_count": 2,
+      "people": [
+        {
+          "bbox": [
+            332,
+            380,
+            447,
+            639
+          ],
+          "center": [
+            389,
+            509
+          ],
+          "confidence": 0.949
+        },
+        {
+          "bbox": [
+            244,
+            335,
+            307,
+            539
+          ],
+          "center": [
+            275,
+            437
+          ],
+          "confidence": 0.938
+        }
+      ],
+      "distances": [
+        {
+          "from": 1,
+          "to": 2,
+          "pixels": 134.8
+        }
+      ]
+    },
+    {
+      "frame": 1140,
+      "timestamp": "0:38.00",
+      "people_count": 2,
+      "people": [
+        {
+          "bbox": [
+            341,
+            372,
+            442,
+            639
+          ],
+          "center": [
+            391,
+            505
+          ],
+          "confidence": 0.952
+        },
+        {
+          "bbox": [
+            125,
+            330,
+            175,
+            439
+          ],
+          "center": [
+            150,
+            384
+          ],
+          "confidence": 0.923
+        }
+      ],
+      "distances": [
+        {
+          "from": 1,
+          "to": 2,
+          "pixels": 269.7
+        }
+      ]
+    },
+    {
+      "frame": 1170,
+      "timestamp": "0:39.00",
+      "people_count": 4,
+      "people": [
+        {
+          "bbox": [
+            322,
+            366,
+            420,
+            639
+          ],
+          "center": [
+            371,
+            502
+          ],
+          "confidence": 0.962
+        },
+        {
+          "bbox": [
+            44,
+            334,
+            79,
+            451
+          ],
+          "center": [
+            61,
+            392
+          ],
+          "confidence": 0.844
+        },
+        {
+          "bbox": [
+            8,
+            371,
+            32,
+            460
+          ],
+          "center": [
+            20,
+            415
+          ],
+          "confidence": 0.796
+        },
+        {
+          "bbox": [
+            8,
+            334,
+            44,
+            459
+          ],
+          "center": [
+            26,
+            396
+          ],
+          "confidence": 0.472
+        }
+      ],
+      "distances": [
+        {
+          "from": 1,
+          "to": 2,
+          "pixels": 328.9
+        },
+        {
+          "from": 1,
+          "to": 3,
+          "pixels": 361.6
+        },
+        {
+          "from": 1,
+          "to": 4,
+          "pixels": 360.9
+        },
+        {
+          "from": 2,
+          "to": 3,
+          "pixels": 47.0
+        },
+        {
+          "from": 2,
+          "to": 4,
+          "pixels": 35.2
+        },
+        {
+          "from": 3,
+          "to": 4,
+          "pixels": 19.9
+        }
+      ]
+    },
+    {
+      "frame": 1200,
+      "timestamp": "0:40.00",
+      "people_count": 2,
+      "people": [
+        {
+          "bbox": [
+            318,
+            363,
+            409,
+            638
+          ],
+          "center": [
+            363,
+            500
+          ],
+          "confidence": 0.958
+        },
+        {
+          "bbox": [
+            49,
+            356,
+            74,
+            454
+          ],
+          "center": [
+            61,
+            405
+          ],
+          "confidence": 0.834
+        }
+      ],
+      "distances": [
+        {
+          "from": 1,
+          "to": 2,
+          "pixels": 316.6
+        }
+      ]
+    },
+    {
+      "frame": 1230,
+      "timestamp": "0:41.00",
+      "people_count": 2,
+      "people": [
+        {
+          "bbox": [
+            328,
+            362,
+            407,
+            615
+          ],
+          "center": [
+            367,
+            488
+          ],
+          "confidence": 0.955
+        },
+        {
+          "bbox": [
+            0,
+            347,
+            51,
+            498
+          ],
+          "center": [
+            25,
+            422
+          ],
+          "confidence": 0.768
+        }
+      ],
+      "distances": [
+        {
+          "from": 1,
+          "to": 2,
+          "pixels": 348.3
+        }
+      ]
+    },
+    {
+      "frame": 1260,
+      "timestamp": "0:42.00",
+      "people_count": 1,
+      "people": [
+        {
+          "bbox": [
+            313,
+            362,
+            392,
+            597
+          ],
+          "center": [
+            352,
+            479
+          ],
+          "confidence": 0.959
+        }
+      ],
+      "distances": []
+    },
+    {
+      "frame": 1290,
+      "timestamp": "0:43.00",
+      "people_count": 1,
+      "people": [
+        {
+          "bbox": [
+            331,
+            369,
+            407,
+            591
+          ],
+          "center": [
+            369,
+            480
+          ],
+          "confidence": 0.956
+        }
+      ],
+      "distances": []
+    },
+    {
+      "frame": 1320,
+      "timestamp": "0:44.00",
+      "people_count": 1,
+      "people": [
+        {
+          "bbox": [
+            353,
+            377,
+            423,
+            580
+          ],
+          "center": [
+            388,
+            478
+          ],
+          "confidence": 0.954
+        }
+      ],
+      "distances": []
+    },
+    {
+      "frame": 1350,
+      "timestamp": "0:45.00",
+      "people_count": 1,
+      "people": [
+        {
+          "bbox": [
+            403,
+            364,
+            458,
+            557
+          ],
+          "center": [
+            430,
+            460
+          ],
+          "confidence": 0.92
+        }
+      ],
+      "distances": []
+    },
+    {
+      "frame": 1380,
+      "timestamp": "0:46.00",
+      "people_count": 1,
+      "people": [
+        {
+          "bbox": [
+            484,
+            345,
+            533,
+            415
+          ],
+          "center": [
+            508,
+            380
+          ],
+          "confidence": 0.936
+        }
+      ],
+      "distances": []
+    },
+    {
+      "frame": 1410,
+      "timestamp": "0:47.00",
+      "people_count": 1,
+      "people": [
+        {
+          "bbox": [
+            577,
+            337,
+            620,
+            402
+          ],
+          "center": [
+            598,
+            369
+          ],
+          "confidence": 0.899
+        }
+      ],
+      "distances": []
+    },
+    {
+      "frame": 1440,
+      "timestamp": "0:48.00",
+      "people_count": 0,
+      "people": [],
+      "distances": []
+    },
+    {
+      "frame": 1470,
+      "timestamp": "0:49.00",
+      "people_count": 0,
+      "people": [],
+      "distances": []
+    },
+    {
+      "frame": 1500,
+      "timestamp": "0:50.00",
+      "people_count": 0,
+      "people": [],
+      "distances": []
+    },
+    {
+      "frame": 1530,
+      "timestamp": "0:51.00",
+      "people_count": 0,
+      "people": [],
+      "distances": []
+    },
+    {
+      "frame": 1560,
+      "timestamp": "0:52.00",
+      "people_count": 0,
+      "people": [],
+      "distances": []
+    },
+    {
+      "frame": 1590,
+      "timestamp": "0:53.00",
+      "people_count": 0,
+      "people": [],
+      "distances": []
+    },
+    {
+      "frame": 1620,
+      "timestamp": "0:54.00",
+      "people_count": 0,
+      "people": [],
+      "distances": []
+    },
+    {
+      "frame": 1650,
+      "timestamp": "0:55.00",
+      "people_count": 1,
+      "people": [
+        {
+          "bbox": [
+            0,
+            374,
+            217,
+            639
+          ],
+          "center": [
+            108,
+            506
+          ],
+          "confidence": 0.927
+        }
+      ],
+      "distances": []
+    },
+    {
+      "frame": 1680,
+      "timestamp": "0:56.00",
+      "people_count": 1,
+      "people": [
+        {
+          "bbox": [
+            182,
+            325,
+            393,
+            639
+          ],
+          "center": [
+            287,
+            482
+          ],
+          "confidence": 0.966
+        }
+      ],
+      "distances": []
+    },
+    {
+      "frame": 1710,
+      "timestamp": "0:57.00",
+      "people_count": 1,
+      "people": [
+        {
+          "bbox": [
+            233,
+            302,
+            409,
+            640
+          ],
+          "center": [
+            321,
+            471
+          ],
+          "confidence": 0.966
+        }
+      ],
+      "distances": []
+    },
+    {
+      "frame": 1740,
+      "timestamp": "0:58.00",
+      "people_count": 1,
+      "people": [
+        {
+          "bbox": [
+            252,
+            294,
+            381,
+            639
+          ],
+          "center": [
+            316,
+            466
+          ],
+          "confidence": 0.968
+        }
+      ],
+      "distances": []
+    },
+    {
+      "frame": 1770,
+      "timestamp": "0:59.00",
+      "people_count": 1,
+      "people": [
+        {
+          "bbox": [
+            279,
+            277,
+            384,
+            639
+          ],
+          "center": [
+            331,
+            458
+          ],
+          "confidence": 0.97
+        }
+      ],
+      "distances": []
+    },
+    {
+      "frame": 1800,
+      "timestamp": "1:00.00",
+      "people_count": 1,
+      "people": [
+        {
+          "bbox": [
+            311,
+            321,
+            515,
+            604
+          ],
+          "center": [
+            413,
+            462
+          ],
+          "confidence": 0.937
+        }
+      ],
+      "distances": []
+    },
+    {
+      "frame": 1830,
+      "timestamp": "1:01.00",
+      "people_count": 1,
+      "people": [
+        {
+          "bbox": [
+            326,
+            329,
+            518,
+            612
+          ],
+          "center": [
+            422,
+            470
+          ],
+          "confidence": 0.955
+        }
+      ],
+      "distances": []
+    },
+    {
+      "frame": 1860,
+      "timestamp": "1:02.00",
+      "people_count": 1,
+      "people": [
+        {
+          "bbox": [
+            352,
+            338,
+            476,
+            638
+          ],
+          "center": [
+            414,
+            488
+          ],
+          "confidence": 0.959
+        }
+      ],
+      "distances": []
+    },
+    {
+      "frame": 1890,
+      "timestamp": "1:03.00",
+      "people_count": 1,
+      "people": [
+        {
+          "bbox": [
+            355,
+            330,
+            472,
+            639
+          ],
+          "center": [
+            413,
+            484
+          ],
+          "confidence": 0.954
+        }
+      ],
+      "distances": []
+    },
+    {
+      "frame": 1920,
+      "timestamp": "1:04.00",
+      "people_count": 1,
+      "people": [
+        {
+          "bbox": [
+            325,
+            322,
+            428,
+            619
+          ],
+          "center": [
+            376,
+            470
+          ],
+          "confidence": 0.954
+        }
+      ],
+      "distances": []
+    },
+    {
+      "frame": 1950,
+      "timestamp": "1:05.00",
+      "people_count": 1,
+      "people": [
+        {
+          "bbox": [
+            170,
+            340,
+            358,
+            621
+          ],
+          "center": [
+            264,
+            480
+          ],
+          "confidence": 0.959
+        }
+      ],
+      "distances": []
+    },
+    {
+      "frame": 1980,
+      "timestamp": "1:06.00",
+      "people_count": 1,
+      "people": [
+        {
+          "bbox": [
+            203,
+            329,
+            282,
+            621
+          ],
+          "center": [
+            242,
+            475
+          ],
+          "confidence": 0.958
+        }
+      ],
+      "distances": []
+    },
+    {
+      "frame": 2010,
+      "timestamp": "1:07.00",
+      "people_count": 1,
+      "people": [
+        {
+          "bbox": [
+            249,
+            320,
+            326,
+            578
+          ],
+          "center": [
+            287,
+            449
+          ],
+          "confidence": 0.959
+        }
+      ],
+      "distances": []
+    },
+    {
+      "frame": 2040,
+      "timestamp": "1:08.00",
+      "people_count": 1,
+      "people": [
+        {
+          "bbox": [
+            302,
+            310,
+            380,
+            534
+          ],
+          "center": [
+            341,
+            422
+          ],
+          "confidence": 0.947
+        }
+      ],
+      "distances": []
+    },
+    {
+      "frame": 2070,
+      "timestamp": "1:09.00",
+      "people_count": 1,
+      "people": [
+        {
+          "bbox": [
+            389,
+            295,
+            455,
+            496
+          ],
+          "center": [
+            422,
+            395
+          ],
+          "confidence": 0.941
+        }
+      ],
+      "distances": []
+    },
+    {
+      "frame": 2100,
+      "timestamp": "1:10.00",
+      "people_count": 1,
+      "people": [
+        {
+          "bbox": [
+            519,
+            294,
+            566,
+            381
+          ],
+          "center": [
+            542,
+            337
+          ],
+          "confidence": 0.919
+        }
+      ],
+      "distances": []
+    },
+    {
+      "frame": 2130,
+      "timestamp": "1:11.00",
+      "people_count": 1,
+      "people": [
+        {
+          "bbox": [
+            614,
+            308,
+            640,
+            448
+          ],
+          "center": [
+            627,
+            378
+          ],
+          "confidence": 0.836
+        }
+      ],
+      "distances": []
+    }
+  ]
+}
