@@ -45,3 +45,7 @@ coverage/
 # package-lock.json
 # yarn.lock
 # pnpm-lock.yaml
+
+# Build info
+*.tsbuildinfo
+*.sqlite3
