@@ -79,8 +79,6 @@ This architecture is visualized live in the app's **System Status** page, which 
 - **Customer Info** - traffic/footfall metrics, service quality (attended vs. unattended ratio, response time, interaction duration), spatial behavior (dwell time, shopper behavior split, top paths)
 - **Employee Info** - store-wide staff score, activity leaderboard, responsiveness charts, idle time and floor coverage, zone-by-zone performance
 - **Spatial Analytics** - heatmaps and movement pattern analysis
-- **Sales & Product Trends** - POS-driven product and category performance
-- **Reports & Exports** - configurable report builder with AI-generated narrative summaries, exported as a downloadable PDF (via jsPDF)
 - **Alerts & Notifications** - unified, filterable feed of active/resolved system alerts (unattended customers, unstaffed zones, idle spikes, traffic anomalies)
 - **System Status** - live agent pipeline visualization, per-agent health, and activity log
 - **Store Settings** - system configuration
@@ -106,10 +104,9 @@ This architecture is visualized live in the app's **System Status** page, which 
 | PDF Export | jsPDF |
 | Computer Vision | YOLO-based detection (lightweight, non-GPU-dependent) |
 | Agent Orchestration | LangGraph |
-| POS Analytics API | FastAPI, SQLite |
 | Fonts | Space Grotesk (headings), Inter (body), JetBrains Mono (stats/data) |
 
-> **Note:** the CV pipeline and agent orchestration are still partly represented with prototype/demo data. The POS analytics pillar now has a local FastAPI + SQLite implementation for CSV/XLSX imports, deterministic metrics, forecasts, recommendations, and cited assistant evidence.
+> **Note:** the CV pipeline and agent orchestration are still partly represented with prototype/demo data.
 
 ## Project Structure
 
@@ -163,7 +160,6 @@ npm install
 ### Running locally
 
 ```bash
-npm run pos:api
 npm run dev
 ```
 
@@ -176,21 +172,13 @@ npm run dev:all
 This starts Next.js on `http://localhost:3000` and FastAPI on
 `http://127.0.0.1:8011`. Press Ctrl+C once to stop both processes.
 
-The POS API binds to `http://127.0.0.1:8011` and the app will be available at `http://localhost:3000`.
-For the complete local backend (POS plus camera handoff jobs), run
-`npm run backend:api`; it exposes `/pos/*` and `/camera/*` from the same
-localhost service. Camera jobs are queued and can be polled at
-`/camera/jobs/{id}`. Both services require their internal secret header when
-called directly; the Next.js proxy supplies it server-side.
-
-Manager POS routes require a signed HttpOnly session cookie. In the local FYP demo, choosing Manager with any valid email and a 6+ character password creates that cookie. Configure these secrets before running:
+Manager routes require a signed HttpOnly session cookie. In the local FYP demo, choosing Manager with any valid email and a 6+ character password creates that cookie. Configure these secrets before running:
 
 ```bash
 export POS_SESSION_SECRET="change-me"
-export POS_INTERNAL_SECRET="local-dev-pos-secret"
 ```
 
-Employee and Manager use the same demo credential rule. Manager still receives a server-signed session so POS APIs are not unlocked by changing localStorage alone.
+Employee and Manager use the same demo credential rule. Manager still receives a server-signed session so manager APIs are not unlocked by changing localStorage alone.
 
 ### Build for production
 
@@ -208,7 +196,6 @@ To fit within the project timeline and available hardware (no dedicated GPU), th
 - Staff/customer classification (non-biometric, zone/appearance-based)
 - Engagement analytics (approach time, interaction duration, idle detection, unattended flagging, employee scoring)
 - Trajectory & spatial behavior (path tracking, zone dwell time, heatmaps, crowd density)
-- POS CSV/XLSX import, product performance, purchase conversion, 7/30-day demand forecasts, inventory recommendations, and cited POS assistant answers for a single local store
 
 **Explicitly descoped (see Future Work):**
 - Multi-camera identity linking (Global Master ID / cross-camera re-identification)
@@ -220,7 +207,6 @@ To fit within the project timeline and available hardware (no dedicated GPU), th
 - **Pilot deployment** with a real retail partner (e.g. Imtiaz, Punjab Cash & Carry, Max Mart) to validate against live store conditions
 - **Multi-store scaling** beyond the single-store prototype
 - **Multi-camera identity linking** for full cross-camera customer tracking
-- **Direct live POS connector** beyond CSV/XLSX import
 - **Shelf-level interaction detection**
 - **Real-time dashboard** as the primary deliverable (currently offline/batch processing)
 - **Expanded agent layer** - additional reasoning agents (anomaly detection, natural-language querying over store data)
