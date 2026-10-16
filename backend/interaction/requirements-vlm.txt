@@ -1,0 +1,5 @@
+# Optional semantic stage. Detector/tracker-only deployments do not need this.
+transformers>=4.45
+Pillow>=10
+torchvision
+num2words

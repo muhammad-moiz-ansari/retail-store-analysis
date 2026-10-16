@@ -1,0 +1,533 @@
+{
+  "note": "World-space zone changes from the shared trajectories; these are not detector or Re-ID predictions. Camera view boundaries may overlap map zones.",
+  "transitions": [
+    {
+      "person_id": "C10",
+      "role": "customer",
+      "frame_index": 19,
+      "source_time_seconds": 1.9,
+      "from_zone": "outside_store",
+      "to_zone": "cam07",
+      "world_position_m": [
+        0.0184,
+        7.5
+      ]
+    },
+    {
+      "person_id": "C09",
+      "role": "customer",
+      "frame_index": 25,
+      "source_time_seconds": 2.5,
+      "from_zone": "outside_store",
+      "to_zone": "cam01",
+      "world_position_m": [
+        0.0264,
+        1.5
+      ]
+    },
+    {
+      "person_id": "C11",
+      "role": "customer",
+      "frame_index": 144,
+      "source_time_seconds": 14.4,
+      "from_zone": "cam05",
+      "to_zone": "cam06",
+      "world_position_m": [
+        12.0922,
+        6.2134
+      ]
+    },
+    {
+      "person_id": "C12",
+      "role": "customer",
+      "frame_index": 145,
+      "source_time_seconds": 14.5,
+      "from_zone": "cam03",
+      "to_zone": "cam04",
+      "world_position_m": [
+        12.1666,
+        3.0072
+      ]
+    },
+    {
+      "person_id": "C12",
+      "role": "customer",
+      "frame_index": 150,
+      "source_time_seconds": 15.0,
+      "from_zone": "cam04",
+      "to_zone": "central_aisle",
+      "world_position_m": [
+        12.0965,
+        3.0523
+      ]
+    },
+    {
+      "person_id": "C11",
+      "role": "customer",
+      "frame_index": 155,
+      "source_time_seconds": 15.5,
+      "from_zone": "cam06",
+      "to_zone": "central_aisle",
+      "world_position_m": [
+        11.9159,
+        6.0922
+      ]
+    },
+    {
+      "person_id": "C10",
+      "role": "customer",
+      "frame_index": 170,
+      "source_time_seconds": 17.0,
+      "from_zone": "cam07",
+      "to_zone": "cam08",
+      "world_position_m": [
+        5.1868,
+        6.0943
+      ]
+    },
+    {
+      "person_id": "C09",
+      "role": "customer",
+      "frame_index": 175,
+      "source_time_seconds": 17.5,
+      "from_zone": "cam01",
+      "to_zone": "cam08",
+      "world_position_m": [
+        5.0599,
+        3.0058
+      ]
+    },
+    {
+      "person_id": "C10",
+      "role": "customer",
+      "frame_index": 184,
+      "source_time_seconds": 18.4,
+      "from_zone": "cam08",
+      "to_zone": "central_aisle",
+      "world_position_m": [
+        5.5234,
+        5.8139
+      ]
+    },
+    {
+      "person_id": "C09",
+      "role": "customer",
+      "frame_index": 188,
+      "source_time_seconds": 18.8,
+      "from_zone": "cam08",
+      "to_zone": "central_aisle",
+      "world_position_m": [
+        5.5027,
+        3.2663
+      ]
+    },
+    {
+      "person_id": "C07",
+      "role": "customer",
+      "frame_index": 335,
+      "source_time_seconds": 33.5,
+      "from_zone": "cam07",
+      "to_zone": "cam08",
+      "world_position_m": [
+        3.7642,
+        6.0792
+      ]
+    },
+    {
+      "person_id": "C04",
+      "role": "customer",
+      "frame_index": 336,
+      "source_time_seconds": 33.6,
+      "from_zone": "cam04",
+      "to_zone": "central_aisle",
+      "world_position_m": [
+        12.089,
+        4.745
+      ]
+    },
+    {
+      "person_id": "C05",
+      "role": "customer",
+      "frame_index": 339,
+      "source_time_seconds": 33.9,
+      "from_zone": "cam05",
+      "to_zone": "cam04",
+      "world_position_m": [
+        12.3498,
+        6.0975
+      ]
+    },
+    {
+      "person_id": "C05",
+      "role": "customer",
+      "frame_index": 344,
+      "source_time_seconds": 34.4,
+      "from_zone": "cam04",
+      "to_zone": "central_aisle",
+      "world_position_m": [
+        12.0843,
+        5.9433
+      ]
+    },
+    {
+      "person_id": "C02",
+      "role": "customer",
+      "frame_index": 351,
+      "source_time_seconds": 35.1,
+      "from_zone": "cam02",
+      "to_zone": "central_aisle",
+      "world_position_m": [
+        8.8665,
+        3.0265
+      ]
+    },
+    {
+      "person_id": "C01",
+      "role": "customer",
+      "frame_index": 362,
+      "source_time_seconds": 36.2,
+      "from_zone": "cam01",
+      "to_zone": "cam02",
+      "world_position_m": [
+        5.5122,
+        2.6575
+      ]
+    },
+    {
+      "person_id": "C03",
+      "role": "customer",
+      "frame_index": 363,
+      "source_time_seconds": 36.3,
+      "from_zone": "cam03",
+      "to_zone": "cam02",
+      "world_position_m": [
+        12.0658,
+        2.6975
+      ]
+    },
+    {
+      "person_id": "C08",
+      "role": "customer",
+      "frame_index": 363,
+      "source_time_seconds": 36.3,
+      "from_zone": "cam08",
+      "to_zone": "central_aisle",
+      "world_position_m": [
+        5.5182,
+        4.8912
+      ]
+    },
+    {
+      "person_id": "C06",
+      "role": "customer",
+      "frame_index": 370,
+      "source_time_seconds": 37.0,
+      "from_zone": "cam06",
+      "to_zone": "central_aisle",
+      "world_position_m": [
+        9.6,
+        6.0958
+      ]
+    },
+    {
+      "person_id": "C03",
+      "role": "customer",
+      "frame_index": 383,
+      "source_time_seconds": 38.3,
+      "from_zone": "cam02",
+      "to_zone": "central_aisle",
+      "world_position_m": [
+        11.2708,
+        3.0142
+      ]
+    },
+    {
+      "person_id": "C01",
+      "role": "customer",
+      "frame_index": 384,
+      "source_time_seconds": 38.4,
+      "from_zone": "cam02",
+      "to_zone": "central_aisle",
+      "world_position_m": [
+        5.811,
+        3.015
+      ]
+    },
+    {
+      "person_id": "C09",
+      "role": "customer",
+      "frame_index": 385,
+      "source_time_seconds": 38.5,
+      "from_zone": "central_aisle",
+      "to_zone": "cam04",
+      "world_position_m": [
+        12.1252,
+        4.4144
+      ]
+    },
+    {
+      "person_id": "C07",
+      "role": "customer",
+      "frame_index": 394,
+      "source_time_seconds": 39.4,
+      "from_zone": "cam08",
+      "to_zone": "central_aisle",
+      "world_position_m": [
+        5.5243,
+        4.3583
+      ]
+    },
+    {
+      "person_id": "C11",
+      "role": "customer",
+      "frame_index": 411,
+      "source_time_seconds": 41.1,
+      "from_zone": "central_aisle",
+      "to_zone": "cam08",
+      "world_position_m": [
+        5.4728,
+        3.3013
+      ]
+    },
+    {
+      "person_id": "C12",
+      "role": "customer",
+      "frame_index": 419,
+      "source_time_seconds": 41.9,
+      "from_zone": "central_aisle",
+      "to_zone": "cam08",
+      "world_position_m": [
+        5.4893,
+        5.894
+      ]
+    },
+    {
+      "person_id": "C11",
+      "role": "customer",
+      "frame_index": 429,
+      "source_time_seconds": 42.9,
+      "from_zone": "cam08",
+      "to_zone": "cam01",
+      "world_position_m": [
+        4.9679,
+        2.9948
+      ]
+    },
+    {
+      "person_id": "C12",
+      "role": "customer",
+      "frame_index": 430,
+      "source_time_seconds": 43.0,
+      "from_zone": "cam08",
+      "to_zone": "cam07",
+      "world_position_m": [
+        5.1477,
+        6.1144
+      ]
+    },
+    {
+      "person_id": "C10",
+      "role": "customer",
+      "frame_index": 438,
+      "source_time_seconds": 43.8,
+      "from_zone": "central_aisle",
+      "to_zone": "cam04",
+      "world_position_m": [
+        12.1134,
+        3.2127
+      ]
+    },
+    {
+      "person_id": "C10",
+      "role": "customer",
+      "frame_index": 460,
+      "source_time_seconds": 46.0,
+      "from_zone": "cam04",
+      "to_zone": "cam03",
+      "world_position_m": [
+        12.5761,
+        2.9923
+      ]
+    },
+    {
+      "person_id": "C09",
+      "role": "customer",
+      "frame_index": 471,
+      "source_time_seconds": 47.1,
+      "from_zone": "cam04",
+      "to_zone": "cam05",
+      "world_position_m": [
+        13.7332,
+        6.1229
+      ]
+    },
+    {
+      "person_id": "C09",
+      "role": "customer",
+      "frame_index": 532,
+      "source_time_seconds": 53.2,
+      "from_zone": "cam05",
+      "to_zone": "cam06",
+      "world_position_m": [
+        12.0938,
+        6.9644
+      ]
+    },
+    {
+      "person_id": "C07",
+      "role": "customer",
+      "frame_index": 546,
+      "source_time_seconds": 54.6,
+      "from_zone": "central_aisle",
+      "to_zone": "cam08",
+      "world_position_m": [
+        5.5,
+        4.5043
+      ]
+    },
+    {
+      "person_id": "C06",
+      "role": "customer",
+      "frame_index": 555,
+      "source_time_seconds": 55.5,
+      "from_zone": "central_aisle",
+      "to_zone": "cam06",
+      "world_position_m": [
+        9.6732,
+        6.1239
+      ]
+    },
+    {
+      "person_id": "C01",
+      "role": "customer",
+      "frame_index": 557,
+      "source_time_seconds": 55.7,
+      "from_zone": "central_aisle",
+      "to_zone": "cam02",
+      "world_position_m": [
+        5.713,
+        2.9935
+      ]
+    },
+    {
+      "person_id": "C03",
+      "role": "customer",
+      "frame_index": 558,
+      "source_time_seconds": 55.8,
+      "from_zone": "central_aisle",
+      "to_zone": "cam02",
+      "world_position_m": [
+        11.7884,
+        2.9913
+      ]
+    },
+    {
+      "person_id": "C03",
+      "role": "customer",
+      "frame_index": 563,
+      "source_time_seconds": 56.3,
+      "from_zone": "cam02",
+      "to_zone": "cam03",
+      "world_position_m": [
+        12.1435,
+        2.8826
+      ]
+    },
+    {
+      "person_id": "C08",
+      "role": "customer",
+      "frame_index": 564,
+      "source_time_seconds": 56.4,
+      "from_zone": "central_aisle",
+      "to_zone": "cam08",
+      "world_position_m": [
+        5.4877,
+        5.0768
+      ]
+    },
+    {
+      "person_id": "C01",
+      "role": "customer",
+      "frame_index": 567,
+      "source_time_seconds": 56.7,
+      "from_zone": "cam02",
+      "to_zone": "cam01",
+      "world_position_m": [
+        5.4957,
+        2.7688
+      ]
+    },
+    {
+      "person_id": "C05",
+      "role": "customer",
+      "frame_index": 573,
+      "source_time_seconds": 57.3,
+      "from_zone": "central_aisle",
+      "to_zone": "cam05",
+      "world_position_m": [
+        12.1007,
+        6.1551
+      ]
+    },
+    {
+      "person_id": "C02",
+      "role": "customer",
+      "frame_index": 575,
+      "source_time_seconds": 57.5,
+      "from_zone": "central_aisle",
+      "to_zone": "cam02",
+      "world_position_m": [
+        9.0609,
+        2.9957
+      ]
+    },
+    {
+      "person_id": "C07",
+      "role": "customer",
+      "frame_index": 575,
+      "source_time_seconds": 57.5,
+      "from_zone": "cam08",
+      "to_zone": "cam07",
+      "world_position_m": [
+        4.05,
+        6.1435
+      ]
+    },
+    {
+      "person_id": "C04",
+      "role": "customer",
+      "frame_index": 578,
+      "source_time_seconds": 57.8,
+      "from_zone": "central_aisle",
+      "to_zone": "cam04",
+      "world_position_m": [
+        12.1435,
+        5.0261
+      ]
+    },
+    {
+      "person_id": "C11",
+      "role": "customer",
+      "frame_index": 578,
+      "source_time_seconds": 57.8,
+      "from_zone": "cam01",
+      "to_zone": "outside_store",
+      "world_position_m": [
+        -0.0007,
+        1.5631
+      ]
+    },
+    {
+      "person_id": "C12",
+      "role": "customer",
+      "frame_index": 578,
+      "source_time_seconds": 57.8,
+      "from_zone": "cam07",
+      "to_zone": "outside_store",
+      "world_position_m": [
+        -0.0007,
+        7.5
+      ]
+    }
+  ]
+}

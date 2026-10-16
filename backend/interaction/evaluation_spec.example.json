@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "version": "interaction-eval-v1",
+  "approved_by": "REPLACE_WITH_REVIEWERS",
+  "scope": "existing_calibrated_cameras",
+  "minimum_samples": {
+    "annotated_frames": 1000,
+    "annotated_people": 500,
+    "orientation_eligible": 200,
+    "engagement_events": 50
+  },
+  "limits": {
+    "detection.precision": 0.9,
+    "detection.recall": 0.8,
+    "tracking.idf1": 0.75,
+    "roles.employee.precision": 0.9,
+    "roles.employee.recall": 0.8,
+    "roles.customer.precision": 0.9,
+    "roles.customer.recall": 0.8,
+    "unknown_role_rate": 0.3,
+    "orientation.accuracy": 0.8,
+    "orientation.availability": 0.5,
+    "orientation.eligible": 200
+  },
+  "event_matching": {
+    "temporal_iou": 0.5,
+    "start_end_error_seconds": 1.0,
+    "minimum_event_precision": 0.9,
+    "minimum_event_recall": 0.7
+  }
+}
