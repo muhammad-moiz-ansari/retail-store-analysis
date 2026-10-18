@@ -49,3 +49,10 @@ coverage/
 # package-lock.json
 # yarn.lock
 # pnpm-lock.yaml
+
+models/
+
+# Local floor-distance inputs and generated diagnostics
+/data/videos/raw/
+/data/outputs/
+/data/calibration/

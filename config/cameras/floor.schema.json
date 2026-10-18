@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "RetailPulse floor calibration inputs and generated homography v1",
+  "type": "object",
+  "required": ["schema_version", "camera_id", "calibration_id", "source_reference", "reference_frame_index", "reference_timestamp_s", "frame_size", "coordinate_space", "floor_units", "measurements_status", "landmarks", "operational_region_px", "distortion", "motion", "independent_validation"],
+  "$defs": {"point": {"type": "array", "items": {"type": "number"}, "minItems": 2, "maxItems": 2}, "polygon": {"type": "array", "items": {"$ref": "#/$defs/point"}, "minItems": 3}},
+  "properties": {
+    "schema_version": {"const": 1},
+    "camera_id": {"type": "string", "minLength": 1},
+    "calibration_id": {"type": "string", "minLength": 1},
+    "source_reference": {"type": "string"},
+    "reference_frame_index": {"type": "integer", "minimum": 0},
+    "reference_timestamp_s": {"type": "number", "minimum": 0},
+    "frame_size": {"type": "array", "items": {"type": "integer", "minimum": 1}, "minItems": 2, "maxItems": 2},
+    "coordinate_space": {"const": "original_distorted_pixels"},
+    "floor_units": {"const": "m"},
+    "measurements_status": {"enum": ["estimated", "verified", "illustrative"]},
+    "calibration_status": {"enum": ["provisional", "unvalidated"]},
+    "landmarks": {"type": "array", "minItems": 4, "items": {"type": "object", "required": ["id", "image_xy_px"], "properties": {"id": {"type": "string"}, "image_xy_px": {"$ref": "#/$defs/point"}, "floor_xy_m": {"$ref": "#/$defs/point"}}}},
+    "rectangle": {"type": "object", "required": ["corner_order", "width", "depth_or_diagonal", "units", "interpretation"], "properties": {"corner_order": {"type": "array", "items": {"type": "string"}, "minItems": 4, "maxItems": 4, "uniqueItems": true}, "width": {"type": "number", "exclusiveMinimum": 0}, "depth_or_diagonal": {"type": "number", "exclusiveMinimum": 0}, "units": {"enum": ["ft", "m"]}, "interpretation": {"enum": ["width_and_depth", "width_and_diagonal"]}}},
+    "operational_region_px": {"$ref": "#/$defs/polygon"},
+    "exclusion_regions_px": {"type": "array", "items": {"$ref": "#/$defs/polygon"}},
+    "distortion": {"type": "object", "required": ["handling"], "properties": {"handling": {"const": "uncorrected"}}},
+    "H_direction": {"const": "image_to_floor"},
+    "H_image_to_floor": {"type": "array", "minItems": 3, "maxItems": 3, "items": {"type": "array", "minItems": 3, "maxItems": 3, "items": {"type": "number"}}},
+    "motion": {"type": "object", "required": ["mode", "quality"], "properties": {"mode": {"enum": ["monitor", "fixed", "snapshot"]}, "quality": {"type": "object", "required": ["match_ratio", "min_inliers", "min_inlier_ratio", "min_spread_ratio", "ransac_threshold_px", "max_alignment_residual_px", "max_displacement_px"]}}},
+    "independent_validation": {"type": "object", "required": ["status", "sample_count"]}
+  }
+}

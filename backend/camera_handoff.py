@@ -54,7 +54,10 @@ def process_camera(
 ) -> dict[str, Any]:
     """Process one camera independently and emit eligible boundary events."""
     import cv2
-    from ultralytics import YOLO
+    try:
+        from .vision_inference import load_model, track_frame
+    except ImportError:
+        from vision_inference import load_model, track_frame
 
     cap = cv2.VideoCapture(str(video_path))
     if not cap.isOpened():
@@ -62,7 +65,7 @@ def process_camera(
     fps = float(cap.get(cv2.CAP_PROP_FPS) or 25.0)
     width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH) or 0)
     total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT) or 0)
-    model = YOLO(str(model_path))
+    model = load_model(model_path)
     track_states: dict[str, dict[str, Any]] = {}
     track_summaries: dict[str, dict[str, Any]] = {}
     events: list[dict[str, Any]] = []
@@ -79,7 +82,7 @@ def process_camera(
             continue
 
         timestamp = frame_index / fps
-        results = model.track(frame, persist=True, classes=[0], device="cpu", verbose=False, tracker="bytetrack.yaml")
+        results = track_frame(model, frame, classes=[0])
         boxes = results[0].boxes if results else []
         for box in boxes:
             if box.id is None:
