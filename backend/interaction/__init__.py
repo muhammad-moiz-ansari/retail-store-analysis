@@ -1,6 +1,4 @@
-"""Standalone YOLO + ByteTrack employee/customer interaction module."""
+"""Anonymous, store-calibrated employee/customer engagement analytics.
 
-from .config import InteractionConfig
-from .pipeline import InteractionPipeline
-
-__all__ = ["InteractionConfig", "InteractionPipeline"]
+Standalone YOLO + ByteTrack pipeline: ``pipeline.InteractionPipeline`` with ``config.InteractionConfig``.
+"""

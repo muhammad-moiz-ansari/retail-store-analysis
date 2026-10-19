@@ -1,4 +1,4 @@
-"""Unified local backend entry point for POS, camera and store operations."""
+"""Unified local backend entry point for camera and store operations."""
 
 from __future__ import annotations
 
@@ -13,7 +13,6 @@ from fastapi import Depends, FastAPI, Header, HTTPException, Query
 from fastapi.responses import StreamingResponse
 
 from .camera_service import app as camera_app
-from .pos_service import app as pos_app
 from .store_core import (
     accept_invitation,
     authenticate,
@@ -30,7 +29,6 @@ from .voice_agent import generate_voice_script, integration_status, synthesize_v
 
 app = FastAPI(title="RetailPulse Backend", version="0.1.0")
 app.mount("/camera", camera_app)
-app.mount("/pos", pos_app)
 
 INTERNAL_SECRET = os.getenv("RETAILPULSE_INTERNAL_SECRET", os.getenv("POS_INTERNAL_SECRET", "local-dev-pos-secret"))
 

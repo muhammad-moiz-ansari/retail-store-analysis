@@ -207,18 +207,6 @@ export default function LandingPage() {
             <RetroCard>
               <div className="space-y-3">
                 <h3 className="font-heading text-lg font-semibold text-text">
-                  Sales &amp; Product Trends
-                </h3>
-                <p className="text-sm text-text-muted leading-relaxed">
-                  POS-driven trend data - connect sales performance to customer
-                  behavior patterns.
-                </p>
-              </div>
-            </RetroCard>
-
-            <RetroCard>
-              <div className="space-y-3">
-                <h3 className="font-heading text-lg font-semibold text-text">
                   AI Reports &amp; Exports
                 </h3>
                 <p className="text-sm text-text-muted leading-relaxed">

@@ -12,6 +12,7 @@ __pycache__/
 *.py[cod]
 *.pyo
 *.pyd
+backend/interaction.sqlite3*
 .venv/
 .venv-interaction/
 venv/
@@ -49,3 +50,7 @@ coverage/
 # package-lock.json
 # yarn.lock
 # pnpm-lock.yaml
+
+# Build info
+*.tsbuildinfo
+*.sqlite3

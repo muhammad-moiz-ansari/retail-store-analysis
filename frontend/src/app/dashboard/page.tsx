@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, FormEvent } from "react";
+import React, { useState, FormEvent } from "react";
 import {
   RetroWindow,
   CRTFrame,
@@ -9,8 +9,6 @@ import {
   RetroCard,
 } from "@/components/ui";
 import { defaultDashboardData } from "@/lib/dashboard-data";
-import { fetchPosAnalytics } from "@/lib/pos/api";
-import type { PosAnalytics } from "@/lib/pos/types";
 
 type FlaggedEvent = {
   label: string;
@@ -33,15 +31,6 @@ function ChatBubblesIcon() {
       <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
       <path d="M13 8H7" opacity="0.5" />
       <path d="M17 12H7" opacity="0.5" />
-    </svg>
-  );
-}
-
-function FunnelIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z" />
     </svg>
   );
 }
@@ -133,71 +122,6 @@ function EngagementCard({
         ))}
       </div>
     </RetroCard>
-  );
-}
-
-function PosDashboardPanel() {
-  const [analytics, setAnalytics] = useState<PosAnalytics | null>(null);
-  const [error, setError] = useState("");
-
-  useEffect(() => {
-    const timeoutId = window.setTimeout(() => {
-      fetchPosAnalytics()
-        .then(setAnalytics)
-        .catch((loadError) => setError(loadError instanceof Error ? loadError.message : "POS analytics unavailable"));
-    }, 150);
-
-    return () => window.clearTimeout(timeoutId);
-  }, []);
-
-  if (!analytics || analytics.products.length === 0) {
-    return (
-      <div className="space-y-4">
-        <div className="flex items-center gap-2 text-text-muted">
-          <FunnelIcon />
-          <span className="font-heading text-xs font-semibold uppercase tracking-wider">Live POS</span>
-        </div>
-        <p className="text-sm leading-relaxed text-text-muted">
-          {error || "Import POS data to show revenue, conversion, and product recommendations here."}
-        </p>
-        <RetroButton variant="secondary" className="w-full !text-xs !py-1.5">View Sales Trends</RetroButton>
-      </div>
-    );
-  }
-
-  const conversion = analytics.conversion.conversion === null ? "NA" : `${(analytics.conversion.conversion * 100).toFixed(1)}%`;
-
-  return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-2 text-text-muted">
-        <FunnelIcon />
-        <span className="font-heading text-xs font-semibold uppercase tracking-wider">Live POS</span>
-      </div>
-      <div className="grid grid-cols-2 gap-2">
-        <div className="rounded-md border border-border-soft bg-surface-alt px-3 py-2">
-          <p className="font-mono text-[10px] uppercase tracking-wider text-text-muted">Net revenue</p>
-          <p className="font-mono text-lg font-bold text-text">Rs. {Math.round(analytics.kpis.net_revenue).toLocaleString("en-PK")}</p>
-        </div>
-        <div className="rounded-md border border-border-soft bg-surface-alt px-3 py-2">
-          <p className="font-mono text-[10px] uppercase tracking-wider text-text-muted">Conversion</p>
-          <p className="font-mono text-lg font-bold text-text">{conversion}</p>
-        </div>
-      </div>
-      <div>
-        <p className="mb-2 font-heading text-[10px] font-semibold uppercase tracking-wider text-text-muted">Top products</p>
-        <div className="space-y-1.5">
-          {analytics.products.slice(0, 3).map((item, i) => (
-            <div key={item.sku_id} className="flex items-center justify-between font-mono text-[11px]">
-              <span className="text-text"><span className="mr-1.5 font-bold text-accent-soft">#{i + 1}</span>{item.sku_name}</span>
-              <span className="text-text-muted">{item.gross_units} units</span>
-            </div>
-          ))}
-        </div>
-      </div>
-      <p className="font-mono text-[10px] uppercase tracking-wider text-text-muted">
-        Run: {analytics.period.from} to {analytics.period.to}
-      </p>
-    </div>
   );
 }
 
@@ -470,17 +394,6 @@ export default function DashboardPage() {
                   View Details
                 </RetroButton>
               </div>
-            </RetroWindow>
-
-            {/* Panel 2: Product & POS Funnel */}
-            <RetroWindow title="Product & POS Funnel" className="relative">
-              {/* Accent stripe */}
-              <div
-                className="absolute left-0 top-0 bottom-0 w-1 rounded-l-lg"
-                style={{ backgroundColor: "var(--color-accent-soft)" }}
-              />
-
-              <PosDashboardPanel />
             </RetroWindow>
 
             {/* Panel 3: Trajectory & Heatmaps */}

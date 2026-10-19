@@ -1,0 +1,82 @@
+[
+  {
+    "event_type": "scripted_engagement",
+    "employee_id": "E01",
+    "customer_id": "C01",
+    "start_seconds": 19,
+    "end_seconds": 30,
+    "duration_seconds": 11,
+    "zone": "cam01",
+    "definition": "scripted close proximity, mutual facing and gesturing; ground truth from simulation"
+  },
+  {
+    "event_type": "scripted_engagement",
+    "employee_id": "E02",
+    "customer_id": "C02",
+    "start_seconds": 19,
+    "end_seconds": 30,
+    "duration_seconds": 11,
+    "zone": "cam02",
+    "definition": "scripted close proximity, mutual facing and gesturing; ground truth from simulation"
+  },
+  {
+    "event_type": "scripted_engagement",
+    "employee_id": "E03",
+    "customer_id": "C03",
+    "start_seconds": 19,
+    "end_seconds": 30,
+    "duration_seconds": 11,
+    "zone": "cam03",
+    "definition": "scripted close proximity, mutual facing and gesturing; ground truth from simulation"
+  },
+  {
+    "event_type": "scripted_engagement",
+    "employee_id": "E04",
+    "customer_id": "C04",
+    "start_seconds": 19,
+    "end_seconds": 30,
+    "duration_seconds": 11,
+    "zone": "cam04",
+    "definition": "scripted close proximity, mutual facing and gesturing; ground truth from simulation"
+  },
+  {
+    "event_type": "scripted_engagement",
+    "employee_id": "E05",
+    "customer_id": "C05",
+    "start_seconds": 19,
+    "end_seconds": 30,
+    "duration_seconds": 11,
+    "zone": "cam05",
+    "definition": "scripted close proximity, mutual facing and gesturing; ground truth from simulation"
+  },
+  {
+    "event_type": "scripted_engagement",
+    "employee_id": "E06",
+    "customer_id": "C06",
+    "start_seconds": 19,
+    "end_seconds": 30,
+    "duration_seconds": 11,
+    "zone": "cam06",
+    "definition": "scripted close proximity, mutual facing and gesturing; ground truth from simulation"
+  },
+  {
+    "event_type": "scripted_engagement",
+    "employee_id": "E07",
+    "customer_id": "C07",
+    "start_seconds": 19,
+    "end_seconds": 30,
+    "duration_seconds": 11,
+    "zone": "cam07",
+    "definition": "scripted close proximity, mutual facing and gesturing; ground truth from simulation"
+  },
+  {
+    "event_type": "scripted_engagement",
+    "employee_id": "E08",
+    "customer_id": "C08",
+    "start_seconds": 19,
+    "end_seconds": 30,
+    "duration_seconds": 11,
+    "zone": "cam08",
+    "definition": "scripted close proximity, mutual facing and gesturing; ground truth from simulation"
+  }
+]

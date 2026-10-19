@@ -2,9 +2,8 @@ opencv-python
 numpy
 ultralytics
 torch
-Pillow
-transformers
 fastapi
 uvicorn
-python-multipart
-openpyxl
+av>=18,<19
+scipy>=1.13,<2
+lap>=0.5.12

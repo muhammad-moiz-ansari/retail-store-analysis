@@ -11,13 +11,90 @@ import argparse
 import json
 import sys
 import time
+import uuid
 from pathlib import Path
 from typing import Any
 
 try:
     from .handoff_core import HandoffConfig, crossing_direction, match_handoff_events, normalized_x
+    from .interaction.identity import EphemeralIdentityRegistry
 except ImportError:
     from handoff_core import HandoffConfig, crossing_direction, match_handoff_events, normalized_x
+    from interaction.identity import EphemeralIdentityRegistry
+
+
+def attach_global_identities(
+    cameras: list[dict[str, Any]],
+    matches: list[dict[str, Any]],
+    registry,
+    store_id: str,
+    session_id: str,
+    customer_entry_rules: list[Any],
+) -> None:
+    """Bind local tracks to global people and attach authoritative roles in place."""
+    # Confirmed cross-camera Re-ID is the only automatic identity merge.
+    for match in matches:
+        if match["status"] != "confirmed":
+            continue
+        source = registry.resolve_track(
+            store_id, session_id, "cam1", str(match["source_track_id"])
+        )
+        target = registry.resolve_track(
+            store_id,
+            session_id,
+            "cam2",
+            str(match["target_track_id"]),
+            matched_global_person_id=source["global_person_id"],
+        )
+        match["global_person_id"] = target["global_person_id"]
+
+    # Every observed track gets a global ID, including uncertain/unmatched people.
+    for camera in cameras:
+        for track in camera["tracks"]:
+            person = registry.resolve_track(
+                store_id, session_id, camera["camera_id"], str(track["local_track_id"])
+            )
+            track.update(global_person_id=person["global_person_id"], role=person["role"])
+
+        for event in camera["events"]:
+            person = registry.resolve_track(
+                store_id, session_id, camera["camera_id"], str(event["local_track_id"])
+            )
+            person = registry.apply_customer_entry(
+                store_id,
+                person["global_person_id"],
+                {
+                    "camera_id": camera["camera_id"],
+                    "event": "boundary_crossing",
+                    "boundary": event["boundary"],
+                    "direction": event["direction"],
+                },
+                customer_entry_rules,
+            )
+            event.update(global_person_id=person["global_person_id"], role=person["role"])
+
+    # Refresh summaries and match records after context rules may have assigned CUSTOMER.
+    for camera in cameras:
+        for track in camera["tracks"]:
+            person = registry.get_person(store_id, track["global_person_id"])
+            track.update(role=person["role"], role_source=person["role_source"])
+
+    for match in matches:
+        source_person = None
+        target_person = None
+        if match.get("source_track_id") is not None:
+            source_person = registry.resolve_track(
+                store_id, session_id, "cam1", str(match["source_track_id"])
+            )
+            match["source_global_person_id"] = source_person["global_person_id"]
+        if match.get("target_track_id") is not None:
+            target_person = registry.resolve_track(
+                store_id, session_id, "cam2", str(match["target_track_id"])
+            )
+            match["target_global_person_id"] = target_person["global_person_id"]
+        if match["status"] == "confirmed" and source_person is not None:
+            match["global_person_id"] = source_person["global_person_id"]
+            match["role"] = source_person["role"]
 
 
 def appearance_descriptor(frame: Any, bbox: list[int]) -> list[float]:
@@ -133,15 +210,30 @@ def run_pipeline(
     cam1_boundary: float = 0.85,
     cam2_boundary: float = 0.15,
     log=print,
+    identity_registry=None,
+    store_id: str = "default",
+    session_id: str | None = None,
+    customer_entry_rules: list[Any] | None = None,
 ) -> dict[str, Any]:
     config = HandoffConfig(source_boundary=cam1_boundary, target_boundary=cam2_boundary, min_gap_seconds=min_gap, max_gap_seconds=max_gap)
     started = time.perf_counter()
     cam1 = process_camera("cam1", cam1_path, cam1_boundary, "right", model_path, sample_every, config.cooldown_seconds, log)
     cam2 = process_camera("cam2", cam2_path, cam2_boundary, "left", model_path, sample_every, config.cooldown_seconds, log)
     matches = match_handoff_events(cam1["events"], cam2["events"], config)
+    session_id = session_id or uuid.uuid4().hex
+    attach_global_identities(
+        [cam1, cam2],
+        matches,
+        identity_registry or EphemeralIdentityRegistry(),
+        store_id,
+        session_id,
+        customer_entry_rules or [],
+    )
     elapsed = time.perf_counter() - started
     return {
-        "schema_version": 1,
+        "schema_version": 2,
+        "store_id": store_id,
+        "session_id": session_id,
         "configuration": {"source_camera": config.source_camera, "target_camera": config.target_camera, "source_boundary": config.source_boundary, "target_boundary": config.target_boundary, "min_gap_seconds": config.min_gap_seconds, "max_gap_seconds": config.max_gap_seconds, "sample_every": sample_every},
         "cameras": [cam1, cam2],
         "handoffs": matches,

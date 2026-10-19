@@ -1,0 +1,7 @@
+-r ../requirements.txt
+# Explicit Track A dependencies; inference is CPU-only.
+torchvision
+av>=18,<19
+scipy>=1.13,<2
+lap>=0.5.12
+ultralytics==8.4.135

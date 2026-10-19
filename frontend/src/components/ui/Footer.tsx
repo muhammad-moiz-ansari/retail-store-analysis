@@ -24,8 +24,6 @@ const AUTHENTICATED_QUICK_LINKS: NavLink[] = [
   { label: "Customer Info", href: "/customer-info" },
   { label: "Employee Info", href: "/employee-info" },
   { label: "Spatial Analytics", href: "/spatial-analytics" },
-  { label: "Sales & Product Trends", href: "/sales-trends" },
-  { label: "Reports & Exports", href: "/reports" },
   { label: "Store Settings", href: "/settings", managerOnly: true },
   { label: "About", href: "/about" },
 ];
@@ -36,8 +34,6 @@ const AUTHENTICATED_ROUTES = [
   "/customer-info",
   "/employee-info",
   "/spatial-analytics",
-  "/sales-trends",
-  "/reports",
   "/settings",
   "/alerts",
   "/employee",
