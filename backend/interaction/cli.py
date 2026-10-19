@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import time
 from pathlib import Path
 
 import cv2
@@ -18,7 +19,8 @@ def main() -> None:
     parser.add_argument("video", type=Path)
     parser.add_argument("--output", type=Path, default=Path("interaction_output.mp4"))
     parser.add_argument("--roles", type=Path, help="YOLO role model trained on the bib-labelled dataset")
-    parser.add_argument("--every", type=int, default=1, help="Score roles on every Nth frame (tracking always runs on every frame)")
+    parser.add_argument("--every", type=int, default=1, help="Score roles and write output on every Nth frame")
+    parser.add_argument("--track-every", type=int, default=1, help="Run the tracker on every Nth frame (3 = 10 fps on 30 fps video)")
     parser.add_argument("--device", default="cpu", help="Inference device, e.g. cpu or cuda:0")
     args = parser.parse_args()
     cap = cv2.VideoCapture(str(args.video))
@@ -28,6 +30,7 @@ def main() -> None:
     writer = cv2.VideoWriter(str(args.output), cv2.VideoWriter_fourcc(*"mp4v"), fps or 25, (width, height))
     pipeline = InteractionPipeline(InteractionConfig(role_model=args.roles, device=args.device))
     frame_number, all_events, tracks, detections = 0, [], {}, []
+    started = time.perf_counter()
     while True:
         ok, frame = cap.read()
         if not ok:
@@ -47,11 +50,13 @@ def main() -> None:
                 else:
                     segments.append({"role": person["role"], "from": result["timestamp"], "to": result["timestamp"], "frames": 1})
             writer.write(draw_result(frame, result))
-        else:
-            # Keep the tracker fed every frame so IDs survive crossings; roles are only scored on sampled frames.
+        elif frame_number % max(1, args.track_every) == 0:
+            # Keep the tracker fed between scored frames so IDs survive crossings.
             pipeline.tracker.detect_and_track(frame, frame_number / (fps or 25))
         frame_number += 1
     cap.release()
+    elapsed, duration = time.perf_counter() - started, frame_number / (fps or 25)
+    print(f"processed {duration:.1f}s of video in {elapsed:.1f}s ({duration / elapsed:.2f}x realtime)")
     writer.release()
     args.output.with_suffix(".json").write_text(json.dumps(all_events, indent=2), encoding="utf-8")
     args.output.with_suffix(".detections.json").write_text(json.dumps(detections, indent=2), encoding="utf-8")

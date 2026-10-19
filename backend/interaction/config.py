@@ -9,7 +9,12 @@ from typing import Literal
 
 @dataclass(slots=True)
 class InteractionConfig:
-    person_model: Path = field(default_factory=lambda: Path(__file__).resolve().parents[1] / "yolov8n.pt")
+    # One model detects + tracks + labels roles: best.pt exported to OpenVINO at 320 px
+    # (~10 fps tracking on a laptop CPU). For a plain COCO model set person_classes=(0,).
+    person_model: Path = field(default_factory=lambda: Path(__file__).resolve().parents[1] / "models" / "best_320_openvino_model")
+    person_classes: tuple[int, ...] | None = None
+    imgsz: int = 320
+    role_model_customer_labels: tuple[str, ...] = ("customer",)
     role_model: Path | None = None
     role_model_employee_labels: tuple[str, ...] = ("employee", "staff", "bib")
     role_mode: Literal["model", "bib_color"] = "model"

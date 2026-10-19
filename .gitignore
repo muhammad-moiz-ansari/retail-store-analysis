@@ -54,3 +54,7 @@ coverage/
 # Build info
 *.tsbuildinfo
 *.sqlite3
+
+# Local analysis outputs and auto-downloaded BoT-SORT ReID model
+dummyoutputs/
+yolo26n-cls.pt

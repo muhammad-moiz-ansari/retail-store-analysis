@@ -30,10 +30,15 @@ class RoleClassifier:
         self._role_detections: list[tuple[tuple[float, ...], str, float]] = []
 
     def classify(
-        self, frame: np.ndarray, bbox: tuple[int, int, int, int], track_id: int, timestamp: float
+        self, frame: np.ndarray, bbox: tuple[int, int, int, int], track_id: int, timestamp: float,
+        yolo: tuple[str, float] | None = None,
     ) -> tuple[str, float, dict]:
-        """Classify from YOLO role, bib colour, staff-zone and stationary evidence via the weighted agent."""
-        yolo = self._classify_with_model(frame, bbox) if self.model is not None and self.config.role_mode == "model" else None
+        """Classify from YOLO role, bib colour, staff-zone and stationary evidence via the weighted agent.
+
+        `yolo` is the role the tracking model already gave this box; a separate role model is only run without it.
+        """
+        if yolo is None and self.model is not None and self.config.role_mode == "model":
+            yolo = self._classify_with_model(frame, bbox)
         bib_role, bib_confidence = self._classify_bib_colour(frame, bbox)
         history = self._update_history(track_id, bbox, timestamp, frame.shape[1], frame.shape[0])
         # Temporal signals only reinforce an appearance signal or a configured
@@ -55,10 +60,11 @@ class RoleClassifier:
         history.observations += 1
         score = history.smoothed_employee_score
         frame_role = "employee" if score >= self.agent.threshold else "customer"
-        # An ID keeps its role until the opposite role has held for role_hold_seconds:
-        # ignores flicker, but still corrects a ByteTrack ID swap between people.
-        if history.role is None or frame_role == history.role:
-            history.role, history.pending_role = history.role or frame_role, None
+        # A role locks once it has held for role_hold_seconds (until then the per-frame role
+        # is shown); a locked role only flips after the opposite has held that long too.
+        # Ignores flicker, but still corrects an ID that jumped to another person.
+        if history.role is not None and frame_role == history.role:
+            history.pending_role = None
         elif history.pending_role != frame_role:
             history.pending_role, history.pending_since = frame_role, timestamp
         elif timestamp - history.pending_since >= self.config.role_hold_seconds:
@@ -73,7 +79,7 @@ class RoleClassifier:
             "raw_employee_score": round(raw_score, 3),
             "employee_score": round(score, 3),
         }
-        return (history.role, score, evidence)
+        return (history.role or frame_role, score, evidence)
 
     def _update_history(self, track_id: int, bbox: tuple[int, int, int, int], timestamp: float, width: int, height: int) -> "_TrackHistory":
         center = ((bbox[0] + bbox[2]) / 2, (bbox[1] + bbox[3]) / 2)
@@ -100,10 +106,10 @@ class RoleClassifier:
         """
         if frame is not self._role_frame:
             self._role_frame, self._role_detections = frame, []
-            for result in self.model(frame, verbose=False, conf=self.config.confidence, device=self.config.device):
+            for result in self.model(frame, verbose=False, conf=self.config.confidence, imgsz=self.config.imgsz, device=self.config.device):
                 for box in result.boxes:
                     label = str(result.names[int(box.cls[0])]).lower()
-                    role = "employee" if label in self.config.role_model_employee_labels else "customer" if label in {"customer", "person"} else None
+                    role = "employee" if label in self.config.role_model_employee_labels else "customer" if label in (*self.config.role_model_customer_labels, "person") else None
                     if role:
                         self._role_detections.append((tuple(box.xyxy[0].tolist()), role, float(box.conf[0])))
         overlap, role, score = max(((_iou(bbox, box), role, score) for box, role, score in self._role_detections), default=(0.0, None, 0.0))

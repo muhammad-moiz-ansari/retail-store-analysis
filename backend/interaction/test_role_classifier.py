@@ -31,12 +31,24 @@ def test_role_flicker_shorter_than_hold_is_ignored_but_sustained_change_switches
     yellow = np.full((120, 80, 3), (0, 255, 255), dtype=np.uint8)
     grey = np.full((120, 80, 3), (128, 128, 128), dtype=np.uint8)
     box = (0, 0, 80, 120)
-    assert classifier.classify(yellow, box, 1, 0.0)[0] == "employee"
-    assert classifier.classify(grey, box, 1, 1.0)[0] == "employee"  # flicker starts
-    assert classifier.classify(yellow, box, 1, 2.0)[0] == "employee"  # flicker over, pending reset
-    for t in (3.0, 4.0, 5.0):
+    for t in (0.0, 1.0, 2.0, 3.0):
+        assert classifier.classify(yellow, box, 1, t)[0] == "employee"  # employee held 3 s -> locked
+    assert classifier.classify(grey, box, 1, 4.0)[0] == "employee"  # flicker starts
+    assert classifier.classify(yellow, box, 1, 5.0)[0] == "employee"  # flicker over, pending reset
+    for t in (6.0, 7.0, 8.0):
         assert classifier.classify(grey, box, 1, t)[0] == "employee"  # held < 3 s
-    assert classifier.classify(grey, box, 1, 6.0)[0] == "customer"  # held 3 s -> switch
+    assert classifier.classify(grey, box, 1, 9.0)[0] == "customer"  # held 3 s -> switch
+
+
+def test_new_id_follows_frame_role_until_a_role_has_held_long_enough_to_lock() -> None:
+    classifier = RoleClassifier(InteractionConfig(role_mode="bib_color", role_smoothing=0.0, role_hold_seconds=3.0))
+    yellow = np.full((120, 80, 3), (0, 255, 255), dtype=np.uint8)
+    grey = np.full((120, 80, 3), (128, 128, 128), dtype=np.uint8)
+    box = (0, 0, 80, 120)
+    assert classifier.classify(yellow, box, 1, 0.0)[0] == "employee"  # first frame overlapped a bib wearer
+    for t in (0.5, 1.0, 2.0, 3.5):
+        assert classifier.classify(grey, box, 1, t)[0] == "customer"  # not locked: corrects at once
+    assert classifier.classify(yellow, box, 1, 4.0)[0] == "customer"  # customer locked at 3.5 s
 
 
 def test_full_frame_role_detection_is_matched_to_the_right_overlapping_person() -> None:

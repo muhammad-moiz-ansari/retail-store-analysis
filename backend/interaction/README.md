@@ -20,10 +20,10 @@ Customer dwell time in ordinary aisles is deliberately not used as employee evid
 Train a small YOLO role model from the existing bib-labelled dataset with labels such as `employee`, `customer`, or `bib`. Supply the generated weight file at runtime:
 
 ```powershell
-python -m backend.interaction.cli path\to\footage.mp4 --roles path\to\best.pt --output interaction.mp4
+python -m backend.interaction.cli path\to\footage.mp4 --track-every 3 --every 15 --output interaction.mp4
 ```
 
-Without `--roles`, classification falls back to the configured yellow-bib HSV range. Update `bib_hsv_lower` and `bib_hsv_upper` in an `InteractionConfig` instance to match the real bib colour and lighting.
+By default one model does detection, tracking and the YOLO role factor: `backend/models/best_320_openvino_model` (`best.pt` exported to OpenVINO at 320 px, ~10 fps tracking on a laptop CPU). `--track-every 3` tracks at 10 fps on 30 fps video; `--every 15` scores roles and writes output at 2 fps. Re-export with `YOLO('backend/models/best.pt').export(format='openvino', imgsz=320)` and rename the folder to `best_320_openvino_model`. With a plain COCO person model instead, set `person_classes=(0,)` and pass the role model via `--roles`; with neither, classification falls back to the configured yellow-bib HSV range. Update `bib_hsv_lower` and `bib_hsv_upper` in an `InteractionConfig` instance to match the real bib colour and lighting.
 
 ## Customer/employee agent
 

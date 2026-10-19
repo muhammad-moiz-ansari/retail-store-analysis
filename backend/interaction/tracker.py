@@ -28,7 +28,8 @@ class ByteTrackPersonTracker:
         results = self.model.track(
             frame,
             persist=True,
-            classes=[0],  # COCO person
+            classes=None if self.config.person_classes is None else list(self.config.person_classes),
+            imgsz=self.config.imgsz,
             conf=self.config.confidence,
             tracker=self.config.tracker,
             device=self.config.device,
@@ -44,6 +45,7 @@ class ByteTrackPersonTracker:
                     "track_id": int(track_id.item()),
                     "bbox": (x1, y1, x2, y2),
                     "confidence": float(box.conf[0]),
+                    "label": str(result.names[int(box.cls[0])]).lower(),
                 })
         return self._relink(frame, people, timestamp)
 

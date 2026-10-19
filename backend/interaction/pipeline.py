@@ -27,7 +27,7 @@ class InteractionPipeline:
         self.config = config or InteractionConfig()
         from ultralytics import YOLO  # lazy: importing package does not require ML dependencies
 
-        self.person_model = YOLO(str(self.config.person_model))
+        self.person_model = YOLO(str(self.config.person_model), task="detect")
         role_model = YOLO(str(self.config.role_model)) if self.config.role_model and Path(self.config.role_model).is_file() else None
         self.tracker = ByteTrackPersonTracker(self.person_model, self.config)
         self.classifier = RoleClassifier(self.config, role_model)
@@ -42,7 +42,7 @@ class InteractionPipeline:
             )
             for item in self.tracker.detect_and_track(frame, timestamp)
             for role, role_confidence, evidence in [
-                self.classifier.classify(frame, item["bbox"], item["track_id"], timestamp)
+                self.classifier.classify(frame, item["bbox"], item["track_id"], timestamp, self._tracked_role(item))
             ]
         ]
         events = self.engagement.update(people, timestamp)
@@ -55,6 +55,15 @@ class InteractionPipeline:
             "customer_count": customers,
             "interactions": [event.to_dict() for event in events],
         }
+
+
+    def _tracked_role(self, item: dict) -> tuple[str, float] | None:
+        """Role straight from the tracking model's class, when it is a role model (e.g. best.pt)."""
+        if item.get("label") in self.config.role_model_employee_labels:
+            return "employee", item["confidence"]
+        if item.get("label") in self.config.role_model_customer_labels:
+            return "customer", item["confidence"]
+        return None
 
 
 class FrameProcessor:
