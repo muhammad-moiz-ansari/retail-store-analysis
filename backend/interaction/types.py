@@ -34,7 +34,8 @@ class InteractionEvent:
     customer_track_id: int
     started_at: float
     last_seen_at: float
-    distance_px: float
+    distance_body_heights: float
+    measured_by: str  # feet | hips | head: lowest body part visible on both people
     active: bool = True
 
     @property
@@ -43,5 +44,5 @@ class InteractionEvent:
 
     def to_dict(self) -> dict:
         result = asdict(self)
-        result["duration_seconds"], result["distance_px"] = round(self.duration_seconds, 3), round(self.distance_px, 2)
+        result["duration_seconds"], result["distance_body_heights"] = round(self.duration_seconds, 3), round(self.distance_body_heights, 3)
         return result

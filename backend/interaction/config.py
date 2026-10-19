@@ -31,7 +31,11 @@ class InteractionConfig:
     role_hold_seconds: float = 3.0
     confidence: float = 0.35
     tracker: str = str(Path(__file__).with_name("botsort_reid.yaml"))
-    interaction_distance_px: float = 180.0
+    # Interaction distance in body heights (mean box height of the pair), no floor calibration.
+    # Higher body parts carry less depth information, so their limits are tighter.
+    frame_edge_margin_px: float = 4.0  # a box this close to the frame edge is cut off
+    interaction_thresholds_heights: dict[str, float] = field(default_factory=lambda: {"feet": 1.0, "hips": 0.8, "head": 0.6})
+    min_height_ratio: float = 0.6
     # ID memory: a person lost mid-frame (not at a left/right edge) is assumed hidden and
     # gets their old ID back if a similar-looking person appears mid-frame within relink_seconds.
     exit_edge_margin: float = 0.05

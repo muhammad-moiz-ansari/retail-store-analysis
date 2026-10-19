@@ -45,7 +45,7 @@ class InteractionPipeline:
                 self.classifier.classify(frame, item["bbox"], item["track_id"], timestamp, self._tracked_role(item))
             ]
         ]
-        events = self.engagement.update(people, timestamp)
+        events = self.engagement.update(people, timestamp, frame.shape[0])
         employees = sum(person.role == "employee" for person in people)
         customers = len(people) - employees
         return {
