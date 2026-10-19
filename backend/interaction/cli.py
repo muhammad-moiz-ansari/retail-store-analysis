@@ -61,7 +61,7 @@ def main() -> None:
     elapsed, duration = time.perf_counter() - started, frame_number / (fps or 25)
     print(f"processed {duration:.1f}s of video in {elapsed:.1f}s ({duration / elapsed:.2f}x realtime)")
     writer.release()
-    args.output.with_suffix(".json").write_text(json.dumps(list(interactions.values()), indent=2), encoding="utf-8")
+    args.output.with_suffix(".interactions.json").write_text(json.dumps(list(interactions.values()), indent=2), encoding="utf-8")
     args.output.with_suffix(".detections.json").write_text(json.dumps(detections, indent=2), encoding="utf-8")
     people = [
         {"track_id": track_id, "first_seen": round(t["first_seen"], 2), "last_seen": round(t["last_seen"], 2),

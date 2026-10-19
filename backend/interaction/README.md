@@ -31,7 +31,7 @@ By default one model does detection, tracking and the YOLO role factor: `backend
 
 ## Output
 
-The CLI writes an annotated video, `<output>.detections.json` (every processed frame: ByteTrack ID, bbox, detection confidence, per-frame role and factor evidence), `<output>.people.json` (one entry per ByteTrack ID: factors, weighted contributions, score, final role), plus `<output>.json` with one record per interaction: employee and customer ByteTrack IDs, start, last seen, duration, distance in body heights, the body part it was measured by (feet, hips or head), and whether it was still active when the video ended. Each detections frame also carries `interaction_active`, the flag shown on screen as INTERACTION: ON/OFF.
+The CLI writes an annotated video, `<output>.detections.json` (every processed frame: ByteTrack ID, bbox, detection confidence, per-frame role and factor evidence), `<output>.people.json` (one entry per ByteTrack ID: factors, weighted contributions, score, final role), plus `<output>.interactions.json`, a dedicated file with one record per interaction: employee and customer ByteTrack IDs, start, last seen, duration, distance in body heights, the body part it was measured by (feet, hips or head), and whether it was still active when the video ended. Each detections frame also carries `interaction_active`, the flag shown on screen as INTERACTION: ON/OFF.
 
 ## Optional service
 
