@@ -1,0 +1,371 @@
+[
+  {
+    "employee_track_id": 1,
+    "customer_track_id": 2,
+    "started_at": 5.5,
+    "last_seen_at": 7.5,
+    "distance_px": 115.23,
+    "active": true,
+    "duration_seconds": 2.0
+  },
+  {
+    "employee_track_id": 1,
+    "customer_track_id": 2,
+    "started_at": 5.5,
+    "last_seen_at": 8.0,
+    "distance_px": 124.29,
+    "active": true,
+    "duration_seconds": 2.5
+  },
+  {
+    "employee_track_id": 1,
+    "customer_track_id": 2,
+    "started_at": 5.5,
+    "last_seen_at": 8.5,
+    "distance_px": 134.1,
+    "active": true,
+    "duration_seconds": 3.0
+  },
+  {
+    "employee_track_id": 1,
+    "customer_track_id": 2,
+    "started_at": 5.5,
+    "last_seen_at": 9.0,
+    "distance_px": 107.86,
+    "active": true,
+    "duration_seconds": 3.5
+  },
+  {
+    "employee_track_id": 1,
+    "customer_track_id": 2,
+    "started_at": 5.5,
+    "last_seen_at": 9.5,
+    "distance_px": 117.17,
+    "active": true,
+    "duration_seconds": 4.0
+  },
+  {
+    "employee_track_id": 1,
+    "customer_track_id": 2,
+    "started_at": 5.5,
+    "last_seen_at": 10.0,
+    "distance_px": 141.64,
+    "active": true,
+    "duration_seconds": 4.5
+  },
+  {
+    "employee_track_id": 1,
+    "customer_track_id": 2,
+    "started_at": 5.5,
+    "last_seen_at": 10.5,
+    "distance_px": 143.71,
+    "active": true,
+    "duration_seconds": 5.0
+  },
+  {
+    "employee_track_id": 1,
+    "customer_track_id": 2,
+    "started_at": 5.5,
+    "last_seen_at": 11.0,
+    "distance_px": 124.54,
+    "active": true,
+    "duration_seconds": 5.5
+  },
+  {
+    "employee_track_id": 1,
+    "customer_track_id": 2,
+    "started_at": 5.5,
+    "last_seen_at": 11.5,
+    "distance_px": 121.28,
+    "active": true,
+    "duration_seconds": 6.0
+  },
+  {
+    "employee_track_id": 1,
+    "customer_track_id": 2,
+    "started_at": 5.5,
+    "last_seen_at": 12.0,
+    "distance_px": 139.67,
+    "active": true,
+    "duration_seconds": 6.5
+  },
+  {
+    "employee_track_id": 1,
+    "customer_track_id": 2,
+    "started_at": 5.5,
+    "last_seen_at": 12.5,
+    "distance_px": 152.48,
+    "active": true,
+    "duration_seconds": 7.0
+  },
+  {
+    "employee_track_id": 1,
+    "customer_track_id": 2,
+    "started_at": 5.5,
+    "last_seen_at": 13.0,
+    "distance_px": 149.85,
+    "active": true,
+    "duration_seconds": 7.5
+  },
+  {
+    "employee_track_id": 1,
+    "customer_track_id": 2,
+    "started_at": 5.5,
+    "last_seen_at": 13.5,
+    "distance_px": 140.79,
+    "active": true,
+    "duration_seconds": 8.0
+  },
+  {
+    "employee_track_id": 1,
+    "customer_track_id": 2,
+    "started_at": 5.5,
+    "last_seen_at": 14.0,
+    "distance_px": 140.92,
+    "active": true,
+    "duration_seconds": 8.5
+  },
+  {
+    "employee_track_id": 1,
+    "customer_track_id": 2,
+    "started_at": 5.5,
+    "last_seen_at": 14.5,
+    "distance_px": 160.92,
+    "active": true,
+    "duration_seconds": 9.0
+  },
+  {
+    "employee_track_id": 1,
+    "customer_track_id": 2,
+    "started_at": 5.5,
+    "last_seen_at": 14.5,
+    "distance_px": 160.92,
+    "active": true,
+    "duration_seconds": 9.0
+  },
+  {
+    "employee_track_id": 1,
+    "customer_track_id": 2,
+    "started_at": 5.5,
+    "last_seen_at": 14.5,
+    "distance_px": 160.92,
+    "active": true,
+    "duration_seconds": 9.0
+  },
+  {
+    "employee_track_id": 1,
+    "customer_track_id": 2,
+    "started_at": 5.5,
+    "last_seen_at": 14.5,
+    "distance_px": 160.92,
+    "active": true,
+    "duration_seconds": 9.0
+  },
+  {
+    "employee_track_id": 1,
+    "customer_track_id": 2,
+    "started_at": 5.5,
+    "last_seen_at": 14.5,
+    "distance_px": 160.92,
+    "active": false,
+    "duration_seconds": 9.0
+  },
+  {
+    "employee_track_id": 1,
+    "customer_track_id": 8,
+    "started_at": 33.5,
+    "last_seen_at": 35.5,
+    "distance_px": 94.3,
+    "active": true,
+    "duration_seconds": 2.0
+  },
+  {
+    "employee_track_id": 1,
+    "customer_track_id": 8,
+    "started_at": 33.5,
+    "last_seen_at": 36.0,
+    "distance_px": 121.66,
+    "active": true,
+    "duration_seconds": 2.5
+  },
+  {
+    "employee_track_id": 1,
+    "customer_track_id": 8,
+    "started_at": 33.5,
+    "last_seen_at": 36.5,
+    "distance_px": 102.27,
+    "active": true,
+    "duration_seconds": 3.0
+  },
+  {
+    "employee_track_id": 1,
+    "customer_track_id": 8,
+    "started_at": 33.5,
+    "last_seen_at": 37.0,
+    "distance_px": 98.06,
+    "active": true,
+    "duration_seconds": 3.5
+  },
+  {
+    "employee_track_id": 1,
+    "customer_track_id": 8,
+    "started_at": 33.5,
+    "last_seen_at": 37.5,
+    "distance_px": 134.23,
+    "active": true,
+    "duration_seconds": 4.0
+  },
+  {
+    "employee_track_id": 1,
+    "customer_track_id": 8,
+    "started_at": 33.5,
+    "last_seen_at": 38.0,
+    "distance_px": 132.83,
+    "active": true,
+    "duration_seconds": 4.5
+  },
+  {
+    "employee_track_id": 1,
+    "customer_track_id": 8,
+    "started_at": 33.5,
+    "last_seen_at": 38.5,
+    "distance_px": 95.16,
+    "active": true,
+    "duration_seconds": 5.0
+  },
+  {
+    "employee_track_id": 1,
+    "customer_track_id": 8,
+    "started_at": 33.5,
+    "last_seen_at": 39.0,
+    "distance_px": 110.04,
+    "active": true,
+    "duration_seconds": 5.5
+  },
+  {
+    "employee_track_id": 1,
+    "customer_track_id": 8,
+    "started_at": 33.5,
+    "last_seen_at": 39.5,
+    "distance_px": 95.48,
+    "active": true,
+    "duration_seconds": 6.0
+  },
+  {
+    "employee_track_id": 1,
+    "customer_track_id": 8,
+    "started_at": 33.5,
+    "last_seen_at": 40.0,
+    "distance_px": 107.22,
+    "active": true,
+    "duration_seconds": 6.5
+  },
+  {
+    "employee_track_id": 1,
+    "customer_track_id": 8,
+    "started_at": 33.5,
+    "last_seen_at": 40.5,
+    "distance_px": 122.7,
+    "active": true,
+    "duration_seconds": 7.0
+  },
+  {
+    "employee_track_id": 1,
+    "customer_track_id": 8,
+    "started_at": 33.5,
+    "last_seen_at": 41.0,
+    "distance_px": 102.76,
+    "active": true,
+    "duration_seconds": 7.5
+  },
+  {
+    "employee_track_id": 1,
+    "customer_track_id": 8,
+    "started_at": 33.5,
+    "last_seen_at": 41.5,
+    "distance_px": 136.01,
+    "active": true,
+    "duration_seconds": 8.0
+  },
+  {
+    "employee_track_id": 1,
+    "customer_track_id": 8,
+    "started_at": 33.5,
+    "last_seen_at": 42.0,
+    "distance_px": 116.01,
+    "active": true,
+    "duration_seconds": 8.5
+  },
+  {
+    "employee_track_id": 1,
+    "customer_track_id": 8,
+    "started_at": 33.5,
+    "last_seen_at": 42.5,
+    "distance_px": 111.38,
+    "active": true,
+    "duration_seconds": 9.0
+  },
+  {
+    "employee_track_id": 1,
+    "customer_track_id": 8,
+    "started_at": 33.5,
+    "last_seen_at": 43.0,
+    "distance_px": 130.15,
+    "active": true,
+    "duration_seconds": 9.5
+  },
+  {
+    "employee_track_id": 1,
+    "customer_track_id": 8,
+    "started_at": 33.5,
+    "last_seen_at": 43.5,
+    "distance_px": 133.12,
+    "active": true,
+    "duration_seconds": 10.0
+  },
+  {
+    "employee_track_id": 1,
+    "customer_track_id": 8,
+    "started_at": 33.5,
+    "last_seen_at": 44.0,
+    "distance_px": 129.56,
+    "active": true,
+    "duration_seconds": 10.5
+  },
+  {
+    "employee_track_id": 1,
+    "customer_track_id": 8,
+    "started_at": 33.5,
+    "last_seen_at": 44.0,
+    "distance_px": 129.56,
+    "active": true,
+    "duration_seconds": 10.5
+  },
+  {
+    "employee_track_id": 1,
+    "customer_track_id": 8,
+    "started_at": 33.5,
+    "last_seen_at": 44.0,
+    "distance_px": 129.56,
+    "active": true,
+    "duration_seconds": 10.5
+  },
+  {
+    "employee_track_id": 1,
+    "customer_track_id": 8,
+    "started_at": 33.5,
+    "last_seen_at": 44.0,
+    "distance_px": 129.56,
+    "active": true,
+    "duration_seconds": 10.5
+  },
+  {
+    "employee_track_id": 1,
+    "customer_track_id": 8,
+    "started_at": 33.5,
+    "last_seen_at": 44.0,
+    "distance_px": 129.56,
+    "active": false,
+    "duration_seconds": 10.5
+  }
+]

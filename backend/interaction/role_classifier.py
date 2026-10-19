@@ -26,6 +26,8 @@ class RoleClassifier:
         self.model = model
         self.agent = CustEmpClassifier(threshold=config.employee_score_threshold)
         self._history: dict[int, _TrackHistory] = {}
+        self._role_frame: np.ndarray | None = None
+        self._role_detections: list[tuple[tuple[float, ...], str, float]] = []
 
     def classify(
         self, frame: np.ndarray, bbox: tuple[int, int, int, int], track_id: int, timestamp: float
@@ -92,20 +94,20 @@ class RoleClassifier:
         return history
 
     def _classify_with_model(self, frame: np.ndarray, bbox: tuple[int, int, int, int]) -> tuple[str, float] | None:
-        x1, y1, x2, y2 = bbox
-        crop = frame[max(0, y1):max(y1 + 1, y2), max(0, x1):max(x1 + 1, x2)]
-        if crop.size == 0:
-            return None
-        results = self.model(crop, verbose=False, conf=self.config.confidence, device=self.config.device)
-        for result in results:
-            for box in result.boxes:
-                label = str(result.names[int(box.cls[0])]).lower()
-                score = float(box.conf[0])
-                if label in self.config.role_model_employee_labels:
-                    return "employee", score
-                if label in {"customer", "person"}:
-                    return "customer", score
-        return None
+        """Run the role model once on the full frame and take the detection that best overlaps this person.
+
+        Cropping let an overlapping neighbour's bib leak into the wrong person's crop.
+        """
+        if frame is not self._role_frame:
+            self._role_frame, self._role_detections = frame, []
+            for result in self.model(frame, verbose=False, conf=self.config.confidence, device=self.config.device):
+                for box in result.boxes:
+                    label = str(result.names[int(box.cls[0])]).lower()
+                    role = "employee" if label in self.config.role_model_employee_labels else "customer" if label in {"customer", "person"} else None
+                    if role:
+                        self._role_detections.append((tuple(box.xyxy[0].tolist()), role, float(box.conf[0])))
+        overlap, role, score = max(((_iou(bbox, box), role, score) for box, role, score in self._role_detections), default=(0.0, None, 0.0))
+        return (role, score) if overlap >= 0.4 else None
 
     def _classify_bib_colour(self, frame: np.ndarray, bbox: tuple[int, int, int, int]) -> tuple[str, float]:
         """Measure bib colour in the middle torso, avoiding face/legs/background."""
@@ -122,6 +124,13 @@ class RoleClassifier:
         if coverage >= self.config.bib_min_coverage:
             return "employee", min(1.0, coverage / max(self.config.bib_min_coverage, 1e-6))
         return "customer", min(1.0, 1.0 - coverage)
+
+
+def _iou(a: tuple[float, ...], b: tuple[float, ...]) -> float:
+    width = max(0.0, min(a[2], b[2]) - max(a[0], b[0]))
+    height = max(0.0, min(a[3], b[3]) - max(a[1], b[1]))
+    inter = width * height
+    return inter / max(1e-6, (a[2] - a[0]) * (a[3] - a[1]) + (b[2] - b[0]) * (b[3] - b[1]) - inter)
 
 
 @dataclass

@@ -1,0 +1,179 @@
+{
+  "weights": {
+    "yolo": 0.55,
+    "bib_colour": 0.3,
+    "staff_zone": 0.1,
+    "stationary": 0.05
+  },
+  "threshold": 0.45,
+  "people": [
+    {
+      "track_id": 1,
+      "first_seen": 0.0,
+      "last_seen": 67.5,
+      "frames_observed": 135,
+      "role": "employee",
+      "employee_score": 0.825,
+      "factors": {
+        "yolo": 0.949,
+        "bib_colour": 1.0,
+        "staff_zone": 0.0,
+        "stationary": 0.058
+      },
+      "contributions": {
+        "yolo": 0.522,
+        "bib_colour": 0.3,
+        "staff_zone": 0.0,
+        "stationary": 0.003
+      },
+      "role_segments": [
+        {
+          "role": "employee",
+          "from": 0.0,
+          "to": 67.5,
+          "frames": 135
+        }
+      ]
+    },
+    {
+      "track_id": 2,
+      "first_seen": 1.5,
+      "last_seen": 17.0,
+      "frames_observed": 30,
+      "role": "customer",
+      "employee_score": 0.0,
+      "factors": {
+        "yolo": -0.958,
+        "bib_colour": 0.0,
+        "staff_zone": 0.0,
+        "stationary": 0.036
+      },
+      "contributions": {
+        "yolo": -0.527,
+        "bib_colour": 0.0,
+        "staff_zone": 0.0,
+        "stationary": 0.002
+      },
+      "role_segments": [
+        {
+          "role": "customer",
+          "from": 1.5,
+          "to": 17.0,
+          "frames": 30
+        }
+      ]
+    },
+    {
+      "track_id": 4,
+      "first_seen": 15.5,
+      "last_seen": 16.0,
+      "frames_observed": 2,
+      "role": "customer",
+      "employee_score": 0.0,
+      "factors": {
+        "yolo": -0.889,
+        "bib_colour": 0.0,
+        "staff_zone": 0.0,
+        "stationary": 0.0
+      },
+      "contributions": {
+        "yolo": -0.489,
+        "bib_colour": 0.0,
+        "staff_zone": 0.0,
+        "stationary": 0.0
+      },
+      "role_segments": [
+        {
+          "role": "customer",
+          "from": 15.5,
+          "to": 16.0,
+          "frames": 2
+        }
+      ]
+    },
+    {
+      "track_id": 7,
+      "first_seen": 17.5,
+      "last_seen": 17.5,
+      "frames_observed": 1,
+      "role": "customer",
+      "employee_score": 0.0,
+      "factors": {
+        "yolo": -0.772,
+        "bib_colour": 0.0,
+        "staff_zone": 0.0,
+        "stationary": 0.0
+      },
+      "contributions": {
+        "yolo": -0.425,
+        "bib_colour": 0.0,
+        "staff_zone": 0.0,
+        "stationary": 0.0
+      },
+      "role_segments": [
+        {
+          "role": "customer",
+          "from": 17.5,
+          "to": 17.5,
+          "frames": 1
+        }
+      ]
+    },
+    {
+      "track_id": 8,
+      "first_seen": 33.5,
+      "last_seen": 48.5,
+      "frames_observed": 26,
+      "role": "customer",
+      "employee_score": 0.0,
+      "factors": {
+        "yolo": -0.948,
+        "bib_colour": 0.0,
+        "staff_zone": 0.0,
+        "stationary": 0.005
+      },
+      "contributions": {
+        "yolo": -0.521,
+        "bib_colour": 0.0,
+        "staff_zone": 0.0,
+        "stationary": 0.0
+      },
+      "role_segments": [
+        {
+          "role": "customer",
+          "from": 33.5,
+          "to": 48.5,
+          "frames": 26
+        }
+      ]
+    },
+    {
+      "track_id": 12,
+      "first_seen": 45.0,
+      "last_seen": 50.0,
+      "frames_observed": 7,
+      "role": "customer",
+      "employee_score": 0.0,
+      "factors": {
+        "yolo": -0.849,
+        "bib_colour": 0.143,
+        "staff_zone": 0.0,
+        "stationary": 0.0
+      },
+      "contributions": {
+        "yolo": -0.467,
+        "bib_colour": 0.043,
+        "staff_zone": 0.0,
+        "stationary": 0.0
+      },
+      "role_segments": [
+        {
+          "role": "customer",
+          "from": 45.0,
+          "to": 50.0,
+          "frames": 7
+        }
+      ]
+    }
+  ]
+}

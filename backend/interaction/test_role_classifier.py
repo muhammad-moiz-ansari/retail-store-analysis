@@ -37,3 +37,22 @@ def test_role_flicker_shorter_than_hold_is_ignored_but_sustained_change_switches
     for t in (3.0, 4.0, 5.0):
         assert classifier.classify(grey, box, 1, t)[0] == "employee"  # held < 3 s
     assert classifier.classify(grey, box, 1, 6.0)[0] == "customer"  # held 3 s -> switch
+
+
+def test_full_frame_role_detection_is_matched_to_the_right_overlapping_person() -> None:
+    class Box:
+        def __init__(self, xyxy, cls, conf):
+            self.xyxy, self.cls, self.conf = np.array([xyxy], float), np.array([cls]), np.array([conf])
+
+    class Result:
+        names = {0: "employee", 1: "customer"}
+        boxes = [Box((100, 50, 200, 400), 0, 0.9), Box((160, 60, 300, 470), 1, 0.8)]
+
+    calls = []
+    model = lambda frame, **_: calls.append(1) or [Result()]
+    classifier = RoleClassifier(InteractionConfig(role_mode="model"), model)
+    frame = np.zeros((480, 640, 3), dtype=np.uint8)
+    assert classifier._classify_with_model(frame, (165, 55, 300, 470)) == ("customer", 0.8)
+    assert classifier._classify_with_model(frame, (100, 50, 205, 400)) == ("employee", 0.9)
+    assert classifier._classify_with_model(frame, (500, 50, 600, 400)) is None  # nobody there
+    assert len(calls) == 1  # one role-model pass per frame, not per person

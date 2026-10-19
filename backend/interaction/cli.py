@@ -18,7 +18,7 @@ def main() -> None:
     parser.add_argument("video", type=Path)
     parser.add_argument("--output", type=Path, default=Path("interaction_output.mp4"))
     parser.add_argument("--roles", type=Path, help="YOLO role model trained on the bib-labelled dataset")
-    parser.add_argument("--every", type=int, default=1, help="Process every Nth frame")
+    parser.add_argument("--every", type=int, default=1, help="Score roles on every Nth frame (tracking always runs on every frame)")
     parser.add_argument("--device", default="cpu", help="Inference device, e.g. cpu or cuda:0")
     args = parser.parse_args()
     cap = cv2.VideoCapture(str(args.video))
@@ -47,6 +47,9 @@ def main() -> None:
                 else:
                     segments.append({"role": person["role"], "from": result["timestamp"], "to": result["timestamp"], "frames": 1})
             writer.write(draw_result(frame, result))
+        else:
+            # Keep the tracker fed every frame so IDs survive crossings; roles are only scored on sampled frames.
+            pipeline.tracker.detect_and_track(frame, frame_number / (fps or 25))
         frame_number += 1
     cap.release()
     writer.release()
