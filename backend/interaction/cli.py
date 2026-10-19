@@ -29,7 +29,7 @@ def main() -> None:
     fps, width, height = cap.get(cv2.CAP_PROP_FPS), int(cap.get(3)), int(cap.get(4))
     writer = cv2.VideoWriter(str(args.output), cv2.VideoWriter_fourcc(*"mp4v"), fps or 25, (width, height))
     pipeline = InteractionPipeline(InteractionConfig(role_model=args.roles, device=args.device))
-    frame_number, all_events, tracks, detections = 0, [], {}, []
+    frame_number, interactions, tracks, detections = 0, {}, {}, []
     started = time.perf_counter()
     while True:
         ok, frame = cap.read()
@@ -37,8 +37,11 @@ def main() -> None:
             break
         if frame_number % max(1, args.every) == 0:
             result = pipeline.process_frame(frame, frame_number / (fps or 25))
-            all_events.extend(result["interactions"])
-            detections.append({"frame": frame_number, "timestamp": round(result["timestamp"], 2), "people": result["people"]})
+            for event in result["interactions"]:
+                # One record per interaction: later snapshots overwrite earlier ones with the final state.
+                interactions[(event["employee_track_id"], event["customer_track_id"], event["started_at"])] = event
+            detections.append({"frame": frame_number, "timestamp": round(result["timestamp"], 2),
+                               "interaction_active": result["interaction_active"], "people": result["people"]})
             for person in result["people"]:
                 track = tracks.setdefault(person["track_id"], {"first_seen": result["timestamp"], "factors": []})
                 track["last_seen"] = result["timestamp"]
@@ -58,7 +61,7 @@ def main() -> None:
     elapsed, duration = time.perf_counter() - started, frame_number / (fps or 25)
     print(f"processed {duration:.1f}s of video in {elapsed:.1f}s ({duration / elapsed:.2f}x realtime)")
     writer.release()
-    args.output.with_suffix(".json").write_text(json.dumps(all_events, indent=2), encoding="utf-8")
+    args.output.with_suffix(".json").write_text(json.dumps(list(interactions.values()), indent=2), encoding="utf-8")
     args.output.with_suffix(".detections.json").write_text(json.dumps(detections, indent=2), encoding="utf-8")
     people = [
         {"track_id": track_id, "first_seen": round(t["first_seen"], 2), "last_seen": round(t["last_seen"], 2),
