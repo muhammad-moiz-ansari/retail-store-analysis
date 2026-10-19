@@ -54,6 +54,8 @@ class InteractionPipeline:
             "employee_count": employees,
             "customer_count": customers,
             "interactions": [event.to_dict() for event in events],
+            # On while any employee/customer interaction past min_interaction_seconds is ongoing.
+            "interaction_active": any(event.active for event in events),
         }
 
 

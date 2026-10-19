@@ -31,4 +31,7 @@ def draw_result(frame: np.ndarray, result: dict) -> np.ndarray:
             cv2.putText(annotated, f'{event["duration_seconds"]:.1f}s {event["measured_by"]} {event["distance_body_heights"]:.2f}h', a, cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
     summary = f'Employees: {result["employee_count"]}  Customers: {result["customer_count"]}'
     cv2.putText(annotated, summary, (12, 28), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (255, 255, 255), 2)
+    on = result["interaction_active"]
+    cv2.rectangle(annotated, (12, 40), (232, 72), (0, 200, 0) if on else (80, 80, 80), -1)
+    cv2.putText(annotated, f'INTERACTION: {"ON" if on else "OFF"}', (20, 63), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
     return annotated
