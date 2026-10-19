@@ -54,3 +54,9 @@ coverage/
 # Build info
 *.tsbuildinfo
 *.sqlite3
+models/
+
+# Local floor-distance inputs and generated diagnostics
+/data/videos/raw/
+/data/outputs/
+/data/calibration/

@@ -1,0 +1,6 @@
+{
+  "reference_kind": "illustrative",
+  "note": "Replace all examples with withheld independently measured points/separations in the calibrated reference frame. For other frames, use verified alignment. Region labels: near/middle/far; visibility labels: visible/occluded. Do not use fitting points as withheld data.",
+  "points": [{"image_xy_px": [300, 300], "floor_xy_m": [1, 2], "region": "middle", "visibility": "visible", "status": "observed_proxy"}],
+  "pairs": [{"image_a_px": [250, 300], "image_b_px": [350, 300], "known_distance_m": 1, "region": "middle", "visibility": "visible", "status": "observed_proxy"}]
+}
