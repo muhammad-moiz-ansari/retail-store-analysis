@@ -22,10 +22,16 @@ class InteractionConfig:
     stationary_distance_px: float = 18.0
     staff_zone_dwell_seconds: float = 12.0
     role_smoothing: float = 0.65
-    employee_score_threshold: float = 0.60
+    employee_score_threshold: float = 0.45
+    role_hold_seconds: float = 3.0
     confidence: float = 0.35
-    tracker: str = "bytetrack.yaml"
+    tracker: str = str(Path(__file__).with_name("botsort_reid.yaml"))
     interaction_distance_px: float = 180.0
+    # ID memory: a person lost mid-frame (not at a left/right edge) is assumed hidden and
+    # gets their old ID back if a similar-looking person appears mid-frame within relink_seconds.
+    exit_edge_margin: float = 0.05
+    relink_seconds: float = 5.0
+    relink_min_similarity: float = 0.90
     min_interaction_seconds: float = 2.0
     max_missing_seconds: float = 1.5
     device: str = "cpu"

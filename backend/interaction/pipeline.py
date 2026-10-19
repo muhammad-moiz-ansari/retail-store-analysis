@@ -32,7 +32,7 @@ class InteractionPipeline:
                 track_id=item["track_id"], bbox=item["bbox"], confidence=item["confidence"],
                 role=role, role_confidence=role_confidence, role_evidence=evidence,
             )
-            for item in self.tracker.detect_and_track(frame)
+            for item in self.tracker.detect_and_track(frame, timestamp)
             for role, role_confidence, evidence in [
                 self.classifier.classify(frame, item["bbox"], item["track_id"], timestamp)
             ]
