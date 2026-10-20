@@ -6,6 +6,11 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Literal
 
+try:
+    from ..device import DEVICE
+except ImportError:
+    from device import DEVICE
+
 
 @dataclass(slots=True)
 class InteractionConfig:
@@ -43,4 +48,4 @@ class InteractionConfig:
     relink_min_similarity: float = 0.90
     min_interaction_seconds: float = 2.0
     max_missing_seconds: float = 1.5
-    device: str = "cpu"
+    device: str = DEVICE

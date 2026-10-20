@@ -4,6 +4,10 @@ import hashlib
 from pathlib import Path
 from types import SimpleNamespace
 
+try:
+    from ..device import DEVICE
+except ImportError:
+    from device import DEVICE
 from .core import normalized
 from .cv_contracts import ModelVersion
 
@@ -58,7 +62,7 @@ class CVModels:
     def track(self, frame, tracker):
         # Ultralytics maps letterboxed predictions back to the original source image.
         result = self.detector.predict(frame, imgsz=960, rect=False, classes=[0], conf=0.1,
-                                       device="cpu", verbose=False)[0]
+                                       device=DEVICE, verbose=False)[0]
         self.last_detections = [{"bbox": box, "confidence": score} for box, score in
                                 zip(result.boxes.xyxy.cpu().tolist(), result.boxes.conf.cpu().tolist())]
         tracks = tracker.update(result.boxes.cpu().numpy(), img=frame)
@@ -68,7 +72,7 @@ class CVModels:
     def poses(self, frame):
         if self.pose is None or self.orientation_head is not None:
             return []
-        result = self.pose.predict(frame, imgsz=960, rect=False, device="cpu", verbose=False)[0]
+        result = self.pose.predict(frame, imgsz=960, rect=False, device=DEVICE, verbose=False)[0]
         if result.keypoints is None:
             return []
         return [{"bbox": box, "keypoints": points} for box, points in

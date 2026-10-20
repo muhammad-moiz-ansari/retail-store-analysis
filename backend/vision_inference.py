@@ -2,6 +2,11 @@
 import os
 from pathlib import Path
 
+try:
+    from .device import DEVICE
+except ImportError:
+    from device import DEVICE
+
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -23,5 +28,5 @@ def load_model(path):
 
 
 def track_frame(model, frame, classes=None):
-    return model.track(frame, persist=True, classes=classes, device="cpu",
+    return model.track(frame, persist=True, classes=classes, device=DEVICE,
                        verbose=False, tracker="bytetrack.yaml")
