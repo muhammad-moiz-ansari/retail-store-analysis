@@ -42,7 +42,7 @@ def draw_detections(frame, detections):
 def common_parser(description):
     p = argparse.ArgumentParser(description=description)
     p.add_argument("--video", type=Path, required=True)
-    p.add_argument("--model", type=Path, default=ROOT / "models/best.pt")
+    p.add_argument("--model", type=Path, default=ROOT / "backend/models/best.pt")
     p.add_argument("--output-dir", type=Path, default=ROOT / "data/outputs/distance/preview")
     p.add_argument("--max-frames", type=int, default=0, help="Maximum processed frames, 0 = whole clip")
     p.add_argument("--sample-every", type=int, default=1)

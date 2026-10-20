@@ -1,6 +1,6 @@
 # Provisional floor-distance prototype
 
-The trained local `models/best.pt` is reused without retraining or replacement.
+The trained `backend/models/best.pt` (shared with the interaction pipeline) is reused without retraining or replacement.
 Its classes are `0: employee`, `1: customer`. The local clip is 1080 × 1080,
 4421 frames, nominal 59.822989 FPS (about 74 seconds). Actual decoded timestamps
 are exported; nominal FPS sets output playback while reference selection seeks
@@ -227,5 +227,5 @@ a stationary final camera; create and independently evaluate its own calibration
 
 Raw footage, all real calibration data and generated diagnostics remain ignored
 under `/data/videos/raw/`, `/data/calibration/`, `/data/outputs/`. Trained weights
-stay in their existing ignored `models/` location. Source, examples, schema and
+stay in tracked `backend/models/`. Source, examples, schema and
 documentation are tracked. No frontend or staffing/orchestration layer was changed.
