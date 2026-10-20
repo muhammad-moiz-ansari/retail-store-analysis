@@ -1,4 +1,3 @@
-from datetime import datetime
 from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
@@ -77,39 +76,7 @@ class CustomerEntryRule(StrictModel):
         )
 
 
-class JobRequest(StrictModel):
-    camera_id: Identifier
-    source: str = Field(min_length=1, max_length=2048)
-    source_type: Literal["video", "live"] = "video"
-    mode: Literal["review", "engagement"] = "review"
-    start_time: datetime
-    employee_shift: str = Field(default="Unassigned", min_length=1, max_length=80)
-    sample_every: int = Field(default=3, ge=1, le=60)
-    max_seconds: float = Field(default=300, gt=0, le=86400)
-
-    @field_validator("start_time")
-    @classmethod
-    def aware_time(cls, value):
-        if value.tzinfo is None or value.utcoffset() is None:
-            raise ValueError("start_time must include a timezone")
-        return value
-
-
-class LabelRequest(StrictModel):
-    role: Literal["employee", "customer", "unknown"]
-
-
 class RoleAssignmentRequest(StrictModel):
     role: Literal["employee", "unknown"]
     assigned_by: str = Field(min_length=1, max_length=120)
     reason: str | None = Field(default=None, max_length=500)
-
-
-class CalibrationRequest(StrictModel):
-    track_ids: list[str] = Field(min_length=2, max_length=200)
-
-    @model_validator(mode="after")
-    def unique(self):
-        if len(self.track_ids) != len(set(self.track_ids)):
-            raise ValueError("Reference tracks must be unique")
-        return self

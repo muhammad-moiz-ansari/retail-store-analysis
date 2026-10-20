@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
-import { RetroButton, RetroCard, RetroInput, RetroWindow } from "@/components/ui";
+import { RetroButton, RetroInput, RetroWindow } from "@/components/ui";
 
 type Handoff = {
   status: "confirmed" | "uncertain" | "unmatched";

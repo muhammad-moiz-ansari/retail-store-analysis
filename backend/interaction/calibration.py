@@ -47,6 +47,3 @@ class RoleEstimator:
         if abs(fused) < self.calibration.margin or (fused > 0) != (visual_margin > 0):
             return "unknown", evidence, "conflicting_prior"
         return role, evidence, None
-
-    def discard(self, track_id):
-        self.history.pop(track_id, None)

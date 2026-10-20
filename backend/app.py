@@ -20,7 +20,6 @@ from .store_core import (
     create_invitation,
     get_setting,
     now_iso,
-    public_user,
     row_to_dict,
     set_setting,
     settings_snapshot,
@@ -375,7 +374,7 @@ def dispatch_task(body: dict) -> dict:
             conn.commit()
             raise HTTPException(status_code=409, detail="No eligible employee is available")
         instruction = str(body.get("instruction") or "Please assist customers in the requested zone.")
-        task_id = create_task_for_employee(
+        create_task_for_employee(
             conn,
             employee["id"],
             instruction,

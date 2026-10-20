@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import sys
 import time
 import uuid
 from pathlib import Path

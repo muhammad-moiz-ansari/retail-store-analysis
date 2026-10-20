@@ -69,16 +69,16 @@ export default function StyleGuidePage() {
             { name: "bg", hex: "#EDE0C8" },
             { name: "surface", hex: "#F7EFDD" },
             { name: "surface-alt", hex: "#E4D4B0" },
-            { name: "border", hex: "#4A2E1E", light: true },
-            { name: "border-soft", hex: "#8B6A4A", light: true },
-            { name: "accent", hex: "#C1652F", light: true },
-            { name: "accent-hover", hex: "#A6521F", light: true },
+            { name: "border", hex: "#4A2E1E" },
+            { name: "border-soft", hex: "#8B6A4A" },
+            { name: "accent", hex: "#C1652F" },
+            { name: "accent-hover", hex: "#A6521F" },
             { name: "accent-soft", hex: "#E8B84B" },
-            { name: "success", hex: "#4C7A5A", light: true },
-            { name: "danger", hex: "#B5432E", light: true },
-            { name: "text", hex: "#2E1F14", light: true },
-            { name: "text-muted", hex: "#6B5642", light: true },
-          ].map(({ name, hex, light }) => (
+            { name: "success", hex: "#4C7A5A" },
+            { name: "danger", hex: "#B5432E" },
+            { name: "text", hex: "#2E1F14" },
+            { name: "text-muted", hex: "#6B5642" },
+          ].map(({ name, hex }) => (
             <div
               key={name}
               className="rounded-lg border border-border-soft overflow-hidden"

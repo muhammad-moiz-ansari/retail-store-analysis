@@ -66,16 +66,6 @@ class TrackObservation(StrictModel):
             raise ValueError("UTC anchor must be timezone aware")
         return self
 
-    def event_observation(self):
-        """Use the cross-camera global ID in the existing event engine."""
-        from .core import Observation
-        x1, y1, x2, y2 = self.bbox
-        diagonal = math.hypot(*self.source_size)
-        return Observation(self.global_person_id, self.role, ((x1 + x2) / (2 * diagonal),
-                           (y1 + y2) / (2 * diagonal)), self.orientation.vector,
-                           self.orientation.confidence or 0, self.zone)
-
-
 class FrameResult(StrictModel):
     schema_version: Literal[1] = 1
     store_id: Identifier

@@ -27,10 +27,6 @@ export function createSession(session: Omit<SessionPayload, "exp">, ttlSeconds =
   return `${payload}.${signPayload(payload)}`;
 }
 
-export function createManagerSession(email: string, ttlSeconds = 60 * 60 * 8) {
-  return createSession({ role: "Manager", email }, ttlSeconds);
-}
-
 export function verifySession(token?: string | null): SessionPayload | null {
   if (!token) return null;
   const [payload, signature] = token.split(".");
@@ -46,13 +42,4 @@ export function verifySession(token?: string | null): SessionPayload | null {
   } catch {
     return null;
   }
-}
-
-export function verifyManagerSession(token?: string | null): SessionPayload | null {
-  const session = verifySession(token);
-  return session?.role === "Manager" ? session : null;
-}
-
-export function acceptsDemoCredential(email: string, password: string) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && password.length >= 6;
 }
