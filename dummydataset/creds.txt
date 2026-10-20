@@ -1,2 +1,0 @@
-Manager: manager@retailpulse.local / 123456
-Employee:employee@retailpulse.local / 123456

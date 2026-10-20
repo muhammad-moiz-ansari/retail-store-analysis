@@ -69,3 +69,10 @@ yolo26n-cls.pt
 .claude/
 # Claude Code local state (worktrees, settings)
 .claude/
+
+# Generated outputs, uppercase-extension media, local credentials
+/outputs/
+/backend/output/
+*.MOV
+*.MP4
+dummydataset/creds.txt
