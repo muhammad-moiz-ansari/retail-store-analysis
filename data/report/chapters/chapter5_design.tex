@@ -1,0 +1,170 @@
+\chapter{System Design}
+\label{ch:design}
+\section{System Architecture}
+RetailPulse is a coordinated multi-agent pipeline orchestrated with LangGraph. Each agent owns a distinct responsibility, and outputs are reconciled against the same tracked entities before reaching the dashboard. Camera feeds flow through detection, classification, engagement, and trajectory analysis to the orchestrator, and then to the Next.js frontend. The Insight Narration agent runs on demand.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[>=Stealth, font=\small, node distance=0.55cm,
+ box/.style={draw,rectangle,minimum width=7.2cm,minimum height=0.8cm,align=center}]
+\node[box] (cam) {Camera feeds (entrance, floor 1, floor 2)};
+\node[box,below=of cam] (det) {Detection Agent: person detection (YOLO)};
+\node[box,below=of det] (cls) {Classification Agent: staff vs.\ customer (non-biometric)};
+\node[box,below=of cls] (floor) {Floor mapping + quality checks (implemented CLI prototype)};
+\node[box,below=of floor] (eng) {Engagement Agent: approach time, interaction, idle};
+\node[box,below=of eng] (tra) {Trajectory Agent: paths, dwell time, heatmaps};
+\node[box,below=of tra] (orc) {Orchestrator (LangGraph): reconcile per entity};
+\node[box,below=of orc] (dash) {Dashboard output (Next.js)};
+\node[box,right=1.2cm of orc,minimum width=3.2cm] (nar) {Insight Narration\\ Agent (on demand)};
+\foreach \a/\b in {cam/det,det/cls,cls/floor,floor/eng,eng/tra,tra/orc,orc/dash} \draw[->] (\a) -- (\b);
+\draw[<->] (orc) -- (nar);
+\end{tikzpicture}
+\caption{RetailPulse target multi-agent pipeline; floor outputs are currently exported by CLI and their downstream integration is pending}
+\label{fig:arch}
+\end{figure}
+
+The application tier is separate from the vision pipeline. The Next.js frontend serves the pages and proxies backend calls. A local FastAPI service exposes \texttt{/pos/*} for POS analytics and \texttt{/camera/*} for camera-handoff jobs.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[>=Stealth, font=\small,
+ box/.style={draw,rectangle,minimum width=2.4cm,minimum height=1cm,align=center,font=\scriptsize}]
+\node[box] (br) {Browser\\ (Manager / Employee)};
+\node[box,right=0.9cm of br] (nx) {Next.js\\ (port 3000)\\ pages + proxy};
+\node[box,right=0.9cm of nx] (fa) {FastAPI\\ (port 8011)\\ /pos/*, /camera/*};
+\node[box,below=1.1cm of fa] (db) {SQLite\\ (POS data)};
+\node[box,right=0.9cm of fa] (cv) {YOLO + ByteTrack\\ handoff job};
+\draw[<->] (br) -- node[above]{session cookie} (nx);
+\draw[<->] (nx) -- node[above]{secret header} (fa);
+\draw[<->] (fa) -- (db);
+\draw[->] (fa) -- (cv);
+\end{tikzpicture}
+\caption{Application tier and service boundaries}
+\label{fig:tiers}
+\end{figure}
+
+\section{Architectural Components}
+\begin{table}[H]
+\centering
+\caption{Architectural components}
+\begin{tabular}{P{0.26\textwidth}P{0.62\textwidth}}
+\toprule
+Component & Description\\
+\midrule
+Frontend & Next.js (App Router) and React pages, Tailwind CSS styling, Recharts charts, and jsPDF export. UI primitives live in \texttt{src/components/ui}.\\
+Proxy layer & Next.js server-side routes that forward calls to FastAPI and attach the internal secret.\\
+POS service & FastAPI application with SQLite storage, CSV/XLSX import, metrics, forecasts, recommendations, and cited assistant evidence.\\
+Camera service & Queued handoff jobs, polled at \texttt{/camera/jobs/\{id\}}, that run \texttt{backend/camera\_handoff.py}.\\
+Vision agents & Detection, Classification, Engagement, and Trajectory agents; downstream web integration remains in progress.\\
+Floor-distance component & Reuses trained role detections and ByteTrack; checks foot proxies and camera alignment before floor projection and pair-distance export.\\
+Orchestrator & LangGraph graph that reconciles agent outputs.\\
+Narration agent & Produces natural-language summaries for reports.\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Interfaces and Dependencies}
+\begin{itemize}
+\item Browser to Next.js: HTTP, with a signed HttpOnly session cookie for manager routes.
+\item Next.js to FastAPI: HTTP on \texttt{127.0.0.1:8011}, carrying an internal secret header added server-side.
+\item FastAPI to SQLite: local database file for POS data.
+\item Handoff job to filesystem: inputs are two video files. The output is \path{backend/output/camera_handoff.json}.
+\item Floor CLI to filesystem: local video, weights and calibration JSON produce annotated video, top-down output and JSONL records under \path{data/outputs/distance/}. No floor-distance HTTP endpoint or frontend integration is claimed.
+\item Configuration: \texttt{POS\_SESSION\_SECRET} and \texttt{POS\_INTERNAL\_SECRET} environment variables.
+\item Key dependencies: Node.js 18+, Python 3.12+, YOLO implementation, ByteTrack, LangGraph, Recharts, jsPDF.
+\end{itemize}
+
+\section{Architecture Decisions and Rationale}
+\begin{table}[H]
+\centering
+\caption{Architecture decisions}
+\begin{tabular}{P{0.3\textwidth}P{0.58\textwidth}}
+\toprule
+Decision & Rationale\\
+\midrule
+Multi-agent pipeline with LangGraph & Separates concerns, allows testing each agent, and gives an explicit place (the orchestrator) to reconcile conflicts.\\
+CPU-only, lightweight YOLO & Matches hardware constraints and the target retailer.\\
+Non-biometric classification & Privacy-conscious design and simpler compliance.\\
+Next.js proxy with server-held secret & Keeps secrets and role checks out of the browser.\\
+SQLite for POS data & Zero-administration storage that suits a single-store prototype.\\
+Offline/batch processing & Real-time guarantees are not feasible on CPU for the committed scope.\\
+Calibrated planar floor mapping & Reuses camera/detector inputs and estimates floor separation without full 3D reconstruction.\\
+Quality gates before smoothing & Prevents smoothing or stale alignment from disguising unsupported geometry; predictions are excluded from supported pair measurements.\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Design Evolution}
+The initial proposal envisaged full multi-camera identity linking and a real-time dashboard. After feasibility triage, full re-identification was replaced by a conservative two-camera handoff MVP that keeps uncertain and unmatched cases visible, and processing was committed as offline/batch. A POS analytics pillar was added with deterministic metrics and cited assistant answers, so the dashboard offers verifiable insight even where vision output is still prototype data. Authentication was upgraded from client-side role flags to server-signed session cookies and an internal secret header.
+
+A separate single-camera floor-distance prototype now supplements the handoff MVP. Calibration, inference, projection and visualization are separated, and reference alignment is monitored before supported metric output. This does not create a common cross-camera coordinate system or complete interaction-event integration.
+
+\section{Domain Model}
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[font=\small, node distance=1.2cm and 1.6cm,
+ cls/.style={draw,rectangle,minimum width=2.6cm,minimum height=0.9cm,align=center}]
+\node[cls] (store) {Store};
+\node[cls,right=of store] (cam) {Camera};
+\node[cls,right=of cam] (zone) {Zone};
+\node[cls,below=of cam] (ent) {Tracked Entity\\ (staff / customer)};
+\node[cls,left=of ent] (emp) {Employee};
+\node[cls,right=of ent] (int) {Interaction Event};
+\node[cls,below=of store] (user) {User\\ (Manager / Employee)};
+\node[cls,below=of ent] (alert) {Alert};
+\node[cls,below=of int] (rep) {Report};
+\node[cls,below=of emp] (sale) {POS Sale / Product};
+\draw (store) -- (cam); \draw (cam) -- (zone); \draw (cam) -- (ent);
+\draw (ent) -- (int); \draw (emp) -- (ent); \draw (store) -- (user);
+\draw (ent) -- (alert); \draw (int) -- (rep); \draw (store) -- (sale);
+\end{tikzpicture}
+\caption{Conceptual domain model}
+\end{figure}
+
+\section{Data Design}
+POS data is stored in SQLite after CSV/XLSX import: products, categories, and sales records from which metrics, forecasts, and recommendations are derived. Vision outputs are produced per tracked entity as structured records (entity id, camera, class, zone visits, interaction events, and timestamps), and the handoff stage writes a JSON document of boundary events and associations (confirmed, uncertain, unmatched). \todo{replace this conceptual description with the actual table/column names and JSON schema from the repository}
+
+\subsection{Floor Calibration and Runtime Records}
+Versioned calibration JSON stores camera/calibration IDs, the video reference and timestamp, original frame dimensions, the coordinate-space definition, metre units, image/floor landmarks, an image-to-floor homography, operational/exclusion polygons, distortion metadata, motion/smoothing settings and fitting diagnostics. Measurement-status metadata identifies estimated calibration inputs.
+
+The local editable input is \path{data/calibration/queue_temp.landmarks.json}; generated calibration is \path{data/calibration/queue_temp.json}. The authoritative rectangle fields and original-frame landmark pixels are used to regenerate the matrix. A modified input with a stale stored matrix is rejected. Non-sensitive examples and the schema are stored under \path{config/cameras/}; footage, real calibration and diagnostics are excluded from Git.
+
+Runtime JSONL records store frame index, actual decoded timestamp, camera/calibration identity, track ID, role, joint detection/class confidence, pixel box and foot point, supported floor position, motion diagnostics, pair distances and explicit rejection reasons. Unavailable positions/distances are JSON \texttt{null}. \texttt{observed\_proxy} denotes an accepted box-bottom estimate, not verified foot visibility; \texttt{predicted} denotes short extrapolation and is excluded from supported pair measurements.
+
+\section{Process / Behavior Design}
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[>=Stealth, font=\small, node distance=0.5cm,
+ box/.style={draw,rectangle,minimum width=7.4cm,minimum height=0.75cm,align=center}]
+\node[box] (a) {Run YOLO + ByteTrack on each camera (every $n$-th frame)};
+\node[box,below=of a] (b) {Emit directional boundary events: cam1 right-side exit, cam2 left-side entry};
+\node[box,below=of b] (c) {Filter candidate pairs by synchronised time window};
+\node[box,below=of c] (d) {Compare HSV and shape appearance descriptors};
+\node[box,below=of d] (e) {Classify: confirmed / uncertain / unmatched};
+\node[box,below=of e] (f) {Assign stable Master ID to confirmed pairs; write JSON};
+\foreach \x/\y in {a/b,b/c,c/d,d/e,e/f} \draw[->] (\x) -- (\y);
+\end{tikzpicture}
+\caption{Camera-handoff process}
+\label{fig:handoff}
+\end{figure}
+
+For the planned engagement behaviour, a customer entity entering a floor zone starts an approach timer. The timer stops when a staff entity satisfies the interaction criteria (proximity and duration). If the threshold passes with no such interaction, the customer is flagged as unattended and an alert is raised. \todo{confirm the interaction criteria (distance, duration, orientation) as implemented}
+
+\subsection{Floor-Distance Quality-Gating Process}
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[>=Stealth,font=\small,node distance=0.45cm,
+ box/.style={draw,rectangle,text width=10.6cm,minimum height=0.7cm,align=center}]
+\node[box] (fd1) {Local frame $\rightarrow$ trained employee/customer detector $\rightarrow$ ByteTrack};
+\node[box,below=of fd1] (fd2) {Calculate original-pixel box-bottom proxy};
+\node[box,below=of fd2] (fd3) {Check frame geometry, floor coverage, exclusions and reference alignment};
+\node[box,below=of fd3] (fd4) {Supported: project to metres; unsupported: explicit unavailable state};
+\node[box,below=of fd4] (fd5) {Smooth accepted positions; gate jumps; exclude predictions from supported distances};
+\node[box,below=of fd5] (fd6) {Export provisional video, floor map, timestamps and quality records};
+\foreach \a/\b in {fd1/fd2,fd2/fd3,fd3/fd4,fd4/fd5,fd5/fd6} \draw[->] (\a) -- (\b);
+\end{tikzpicture}
+\caption{Floor-distance localization and quality-checking pipeline}
+\label{fig:floor-pipeline}
+\end{figure}
+
+The reference frame supports a provisional snapshot. Other frames require sufficient distributed static floor evidence within configured tolerances. A lack of matches is unverified alignment, not a stationary-camera decision. The current implementation monitors and rejects movement; it does not compensate for it. Metric smoothing cannot repair camera mapping errors. Combined interaction inference using trained roles, metric proximity and duration remains a future integration step; proximity alone is not proof of assistance.

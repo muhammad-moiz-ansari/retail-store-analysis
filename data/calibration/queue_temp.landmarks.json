@@ -1,0 +1,147 @@
+{
+  "schema_version": 1,
+  "camera_id": "queue_temp",
+  "calibration_id": "queue_temp_estimated_v1",
+  "source_reference": "data/videos/raw/queue_temp.mp4",
+  "reference_frame_index": 0,
+  "reference_timestamp_s": 0,
+  "frame_size": [
+    1080,
+    1080
+  ],
+  "coordinate_space": "original_distorted_pixels",
+  "floor_units": "m",
+  "measurements_status": "estimated",
+  "calibration_status": "provisional",
+  "measurement_notes": "Owner corrected edge order to A-B-D-C. Rectangle/right-angle assumption; estimated lengths, no independent measured validation.",
+  "supplied_measurements_ft": {
+    "A-B": 3.13225,
+    "B-D": 4.2075,
+    "D-C": 3.13225,
+    "C-A": 4.2075
+  },
+  "rectangle": {
+    "corner_order": [
+      "A",
+      "B",
+      "D",
+      "C"
+    ],
+    "width": 3.13225,
+    "depth_or_diagonal": 4.2075,
+    "units": "ft",
+    "interpretation": "width_and_depth"
+  },
+  "point_provenance": {
+    "marked_image": "Screenshot 2026-10-19 004318 - WITH MARKED POINTS.png",
+    "marked_image_size": [
+      479,
+      479
+    ],
+    "points_in_marked_image_px": {
+      "A": [
+        144.5,
+        353.5
+      ],
+      "B": [
+        349.3736263736264,
+        356.43956043956047
+      ],
+      "D": [
+        389.5,
+        435.5
+      ],
+      "C": [
+        110.5,
+        433.5
+      ]
+    },
+    "transformation": "Full-frame uniform resize to 1080x1080; pixel-centre mapping (p+0.5)*1080/479-0.5. No crop or letterbox. Source screenshot matched visually and by image difference to earliest video frame. Points remain approximate.",
+    "reference_choice": "frame 0 is closest among sampled frames and first 30 frames; screenshot is resized/modified and not an exact pixel reference"
+  },
+  "landmarks": [
+    {
+      "id": "A",
+      "image_xy_px": [
+        326.4311064718163,
+        797.6628392484342
+      ]
+    },
+    {
+      "id": "B",
+      "image_xy_px": [
+        788.3591158319759,
+        804.290658193581
+      ]
+    },
+    {
+      "id": "D",
+      "image_xy_px": [
+        878.8319415448851,
+        982.5480167014614
+      ]
+    },
+    {
+      "id": "C",
+      "image_xy_px": [
+        249.7713987473904,
+        978.0386221294364
+      ]
+    }
+  ],
+  "operational_region_px": [
+    [
+      326.4311064718163,
+      797.6628392484342
+    ],
+    [
+      788.3591158319759,
+      804.290658193581
+    ],
+    [
+      878.8319415448851,
+      982.5480167014614
+    ],
+    [
+      249.7713987473904,
+      978.0386221294364
+    ]
+  ],
+  "exclusion_regions_px": [],
+  "distortion": {
+    "handling": "uncorrected",
+    "intrinsics": null,
+    "coefficients": null,
+    "note": "Lens distortion unmeasured; no undistortion applied to either path"
+  },
+  "quality": {
+    "ransac_threshold_px": 3.0,
+    "bottom_margin_px": 4
+  },
+  "grid_step_m": 0.25,
+  "motion": {
+    "mode": "monitor",
+    "compensation": false,
+    "quality": {
+      "match_ratio": 0.75,
+      "min_inliers": 10,
+      "min_inlier_ratio": 0.65,
+      "min_spread_ratio": 0.15,
+      "ransac_threshold_px": 2.0,
+      "max_alignment_residual_px": 1.5,
+      "max_displacement_px": 2.0
+    },
+    "note": "Development thresholds only, not metre-accuracy guarantees. Reference-frame snapshot is permitted; other frames require supported floor alignment."
+  },
+  "smoothing": {
+    "tau_s": 0.25,
+    "max_speed_m_s": 3.0,
+    "jump_allowance_m": 0.2,
+    "prediction_s": 0.3,
+    "expire_s": 1.0
+  },
+  "independent_validation": {
+    "status": "pending",
+    "sample_count": 0
+  }
+}

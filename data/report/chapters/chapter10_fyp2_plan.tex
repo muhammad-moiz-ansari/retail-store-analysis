@@ -1,0 +1,65 @@
+\chapter{Remaining FYP Plan}
+\label{ch:fyp2plan}
+\section{Remaining Scope}
+Integrate and evaluate the vision agents, orchestrate them with LangGraph, bind real outputs to the dashboard, and prepare the final demonstration. Items listed as out of scope in Chapter~\ref{ch:intro} remain future work.
+
+\section{Remaining Modules and Features}
+\begin{itemize}
+\item Integrate and evaluate Detection, Classification, Engagement and Trajectory agents; the trained-role floor CLI is already implemented.
+\item Integrate supported metric proximity with trained roles and temporal evidence for interaction events, including close pass-bys that are not assistance.
+\item LangGraph orchestrator that reconciles per entity.
+\item Insight Narration agent over real analytics.
+\item Real data in Dashboard, Customer Info, Employee Info, Spatial Analytics, Alerts, and System Status.
+\item Improvements to the handoff stage within the committed two-camera scope.
+\item Replacement of demo authentication with proper credential handling.
+\end{itemize}
+
+\section{Remaining Iterations}
+\begin{table}[H]
+\centering
+\caption{Planned FYP-2 iterations}
+\begin{tabular}{P{0.15\textwidth}P{0.72\textwidth}}
+\toprule
+Iteration & Focus\\
+\midrule
+2 & Vision agents integrated through the orchestrator, real data in dashboard pages\\
+3 & Evaluation on labelled clips, tuning of thresholds and heuristics, alerts on real events\\
+4 & Hardening, security, performance, documentation, and final demonstration\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Implementation Plan}
+Bind agents one at a time to the dashboard, beginning with Detection and footfall, then Classification, Engagement, and Trajectory, keeping prototype data as a fallback until each agent passes its checks. Build the LangGraph graph with explicit state per tracked entity and a defined conflict-resolution rule set.
+
+\section{Testing and Validation Plan}
+Label a set of clips for staff/customer, interactions, and zone dwell. Report precision, recall, and error analysis per agent. Re-run Appendix test cases after each integration and record results. Check performance on CPU and record throughput.
+
+\section{Deployment Plan}
+The deliverable is a local deployment run with the documented \texttt{npm run dev:all} flow and production build commands (\texttt{npm run build}, \texttt{npm start}). A pilot with a real retail partner is future work.
+
+\section{Tentative Timeline}
+\begin{table}[H]
+\centering
+\caption{Tentative FYP-2 timeline (to be confirmed with the supervisor)}
+\begin{tabular}{P{0.2\textwidth}P{0.67\textwidth}}
+\toprule
+Period & Activity\\
+\midrule
+Weeks 1--3 & Detection and footfall integration, orchestrator skeleton\\
+Weeks 4--6 & Classification and engagement integration\\
+Weeks 7--9 & Trajectory, narration, dashboard binding\\
+Weeks 10--12 & Labelled role/interaction evaluation and tuning\\
+Weeks 13--14 & Hardening, security, documentation\\
+Weeks 15--16 & Final testing, demonstration, and report\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Expected Final Deliverables}
+\begin{itemize}
+\item Working RetailPulse system with real vision analytics and POS analytics.
+\item Evaluation report with detector/interaction results, floor-distance quality/coverage diagnostics and CPU throughput.
+\item Source repository with documentation and run instructions.
+\item Final report and demonstration.
+\end{itemize}

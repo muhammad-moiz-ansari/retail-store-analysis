@@ -1,0 +1,103 @@
+\chapter{Project Management and Development Evidence}
+\label{ch:mgmt}
+\section{Work Completed}
+\begin{itemize}
+\item Next.js application with manager, employee, and shared pages.
+\item POS analytics service with import, metrics, forecasts, recommendations, and cited assistant.
+\item Role-aware access with signed session cookies and an internal secret header.
+\item Reports with narrative summaries and PDF export.
+\item Experimental camera-handoff pipeline with web endpoint and job queue.
+\item Trained-role/ByteTrack foot-point preview and provisional floor-distance CLI: editable calibration, motion/reliability checks, metric smoothing and diagnostic exports.
+\item Executed 17 focused floor-distance checks and 4 existing handoff regression checks; actual sampled-video inference and output readability verified.
+\end{itemize}
+
+\section{Work Remaining}
+Integrating the vision agents with the dashboard, LangGraph orchestration, labelled detector/interaction evaluation, the Insight Narration agent on real data, and hardening. Details are in Chapter~\ref{ch:fyp2plan}.
+
+\section{Individual Responsibilities}
+\begin{table}[H]
+\centering
+\caption{Responsibilities}
+\begin{tabular}{P{0.25\textwidth}P{0.62\textwidth}}
+\toprule
+Member & Responsibility\\
+\midrule
+Moiz Ansari (23I-0523) & \todo{responsibilities}\\
+Saqib Atif (23I-0769) & \todo{responsibilities}\\
+Ruhab Ahmad (23I-0559) & \todo{responsibilities}\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Contribution of Each Team Member}
+\todo{describe each member's concrete contributions, using repository history as evidence}
+
+\section{Repository and Version Control Evidence}
+The project is kept in the Git repository \path{muhammad-moiz-ansari/retail-store-analysis} on GitHub. Work is organised on feature branches, and this report corresponds to the \path{feature/interaction-factors} branch.
+
+\section{Milestones and Commit Evidence}
+The floor-distance change comprises the four CLI entry points, separated backend geometry/calibration/motion/smoothing/evaluation modules, the shared inference helper, focused tests and usage documentation. A suitable change description is ``feat(vision): add provisional floor-distance estimation pipeline''. This is a suggested commit description, not evidence that a commit or tag was created. \todo{insert verified commit hashes, milestone/tag list and member attribution from repository history; see Appendix~\ref{app:repo}}
+
+\section{Tools and Tool-Assisted Development}
+Development tools include Node.js and npm, a Python virtual environment, Git and GitHub, and the libraries listed in Chapter~\ref{ch:iter1}. Codex assisted with the floor-distance implementation, diagnostic execution and report-source revision. Verification included focused automated tests, actual local trained-model/video runs, inspection of preview/grid outputs, export readability and record-invariant checks. \todo{confirm the complete tool-use disclosure and individual contributions with the team before submission}
+
+\section{External Components and Dependencies}
+\begin{table}[H]
+\centering
+\caption{External components}
+\begin{tabular}{P{0.25\textwidth}P{0.62\textwidth}}
+\toprule
+Component & Use\\
+\midrule
+YOLO implementation \cite{ultralytics} & Person detection\\
+ByteTrack \cite{zhang2022bytetrack} & Per-camera tracking; \texttt{lap} supplies assignment support\\
+OpenCV / NumPy \cite{opencvHomography} & Homography fitting, projection, ORB matching, diagnostics and numerical geometry\\
+ORB \cite{rublee2011orb} and RANSAC \cite{fischler1981ransac} & Reference-alignment evidence and robust fitting; no motion compensation claimed\\
+LangGraph \cite{langgraph} & Agent orchestration\\
+FastAPI \cite{fastapi} & POS and camera API\\
+Next.js and React \cite{nextjs} & Frontend\\
+Recharts, jsPDF, Tailwind CSS & Charts, PDF export, styling\\
+SQLite & POS storage\\
+\bottomrule
+\end{tabular}
+\end{table}
+\todo{check each component's licence against the project's academic use, in particular the detector implementation's licence terms}
+
+\section{Risks and Mitigation}
+\begin{table}[H]
+\centering
+\caption{Risk register}
+\begin{tabular}{P{0.3\textwidth}P{0.1\textwidth}P{0.4\textwidth}}
+\toprule
+Risk & Level & Mitigation\\
+\midrule
+CPU-only inference too slow & High & Frame sampling, small models, batch processing\\
+Staff/customer misclassification & High & Zone rules plus appearance, labelled evaluation, manager review\\
+Wrong cross-camera matches & Medium & Keep uncertain and unmatched outcomes, no forced matches\\
+Limited footage for evaluation & Medium & Record or label additional clips early in FYP-2\\
+Integration slippage & Medium & Bind one agent at a time, keep prototype data fallback\\
+Privacy or misuse concerns & Medium & Non-biometric design, decision-support framing\\
+Incorrect scale or landmark selection & High & Editable configuration, landmark review and calibration diagnostics\\
+Camera motion / insufficient floor evidence & High & Suppress shifted/unverified measurements; use final fixed-camera calibration\\
+Foot proxy wrong under seating/occlusion & High & Quality flags, manual exclusions, visible-foot ground truth and coverage reporting\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Security and Privacy Considerations}
+Manager routes require a signed HttpOnly session cookie, and direct backend calls require an internal secret header that only the server-side proxy supplies. Secrets come from environment variables. No biometric identifiers are stored, and the local demo credential rule is for development only and must be replaced by real authentication before any deployment.
+
+Floor footage, calibration frames/configuration and generated diagnostics remain local under Git-ignored data directories. The report includes only selected local demonstration frames; no footage upload, persistent person crops or facial-identity records are required by the prototype.
+
+\section{Current Limitations}
+\begin{itemize}
+\item Vision-derived dashboard metrics still use prototype or demo data, and the agent status page shows mock data.
+\item The pipeline is offline/batch, not real time.
+\item Camera handoff covers only cam1 right exit to cam2 left entry, and it is not full re-identification.
+\item Single store only, and POS data comes from file import.
+\item Demo authentication accepts any valid email and a password of six or more characters.
+\item The temporary floor calibration uses estimated dimensions and approximate screenshot correspondences; all distance outputs are provisional/approximate.
+\item The sampled moving clip supported only the reference snapshot. Whole-clip metric coverage and motion compensation are not established.
+\item Box-bottom proxies can be wrong for seated or occluded people, including those in the reference-frame pair.
+\item Trained role detection and metric outputs are available through CLI, but their integration with temporal interaction events and the dashboard remains pending.
+\end{itemize}

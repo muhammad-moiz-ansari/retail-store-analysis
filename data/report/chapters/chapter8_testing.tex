@@ -1,0 +1,107 @@
+\chapter{Testing and Early Validation}
+\label{ch:testing}
+\section{Testing Strategy}
+Testing combines functional checks of implemented modules, integration checks across the proxy, backend, and database, security checks of access control, and, in FYP-2, quantitative evaluation of the vision agents against manually labelled clips.
+
+\section{Test Levels and Techniques}
+\begin{itemize}
+\item \textbf{Unit level:} deterministic POS functions and focused floor-geometry, failure-state, smoothing, motion and evaluation checks with known synthetic inputs.
+\item \textbf{Vision CLI integration:} actual trained weights and local video, exported video readability, JSONL invariants and explicit unavailable-state checks.
+\item \textbf{Integration level:} frontend to proxy to FastAPI to SQLite for POS flows, and job queueing and polling for handoff.
+\item \textbf{System level:} end-to-end use of dashboards, reports, and the handoff page.
+\item \textbf{Security testing:} direct calls without cookie or secret.
+\item \textbf{Vision evaluation (FYP-2):} precision and recall against labelled clips.
+\end{itemize}
+
+\section{Test Cases}
+\begin{longtable}{P{0.09\textwidth}P{0.3\textwidth}P{0.32\textwidth}P{0.14\textwidth}}
+\toprule
+ID & Test & Expected result & Req.\\
+\midrule
+\endhead
+TC-01 & Log in as Manager with valid email and 6+ character password & Session cookie set; manager pages open & FR-10\\
+TC-02 & Open a manager POS route without a cookie, or call backend without the secret & Request rejected & NFR-07/08\\
+TC-03 & Import a valid CSV/XLSX sample & Rows stored; metrics and forecasts computed & FR-14/15\\
+TC-04 & Import the same file twice & Identical metrics both times & NFR-01\\
+TC-05 & Submit handoff job with cam1 and cam2 & Job id returned; result lists confirmed, uncertain, unmatched & FR-09\\
+TC-06 & Poll an unknown job id & Clear error, no crash & FR-09\\
+TC-07 & Person detection on a labelled clip & Detection precision/recall reported & FR-01/02\\
+TC-08 & Staff/customer classification on a labelled clip & Accuracy reported & FR-03\\
+TC-09 & Controlled clip with unattended customer & Unattended flag and alert raised & FR-04/05\\
+TC-10 & Path and dwell on a labelled clip & Zone dwell matches annotation within tolerance & FR-07\\
+TC-11 & Compare dashboard values with orchestrator output & Values consistent per entity & FR-08\\
+TC-12 & Navigate all pages for both roles & Pages render; employee blocked from manager pages & FR-11--13, 18--20\\
+TC-13 & Build report and export PDF & PDF contains selected sections and narrative & FR-17\\
+TC-14 & Uncalibrated trained-model preview & Role labels, IDs and foot proxies exported without fabricated metres & FR-21\\
+TC-15 & Headless landmark calibration & Provisional H, grid and floor map generated & FR-22/26\\
+TC-16 & Interactive point selection & Ordered clicks, undo/reset/save preserve original pixels & FR-22\\
+TC-17 & Known geometry and preprocessing & Expected projections, metre units and coordinate recovery & FR-23; NFR-11\\
+TC-18 & Invalid/unsupported positions & Explicit unavailable states rather than zero distances & FR-24; NFR-11\\
+TC-19 & Camera alignment / no features & Shifted and unverified frames suppress supported output & FR-25\\
+TC-20 & Demo and diagnostic exports & Readable videos, timestamps and approximate/provisional labels & FR-27/28\\
+\bottomrule
+\end{longtable}
+Detailed steps are in Appendix~\ref{app:tests}.
+
+\section{Test Results}
+\begin{table}[H]
+\centering
+\caption{Test execution status at mid-report}
+\begin{tabular}{P{0.12\textwidth}P{0.18\textwidth}P{0.5\textwidth}}
+\toprule
+Test & Result & Notes\\
+\midrule
+TC-01--TC-06, TC-12, TC-13 & \todo{record} & Implemented features. Record pass/fail and date after the team runs them.\\
+TC-07--TC-11 & Pending & Depend on integrating the vision agents (Iteration 2).\\
+\bottomrule
+\end{tabular}
+\end{table}
+The preceding table retains the earlier application cases awaiting team recording. The floor-distance software/integration evidence below was executed during the 19--20 October 2026 implementation session. The results below describe software checks, integration behavior and accepted-position coverage.
+
+\subsection{Floor-Distance Software and Integration Results}
+\begin{longtable}{P{0.42\textwidth}P{0.44\textwidth}}
+\caption{Executed floor-distance checks and temporary-video coverage}\label{tab:floor-results}\\
+\toprule
+Check / quantity & Actual result\\
+\midrule
+\endhead
+Focused floor-distance automated suite (TC-17--TC-19 and evaluation functions) & 17 tests passed; synthetic geometry/failure cases, smoothing/prediction, alignment shifts and error statistics.\\
+Existing handoff core regression suite & 4 tests passed; separate from the 17 new floor checks.\\
+Actual trained-model preview (TC-14) & Completed with local \path{models/best.pt}; no retraining.\\
+Headless calibration (TC-15) & Completed; grid and versioned provisional calibration saved.\\
+Point-click calibration (TC-16) & Point-selection interface implemented.\\
+Sampled clip execution (TC-20) & 148 processed frames, sampling every 30 source frames across the clip.\\
+Detection observations & 284 repeated observations, not 284 unique people.\\
+Frame alignment outcomes & 1 reference snapshot; 9 motion-invalid frames; 138 unverified frames.\\
+Accepted position observations & 2 of 284, approximately 0.70\% accepted coverage.\\
+Available approximate pair observations & 1 reference-frame pair, including a seated-person proxy.\\
+Video/record verification & Both 148-frame videos decode through the final frame; timestamps increase; unsupported positions have null coordinates.\\
+Snapshot / missing-track behavior & Three-frame check preserves explicit unavailable selected-pair records.\\
+Missing-weight handling & Actionable local missing-model error verified.\\
+\bottomrule
+\end{longtable}
+The executed commands are documented in \path{docs/floor_distance_usage.md}. The coverage summary is exported as \path{data/outputs/distance/demo/summary.json}, with observation records in \path{metrics.jsonl}. The 0.70\% value is accepted-position coverage, not accuracy. The reference pair is an approximate box-proxy demonstration involving a seated person. No whole-clip supported metric result is claimed.
+
+\section{Acceptance Testing / Validation}
+Acceptance follows the criteria in Chapter~\ref{ch:req}. Demonstrations to the supervisor of the dashboard, POS flow, and handoff output form the current validation evidence. \todo{record demo date and supervisor feedback}
+
+
+\section{Edge and Failure Cases}
+\begin{itemize}
+\item Invalid or empty POS file, or missing columns.
+\item Handoff with no boundary crossings, or with several candidates inside the time window.
+\item Lighting differences between cameras reducing colour similarity (expected to yield uncertain results).
+\item Staff outside their usual zone or customers in uniform-like clothing, affecting classification.
+\item Identity switches during occlusion, affecting dwell and interaction durations.
+\item Expired or missing session cookie.
+\item Duplicate/collinear landmarks, invalid homogeneous denominators, incompatible units or frame sizes, stale homography and extrapolation outside calibrated coverage.
+\item Lower-frame truncation, manual exclusions, person overlap and seated/occluded feet; box-bottom positions remain proxies.
+\item Missing selected tracks, predicted positions, implausible metric jumps and expired reliable observations.
+\item Camera shifts, insufficient floor matches or poor spatial spread: preserve unavailable measurements rather than reuse stale alignment.
+\end{itemize}
+
+\section{Defects and Corrective Actions}
+The first actual tracking run exposed a missing \texttt{lap} assignment dependency; it was installed into the existing virtual environment and declared in backend requirements, after which ByteTrack inference completed. Reference-frame selection was changed to use media timestamps rather than assuming constant-rate timing. A stale-calibration guard and explicit illustrative-config rejection prevent accidental use of incompatible inputs. Existing handoff tracking thresholds were preserved when extracting the shared inference helper. Further unrelated application defects remain to be recorded by the team.
+
+\section{Current Validation Status}
+The floor-distance prototype passes its focused synthetic software checks and actual-model/video integration checks. The moving temporary clip supported only the calibration-reference snapshot; the remaining sampled frames were motion-invalid or unverified. The exported quality states distinguish supported approximate positions from unavailable measurements. The combined trained-role, metric-distance and duration-based interaction pipeline is not yet integrated.

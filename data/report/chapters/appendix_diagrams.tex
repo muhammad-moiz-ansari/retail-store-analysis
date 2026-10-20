@@ -1,0 +1,19 @@
+\chapter{Additional Design Diagrams}
+The main architecture, tier, domain, and handoff diagrams are in Chapter~\ref{ch:design} (Figures~\ref{fig:arch}, \ref{fig:tiers}, and \ref{fig:handoff}). \todo{add any additional sequence, activity, or schema diagrams from the repository}
+
+\section{Floor Calibration Schema and Failure States}
+The floor process is shown in Figure~\ref{fig:floor-pipeline}; actual preview, calibration and map examples are in Figures~\ref{fig:floor-preview}--\ref{fig:floor-map}. The authoritative correspondence order for the provisional rectangle is A--B--D--C. Floor coordinates are $(0,0)$, $(w,0)$, $(w,d)$ and $(0,d)$ in metres for that order.
+
+\begin{tabular}{P{0.28\textwidth}P{0.59\textwidth}}
+\toprule
+Record group & Key information\\
+\midrule
+Identity / geometry & Schema version, camera/calibration ID, source reference, frame index/timestamp, frame size, coordinate space.\\
+Landmarks / mapping & Original-pixel and metre correspondences, authoritative dimensions, image-to-floor H, inliers/residuals.\\
+Operational quality & Supported polygon, exclusions, distortion handling, motion thresholds, smoothing/prediction limits.\\
+Measurement status & Estimated calibration inputs and approximate-output metadata.\\
+Runtime observation & Track ID, role/score, pixel foot proxy, nullable floor coordinates, motion/position state and reasons.\\
+\bottomrule
+\end{tabular}
+
+States include \texttt{uncalibrated}, \texttt{observed\_proxy}, \texttt{predicted}, \texttt{unreliable}, \texttt{out\_of\_region}, \texttt{motion\_unverified} and \texttt{motion\_invalid}. Only supported observed proxies contribute to approximate pair distances. The localization equations are given in Equations~\ref{eq:floor-foot}--\ref{eq:floor-distance}; no 3D reconstruction is implied.

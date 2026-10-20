@@ -1,0 +1,77 @@
+\chapter{Proposal Feedback and Iteration Plan}
+\label{ch:plan}
+\section{Proposal Feedback Summary}
+The proposal feedback and its resolution are recorded in the action register below and in Appendix~\ref{app:actions}. \todo{insert the actual proposal-defense feedback received from the evaluators and supervisor}
+
+The scope decisions already reflected in the project (descoping multi-camera re-identification, shelf-level interaction detection, and long-term layout evaluation) came out of the feasibility triage described in Chapter~\ref{ch:research} and are tracked here as actions.
+
+\section{Proposal Action Register}
+\begin{longtable}{P{0.06\textwidth}P{0.28\textwidth}P{0.25\textwidth}P{0.14\textwidth}P{0.17\textwidth}}
+\toprule
+No. & Feedback / Required Change & Action Taken & Status & Evidence\\
+\midrule
+\endhead
+1 & \todo{evaluator feedback} & Scope narrowed to a single-store, three-camera, CPU-only prototype after a feasibility triage. & Done & Chapter~\ref{ch:intro} scope\\
+2 & \todo{evaluator feedback} & Full multi-camera identity linking descoped. An experimental two-camera handoff MVP built instead. & Done & Chapter~\ref{ch:iter1}\\
+3 & \todo{evaluator feedback} & POS analytics added with deterministic metrics and cited assistant answers. & Done & Chapter~\ref{ch:iter1}\\
+4 & \todo{evaluator feedback} & Privacy approach fixed as non-biometric, and results framed as decision support. & Done & Chapter~\ref{ch:intro}\\
+\bottomrule
+\end{longtable}
+
+\section{Iteration Strategy}
+Development is iterative, with each iteration delivering a working increment that is demonstrated and evaluated before the next begins. Iteration 1 builds the platform foundation: the web application, the POS analytics service, secure access, and the camera-handoff MVP. Iteration 2 connects the vision agents to the platform through the orchestrator and evaluates them on store footage. Work is tracked on feature branches in the project repository. \todo{confirm iteration boundaries and dates with the supervisor}
+
+\section{Iteration 1 Plan}
+\textbf{Objectives:} establish the application shell and data flows that later analytics plug into, and prove the riskiest vision idea (cross-camera handoff) early.
+
+\textbf{Selected features:} manager and employee pages; role-aware authentication; reports with PDF export; alerts feed; system status page; POS import, metrics, forecasts, recommendations, and cited assistant; camera-handoff pipeline and its web endpoint.
+
+\textbf{Deliverables:} running frontend, local backend (\texttt{/pos/*} and \texttt{/camera/*}), handoff JSON output, and demonstration evidence (Chapter~\ref{ch:iter1}).
+
+\section{Iteration 2 Plan}
+\textbf{Objectives:} replace prototype data with real agent output and evaluate it.
+
+\textbf{Selected features:} Detection, Classification, Engagement (including interaction factors), and Trajectory agents; the LangGraph orchestrator; live data in the dashboard pages; the Insight Narration agent; and quantitative evaluation on labelled clips.
+
+\textbf{Deliverables:} integrated pipeline, evaluation report, and updated dashboard bound to real outputs (Chapter~\ref{ch:fyp2plan}).
+
+\section{Work Breakdown and Responsibilities}
+\begin{table}[H]
+\centering
+\caption{Planned work breakdown}
+\begin{tabular}{P{0.3\textwidth}P{0.45\textwidth}P{0.15\textwidth}}
+\toprule
+Work package & Description & Owner\\
+\midrule
+Frontend and UX & Next.js pages, design system, charts, PDF export & \todo{name}\\
+POS analytics backend & FastAPI, SQLite, forecasts, recommendations, assistant & \todo{name}\\
+Vision pipeline & Detection, tracking, classification, engagement, trajectory & \todo{name}\\
+Camera handoff & Boundary events, time window, appearance matching & \todo{name}\\
+Orchestration and narration & LangGraph graph, reconciliation, narration & \todo{name}\\
+Testing and documentation & Test cases, evaluation, report & \todo{name}\\
+\bottomrule
+\end{tabular}
+\end{table}
+The team consists of Moiz Ansari, Saqib Atif, and Ruhab Ahmad. Individual ownership is recorded in Chapter~\ref{ch:mgmt}.
+
+\section{Progress Against Plan}
+\begin{table}[H]
+\centering
+\caption{Planned versus actual progress at mid-report}
+\begin{tabular}{P{0.34\textwidth}P{0.2\textwidth}P{0.3\textwidth}}
+\toprule
+Milestone & Planned & Actual\\
+\midrule
+Web application (manager and employee) & Iteration 1 & Implemented\\
+POS analytics service & Iteration 1 & Implemented (local)\\
+Camera-handoff MVP & Iteration 1 & Implemented (experimental)\\
+Floor-distance CLI & Current prototype increment & Implemented provisionally\\
+Vision agents wired to dashboard & Iteration 2 & In progress (prototype data)\\
+LangGraph orchestration & Iteration 2 & In progress\\
+Independent physical / labelled accuracy evaluation & Iteration 2 & Pending; floor software checks already executed\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Delays, Deviations and Recovery Plan}
+\textbf{Deviation 1.} Full cross-camera re-identification was descoped to a conservative handoff MVP because of the CPU-only constraint and limited footage. \textbf{Deviation 2.} A POS analytics pillar was implemented as a local FastAPI and SQLite service ahead of the vision integration, so the dashboard has real data in one area while the vision agents mature. \textbf{Residual gap.} The dashboard's camera-derived metrics still use prototype data. \textbf{Recovery:} the first FYP-2 sprint binds the Detection and Engagement outputs to the dashboard, and quantitative evaluation is scheduled for the middle of the semester so that tuning time remains.
