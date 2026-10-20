@@ -64,3 +64,6 @@ yolo26n-cls.pt
 # Local raw footage and generated outputs (Ultralytics config dir lives under data/outputs)
 /data/videos/raw/
 /data/outputs/
+
+
+.claude/
