@@ -73,8 +73,6 @@ class Observation:
     facing: tuple[float, float] | None = None
     orientation_confidence: float = 0
     zone: str = "Unassigned"
-    vlm_interaction: str | None = None
-    vlm_interaction_confidence: float = 0
 
 
 def pair_qualifies(employee, customer, config):
@@ -94,12 +92,11 @@ def pair_qualifies(employee, customer, config):
 
 class EventEngine:
     def __init__(self, job_id, store_id, camera_id, start_time, shift, calibration_version,
-                 config: CameraConfig, interaction_classifier=None):
+                 config: CameraConfig):
         self.job_id, self.store_id, self.camera_id = job_id, store_id, camera_id
         self.start_time = datetime.fromisoformat(start_time)
         self.shift, self.version, self.config = shift, calibration_version, config
         self.pairs = {}
-        self.interaction_classifier = interaction_classifier
         self.last_time = -1.0
 
     def _finish(self, pair):
@@ -124,11 +121,6 @@ class EventEngine:
         for employee in (o for o in observations if o.role == "employee"):
             for customer in (o for o in observations if o.role == "customer"):
                 if pair_qualifies(employee, customer, self.config):
-                    if self.config.vlm_interaction_enabled and self.interaction_classifier is not None:
-                        result = self.interaction_classifier(employee, customer, timestamp)
-                        if (result is None or result.get("label") != "interaction"
-                                or result.get("confidence", 0) < self.config.vlm_interaction_confidence):
-                            continue
                     qualifying[(employee.track_id, customer.track_id)] = employee
         events = []
         for key, pair in list(self.pairs.items()):

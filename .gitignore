@@ -67,3 +67,5 @@ yolo26n-cls.pt
 
 
 .claude/
+# Claude Code local state (worktrees, settings)
+.claude/

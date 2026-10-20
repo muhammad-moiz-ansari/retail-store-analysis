@@ -19,7 +19,6 @@ from .identity import EphemeralIdentityRegistry
 from .role_classifier import RoleClassifier
 from .tracker import ByteTrackPersonTracker
 from .types import TrackedPerson
-from .vlm import NullVLM
 
 
 class InteractionPipeline:
@@ -68,7 +67,7 @@ class InteractionPipeline:
 
 class FrameProcessor:
     def __init__(self, models, store_id, config, calibration=None, session_id=None,
-                 utc_anchor=None, shift_at=None, identity_registry=None, vlm=None):
+                 utc_anchor=None, shift_at=None, identity_registry=None):
         self.models, self.store_id, self.config = models, store_id, config.model_copy(deep=True)
         self.session_id = session_id or uuid.uuid4().hex
         if utc_anchor is not None and utc_anchor.utcoffset() is None:
@@ -79,7 +78,6 @@ class FrameProcessor:
         # identity/Re-ID evidence and never an employee/customer role source.
         self.calibration = calibration.model_copy(deep=True) if calibration else None
         self.identities = identity_registry or EphemeralIdentityRegistry()
-        self.vlm = vlm or NullVLM()
         self.tracker = models.create_tracker()
         self.tracks = {}
         self.last_time = None
@@ -129,9 +127,7 @@ class FrameProcessor:
                     )
                     state = {"id": self.session_id + ":" + uuid.uuid4().hex, "first_seen": timestamp,
                              "global_person_id": person["global_person_id"],
-                             "last_embedding": -math.inf, "last_vlm": -math.inf, "samples": [],
-                             "last_seen": timestamp, "vlm_role": None, "vlm_confidence": None,
-                             "vlm_evidence": {}}
+                             "last_embedding": -math.inf, "samples": [], "last_seen": timestamp}
                     self.tracks[local] = state
                 state["last_seen"] = timestamp
                 crop = frame.image[int(y1):math.ceil(y2), int(x1):math.ceil(x2)]
@@ -156,17 +152,6 @@ class FrameProcessor:
                     person = self.identities.get_person(self.store_id, state["global_person_id"])
                 role = person["role"]
                 reason = None if role != "unknown" else "unresolved_global_identity"
-                if (role == "unknown" and self.config.vlm_role_enabled and valid_crop
-                        and timestamp - state["last_vlm"] >= self.config.vlm_role_interval_seconds - 1e-8):
-                    result = self.vlm.classify_role(crop)
-                    state.update(last_vlm=timestamp, vlm_role=result.label,
-                                 vlm_confidence=result.confidence, vlm_evidence=result.evidence)
-                # Identity registration remains authoritative; VLM can provide a
-                # high-confidence semantic role for otherwise unresolved tracks.
-                vlm_confidence = state.get("vlm_confidence")
-                if role == "unknown" and state.get("vlm_role") in {"employee", "customer"}:
-                    if vlm_confidence is not None and vlm_confidence >= self.config.vlm_role_confidence:
-                        role, reason = state["vlm_role"], "vlm_role_classification"
                 orientation = Orientation(reason="unmatched_pose")
                 if index in matches:
                     orientation = orientation_from_pose(poses[matches[index]]["keypoints"], self.config.orientation_confidence)
@@ -176,9 +161,7 @@ class FrameProcessor:
                     global_person_id=state["global_person_id"],
                     source_seconds=timestamp, utc_time=self.utc(timestamp), bbox=(x1, y1, x2, y2), source_size=(w, h),
                     detection_confidence=detection["confidence"], role=role, role_evidence={}, role_reason=reason,
-                    orientation=orientation, zone=zone, shift=self.shift_at(self.utc(timestamp)),
-                    vlm_role_confidence=vlm_confidence,
-                    vlm_role_evidence=state.get("vlm_evidence", {})))
+                    orientation=orientation, zone=zone, shift=self.shift_at(self.utc(timestamp))))
             return FrameResult(**base, observations=observations, review_samples=samples,
                                detections=getattr(self.models, "last_detections", detections),
                                processing_seconds=time.perf_counter() - started)

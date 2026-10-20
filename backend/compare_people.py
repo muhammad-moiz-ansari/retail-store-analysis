@@ -19,6 +19,8 @@ from pathlib import Path
 import cv2
 from ultralytics import YOLO
 
+from device import DEVICE
+
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 MODEL_PATH = PROJECT_ROOT / "backend" / "yolov8n.pt"
 OUTPUT_DIR = PROJECT_ROOT / "backend" / "output"
@@ -42,7 +44,7 @@ def seek_and_read(video_path: str, timestamp_ms: float):
 
 
 def count_people(model, frame) -> int:
-    results = model(frame, verbose=False, classes=[0], device="cpu")
+    results = model(frame, verbose=False, classes=[0], device=DEVICE)
     count = sum(len(r.boxes) for r in results)
     return count
 

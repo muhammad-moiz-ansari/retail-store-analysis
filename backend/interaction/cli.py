@@ -9,7 +9,7 @@ from pathlib import Path
 
 import cv2
 
-from .config import InteractionConfig
+from .config import DEVICE, InteractionConfig
 from .pipeline import InteractionPipeline
 from .renderer import draw_result
 
@@ -21,7 +21,7 @@ def main() -> None:
     parser.add_argument("--roles", type=Path, help="YOLO role model trained on the bib-labelled dataset")
     parser.add_argument("--every", type=int, default=1, help="Score roles and write output on every Nth frame")
     parser.add_argument("--track-every", type=int, default=1, help="Run the tracker on every Nth frame (3 = 10 fps on 30 fps video)")
-    parser.add_argument("--device", default="cpu", help="Inference device, e.g. cpu or cuda:0")
+    parser.add_argument("--device", default=DEVICE, help="Inference device, e.g. cpu or cuda:0")
     args = parser.parse_args()
     cap = cv2.VideoCapture(str(args.video))
     if not cap.isOpened():

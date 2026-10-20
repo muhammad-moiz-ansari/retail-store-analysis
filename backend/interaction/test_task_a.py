@@ -47,32 +47,6 @@ class TaskATests(unittest.TestCase):
         self.assertEqual(len(frame.review_samples), 1)
         self.assertEqual(records[-1].reason, "eof")
 
-    def test_vlm_role_is_used_only_when_enabled_and_confident(self):
-        class FakeVLM:
-            def classify_role(self, crop):
-                from .vlm import VLMResult
-                return VLMResult("employee", .95, {"vest": "orange"})
-
-            def classify_interaction(self, frames):
-                from .vlm import VLMResult
-                return VLMResult("no_interaction", .95)
-
-        class FakeModels:
-            metadata = MODELS
-            def create_tracker(self): return object()
-            def track(self, image, tracker):
-                self.last_detections = [{"bbox": [10, 10, 40, 80], "confidence": .9}]
-                return [{"local_id": "7", "bbox": [10, 10, 40, 80], "confidence": .9}]
-            def poses(self, image): return []
-            def embed(self, crop): return [1, 0, 0]
-
-        config = CameraConfig(camera_id="cam", vlm_role_enabled=True)
-        processor = FrameProcessor(FakeModels(), "store", config, session_id="session", vlm=FakeVLM())
-        result = processor.process(Frame(np.zeros((100, 100, 3), dtype=np.uint8), 0))
-        self.assertEqual(result.observations[0].role, "employee")
-        self.assertEqual(result.observations[0].role_reason, "vlm_role_classification")
-        self.assertEqual(result.observations[0].vlm_role_evidence["vest"], "orange")
-
     def test_contract_rejects_unnamespaced_and_unknown_direction(self):
         with self.assertRaises(ValueError):
             TrackObservation(session_id="s1", track_id="track-1", global_person_id="person-1", source_seconds=0,

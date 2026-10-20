@@ -53,8 +53,6 @@ class TrackObservation(StrictModel):
     orientation: Orientation = Field(default_factory=Orientation)
     zone: str = "Unassigned"
     shift: str = "Unassigned"
-    vlm_role_confidence: Unit | None = None
-    vlm_role_evidence: dict[str, str | float] = Field(default_factory=dict)
 
     @model_validator(mode="after")
     def geometry(self):
