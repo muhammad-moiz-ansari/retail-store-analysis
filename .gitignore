@@ -58,3 +58,10 @@ coverage/
 # Local analysis outputs and auto-downloaded BoT-SORT ReID model
 dummyoutputs/
 yolo26n-cls.pt
+
+/models/
+
+# Local floor-distance inputs and generated diagnostics
+/data/videos/raw/
+/data/outputs/
+/data/calibration/
