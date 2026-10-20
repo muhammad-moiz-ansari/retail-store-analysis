@@ -49,3 +49,20 @@ def test_people_at_different_depths_are_not_close_even_when_overlapping() -> Non
     near_camera = person(1, "employee", 0, height=300)
     far_behind = person(2, "customer", 10, height=100)
     assert body_distance(near_camera, far_behind, InteractionConfig())[2] is False
+
+
+def test_passer_by_walking_close_past_the_employee_is_not_an_interaction() -> None:
+    detector = EngagementDetector(InteractionConfig(min_interaction_seconds=2))
+    events = []
+    for step in range(31):  # customer walks from x=-40 to x=80 past the employee at x=0, 0.4 heights/s
+        t = step / 10
+        events = detector.update([person(1, "employee", 0), person(2, "customer", int(-40 + 40 * t))], t)
+        assert events == []
+
+
+def test_pair_moving_camera_still_interacts() -> None:
+    detector = EngagementDetector(InteractionConfig(min_interaction_seconds=2))
+    for step in range(22):  # camera pans: both shift together, relative position unchanged
+        shift = 10 * step
+        events = detector.update([person(1, "employee", shift), person(2, "customer", 30 + shift)], step / 10)
+    assert len(events) == 1

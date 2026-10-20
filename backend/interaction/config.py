@@ -47,5 +47,16 @@ class InteractionConfig:
     relink_seconds: float = 5.0
     relink_min_similarity: float = 0.90
     min_interaction_seconds: float = 2.0
+    # Walking pace is ~0.8 body heights/s, so a passer-by drifts well past this within min_interaction_seconds.
+    max_relative_drift_heights: float = 0.5
     max_missing_seconds: float = 1.5
-    device: str = DEVICE
+    # Second-stage judge: once proximity says "interaction", it looks at the pair and can veto it.
+    # pose: a head must point at the other person.
+    interaction_judge: Literal["off", "pose"] = "pose"
+    pose_model: Path = field(default_factory=lambda: Path(__file__).resolve().parents[1] / "models" / "yolov8n-pose.pt")
+    facing_angle_degrees: float = 60.0  # 2D head direction is coarse, so allow a wide cone
+    min_facing_fraction: float = 0.5  # share of judged frames in which someone faces the other
+    judge_device: str | None = None  # None = same as device; e.g. YOLO on cpu, judge on cuda:0
+    judge_frames: int = 4  # frames sampled across the last min_interaction_seconds
+    judge_recheck_seconds: float = 4.0  # a rejected pair is re-judged this often while still close
+    device: str = DEVICE  # "cuda:0" runs YOLO on the GPU (the .pt model; OpenVINO is CPU-only)

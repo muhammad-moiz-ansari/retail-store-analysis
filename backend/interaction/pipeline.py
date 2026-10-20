@@ -5,20 +5,21 @@ from __future__ import annotations
 import math
 import time
 import uuid
+from collections import deque
 from datetime import timedelta, timezone
 from pathlib import Path
 
 import numpy as np
 
 from .config import InteractionConfig
-from .core import prototype
 from .cv_contracts import FrameResult, Orientation, Signal, TrackObservation
 from .engagement import EngagementDetector
 from .geometry import match_boxes, orientation_from_pose, zone_at
 from .identity import EphemeralIdentityRegistry
+from .pose import PoseJudge
 from .role_classifier import RoleClassifier
 from .tracker import ByteTrackPersonTracker
-from .types import TrackedPerson
+from .types import CONFIRMED, TrackedPerson
 
 
 class InteractionPipeline:
@@ -26,11 +27,19 @@ class InteractionPipeline:
         self.config = config or InteractionConfig()
         from ultralytics import YOLO  # lazy: importing package does not require ML dependencies
 
-        self.person_model = YOLO(str(self.config.person_model), task="detect")
+        person_model = Path(self.config.person_model)
+        if self.config.device != "cpu" and "openvino" in person_model.name:
+            person_model = person_model.with_name("best.pt")  # OpenVINO runs on CPU only; the GPU takes the .pt
+        self.person_model = YOLO(str(person_model), task="detect")
         role_model = YOLO(str(self.config.role_model)) if self.config.role_model and Path(self.config.role_model).is_file() else None
         self.tracker = ByteTrackPersonTracker(self.person_model, self.config)
         self.classifier = RoleClassifier(self.config, role_model)
         self.engagement = EngagementDetector(self.config)
+        self.judge = PoseJudge(self.config.pose_model, self.config.judge_device or self.config.device,
+                               self.config.facing_angle_degrees, self.config.min_facing_fraction) \
+            if self.config.interaction_judge == "pose" else None
+        self._recent: deque[tuple[float, np.ndarray, dict[int, tuple[int, int, int, int]]]] = deque()
+        self._verdicts: dict[tuple[int, int, float], dict] = {}
 
     def process_frame(self, frame: np.ndarray, timestamp: float | None = None) -> dict:
         timestamp = time.time() if timestamp is None else timestamp
@@ -45,6 +54,12 @@ class InteractionPipeline:
             ]
         ]
         events = self.engagement.update(people, timestamp, frame.shape[0])
+        if self.judge:
+            self._recent.append((timestamp, frame, {person.track_id: person.bbox for person in people}))
+            while self._recent[0][0] < timestamp - self.config.min_interaction_seconds:
+                self._recent.popleft()
+            for event in events:
+                self._judge(event, timestamp)
         employees = sum(person.role == "employee" for person in people)
         customers = len(people) - employees
         return {
@@ -52,9 +67,52 @@ class InteractionPipeline:
             "people": [person.to_dict() for person in people],
             "employee_count": employees,
             "customer_count": customers,
-            "interactions": [event.to_dict() for event in events],
+            # Every proximity candidate, with the judge's verdict; only CONFIRMED ones count as interactions.
+            "interactions": [{**event.to_dict(), "verdict": self.verdict(event)} for event in events],
+            # On while any employee/customer interaction past min_interaction_seconds is ongoing.
+            "interaction_active": any(event.active and self.verdict(event) in CONFIRMED for event in events),
         }
 
+    @staticmethod
+    def _key(event) -> tuple[int, int, float]:
+        return event.employee_track_id, event.customer_track_id, event.started_at
+
+    def verdict(self, event) -> str:
+        """interaction | no_interaction | unverified (judge off, failed or unsure)."""
+        state = self._verdicts.get(self._key(event))
+        return state["label"] if state else "unverified"
+
+    def _judge(self, event, timestamp: float) -> None:
+        # Synchronous on purpose: a judge on a background thread slowed every later detector frame ~2x
+        # (thread-pool contention, torch or OpenVINO alike); inline it costs ~250 ms once per candidate.
+        state = self._verdicts.get(self._key(event))
+        recheck = state and state["label"] == "no_interaction" and timestamp - state["checked_at"] >= self.config.judge_recheck_seconds
+        if state and not recheck:
+            return
+        crops, boxes = self._pair_crops(event)
+        if not crops:
+            return
+        try:
+            label = self.judge.classify_interaction(crops, boxes).label
+        except Exception:  # a broken judge must not lose the proximity result
+            label = "unknown"
+        self._verdicts[self._key(event)] = {"label": "unverified" if label == "unknown" else label, "checked_at": timestamp}
+
+    def _pair_crops(self, event) -> tuple[list[np.ndarray], list]:
+        """judge_frames frames spread over the buffered window, cropped to both people with some context,
+        and the (employee, customer) boxes in crop coordinates."""
+        ids = (event.employee_track_id, event.customer_track_id)
+        window = [(frame, boxes) for _, frame, boxes in self._recent if all(i in boxes for i in ids)]
+        count = min(self.config.judge_frames, len(window))
+        crops, pair_boxes = [], []
+        for frame, boxes in (window[round(i * (len(window) - 1) / max(1, count - 1))] for i in range(count)):
+            x1, y1 = min(boxes[i][0] for i in ids), min(boxes[i][1] for i in ids)
+            x2, y2 = max(boxes[i][2] for i in ids), max(boxes[i][3] for i in ids)
+            margin, (height, width) = int(0.15 * (y2 - y1)), frame.shape[:2]
+            left, top = max(0, x1 - margin), max(0, y1 - margin)
+            crops.append(frame[top:min(height, y2 + margin), left:min(width, x2 + margin)].copy())
+            pair_boxes.append(tuple((b[0] - left, b[1] - top, b[2] - left, b[3] - top) for b in (boxes[ids[0]], boxes[ids[1]])))
+        return crops, pair_boxes
 
     def _tracked_role(self, item: dict) -> tuple[str, float] | None:
         """Role straight from the tracking model's class, when it is a role model (e.g. best.pt)."""
@@ -171,12 +229,6 @@ class FrameProcessor:
             self.tracks.clear()
             return FrameResult(**base, status="failed", reason=type(exc).__name__,
                                processing_seconds=time.perf_counter() - started)
-
-    def reference_samples(self):
-        return [{"track_id": state["id"], "camera_id": self.config.camera_id,
-                 "embeddings": state["samples"], "embedding": prototype(state["samples"])}
-                for state in self.tracks.values() if state["samples"]]
-
 
 def process_recording(processor, frames, cancelled=lambda: False):
     """Yield typed records. Exactly one terminal signal follows a started session."""

@@ -6,6 +6,8 @@ from dataclasses import asdict, dataclass
 from typing import Literal
 
 Role = Literal["employee", "customer"]
+# Judge verdicts that count as an interaction; unverified = judge off, failed or unsure, so proximity decides.
+CONFIRMED = ("interaction", "unverified")
 
 
 @dataclass(slots=True)

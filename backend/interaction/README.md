@@ -25,13 +25,19 @@ python -m backend.interaction.cli path\to\footage.mp4 --track-every 3 --every 15
 
 By default one model does detection, tracking and the YOLO role factor: `backend/models/best_320_openvino_model` (`best.pt` exported to OpenVINO at 320 px, ~10 fps tracking on a laptop CPU). `--track-every 3` tracks at 10 fps on 30 fps video; `--every 15` scores roles and writes output at 2 fps. Re-export with `YOLO('backend/models/best.pt').export(format='openvino', imgsz=320)` and rename the folder to `best_320_openvino_model`. With a plain COCO person model instead, set `person_classes=(0,)` and pass the role model via `--roles`; with neither, classification falls back to the configured yellow-bib HSV range. Update `bib_hsv_lower` and `bib_hsv_upper` in an `InteractionConfig` instance to match the real bib colour and lighting.
 
+## Interaction judge (second model)
+
+Proximity (body-height distance for `min_interaction_seconds`, without the pair sliding past each other by more than `max_relative_drift_heights`) only nominates a candidate. The judge then receives `judge_frames` crops of the pair from the last `min_interaction_seconds` and answers `interaction` or `no_interaction`. `--judge pose` (default) runs `backend/models/yolov8n-pose.pt` and confirms when someone's head (nose vs ears; one ear is enough for a head in profile) points at the other person's head within `facing_angle_degrees` in at least `min_facing_fraction` of the frames; two backs to the camera give no evidence and are rejected. `--judge off` keeps proximity alone. It runs once per candidate, inline (~250 ms on CPU), and a rejected pair is re-judged every `judge_recheck_seconds` while still close. If the judge fails or finds no pose, the proximity result stands (`verdict: unverified`).
+
+GPU: `--device cuda:0` runs the detector on the GPU (the pipeline switches to `best.pt`, since OpenVINO is CPU-only) and the judge too; `--judge-device cuda:0` moves only the judge.
+
 ## Customer/employee agent
 
 `cust_emp_classifier.py` (`CustEmpClassifier`) weighs each factor and decides the role. Weights: YOLO role model 0.55 (signed: `+conf` for employee, `-conf` for customer), bib colour 0.30, staff-zone dwell 0.10, stationary 0.05; employee when the score is >= 0.45. Without a role model, the YOLO weight moves to bib colour. Per frame the score is smoothed; per person the agent averages each factor over every observed frame and makes a final decision.
 
 ## Output
 
-The CLI writes an annotated video, `<output>.detections.json` (every processed frame: ByteTrack ID, bbox, detection confidence, per-frame role and factor evidence), `<output>.people.json` (one entry per ByteTrack ID: factors, weighted contributions, score, final role), plus a JSON file of interactions. Each JSON interaction includes employee and customer ByteTrack IDs, duration, image-plane distance, and active state. Pixel distances must be calibrated per camera before treating them as physical distance.
+The CLI writes an annotated video, `<output>.detections.json` (every processed frame: ByteTrack ID, bbox, detection confidence, per-frame role and factor evidence), `<output>.people.json` (one entry per ByteTrack ID: factors, weighted contributions, score, final role), `<output>.interactions.json` (one record per confirmed interaction: employee and customer ByteTrack IDs, start, last seen, duration, distance in body heights, the body part it was measured by, active state and the judge's `verdict`) and `<output>.rejected_interactions.json` (candidates the judge vetoed). Each detections frame also carries `interaction_active`, the flag shown on screen as INTERACTION: ON/OFF. Pixel distances must be calibrated per camera before treating them as physical distance.
 
 ## Optional service
 

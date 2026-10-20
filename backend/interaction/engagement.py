@@ -62,6 +62,7 @@ class EngagementDetector:
     def __init__(self, config: InteractionConfig) -> None:
         self.config = config
         self._events: dict[tuple[int, int], InteractionEvent] = {}
+        self._anchors: dict[tuple[int, int], tuple[float, float]] = {}
 
     def update(self, people: list[TrackedPerson], timestamp: float, frame_height: int = 10**9) -> list[InteractionEvent]:
         """Update interaction state and return active/just-finished eligible events."""
@@ -76,9 +77,15 @@ class EngagementDetector:
                 distance, part, _ = measured
                 key = (employee.track_id, customer.track_id)
                 seen.add(key)
-                event = self._events.get(key)
-                if event is None:
-                    self._events[key] = InteractionEvent(*key, timestamp, timestamp, distance, part)
+                # Customer position relative to the employee, in body heights: camera motion cancels out.
+                height = (employee.bbox[3] - employee.bbox[1] + customer.bbox[3] - customer.bbox[1]) / 2
+                offset = ((customer.center[0] - employee.center[0]) / height, (customer.center[1] - employee.center[1]) / height)
+                event, anchor = self._events.get(key), self._anchors.get(key)
+                walking_by = (event is not None and anchor is not None and event.duration_seconds < self.config.min_interaction_seconds
+                              and hypot(offset[0] - anchor[0], offset[1] - anchor[1]) > self.config.max_relative_drift_heights)
+                if event is None or walking_by:
+                    # A passer-by slides past the employee; restart the clock until the pair holds still together.
+                    self._events[key], self._anchors[key] = InteractionEvent(*key, timestamp, timestamp, distance, part), offset
                 else:
                     event.last_seen_at, event.distance_body_heights, event.measured_by, event.active = timestamp, distance, part, True
 
@@ -87,9 +94,7 @@ class EngagementDetector:
             if key not in seen and timestamp - event.last_seen_at > self.config.max_missing_seconds:
                 event.active = False
                 del self._events[key]
+                self._anchors.pop(key, None)
             if event.duration_seconds >= self.config.min_interaction_seconds:
                 output.append(event)
         return output
-
-    def active_events(self) -> list[InteractionEvent]:
-        return list(self._events.values())
