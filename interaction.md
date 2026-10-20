@@ -4,7 +4,7 @@
 
 The Interaction Module is one of the three core pillars of the retail analytics FYP. It uses overhead CCTV footage to detect and track people, resolves anonymous global identities, and then determines whether a registered employee and a context-resolved customer are engaged in an interaction — including whether they are oriented toward (facing) each other.
 
-**Pipeline summary:** each synchronized CCTV feed covers one configured zone. YOLOv8n detects people, ByteTrack supplies camera-local tracks, appearance embeddings support Re-ID, and an optional small VLM classifies person crops and short interaction windows. The persistent Global Person registry remains authoritative when a manager has registered a role; low-confidence VLM results stay `unknown`.
+**Pipeline summary:** each synchronized CCTV feed covers one configured zone. YOLOv8n detects people, ByteTrack supplies camera-local tracks, appearance embeddings support Re-ID, and a YOLO role model classifies person crops. The persistent Global Person registry remains authoritative when a manager has registered a role; unresolved people stay `unknown`.
 
 ## 2. Objectives
 
@@ -29,20 +29,14 @@ CCTV Frame
 [3] Re-ID / Global Person Resolution
     │  (appearance is identity evidence, never role evidence)
     ▼
-[4] Short Track Windows
-    │  (sampled person crops, cached per track)
-    ▼
-[5] VLM Role Classification
+[4] YOLO Role Classification
     │  (employee/customer/unknown; confidence threshold)
     ▼
-[6] Role Registry + Orientation
+[5] Role Registry + Orientation
     │  (facing direction per tracked person)
     ▼
-[7] VLM Interaction Check
-    │  (short employee/customer window; interaction/no_interaction)
-    ▼
-[8] Engagement Event Logic
-    │  (distance + orientation + VLM + duration thresholds)
+[6] Engagement Event Logic
+    │  (distance + orientation + duration thresholds)
     ▼
 Structured Interaction Events → Agent Layer / Dashboard
 ```

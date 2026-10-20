@@ -38,12 +38,6 @@ class CameraConfig(StrictModel):
     prior_weight: float = Field(default=0.05, ge=0, le=0.2)
     dwell_seconds: float = Field(default=300, gt=0, le=86400)
     customer_entry_rules: list["CustomerEntryRule"] = Field(default_factory=list, max_length=20)
-    # VLM is a semantic second stage.  Low-confidence predictions remain UNKNOWN.
-    vlm_role_enabled: bool = False
-    vlm_role_confidence: Unit = 0.70
-    vlm_role_interval_seconds: float = Field(default=1, gt=0, le=60)
-    vlm_interaction_enabled: bool = False
-    vlm_interaction_confidence: Unit = 0.70
 
     @field_validator("zones")
     @classmethod
