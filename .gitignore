@@ -61,7 +61,6 @@ yolo26n-cls.pt
 
 /models/
 
-# Local floor-distance inputs and generated diagnostics
+# Local raw footage and generated outputs (Ultralytics config dir lives under data/outputs)
 /data/videos/raw/
 /data/outputs/
-/data/calibration/
