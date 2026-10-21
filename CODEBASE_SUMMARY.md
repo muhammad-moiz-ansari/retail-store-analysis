@@ -20,7 +20,7 @@ The frontend is not a separate npm package: the root `package.json`, `tsconfig.j
 
 **Python setup:** one `.venv` at the repo root. `backend/requirements.txt` (OpenCV, Ultralytics, torch, FastAPI, PyAV, scipy, lap) covers everything; `backend/interaction/requirements-cv.txt` adds it plus pinned `ultralytics==8.4.135`, `openvino==2026.4.1` and `torchvision`.
 
-**Builds ignore errors:** both `next.config.ts` files set `typescript.ignoreBuildErrors`, and `frontend/next.config.ts` also sets `eslint.ignoreDuringBuilds` (a workaround for Vercel free-tier memory). Type errors only show up in local `tsc`/editor checks.
+**Builds ignore errors:** `frontend/next.config.ts` sets `typescript.ignoreBuildErrors` and `eslint.ignoreDuringBuilds` (a workaround for Vercel free-tier memory). Type errors only show up in local `tsc`/editor checks.
 
 **Env vars** (`.env.example`): `RETAILPULSE_SERVICE_URL`, `RETAILPULSE_INTERNAL_SECRET` / `POS_INTERNAL_SECRET`, `POS_AUTH_SECRET` (see gap 3), `RETAILPULSE_DB_PATH`, `RETAILPULSE_BOOTSTRAP_MANAGER_*`, `PYTHON_BIN`, `HF_*` (token, router URL, models, timeout) and `ELEVENLABS_*` (key, base URL, voice, model, output format, timeout).
 
@@ -35,7 +35,7 @@ The frontend is not a separate npm package: the root `package.json`, `tsconfig.j
 ```
 Browser ──► Next.js page ──► /api/backend/[...path] (proxy) ──► FastAPI :8011
                 │                 adds x-retailpulse-internal-secret + role/user headers
-                └─► /api/analyze-frame | compare-people | camera-handoff ──► spawns Python scripts
+                └─► /api/compare-people | camera-handoff ──► spawns Python scripts
 ```
 
 **Why it's built this way:** the browser never talks to FastAPI directly. Next.js holds the session, and FastAPI trusts only requests that carry a shared secret.
@@ -110,15 +110,10 @@ Browser ──► Next.js page ──► /api/backend/[...path] (proxy) ──�
 
 Each script is spawned as a subprocess with `PYTHON_BIN`.
 
-- **`analyze_frame.py`** (via `/api/analyze-frame`): reads a base64 JPEG on stdin and runs YOLOv8n person detection.
-  - Role heuristic: the bottom 40% of the frame counts as customer, the top 60% as employee.
-  - Scores interaction from the customer-to-employee ratio plus proximity under 150 px.
-  - Status is one of `good` / `partial` / `unattended` / `idle` / `overwhelmed`.
-  - This is an early prototype. The interaction module replaces it.
 - **`compare_people.py`** (via `/api/compare-people`): counts people in two videos every Nth frame and returns a ratio verdict (`Balanced` / `V1 stronger ratio` / `V2 stronger ratio`). Writes JSON and CSV to `backend/output/`. The route caches results by video path and interval.
-- **`video_similarity.py`**: compares two videos with SSIM and MSE at 300 random timestamps (seed 42). SSIM is implemented by hand, with no scikit-image dependency.
+- `compare_people.py` and the camera handoff use the trained `models/best.pt` (both its classes, employee and customer, are people).
 - **`vision_inference.py`**: shared `load_model` and `track_frame` helpers. It never downloads weights, caps torch threads, and runs ByteTrack.
-- **`frontend/src/lib/dashboard-data.js`**: turns the committed `people_comparison.json` and `video_similarity.json` snapshots into the dashboard's summary numbers. Tested in `dashboard-data.test.js`.
+- **`frontend/src/lib/dashboard-data.js`**: turns the committed `people_comparison.json` and `video_similarity.json` snapshots (the SSIM script that produced the latter was removed; the snapshot stays) into the dashboard's summary numbers. Tested in `dashboard-data.test.js`.
 
 ---
 
@@ -254,19 +249,17 @@ Elsewhere: `backend/test_handoff_core.py` (5 tests, see gap 8) and one Node test
   - `best.pt`: employee/customer detector, trained with `notebooks/train_staff_customer_yolov8_kaggle.ipynb` (YOLOv8n, 640 px, 75 epochs on a Kaggle T4).
   - The OpenVINO 320 px export of it.
   - `yolov8n-pose.pt` for the judge.
-  - `backend/yolov8n.pt` (COCO) for the older scripts.
-- **`dummydataset/`**: synthetic POS data (transactions, footfall and calendar CSVs for a 35% conversion test, dated 2004-12-21 to 27). **No code reads it yet.** The root `README.txt` is not a project readme: it's the import instructions and expected results for this data (701 line items, 350 sales, 1,000 entries → 35%). The folder also holds the local benchmark `.MOV` clips, which are gitignored.
-- **`backend/videos/`**: `cam1`/`cam2` (plus `_tracked` outputs) for handoff and the dashboard, `ShopAssistant1cor.mp4` and `OneShopOneWait1cor.mp4`. All are gitignored, so a fresh clone has none; only `prompt.txt` (a one-line note) is tracked.
+- **`dummydataset/`**: synthetic POS data (transactions, footfall and calendar CSVs for a 35% conversion test, dated 2004-12-21 to 27). **No code reads it yet.** `dummydataset/README.txt` has the import instructions and expected results for this data (701 line items, 350 sales, 1,000 entries → 35%). The folder also holds the local benchmark `.MOV` clips, which are gitignored.
+- **`backend/videos/`**: `cam1`/`cam2` for handoff and the dashboard, `ShopAssistant1cor.mp4` and `OneShopOneWait1cor.mp4`. All are gitignored, so a fresh clone has none.
 - **`.gitignore`** drops all images and video (`*.png`, `*.jpg`, `*.mp4`, `*.MOV` …), every `*.sqlite3`, `backend/output/`, `/data/outputs/` and `/data/videos/raw/`. Generated files never reach git.
 - **`data/calibration/queue_temp*.json`**: a provisional floor calibration. **Also not read by any code.**
 - **`data/report/`**: the LaTeX FYP report (chapters, a FAST-NUCES class file, bibliography).
-- **`interaction.md`, `gpu-and-vlm-notes.md`**: design notes.
 
 ---
 
 ## 9. Gaps worth knowing
 0. **Live API keys in git history:** `.env.example` at `HEAD` (since commit `d3a9850`, pushed to `origin`) contains a real `HF_TOKEN` and `ELEVENLABS_API_KEY`. The uncommitted change blanks them, but they stay in history. Revoke and rotate both keys; blanking the file isn't enough.
-1. **Unguarded CV routes:** `/api/analyze-frame`, `/api/compare-people` and `/api/camera-handoff` have no session check. `camera-handoff` also accepts any absolute file path.
+1. **Unguarded CV routes:** `/api/compare-people` and `/api/camera-handoff` have no session check. `camera-handoff` also accepts any absolute file path.
 2. **Client-only page guard:** `RouteAccessGuard` runs only in the browser; there's no `middleware.ts`. The backend APIs are still role-checked, so data is protected, but pages aren't gated server-side.
 3. **Session secret name mismatch:** `.env.example` sets `POS_AUTH_SECRET`, but `pos-auth.ts` reads `POS_SESSION_SECRET` or `NEXTAUTH_SECRET`. Sessions are therefore signed with the hard-coded default.
 4. **Wrong demo password in docs:** the `.env.example` comment says the manager password is `123456`, but the seeded value is `password123`.

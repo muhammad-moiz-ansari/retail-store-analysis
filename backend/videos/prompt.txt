@@ -1,1 +1,0 @@
-every half sec do the comaprison computation. 

@@ -31,7 +31,7 @@ except ImportError:  # script/test invocation from backend/
 
 INTERNAL_SECRET = os.getenv("CAMERA_INTERNAL_SECRET", "local-dev-camera-secret")
 REPO_ROOT = Path(__file__).resolve().parent.parent
-MODEL_PATH = Path(os.getenv("CAMERA_MODEL_PATH", str(REPO_ROOT / "backend" / "yolov8n.pt")))
+MODEL_PATH = Path(os.getenv("CAMERA_MODEL_PATH", str(REPO_ROOT / "backend" / "models" / "best.pt")))
 app = FastAPI(title="RetailPulse Camera Analytics", version="0.1.0")
 _jobs: dict[str, dict[str, Any]] = {}
 _identity_registry = IdentityRegistry(Store())

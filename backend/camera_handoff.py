@@ -158,7 +158,7 @@ def process_camera(
             continue
 
         timestamp = frame_index / fps
-        results = track_frame(model, frame, classes=[0])
+        results = track_frame(model, frame)
         boxes = results[0].boxes if results else []
         for box in boxes:
             if box.id is None:
@@ -247,7 +247,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Process a directional cam1-to-cam2 handoff")
     parser.add_argument("--cam1", required=True, type=Path)
     parser.add_argument("--cam2", required=True, type=Path)
-    parser.add_argument("--model", default=Path(__file__).with_name("yolov8n.pt"), type=Path)
+    parser.add_argument("--model", default=Path(__file__).with_name("models") / "best.pt", type=Path)
     parser.add_argument("--output", default=Path(__file__).parent / "output" / "camera_handoff.json", type=Path)
     parser.add_argument("--sample-every", default=5, type=int)
     parser.add_argument("--min-gap", default=1.0, type=float)
