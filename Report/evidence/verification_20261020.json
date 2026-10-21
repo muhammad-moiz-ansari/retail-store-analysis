@@ -1,0 +1,137 @@
+{
+  "date": "2026-10-20",
+  "branch": "feature/interaction",
+  "head": "52f651e",
+  "unit_tests": {
+    "passed": 24,
+    "elapsed_seconds": 2.66,
+    "scope": "engagement, role classifiers, identity, tracker",
+    "note": "Rerun for the corrected mid-iteration scope"
+  },
+  "http_checks": {
+    "date": "2026-10-20",
+    "timezone": "Asia/Karachi",
+    "isolated_databases": true,
+    "checks": [
+      {
+        "check": "backend_health",
+        "passed": true,
+        "expected_status": 200,
+        "observed_status": 200,
+        "detail": ""
+      },
+      {
+        "check": "backend_missing_secret",
+        "passed": true,
+        "expected_status": 401,
+        "observed_status": 401,
+        "detail": ""
+      },
+      {
+        "check": "backend_wrong_secret",
+        "passed": true,
+        "expected_status": 401,
+        "observed_status": 401,
+        "detail": ""
+      },
+      {
+        "check": "wrong_password",
+        "passed": true,
+        "expected_status": 401,
+        "observed_status": 401,
+        "detail": ""
+      },
+      {
+        "check": "role_mismatch_rejected",
+        "passed": true,
+        "expected_status": 401,
+        "observed_status": 401,
+        "detail": ""
+      },
+      {
+        "check": "anonymous_session",
+        "passed": true,
+        "expected_status": 200,
+        "observed_status": 200,
+        "detail": ""
+      },
+      {
+        "check": "anonymous_proxy_rejected",
+        "passed": true,
+        "expected_status": 401,
+        "observed_status": 401,
+        "detail": ""
+      },
+      {
+        "check": "manager_login_via_frontend",
+        "passed": true,
+        "expected_status": 200,
+        "observed_status": 200,
+        "detail": ""
+      },
+      {
+        "check": "session_cookie_flags",
+        "passed": true,
+        "detail": "HttpOnly and SameSite=Lax; token intentionally omitted"
+      },
+      {
+        "check": "manager_settings_access",
+        "passed": true,
+        "expected_status": 200,
+        "observed_status": 200,
+        "detail": ""
+      },
+      {
+        "check": "manager_session_readback",
+        "passed": true,
+        "expected_status": 200,
+        "observed_status": 200,
+        "detail": ""
+      },
+      {
+        "check": "logout",
+        "passed": true,
+        "expected_status": 200,
+        "observed_status": 200,
+        "detail": ""
+      },
+      {
+        "check": "employee_login_via_frontend",
+        "passed": true,
+        "expected_status": 200,
+        "observed_status": 200,
+        "detail": ""
+      },
+      {
+        "check": "employee_manager_endpoint_rejected",
+        "passed": true,
+        "expected_status": 403,
+        "observed_status": 403,
+        "detail": ""
+      },
+      {
+        "check": "removed_route_/reports",
+        "passed": true,
+        "expected_status": 404,
+        "observed_status": 404,
+        "detail": "Absent route, not a passed feature test"
+      }
+    ],
+    "all_checks_passed": true,
+    "login_warm_http_ms": [
+      69.86,
+      77.12,
+      82.83
+    ],
+    "login_warm_http_median_ms": 77.12,
+    "timing_scope": "Three warm development-server HTTP requests; excludes first compilation, browser rendering and model inference",
+    "scope": "15 retained in-scope assertions; includes one report-route absence check, not a feature pass"
+  },
+  "ui_scope": "Representative manager dashboard/customer/employee views and employee workspace screenshots. Not exhaustive navigation.",
+  "limitations": [
+    "PDF report route removed",
+    "Floor-distance source removed after historical implementation",
+    "768 MB development Node heap exhausted during navigation; restarted at 2048 MB",
+    "No labelled model-performance accuracy or supervisor acceptance of measured software performance established"
+  ]
+}

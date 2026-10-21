@@ -1,0 +1,173 @@
+\chapter{Testing and Early Validation}
+\label{ch:testing}
+\section{Testing Strategy}
+Testing combines functional checks of implemented modules, integration checks across the proxy, backend, and database, security checks of access control, and, in FYP-2, quantitative evaluation of the vision agents against manually labelled clips.
+
+\section{Test Levels and Techniques}
+\begin{itemize}
+\item \textbf{Unit level:} role/classification, engagement, pass-by, pose-judge, tracking and benchmark-metric checks with known synthetic inputs; the focused floor-geometry, failure-state, smoothing, motion and evaluation checks belonged to the descoped floor prototype.
+\item \textbf{Vision CLI integration:} actual trained weights and local video, exported video readability, JSONL invariants and explicit unavailable-state checks.
+\item \textbf{Integration level:} frontend to proxy to FastAPI to SQLite for account/application flows.
+\item \textbf{System level:} end-to-end use of dashboards, reports and person-analysis outputs.
+\item \textbf{Security testing:} direct calls without cookie or secret.
+\item \textbf{Vision evaluation:} detector KPIs on a held-out split and interaction precision/recall against labelled clips through \path{backend/interaction/benchmark.py}; broader labelled evaluation continues in FYP-2.
+\end{itemize}
+
+\section{Test Cases}
+\begin{longtable}{P{0.09\textwidth}P{0.3\textwidth}P{0.32\textwidth}P{0.14\textwidth}}
+\toprule
+ID & Test & Expected result & Req.\\
+\midrule
+\endhead
+TC-01 & Log in as Manager using a valid existing account & Session cookie set; manager pages open & FR-10\\
+TC-02 & Open a protected manager application route without a cookie, or call backend without the secret & Request rejected & NFR-07/08\\
+TC-07 & Person detection on a labelled clip & Detection precision/recall reported & FR-01/02\\
+TC-08 & Staff/customer classification on a labelled clip & Accuracy reported & FR-03\\
+TC-09 & Controlled clip with unattended customer & Unattended flag and alert raised & FR-04/05\\
+TC-10 & Path and dwell on a labelled clip & Zone dwell matches annotation within tolerance & FR-07\\
+TC-12 & Navigate all pages for both roles & Pages render; employee blocked from manager pages & FR-11--13, 18--20\\
+TC-13 & Build report and export PDF & PDF contains selected sections and narrative & FR-17\\
+TC-14 & Uncalibrated trained-model preview & Role labels, IDs and foot proxies exported without fabricated metres & FR-21\\
+TC-15 & Headless landmark calibration & Provisional H, grid and floor map generated & FR-22/26\\
+TC-16 & Interactive point selection & Ordered clicks, undo/reset/save preserve original pixels & FR-22\\
+TC-17 & Known geometry and preprocessing & Expected projections, metre units and coordinate recovery & FR-23; NFR-11\\
+TC-18 & Invalid/unsupported positions & Explicit unavailable states rather than zero distances & FR-24; NFR-11\\
+TC-19 & Camera alignment / no features & Shifted and unverified frames suppress supported output & FR-25\\
+TC-20 & Demo and diagnostic exports & Readable videos, timestamps and approximate/provisional labels & FR-27/28\\
+TC-21 & Pose judge decision logic & Facing heads confirm; heads turned away or backs to camera reject; no pose or a failing judge keeps the proximity result as \texttt{unverified} & FR-04\\
+TC-22 & Pass-by and moving-camera cases & A customer walking past produces no interaction; a pair under a panning camera still interacts & FR-04\\
+TC-23 & Benchmark metric functions & One-to-one temporal-IoU matching; correct precision, recall and F1 & FR-03/04\\
+TC-24 & Interaction CLI on the local clip set & Every clip completes; annotated video, confirmed and rejected interactions written & FR-04; NFR-02\\
+TC-25 & Repeat run with the same inputs & Byte-identical JSON outputs & NFR-01\\
+\bottomrule
+\end{longtable}
+Detailed steps are in Appendix~\ref{app:tests}.
+
+\section{Test Results}
+\begin{table}[H]
+\centering
+\caption{Test execution status at mid-report}
+\begin{tabular}{P{0.12\textwidth}P{0.18\textwidth}P{0.5\textwidth}}
+\toprule
+Test & Result & Notes\\
+\midrule
+TC-01 & Passed & Actual manager/employee account login, cookie flags, logout and wrong-credential rejection checked.\\
+TC-02 & Passed, adapted & Current settings proxy: anonymous 401, missing/wrong backend secret 401, employee access 403.\\
+TC-13 & Unavailable & Report/PDF route absent on current branch; corresponding route returned 404.\\
+TC-12 & Partial & Representative manager/employee views captured. Exhaustive role navigation not completed.\\
+TC-07, TC-08 & Measured & Held-out split (455 images): precision 0.963, recall 0.953, mAP50 0.969 (Table~\ref{tab:detector-kpi}).\\
+TC-09, TC-10 & Pending & Unattended flags and trajectory are not yet produced (Iteration 2).\\
+TC-21--TC-23 & Passed & 7 pose-judge, 2 pass-by (within the 8-test engagement suite) and 3 benchmark-metric tests.\\
+TC-24 & Passed & 11 clips: 19 candidates, 17 confirmed, 2 rejected (Table~\ref{tab:batch}).\\
+TC-25 & Passed & IMG\_8829 JSON outputs byte-identical across two runs.\\
+\bottomrule
+\end{tabular}
+\end{table}
+The application cases above were executed on 20 October 2026 against isolated SQLite databases and local development servers. All 15 retained in-scope HTTP assertions passed, including one assertion that the removed report route returned 404; that assertion is an absence check, not a feature pass. The role, engagement, identity and tracker suites were rerun for the corrected mid-iteration scope: 24 tests passed in 2.66 seconds. After the pose judge and benchmark were added, all interaction suites were rerun with pytest: 44 tests passed in 1.72 seconds (engagement 8, role classifiers 4 and 5, identity 4, tracker 5, pose judge 7, benchmark 3, frame processor 8). UI screenshots substantiate representative views only. Three warm login HTTP requests took 69.86, 77.12 and 82.83\,ms (median 77.12\,ms); these exclude compilation, rendering and inference and do not establish a dashboard performance requirement.
+
+\textbf{Version boundary.} Commit \texttt{8c3a6fe} removed the calibrated floor-distance source on 20 October. The floor results below preserve the earlier implementation evidence; they are not a successful rerun of removed source at current HEAD. The floor-distance software/integration evidence below was executed during the 19--20 October 2026 implementation session. The results below describe software checks, integration behavior and accepted-position coverage.
+
+\subsection{Floor-Distance Software and Integration Results}
+\begin{longtable}{P{0.42\textwidth}P{0.44\textwidth}}
+\caption{Executed floor-distance checks and temporary-video coverage}\label{tab:floor-results}\\
+\toprule
+Check / quantity & Actual result\\
+\midrule
+\endhead
+Focused floor-distance automated suite (TC-17--TC-19 and evaluation functions) & 17 tests passed; synthetic geometry/failure cases, smoothing/prediction, alignment shifts and error statistics.\\
+Actual trained-model preview (TC-14) & Completed with local \path{models/best.pt}; no retraining.\\
+Headless calibration (TC-15) & Completed; grid and versioned provisional calibration saved.\\
+Point-click calibration (TC-16) & Point-selection interface implemented.\\
+Sampled clip execution (TC-20) & 148 processed frames, sampling every 30 source frames across the clip.\\
+Detection observations & 284 repeated observations, not 284 unique people.\\
+Frame alignment outcomes & 1 reference snapshot; 9 motion-invalid frames; 138 unverified frames.\\
+Accepted position observations & 2 of 284, approximately 0.70\% accepted coverage.\\
+Available approximate pair observations & 1 reference-frame pair, including a seated-person proxy.\\
+Video/record verification & Both 148-frame videos decode through the final frame; timestamps increase; unsupported positions have null coordinates.\\
+Snapshot / missing-track behavior & Three-frame check preserves explicit unavailable selected-pair records.\\
+Missing-weight handling & Actionable local missing-model error verified.\\
+\bottomrule
+\end{longtable}
+The executed commands are documented in \path{docs/floor_distance_usage.md}. The coverage summary is exported as \path{data/outputs/distance/demo/summary.json}, with observation records in \path{metrics.jsonl}. The 0.70\% value is accepted-position coverage, not accuracy. The reference pair is an approximate box-proxy demonstration involving a seated person. No whole-clip supported metric result is claimed.
+
+\subsection{Interaction Pipeline and Benchmark Results}
+The benchmark (\path{backend/interaction/benchmark.py}) was run on 20 October 2026 on a CPU-only laptop, scoring and tracking every tenth frame; the full report is \path{evidence/benchmark_20261020.json}.
+
+\begin{table}[H]
+\centering
+\caption{Detector KPIs on the recording-level held-out split (455 images)}
+\label{tab:detector-kpi}
+\begin{tabular}{P{0.2\textwidth}P{0.14\textwidth}P{0.14\textwidth}P{0.14\textwidth}P{0.16\textwidth}}
+\toprule
+Class & Precision & Recall & mAP50 & mAP50-95\\
+\midrule
+All & 0.963 & 0.953 & 0.969 & 0.896\\
+Employee & 0.968 & 0.990 & 0.982 & --\\
+Customer & 0.958 & 0.916 & 0.955 & --\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Interaction accuracy on the labelled clip (IMG\_8829)}
+\label{tab:interaction-kpi}
+\begin{tabular}{P{0.26\textwidth}P{0.13\textwidth}P{0.13\textwidth}P{0.1\textwidth}P{0.2\textwidth}}
+\toprule
+Decision & Precision & Recall & F1 & TP / FP / FN\\
+\midrule
+Proximity alone & 0.50 & 1.00 & 0.67 & 1 / 1 / 0\\
+Proximity + pose judge & 1.00 & 1.00 & 1.00 & 1 / 0 / 0\\
+\bottomrule
+\end{tabular}
+\end{table}
+The false positive removed by the judge is the 1.7--15.3\,s segment in which the employee and customer walk away side by side (Figure~\ref{fig:judge-examples}, right). One clip with one true interaction shows the judge's effect; it does not establish accuracy. IMG\_8829 is in the detector's training split, so it is used for interaction KPIs only.
+
+\begin{table}[H]
+\centering
+\caption{Interaction CLI on 11 local clips (scored every 10th frame, tracked every 3rd)}
+\label{tab:batch}
+\begin{tabular}{P{0.14\textwidth}P{0.14\textwidth}P{0.12\textwidth}P{0.12\textwidth}P{0.14\textwidth}P{0.14\textwidth}}
+\toprule
+Clip & Candidates & Confirmed & Rejected & Duration (s) & Realtime\\
+\midrule
+IMG\_8829 & 2 & 1 & 1 & 8.0 & 1.40$\times$\\
+IMG\_8878 & 2 & 2 & 0 & 15.7 & 1.54$\times$\\
+IMG\_8880 & 1 & 1 & 0 & 25.3 & 1.41$\times$\\
+IMG\_8881 & 3 & 3 & 0 & 38.0 & 1.31$\times$\\
+IMG\_8885 & 0 & 0 & 0 & 0 & 1.37$\times$\\
+IMG\_8886 & 1 & 1 & 0 & 6.7 & 1.23$\times$\\
+IMG\_8890 & 2 & 2 & 0 & 31.7 & 1.40$\times$\\
+IMG\_8893 & 3 & 2 & 1 & 37.0 & 1.43$\times$\\
+IMG\_8894 & 1 & 1 & 0 & 26.7 & 1.16$\times$\\
+IMG\_8895 & 3 & 3 & 0 & 19.7 & 0.80$\times$\\
+IMG\_8897 & 1 & 1 & 0 & 23.0 & 1.23$\times$\\
+\midrule
+Total & 19 & 17 & 2 & 231.8 & \\
+\bottomrule
+\end{tabular}
+\end{table}
+Candidates, confirmations and durations are from the CLI run; the realtime factor is from the benchmark run, which also tracks every tenth frame. Ten of the 11 clips are not labelled, so their counts are pipeline outputs, not accuracy; their candidates are listed in \path{evidence/interaction_judge_batch_20261020.csv} for labelling. No candidate was \texttt{unverified}. Per-frame latency was 120--171\,ms at the median, and judge calls took 226--401\,ms each, except on IMG\_8895, where they took about 893\,ms; that clip missed the benchmark's 1.0$\times$ realtime target and should be re-measured. With tracking on every third frame, processing ran at 0.50--0.59$\times$ realtime.
+
+\section{Acceptance Testing / Validation}
+Acceptance follows the criteria in Chapter~\ref{ch:req}. The team reports showing the supervisor the 70-video dataset, which he agreed to; this was the material he requested. The dataset was approved at the supervisor meeting on 12 October 2026. The separate client meeting was on 10 September 2026, as confirmed by the team; see Appendix~\ref{app:meetings}. No numeric accuracy or response-time targets were agreed. This is dataset approval rather than acceptance of measured classification, interaction or dashboard performance. Executed local checks and screenshots provide the separate software evidence.
+
+
+\section{Edge and Failure Cases}
+\begin{itemize}
+\item Staff outside their usual zone or customers in uniform-like clothing, affecting classification.
+\item Identity switches during occlusion, affecting dwell and interaction durations.
+\item Expired or missing session cookie.
+\item Depth ambiguity in the interaction pipeline: people at different depths whose boxes overlap can appear close, and a head turned only slightly can pass the $60^\circ$ facing test (IMG\_8878 at 36\,s).
+\item Identity switches on a moving camera split one customer into several track IDs and one interaction into several (IMG\_8881, IMG\_8895).
+\item Duplicate/collinear landmarks, invalid homogeneous denominators, incompatible units or frame sizes, stale homography and extrapolation outside calibrated coverage.
+\item Lower-frame truncation, manual exclusions, person overlap and seated/occluded feet; box-bottom positions remain proxies.
+\item Missing selected tracks, predicted positions, implausible metric jumps and expired reliable observations.
+\item Camera shifts, insufficient floor matches or poor spatial spread: preserve unavailable measurements rather than reuse stale alignment.
+\end{itemize}
+
+\section{Defects and Corrective Actions}
+The first actual tracking run exposed a missing \texttt{lap} assignment dependency; it was installed into the existing virtual environment and declared in backend requirements, after which ByteTrack inference completed. Reference-frame selection was changed to use media timestamps rather than assuming constant-rate timing. A stale-calibration guard and explicit illustrative-config rejection prevent accidental use of incompatible inputs. During the current application checks, the development frontend exhausted a 768\,MB Node heap; it was restarted with a 2048\,MB heap, without modifying application source. The interaction CLI originally appended an active interaction once per scored frame; it now keeps one record per interaction. Annotated videos written while skipping frames keep the source frame rate and play faster than real time; review copies were re-encoded at the true rate. Exhaustive page navigation was not completed. The first unit-test attempt encountered SQLite permission errors in the sandbox temporary directory; using a writable repository-local temporary directory resolved the temporary-directory issue; the corrected-scope rerun subsequently passed 24 tests.
+
+\section{Current Validation Status}
+The floor-distance prototype passed its focused synthetic software checks and actual-model/video integration checks before it was descoped. The moving temporary clip supported only the calibration-reference snapshot; the remaining sampled frames were motion-invalid or unverified. The exported quality states distinguish supported approximate positions from unavailable measurements. Trained roles, body-height proximity, duration and the pose judge are now combined in the interaction pipeline, which runs on all 11 local clips; its accuracy is measured on one labelled clip only, and dashboard integration is pending.

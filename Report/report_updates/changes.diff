@@ -1,0 +1,512 @@
+--- chapters/appendix_diagrams.tex (original)
++++ chapters/appendix_diagrams.tex (updated)
+@@ -37,4 +37,17 @@
+ \bottomrule
+ \end{tabular}
+ 
+-States include \texttt{uncalibrated}, \texttt{observed\_proxy}, \texttt{predicted}, \texttt{unreliable}, \texttt{out\_of\_region}, \texttt{motion\_unverified} and \texttt{motion\_invalid}. Only supported observed proxies contribute to approximate pair distances. The localization equations are given in Equations~\ref{eq:floor-foot}--\ref{eq:floor-distance}; no 3D reconstruction is implied.
++States include \texttt{uncalibrated}, \texttt{observed\_proxy}, \texttt{predicted}, \texttt{unreliable}, \texttt{out\_of\_region}, \texttt{motion\_unverified} and \texttt{motion\_invalid}. Only supported observed proxies contribute to approximate pair distances. The localization equations are given in Equations~\ref{eq:floor-foot}--\ref{eq:floor-distance}; no 3D reconstruction is implied. These records belong to the descoped floor prototype (Section~\ref{sec:floor-descoped}).
++
++\section{Interaction Verdict States}
++Each interaction candidate in the current pipeline carries one verdict; annotated output is in Figure~\ref{fig:judge-examples}.
++
++\begin{tabular}{P{0.22\textwidth}P{0.65\textwidth}}
++\toprule
++Verdict & Meaning\\
++\midrule
++\texttt{interaction} & The pose judge found a head turned towards the other person in at least half of the judged frames.\\
++\texttt{no\_interaction} & Poses were found but nobody faced the other person; written to \texttt{.rejected\_interactions.json} and re-judged every four seconds while the pair stays close.\\
++\texttt{unverified} & Judge switched off, no pose found, or the judge failed; the proximity result stands.\\
++\bottomrule
++\end{tabular}
+--- chapters/appendix_repository.tex (original)
++++ chapters/appendix_repository.tex (updated)
+@@ -1,6 +1,6 @@
+ \chapter{Repository and Contribution Evidence}
+ \label{app:repo}
+-Repository: \path{github.com/muhammad-moiz-ansari/retail-store-analysis}. Inspected branch: \path{feature/interaction}; HEAD: \texttt{52f651e}; evidence date: 20 October 2026.
++Repository: \path{github.com/muhammad-moiz-ansari/retail-store-analysis}. Inspected branch: \path{feature/interaction}; HEAD: \texttt{6560403}; evidence date: 20 October 2026.
+ 
+ \begin{longtable}{P{0.13\textwidth}P{0.16\textwidth}P{0.18\textwidth}P{0.41\textwidth}}
+ \caption{Selected commits verified from local Git history}\\
+@@ -16,6 +16,10 @@
+ \texttt{face2b5} & 20 Oct 2026 & \texttt{msaqibatifj} & Distance-based engagement for moving camera.\\
+ \texttt{8c3a6fe} & 20 Oct 2026 & \texttt{msaqibatifj} & Remove calibrated floor-distance pipeline.\\
+ \texttt{80fb3fd} & 20 Oct 2026 & Moiz Ansari & Add mid-1 report.\\
++\texttt{20db4c6} & 19 Oct 2026 & \texttt{msaqibatifj} & On-screen interaction flag (\path{feature/interaction-flag}).\\
++\texttt{4cbe655} & 20 Oct 2026 & \texttt{msaqibatifj} & Remove unused vision-language-model stage.\\
++\texttt{cffa30b} & 20 Oct 2026 & \texttt{msaqibatifj} & Remove unused code (interaction dataset, evaluation and model loader).\\
++\texttt{6560403} & 20 Oct 2026 & \texttt{msaqibatifj} & Pose judge, pass-by filter and benchmark.\\
+ \bottomrule
+ \end{longtable}
+ 
+@@ -23,4 +27,4 @@
+ At the inspected HEAD, \texttt{git shortlog -sne HEAD} records 43 commits for Moiz Ansari, 41 for \texttt{msaqibatifj} and 28 for Ruhab Ahmad, including merge commits. Counts describe recorded authorship and are not measures of effort or contribution quality. The mapping of account aliases and non-code responsibilities requires team confirmation. \texttt{git tag --list} returned no tags. No task-board history or supervisor-approved milestone record was available for this check, so none is fabricated. Textual Git evidence is supplied instead of an unverified contribution-graph screenshot.
+ 
+ \section{Floor-Distance Implementation Evidence}
+-Commit \texttt{4a9023a} records the shared inference helper, geometry/calibration/motion/smoothing/evaluation modules, four CLI scripts, focused tests, camera schema/examples and usage documentation. The selected report figures preserve local prototype outputs from that implementation. Commit \texttt{8c3a6fe} subsequently removed the source pipeline; current-branch availability must not be inferred from these historical figures. Raw video and generated diagnostics remain outside the report's tracked evidence. The new test summary is at \path{evidence/verification_20261020.json}.
++Commit \texttt{4a9023a} records the shared inference helper, geometry/calibration/motion/smoothing/evaluation modules, four CLI scripts, focused tests, camera schema/examples and usage documentation. The selected report figures preserve local prototype outputs from that implementation. Commit \texttt{8c3a6fe} subsequently removed the source pipeline; current-branch availability must not be inferred from these historical figures. Raw video and generated diagnostics remain outside the report's tracked evidence. The new test summary is at \path{evidence/verification_20261020.json}; the benchmark report and interaction batch results are at \path{evidence/benchmark_20261020.json} and \path{evidence/interaction_judge_batch_20261020.csv}.
+--- chapters/appendix_requirements.tex (original)
++++ chapters/appendix_requirements.tex (updated)
+@@ -13,4 +13,4 @@
+ \end{tabular}
+ 
+ \section{Floor-Distance Requirement Priorities and Operator Use Case}
+-FR-21--FR-26 and FR-28 are high priority; FR-27 is medium priority. NFR-11 applies to all floor-distance paths. UC-14 in Chapter~\ref{ch:req} covers the operator-facing calibration and diagnostic workflow. It supplements existing manager/employee use cases and does not imply that a calibration interface or metric interaction feature is deployed in the web application.
++FR-21--FR-26 and FR-28 are high priority; FR-27 is medium priority. NFR-11 applies to all floor-distance paths. UC-14 in Chapter~\ref{ch:req} covers the operator-facing calibration and diagnostic workflow. It supplements existing manager/employee use cases and does not imply that a calibration interface or metric interaction feature is deployed in the web application. The prototype that implemented these requirements was descoped in commit \texttt{8c3a6fe} (Section~\ref{sec:floor-descoped}).
+--- chapters/appendix_test_cases.tex (original)
++++ chapters/appendix_test_cases.tex (updated)
+@@ -9,11 +9,15 @@
+ TC-02 & Request current settings proxy anonymously; call backend with missing/wrong secret; try employee credentials. & HTTP 401/403 as appropriate. & Passed adapted case\\
+ TC-12 & Inspect representative manager/employee views and route-guard source. & Role-specific pages and consistent restrictions. & Partial; representative views only; not exhaustive\\
+ TC-13 & Build a report and export PDF. & PDF opens with selected sections. & Unavailable: report route removed (404)\\
+-TC-07 to TC-10 & Defined in FYP-2 against labelled clips. & See Chapter~\ref{ch:testing}. & Pending\\
++TC-07, TC-08 & Run the benchmark with the detector section enabled on the held-out split. & Overall and per-class precision, recall and mAP. & Measured 20 Oct 2026\\
++TC-09, TC-10 & Defined in FYP-2 against labelled clips. & See Chapter~\ref{ch:testing}. & Pending\\
++TC-21--TC-23 & Run \path{test_judge.py}, \path{test_engagement.py} and \path{test_benchmark.py}. & All checks pass. & Passed\\
++TC-24 & Run the interaction CLI with \texttt{--every 10 --track-every 3} on each local clip; reopen videos and JSON. & All clips complete; confirmed and rejected interactions written. & Passed (11 clips)\\
++TC-25 & Run the CLI twice on IMG\_8829 with identical settings; compare JSON files. & Byte-identical outputs. & Passed\\
+ \bottomrule
+ \end{longtable}
+ 
+-\section{Floor-Distance Test Procedures}
++\section{Floor-Distance Test Procedures (Descoped Prototype)}
+ \begin{longtable}{P{0.09\textwidth}P{0.35\textwidth}P{0.30\textwidth}P{0.14\textwidth}}
+ \toprule
+ ID & Steps & Expected outcome & Executed status\\
+@@ -41,4 +45,4 @@
+ \end{quote}
+ 
+ \section{Current-Branch Reproduction}
+-The 20 October check ran these existing files with pytest: \path{backend/interaction/test_engagement.py}, \path{test_cust_emp_classifier.py}, \path{test_role_classifier.py}, \path{test_identity.py}, \path{test_tracker.py} (all under the same interaction directory). Set \texttt{PYTHONPATH} to the backend directory and \texttt{TEMP}/\texttt{TMP} to a writable local test directory. Corrected-scope rerun: 24 passed in 2.66 seconds. Historical floor-suite commands above refer to the implementation before its removal, not current-branch availability.
++The 20 October check ran these existing files with pytest: \path{backend/interaction/test_engagement.py}, \path{test_cust_emp_classifier.py}, \path{test_role_classifier.py}, \path{test_identity.py}, \path{test_tracker.py} (all under the same interaction directory). Set \texttt{PYTHONPATH} to the backend directory and \texttt{TEMP}/\texttt{TMP} to a writable local test directory. Corrected-scope rerun: 24 passed in 2.66 seconds. After the pose judge and benchmark were added, \texttt{python -m pytest backend/interaction -q} passed 44 tests in 1.72 seconds. The benchmark is run with \texttt{python -m backend.interaction.benchmark backend/interaction/benchmarks/benchmark.json}. Historical floor-suite commands above refer to the implementation before its removal, not current-branch availability.
+--- chapters/chapter10_fyp2_plan.tex (original)
++++ chapters/chapter10_fyp2_plan.tex (updated)
+@@ -5,12 +5,11 @@
+ 
+ \section{Remaining Modules and Features}
+ \begin{itemize}
+-\item Integrate and evaluate Detection, Classification, Engagement and Trajectory agents; the trained-role floor CLI is already implemented.
+-\item Integrate supported metric proximity with trained roles and temporal evidence for interaction events, including close pass-bys that are not assistance.
++\item Integrate and evaluate Detection, Classification, Engagement and Trajectory agents; detection, classification and interaction detection with the pose judge are already implemented in the interaction CLI.
++\item Evaluate interaction detection (proximity, duration, pass-by filter and pose judge) on labelled clips, including close pass-bys that are not assistance; ten local clips await labels.
+ \item Insight Narration agent over real analytics.
+ \item Real data in Dashboard, Customer Info, Employee Info, Spatial Analytics, Alerts, and System Status.
+-\item Implement camera handoff in the next phase: associate a person leaving one camera with a person entering another using timing, direction and appearance evidence. This is outside the mid-iteration deliverables; ambiguous associations must remain unresolved.
+-\item Replacement of demo authentication with proper credential handling.
++\item Implement camera handoff in the next phase: associate a person leaving one camera with a person entering another using timing, direction and appearance evidence. This is outside the mid-iteration deliverables; ambiguous associations must remain unresolved. An experimental two-camera handoff script and \texttt{/camera/*} job routes already exist.
+ \end{itemize}
+ 
+ \section{Remaining Iterations}
+@@ -58,7 +57,7 @@
+ \section{Expected Final Deliverables}
+ \begin{itemize}
+ \item Working RetailPulse system with real vision analytics and role-aware web access.
+-\item Evaluation report with detector/interaction results, floor-distance quality/coverage diagnostics and CPU throughput.
++\item Evaluation report with detector and interaction results (with and without the pose judge) and CPU throughput.
+ \item Source repository with documentation and run instructions.
+ \item Final report and demonstration.
+ \end{itemize}
+--- chapters/chapter6_iteration1.tex (original)
++++ chapters/chapter6_iteration1.tex (updated)
+@@ -4,21 +4,25 @@
+ Build the application platform and data services that later vision analytics plug into, secure it, and demonstrate person/role analysis, interaction cues and distance estimation.
+ 
+ \section{Selected Use Cases / Features}
+-UC-01--UC-05, UC-08--UC-11, UC-13 and the operator-facing UC-14 (Chapter~\ref{ch:req}), covering the application and person-analysis features and the additional FR-21--FR-28 floor-distance prototype.
++UC-01--UC-05, UC-08--UC-11, UC-13 and the operator-facing UC-14 (Chapter~\ref{ch:req}), covering the application and person-analysis features and the additional FR-21--FR-28 floor-distance prototype. The floor-distance prototype has since been descoped and removed from the current branch (commit \texttt{8c3a6fe}); its sections below are kept as historical evidence.
+ 
+ \section{Design}
+ The design follows Chapter~\ref{ch:design}: a Next.js frontend with a server-side proxy, a FastAPI service for application and \texttt{/camera/*} workflows, SQLite for application records, and local person-distance diagnostics.
+ 
+ \section{Implementation}
+-The frontend follows the App Router layout, with one folder per page (landing, login, signup, dashboard, customer-info, employee-info, spatial-analytics, alerts, system-status, store-settings, employee-home, my-performance, profile, about). Shared UI primitives (RetroWindow, RetroCard, RetroButton, Navbar, Footer) live in \texttt{src/components/ui}, and helper code such as PDF generation lives in \texttt{src/lib}. The backend lives in \texttt{backend/}.
++The frontend follows the App Router layout, with one folder per page (landing, login, signup, dashboard, customer-info, employee-info, spatial-analytics, alerts, settings, employee-home, my-performance, profile, about, camera-handoff, compare-people, voice-agent). Shared UI primitives (RetroWindow, RetroCard, RetroButton, Navbar, Footer) live in \texttt{src/components/ui}, and session-signing helpers live in \texttt{src/lib}. The backend lives in \texttt{backend/}.
+ 
+ \subsection{Two-Model Vision Approach}
+ The project uses two distinct YOLO model roles, as confirmed by the team: a YOLO pose model supplies body-keypoint evidence for interaction analysis, while a standard YOLO object-detection model with customer/employee classes supplies person boxes and role labels. The latter is a detector trained on role classes, not a separate image-classification-only network. Interaction events are derived from pose/proximity and temporal rules rather than treating a pose prediction itself as an interaction label.
+ 
+-The pose-enabled adapter uses pose keypoints for orientation evidence; the trained customer/employee detector supplies role-labelled boxes in the role pipeline. These responsibilities are distinct from tracking and from the subsequent distance/duration decision rules. The head/hips/feet approximation used when a full-person position is rejected belongs to the distance logic and should not be confused with employee/customer role classification.
++In the interaction pipeline the trained customer/employee detector (\path{best.pt}, run as an OpenVINO export on CPU) supplies role-labelled boxes, and the pose model (\path{yolov8n-pose.pt}) acts as an interaction judge: once distance and duration rules nominate an employee/customer pair, it confirms the pair only if someone's head is turned towards the other person. These responsibilities are distinct from tracking (BoT-SORT with appearance re-identification) and from the distance/duration rules that nominate candidates. The head/hips/feet approximation used when a full-person position is rejected belongs to the distance logic and should not be confused with employee/customer role classification.
+ 
+-\subsection{Floor-Distance Command-Line Prototype}
+-The implementation reuses the existing local trained \path{models/best.pt} weights, whose classes are employee and customer, without retraining or replacement weights. Shared loading/tracking helpers in \path{backend/vision_inference.py} provide the YOLO/ByteTrack inference route for the floor-distance prototype. The floor CLI selects both role classes; it does not substitute the earlier vertical-position role heuristic.
++\subsection{Interaction Pipeline and Pose Judge}
++\path{python -m backend.interaction.cli} runs the interaction pipeline on a video. Interaction detection has two stages. Proximity nominates a candidate: an employee and a customer must stay within a body-height-normalised distance (1.0, 0.8 or 0.6 body heights measured at the feet, hips or head band) for at least two seconds, and a customer whose position relative to the employee drifts by more than 0.5 body heights in that time is treated as walking past. The pose judge then takes four crops of the pair from the last two seconds and confirms the candidate only if, in at least half of them, someone's head (nose relative to the ears) points within $60^\circ$ of the other person's head. If no pose is found or the judge fails, the verdict is \texttt{unverified} and the proximity result stands; a rejected pair is re-judged every four seconds while it stays close. For each video the CLI writes an annotated MP4 with an INTERACTION ON/OFF indicator, \texttt{.interactions.json} (confirmed), \texttt{.rejected\_interactions.json} (vetoed), \texttt{.detections.json} and \texttt{.people.json}. \path{python -m backend.interaction.benchmark} measures detector, interaction and speed KPIs (Chapter~\ref{ch:testing}).
++
++\subsection{Floor-Distance Command-Line Prototype (Descoped)}
++\label{sec:floor-descoped}
++This prototype was implemented in commit \texttt{4a9023a} and removed in commit \texttt{8c3a6fe}; the files named in this and the following floor sections exist only in that history. It was descoped because the available moving-camera footage supported almost no floor projections, and body-height-normalised distance replaced it. The implementation reused the existing local trained \path{models/best.pt} weights, whose classes are employee and customer, without retraining or replacement weights. Shared loading/tracking helpers in \path{backend/vision_inference.py} provide the YOLO/ByteTrack inference route for the floor-distance prototype. The floor CLI selects both role classes; it does not substitute the earlier vertical-position role heuristic.
+ 
+ The entry points are \path{scripts/preview_floor_points.py}, \path{scripts/calibrate_floor.py}, \path{scripts/run_floor_distance.py}, and \path{scripts/evaluate_floor_distance.py}. Geometry, calibration diagnostics, motion monitoring, metric smoothing and evaluation are separate backend modules. The preview runs without calibration; the distance demo exports only supported metre observations and explicit unavailable states. No frontend changes were needed for this prototype.
+ 
+@@ -33,9 +37,11 @@
+ Manager dashboard pages & Dashboard, Customer Info, Employee Info, Spatial Analytics, Alerts, System Status, Settings & Done (prototype data for vision metrics)\\
+ Employee workspace & My Workspace and My Performance with rubric and daily log & Done (prototype data)\\
+ Shared pages & Landing, Login/Signup, About, Profile & Done\\
+-Reports & Configurable builder, narrative summary, PDF export via jsPDF & Done\\
+-Secure access & Signed HttpOnly session cookie and internal secret header & Done (demo credentials)\\
+-Floor-distance prototype & Trained roles/track IDs, foot preview, calibration, alignment checks and diagnostic exports & Implemented (local CLI)\\
++Reports & Configurable builder, narrative summary, PDF export & Not on tested branch (route returns 404)\\
++Secure access & Stored accounts (PBKDF2 password hashes), signed HttpOnly session cookie and internal secret header & Done\\
++Floor-distance prototype & Trained roles/track IDs, foot preview, calibration, alignment checks and diagnostic exports & Implemented, then descoped (\texttt{8c3a6fe})\\
++Interaction pipeline & Trained role detector, BoT-SORT tracking, body-height proximity, pass-by filter and YOLO pose judge; annotated video and JSON outputs & Implemented (local CLI)\\
++Benchmark & Detector, interaction (with and without the judge) and speed KPIs & Implemented\\
+ \bottomrule
+ \end{tabular}
+ \end{table}
+@@ -46,15 +52,15 @@
+ 
+ \textbf{Authentication.} Login verifies stored account credentials and creates a server-signed HttpOnly session cookie. Protected manager backend routes require the signed session and server-side role checks. Internal secrets are supplied through environment variables. The executed access-control checks are recorded in Chapter~\ref{ch:testing}.
+ 
+-\subsection{Calibration Configuration and Coordinate Conventions}
++\subsection{Calibration Configuration and Coordinate Conventions (Floor Prototype)}
+ Detections use original-frame $[x_1,y_1,x_2,y_2]$ pixels. Ultralytics already restores \texttt{xyxy} boxes after preprocessing, so coordinates are not unletterboxed again. Frame/configuration dimension mismatches, invalid projections and stale homographies are rejected. No lens undistortion is applied; calibration and runtime share the same distorted pixel space. Intrinsic/distortion metadata slots are retained, but correction would require an explicitly consistent update of both paths.
+ 
+ The provisional rectangle follows A--B--D--C: AB = DC = 3.13225 ft and BD = CA = 4.2075 ft, equivalent to width 0.9547098 m and depth 1.282446 m. The configuration records the rectangle geometry and estimated lengths. Dot centres in the 479-by-479 marked screenshot were mapped to the original 1080-by-1080 video using pixel-centre resize coordinates. Frame zero was selected after image-difference comparison and visual inspection; the resized/modified screenshot correspondence remains approximate. Operational coverage is restricted to the marked rectangle.
+ 
+ The rectangle dimensions and original-pixel points are editable in configuration. Regeneration writes the image-to-floor matrix and fitting diagnostics without changing trained weights. Saved measurements are labelled estimated, calibration is provisional and runtime values are approximate. Point-click selection supports numbered correspondences, undo, reset and save; the headless JSON route was exercised.
+ 
+-\subsection{Reproducible Execution}
+-From the repository root, use the existing virtual environment. The following three command groups reproduce the sampled temporary-video workflow; join wrapped continuation lines when entering each command:
++\subsection{Reproducible Execution (Floor Prototype)}
++These commands ran at commit \texttt{4a9023a}; the scripts are not on the current branch. From the repository root, use the existing virtual environment. The following three command groups reproduce the sampled temporary-video workflow; join wrapped continuation lines when entering each command:
+ \begin{quote}\small\ttfamily
+ .venv/Scripts/python.exe scripts/preview\_floor\_points.py\\
+ \hspace*{1em}--video data/videos/raw/queue\_temp.mp4 --sample-every 30 --headless
+@@ -72,7 +78,7 @@
+ The displayed line breaks are for typesetting; join continuation lines when entering a command. The output directory contains annotated video, top-down video, JSONL observations and summary/coverage records. Actual decoded timestamps are exported. Repository usage instructions are in \path{docs/floor_distance_usage.md}.
+ 
+ \section{Algorithms and Technical Decisions}
+-\subsection{Person Floor-Position Approximation}
++\subsection{Person Floor-Position Approximation (Floor Prototype)}
+ For a box $B=(x_1,y_1,x_2,y_2)$, the homogeneous floor-contact proxy is
+ \begin{equation}
+ \mathbf{p}=\begin{bmatrix}(x_1+x_2)/2 & y_2 & 1\end{bmatrix}^{\mathsf T}.
+@@ -80,7 +86,7 @@
+ \end{equation}
+ This is an observed proxy rather than proof that feet are visible. Boundary truncation, person overlap and manual exclusion polygons provide provisional rejection signals; seated people and chair occlusion remain limitations. An optional future foot/keypoint locator can replace this step without changing the projection interface.
+ 
+-\subsection{Homography-Based Projection and Distance}
++\subsection{Homography-Based Projection and Distance (Floor Prototype)}
+ An image-to-floor homography maps the proxy into metre coordinates \cite{hartley2004multiple,opencvHomography}:
+ \begin{equation}
+ \mathbf{q}=H_{\mathrm{image}\rightarrow\mathrm{floor}}\mathbf{p},\qquad
+@@ -94,7 +100,7 @@
+ \end{equation}
+ Four non-degenerate landmark pairs provide a direct calibration fit. With additional correspondences, the implementation fits floor-to-image using RANSAC with an explicit pixel-space threshold, then inverts the result \cite{fischler1981ransac}. Inliers and fitting residuals are exported as calibration diagnostics.
+ 
+-\subsection{Camera Alignment and Measurement Reliability}
++\subsection{Camera Alignment and Measurement Reliability (Floor Prototype)}
+ The monitor compares ORB features \cite{rublee2011orb} within the supported floor region, masking detected people and manual exclusions. Matches are checked using RANSAC, inlier count/ratio, spatial spread, residual displacement and supported-region displacement limits. Insufficient evidence produces \texttt{motion\_unverified}; supported alignment shifts produce \texttt{motion\_invalid}. Neither state allows a supported metre output. Modes \texttt{monitor} and \texttt{fixed} both enforce these checks; \texttt{snapshot} supports only the reference frame. Motion compensation is deferred because reliable distributed floor evidence was not established on the temporary clip.
+ 
+ Accepted positions are smoothed in metres using timestamps. Configurable speed/jump gates, short prediction limits, a separate last-reliable-observation time and track expiry preserve quality information. Predictions are excluded from supported pair distances, and alignment failures clear smoothing state. Role labels remain separate observations from the trained detector; their confidence is the joint detection/class score, not two independent probabilities. Selected track pairs or a capped set of all pairs can be exported.
+@@ -109,8 +115,8 @@
+ \midrule
+ Frontend & Next.js (App Router), React\\
+ Styling & Tailwind CSS, custom retro-industrial design system\\
+-Charts and export & Recharts, jsPDF\\
+-Computer vision & YOLO pose for interaction cues; trained YOLO role detector (CPU), ByteTrack, OpenCV homography/ORB, NumPy; \texttt{lap} for tracking assignment\\
++Charts & Recharts\\
++Computer vision & YOLO pose model as interaction judge; trained YOLO role detector (OpenVINO, CPU), BoT-SORT with ReID, OpenCV, NumPy; \texttt{lap} for tracking assignment; OpenCV homography/ORB in the descoped floor prototype\\
+ Application and camera API & FastAPI, SQLite\\
+ Fonts & Space Grotesk, Inter, JetBrains Mono\\
+ Runtime & Node.js 18+, Python 3.12+ (virtual environment)\\
+@@ -149,8 +155,17 @@
+ \label{fig:todo-employee-workspace}
+ \end{figure}
+ 
+-\subsection{Floor-Distance Demonstration}
+-Figures~\ref{fig:floor-preview}--\ref{fig:floor-map} show actual local prototype outputs. They demonstrate inference, calibration visualization and export.
++\subsection{Interaction Pipeline Output}
++Figure~\ref{fig:judge-examples} shows annotated output of the current interaction CLI on two local clips.
++\begin{figure}[htbp]
++\centering
++\includegraphics[width=0.96\textwidth]{ThesisFigs/interaction_judge_examples.jpg}
++\caption{Interaction pipeline output. Left (IMG\_8880, 30\,s): employee and customer facing each other during a handover; the pose judge confirms the interaction. Right (IMG\_8829, 8\,s): employee and customer close together but walking away side by side; the pose judge rejects the candidate and the indicator stays OFF.}
++\label{fig:judge-examples}
++\end{figure}
++
++\subsection{Floor-Distance Demonstration (Descoped Prototype)}
++Figures~\ref{fig:floor-preview}--\ref{fig:floor-map} show actual local prototype outputs from commit \texttt{4a9023a}. They demonstrate inference, calibration visualization and export.
+ \begin{figure}[htbp]
+ \centering
+ \includegraphics[width=0.72\textwidth]{ThesisFigs/floor_foot_preview.jpg}
+@@ -173,4 +188,4 @@
+ \section{Iteration Outcome}
+ Iteration 1 covers the application platform, role-aware access, person/role analysis, interaction cues and the distance-estimation prototypes. The vision-derived dashboard metrics still use prototype data, and binding them to real agent output is the first goal of Iteration 2.
+ 
+-The floor-distance CLI prototype additionally demonstrates trained role detection, tracking, provisional calibration and conservative metric export. The quality metadata supports subsequent use of accepted metric observations in downstream interaction analysis.
++The floor-distance CLI prototype demonstrated trained role detection, tracking, provisional calibration and conservative metric export; it was descoped because the moving-camera footage supported almost no floor projections, and body-height-normalised distance replaced it. The interaction pipeline now combines trained roles, proximity, duration and a pose judge.
+--- chapters/chapter8_testing.tex (original)
++++ chapters/chapter8_testing.tex (updated)
+@@ -5,12 +5,12 @@
+ 
+ \section{Test Levels and Techniques}
+ \begin{itemize}
+-\item \textbf{Unit level:} role/classification, engagement and tracking checks, plus focused floor-geometry, failure-state, smoothing, motion and evaluation checks with known synthetic inputs.
++\item \textbf{Unit level:} role/classification, engagement, pass-by, pose-judge, tracking and benchmark-metric checks with known synthetic inputs; the focused floor-geometry, failure-state, smoothing, motion and evaluation checks belonged to the descoped floor prototype.
+ \item \textbf{Vision CLI integration:} actual trained weights and local video, exported video readability, JSONL invariants and explicit unavailable-state checks.
+ \item \textbf{Integration level:} frontend to proxy to FastAPI to SQLite for account/application flows.
+ \item \textbf{System level:} end-to-end use of dashboards, reports and person-analysis outputs.
+ \item \textbf{Security testing:} direct calls without cookie or secret.
+-\item \textbf{Vision evaluation (FYP-2):} precision and recall against labelled clips.
++\item \textbf{Vision evaluation:} detector KPIs on a held-out split and interaction precision/recall against labelled clips through \path{backend/interaction/benchmark.py}; broader labelled evaluation continues in FYP-2.
+ \end{itemize}
+ 
+ \section{Test Cases}
+@@ -34,6 +34,11 @@
+ TC-18 & Invalid/unsupported positions & Explicit unavailable states rather than zero distances & FR-24; NFR-11\\
+ TC-19 & Camera alignment / no features & Shifted and unverified frames suppress supported output & FR-25\\
+ TC-20 & Demo and diagnostic exports & Readable videos, timestamps and approximate/provisional labels & FR-27/28\\
++TC-21 & Pose judge decision logic & Facing heads confirm; heads turned away or backs to camera reject; no pose or a failing judge keeps the proximity result as \texttt{unverified} & FR-04\\
++TC-22 & Pass-by and moving-camera cases & A customer walking past produces no interaction; a pair under a panning camera still interacts & FR-04\\
++TC-23 & Benchmark metric functions & One-to-one temporal-IoU matching; correct precision, recall and F1 & FR-03/04\\
++TC-24 & Interaction CLI on the local clip set & Every clip completes; annotated video, confirmed and rejected interactions written & FR-04; NFR-02\\
++TC-25 & Repeat run with the same inputs & Byte-identical JSON outputs & NFR-01\\
+ \bottomrule
+ \end{longtable}
+ Detailed steps are in Appendix~\ref{app:tests}.
+@@ -50,11 +55,15 @@
+ TC-02 & Passed, adapted & Current settings proxy: anonymous 401, missing/wrong backend secret 401, employee access 403.\\
+ TC-13 & Unavailable & Report/PDF route absent on current branch; corresponding route returned 404.\\
+ TC-12 & Partial & Representative manager/employee views captured. Exhaustive role navigation not completed.\\
+-TC-07--TC-10 & Pending & Depend on integrating the vision agents (Iteration 2).\\
++TC-07, TC-08 & Measured & Held-out split (455 images): precision 0.963, recall 0.953, mAP50 0.969 (Table~\ref{tab:detector-kpi}).\\
++TC-09, TC-10 & Pending & Unattended flags and trajectory are not yet produced (Iteration 2).\\
++TC-21--TC-23 & Passed & 7 pose-judge, 2 pass-by (within the 8-test engagement suite) and 3 benchmark-metric tests.\\
++TC-24 & Passed & 11 clips: 19 candidates, 17 confirmed, 2 rejected (Table~\ref{tab:batch}).\\
++TC-25 & Passed & IMG\_8829 JSON outputs byte-identical across two runs.\\
+ \bottomrule
+ \end{tabular}
+ \end{table}
+-The application cases above were executed on 20 October 2026 against isolated SQLite databases and local development servers. All 15 retained in-scope HTTP assertions passed, including one assertion that the removed report route returned 404; that assertion is an absence check, not a feature pass. The role, engagement, identity and tracker suites were rerun for the corrected mid-iteration scope: 24 tests passed in 2.66 seconds. UI screenshots substantiate representative views only. Three warm login HTTP requests took 69.86, 77.12 and 82.83\,ms (median 77.12\,ms); these exclude compilation, rendering and inference and do not establish a dashboard performance requirement.
++The application cases above were executed on 20 October 2026 against isolated SQLite databases and local development servers. All 15 retained in-scope HTTP assertions passed, including one assertion that the removed report route returned 404; that assertion is an absence check, not a feature pass. The role, engagement, identity and tracker suites were rerun for the corrected mid-iteration scope: 24 tests passed in 2.66 seconds. After the pose judge and benchmark were added, all interaction suites were rerun with pytest: 44 tests passed in 1.72 seconds (engagement 8, role classifiers 4 and 5, identity 4, tracker 5, pose judge 7, benchmark 3, frame processor 8). UI screenshots substantiate representative views only. Three warm login HTTP requests took 69.86, 77.12 and 82.83\,ms (median 77.12\,ms); these exclude compilation, rendering and inference and do not establish a dashboard performance requirement.
+ 
+ \textbf{Version boundary.} Commit \texttt{8c3a6fe} removed the calibrated floor-distance source on 20 October. The floor results below preserve the earlier implementation evidence; they are not a successful rerun of removed source at current HEAD. The floor-distance software/integration evidence below was executed during the 19--20 October 2026 implementation session. The results below describe software checks, integration behavior and accepted-position coverage.
+ 
+@@ -81,6 +90,65 @@
+ \end{longtable}
+ The executed commands are documented in \path{docs/floor_distance_usage.md}. The coverage summary is exported as \path{data/outputs/distance/demo/summary.json}, with observation records in \path{metrics.jsonl}. The 0.70\% value is accepted-position coverage, not accuracy. The reference pair is an approximate box-proxy demonstration involving a seated person. No whole-clip supported metric result is claimed.
+ 
++\subsection{Interaction Pipeline and Benchmark Results}
++The benchmark (\path{backend/interaction/benchmark.py}) was run on 20 October 2026 on a CPU-only laptop, scoring and tracking every tenth frame; the full report is \path{evidence/benchmark_20261020.json}.
++
++\begin{table}[H]
++\centering
++\caption{Detector KPIs on the recording-level held-out split (455 images)}
++\label{tab:detector-kpi}
++\begin{tabular}{P{0.2\textwidth}P{0.14\textwidth}P{0.14\textwidth}P{0.14\textwidth}P{0.16\textwidth}}
++\toprule
++Class & Precision & Recall & mAP50 & mAP50-95\\
++\midrule
++All & 0.963 & 0.953 & 0.969 & 0.896\\
++Employee & 0.968 & 0.990 & 0.982 & --\\
++Customer & 0.958 & 0.916 & 0.955 & --\\
++\bottomrule
++\end{tabular}
++\end{table}
++
++\begin{table}[H]
++\centering
++\caption{Interaction accuracy on the labelled clip (IMG\_8829)}
++\label{tab:interaction-kpi}
++\begin{tabular}{P{0.26\textwidth}P{0.13\textwidth}P{0.13\textwidth}P{0.1\textwidth}P{0.2\textwidth}}
++\toprule
++Decision & Precision & Recall & F1 & TP / FP / FN\\
++\midrule
++Proximity alone & 0.50 & 1.00 & 0.67 & 1 / 1 / 0\\
++Proximity + pose judge & 1.00 & 1.00 & 1.00 & 1 / 0 / 0\\
++\bottomrule
++\end{tabular}
++\end{table}
++The false positive removed by the judge is the 1.7--15.3\,s segment in which the employee and customer walk away side by side (Figure~\ref{fig:judge-examples}, right). One clip with one true interaction shows the judge's effect; it does not establish accuracy. IMG\_8829 is in the detector's training split, so it is used for interaction KPIs only.
++
++\begin{table}[H]
++\centering
++\caption{Interaction CLI on 11 local clips (scored every 10th frame, tracked every 3rd)}
++\label{tab:batch}
++\begin{tabular}{P{0.14\textwidth}P{0.14\textwidth}P{0.12\textwidth}P{0.12\textwidth}P{0.14\textwidth}P{0.14\textwidth}}
++\toprule
++Clip & Candidates & Confirmed & Rejected & Duration (s) & Realtime\\
++\midrule
++IMG\_8829 & 2 & 1 & 1 & 8.0 & 1.40$\times$\\
++IMG\_8878 & 2 & 2 & 0 & 15.7 & 1.54$\times$\\
++IMG\_8880 & 1 & 1 & 0 & 25.3 & 1.41$\times$\\
++IMG\_8881 & 3 & 3 & 0 & 38.0 & 1.31$\times$\\
++IMG\_8885 & 0 & 0 & 0 & 0 & 1.37$\times$\\
++IMG\_8886 & 1 & 1 & 0 & 6.7 & 1.23$\times$\\
++IMG\_8890 & 2 & 2 & 0 & 31.7 & 1.40$\times$\\
++IMG\_8893 & 3 & 2 & 1 & 37.0 & 1.43$\times$\\
++IMG\_8894 & 1 & 1 & 0 & 26.7 & 1.16$\times$\\
++IMG\_8895 & 3 & 3 & 0 & 19.7 & 0.80$\times$\\
++IMG\_8897 & 1 & 1 & 0 & 23.0 & 1.23$\times$\\
++\midrule
++Total & 19 & 17 & 2 & 231.8 & \\
++\bottomrule
++\end{tabular}
++\end{table}
++Candidates, confirmations and durations are from the CLI run; the realtime factor is from the benchmark run, which also tracks every tenth frame. Ten of the 11 clips are not labelled, so their counts are pipeline outputs, not accuracy; their candidates are listed in \path{evidence/interaction_judge_batch_20261020.csv} for labelling. No candidate was \texttt{unverified}. Per-frame latency was 120--171\,ms at the median, and judge calls took 226--401\,ms each, except on IMG\_8895, where they took about 893\,ms; that clip missed the benchmark's 1.0$\times$ realtime target and should be re-measured. With tracking on every third frame, processing ran at 0.50--0.59$\times$ realtime.
++
+ \section{Acceptance Testing / Validation}
+ Acceptance follows the criteria in Chapter~\ref{ch:req}. The team reports showing the supervisor the 70-video dataset, which he agreed to; this was the material he requested. The dataset was approved at the supervisor meeting on 12 October 2026. The separate client meeting was on 10 September 2026, as confirmed by the team; see Appendix~\ref{app:meetings}. No numeric accuracy or response-time targets were agreed. This is dataset approval rather than acceptance of measured classification, interaction or dashboard performance. Executed local checks and screenshots provide the separate software evidence.
+ 
+@@ -90,6 +158,8 @@
+ \item Staff outside their usual zone or customers in uniform-like clothing, affecting classification.
+ \item Identity switches during occlusion, affecting dwell and interaction durations.
+ \item Expired or missing session cookie.
++\item Depth ambiguity in the interaction pipeline: people at different depths whose boxes overlap can appear close, and a head turned only slightly can pass the $60^\circ$ facing test (IMG\_8878 at 36\,s).
++\item Identity switches on a moving camera split one customer into several track IDs and one interaction into several (IMG\_8881, IMG\_8895).
+ \item Duplicate/collinear landmarks, invalid homogeneous denominators, incompatible units or frame sizes, stale homography and extrapolation outside calibrated coverage.
+ \item Lower-frame truncation, manual exclusions, person overlap and seated/occluded feet; box-bottom positions remain proxies.
+ \item Missing selected tracks, predicted positions, implausible metric jumps and expired reliable observations.
+@@ -97,7 +167,7 @@
+ \end{itemize}
+ 
+ \section{Defects and Corrective Actions}
+-The first actual tracking run exposed a missing \texttt{lap} assignment dependency; it was installed into the existing virtual environment and declared in backend requirements, after which ByteTrack inference completed. Reference-frame selection was changed to use media timestamps rather than assuming constant-rate timing. A stale-calibration guard and explicit illustrative-config rejection prevent accidental use of incompatible inputs. During the current application checks, the development frontend exhausted a 768\,MB Node heap; it was restarted with a 2048\,MB heap, without modifying application source. Exhaustive page navigation was not completed. The first unit-test attempt encountered SQLite permission errors in the sandbox temporary directory; using a writable repository-local temporary directory resolved the temporary-directory issue; the corrected-scope rerun subsequently passed 24 tests.
++The first actual tracking run exposed a missing \texttt{lap} assignment dependency; it was installed into the existing virtual environment and declared in backend requirements, after which ByteTrack inference completed. Reference-frame selection was changed to use media timestamps rather than assuming constant-rate timing. A stale-calibration guard and explicit illustrative-config rejection prevent accidental use of incompatible inputs. During the current application checks, the development frontend exhausted a 768\,MB Node heap; it was restarted with a 2048\,MB heap, without modifying application source. The interaction CLI originally appended an active interaction once per scored frame; it now keeps one record per interaction. Annotated videos written while skipping frames keep the source frame rate and play faster than real time; review copies were re-encoded at the true rate. Exhaustive page navigation was not completed. The first unit-test attempt encountered SQLite permission errors in the sandbox temporary directory; using a writable repository-local temporary directory resolved the temporary-directory issue; the corrected-scope rerun subsequently passed 24 tests.
+ 
+ \section{Current Validation Status}
+-The floor-distance prototype passes its focused synthetic software checks and actual-model/video integration checks. The moving temporary clip supported only the calibration-reference snapshot; the remaining sampled frames were motion-invalid or unverified. The exported quality states distinguish supported approximate positions from unavailable measurements. The combined trained-role, metric-distance and duration-based interaction pipeline is not yet integrated.
++The floor-distance prototype passed its focused synthetic software checks and actual-model/video integration checks before it was descoped. The moving temporary clip supported only the calibration-reference snapshot; the remaining sampled frames were motion-invalid or unverified. The exported quality states distinguish supported approximate positions from unavailable measurements. Trained roles, body-height proximity, duration and the pose judge are now combined in the interaction pipeline, which runs on all 11 local clips; its accuracy is measured on one labelled clip only, and dashboard integration is pending.
+--- chapters/chapter9_development_evidence.tex (original)
++++ chapters/chapter9_development_evidence.tex (updated)
+@@ -4,9 +4,9 @@
+ \begin{itemize}
+ \item Next.js application with manager, employee, and shared pages.
+ \item Role-aware access with signed session cookies and an internal secret header.
+-\item Reports with narrative summaries and PDF export.
+-\item Trained-role/ByteTrack foot-point preview and provisional floor-distance CLI: editable calibration, motion/reliability checks, metric smoothing and diagnostic exports.
+-\item Executed 17 historical focused floor-distance checks and 24 current role/engagement/identity/tracker checks; actual sampled-video inference and output readability verified.
++\item Trained-role/ByteTrack foot-point preview and provisional floor-distance CLI: editable calibration, motion/reliability checks, metric smoothing and diagnostic exports (since descoped).
++\item Two-stage interaction pipeline: trained role detector, BoT-SORT tracking, body-height proximity with a pass-by filter, and a YOLO pose judge; plus a benchmark for detector, interaction and speed KPIs.
++\item Executed 17 historical focused floor-distance checks; 44 current interaction unit tests and 5 handoff tests pass; detector benchmarked on 455 held-out images and the interaction pipeline run on 11 local clips.
+ \end{itemize}
+ 
+ \section{Work Remaining}
+@@ -33,13 +33,13 @@
+ Git records attribute the provisional floor-distance implementation (\texttt{4a9023a}) and report addition (\texttt{80fb3fd}) to Moiz Ansari. They attribute the interaction detector (\texttt{e3fe2af}) and video-verification record (\texttt{6c25090}) to Ruhab Ahmad. The Git author \texttt{msaqibatifj} is recorded for temporal role classification (\texttt{882f7dc}), the shared OpenVINO model (\texttt{e2b71a5}) and moving-camera engagement (\texttt{face2b5}). The responsibility table above records the team-supplied distribution. Git author names are retained as recorded; the account alias is not used to infer unconfirmed exclusive ownership. These are commit-author records, not a claim that each author exclusively performed every change or a complete account of non-code work.
+ 
+ \section{Repository and Version Control Evidence}
+-The project is kept in the Git repository \path{muhammad-moiz-ansari/retail-store-analysis} on GitHub. Work is organised on feature branches, and this report corresponds to the \path{feature/interaction}, inspected at \texttt{52f651e} on 20 October 2026 branch.
++The project is kept in the Git repository \path{muhammad-moiz-ansari/retail-store-analysis} on GitHub. Work is organised on feature branches, and this report corresponds to the \path{feature/interaction} branch, inspected on 20 October 2026 at commit \texttt{6560403}.
+ 
+ \section{Milestones and Commit Evidence}
+-The actual floor-distance implementation commit is \texttt{4a9023a} (19 October 2026, Moiz Ansari), titled ``feat(vision): add provisional floor-distance estimation pipeline''. A later commit removed the calibrated floor-distance pipeline (\texttt{8c3a6fe}, 20 October), attributed to Git author \texttt{msaqibatifj}. Therefore historical implementation evidence must be read with its commit context. No Git tags were present in the inspected repository. Selected commit and author-count evidence is reproduced in Appendix~\ref{app:repo}; no project-board or supervisor milestone evidence is inferred from commit dates.
++The actual floor-distance implementation commit is \texttt{4a9023a} (19 October 2026, Moiz Ansari), titled ``feat(vision): add provisional floor-distance estimation pipeline''. A later commit removed the calibrated floor-distance pipeline (\texttt{8c3a6fe}, 20 October), attributed to Git author \texttt{msaqibatifj}. Therefore historical implementation evidence must be read with its commit context. The on-screen interaction flag and one-record-per-interaction output were committed on \path{feature/interaction-flag} (\texttt{20db4c6}, \texttt{ee7947f}, \texttt{0411408}, 19 October 2026, Git author \texttt{msaqibatifj}); the pose judge and benchmark were developed there and ported to \path{feature/interaction} in commit \texttt{6560403} (20 October 2026), after unused code was removed in \texttt{cffa30b}. No Git tags were present in the inspected repository. Selected commit and author-count evidence is reproduced in Appendix~\ref{app:repo}; no project-board or supervisor milestone evidence is inferred from commit dates.
+ 
+ \section{Tools and Tool-Assisted Development}
+-Development tools include Node.js and npm, a Python virtual environment, Git and GitHub, and the libraries listed in Chapter~\ref{ch:iter1}. Codex assisted with the floor-distance implementation, diagnostic execution and report-source revision. Verification included focused automated tests, actual local trained-model/video runs, inspection of preview/grid outputs, export readability and record-invariant checks. The team also reports using Claude as an AI/development assistant. Codex and Claude are disclosed as development aids; their use does not replace the separately recorded test and review evidence. No specific Claude-generated contribution is attributed to an individual without further team information.
++Development tools include Node.js and npm, a Python virtual environment, Git and GitHub, and the libraries listed in Chapter~\ref{ch:iter1}. Codex assisted with the floor-distance implementation, diagnostic execution and report-source revision. Verification included focused automated tests, actual local trained-model/video runs, inspection of preview/grid outputs, export readability and record-invariant checks. The team also reports using Claude as an AI/development assistant. Codex and Claude are disclosed as development aids; their use does not replace the separately recorded test and review evidence. No specific Claude-generated contribution is attributed to an individual without further team information. Claude Code assisted with porting the pose judge and benchmark to the main branch, the batch and benchmark runs, and the 20 October report revision; outputs were checked with automated tests, a byte-identical comparison of pipeline outputs before and after the port, and inspection of annotated frames.
+ 
+ \section{External Components and Dependencies}
+ \begin{table}[H]
+@@ -49,13 +49,14 @@
+ \toprule
+ Component & Use\\
+ \midrule
+-YOLO implementation \cite{ultralytics} & YOLO pose for interaction cues; standard YOLO detection for customer/employee classes\\
+-ByteTrack \cite{zhang2022bytetrack} & Per-camera tracking; \texttt{lap} supplies assignment support\\
+-OpenCV / NumPy \cite{opencvHomography} & Homography fitting, projection, ORB matching, diagnostics and numerical geometry\\
+-ORB \cite{rublee2011orb} and RANSAC \cite{fischler1981ransac} & Reference-alignment evidence and robust fitting; no motion compensation claimed\\
++YOLO implementation \cite{ultralytics} & YOLOv8n pose model as interaction judge; standard YOLO detection for customer/employee classes\\
++OpenVINO & CPU inference runtime for the role detector\\
++ByteTrack \cite{zhang2022bytetrack} / BoT-SORT & Per-camera tracking (BoT-SORT with appearance re-identification in the interaction pipeline); \texttt{lap} supplies assignment support\\
++OpenCV / NumPy \cite{opencvHomography} & Image processing and video input/output; homography fitting, projection and ORB matching in the descoped floor prototype\\
++ORB \cite{rublee2011orb} and RANSAC \cite{fischler1981ransac} & Reference-alignment evidence and robust fitting in the descoped floor prototype\\
+ FastAPI \cite{fastapi} & Application and camera API\\
+ Next.js and React \cite{nextjs} & Frontend\\
+-Recharts, jsPDF, Tailwind CSS & Charts, PDF export, styling\\
++Recharts, Tailwind CSS & Charts, styling\\
+ SQLite & Application, job and interaction storage\\
+ \bottomrule
+ \end{tabular}
+@@ -69,12 +70,12 @@
+ Ultralytics implementation & AGPL-3.0 or a separate Enterprise licence, according to its publisher \cite{ultralyticsLicense}. Academic use does not by itself remove applicable obligations.\\
+ Original ByteTrack repository & MIT \cite{bytetrackLicense}; this does not replace the licence of the Ultralytics implementation used by the project.\\
+ OpenCV & Apache-2.0 for current releases \cite{opencvLicense}.\\
++OpenVINO & Apache-2.0 (installed metadata, version 2026.4.1).\\
+ FastAPI, pytest & MIT (installed distribution metadata).\\
+ Uvicorn, HTTPX; lap & BSD-3-Clause; BSD-2-Clause for lap (installed metadata).\\
+ NumPy and PyTorch & BSD-family and bundled-component notices; retain the complete installed distribution notices rather than assuming a single licence covers every component.\\
+ Pillow & MIT-CMU (installed metadata).\\
+ Next.js, React, ReactDOM, Recharts, Tailwind CSS & MIT (installed package metadata).\\
+-jsPDF & MIT in the installed dependency tree; PDF feature removed from the tested branch.\\
+ Inter, Space Grotesk, JetBrains Mono & SIL Open Font License 1.1 \cite{interLicense,spaceGroteskLicense,jetbrainsMonoLicense}.\\
+ SQLite & Public-domain software; the application's data rights remain separate.\\
+ \bottomrule
+@@ -94,9 +95,9 @@
+ Limited footage for evaluation & Medium & Record or label additional clips early in FYP-2\\
+ Integration slippage & Medium & Bind one agent at a time, keep prototype data fallback\\
+ Privacy or misuse concerns & Medium & Non-biometric design, decision-support framing\\
+-Incorrect scale or landmark selection & High & Editable configuration, landmark review and calibration diagnostics\\
+-Camera motion / insufficient floor evidence & High & Suppress shifted/unverified measurements; use final fixed-camera calibration\\
+-Foot proxy wrong under seating/occlusion & High & Quality flags, manual exclusions, visible-foot ground truth and coverage reporting\\
++Depth ambiguity in a single image & High & Height-ratio check and pose judge; labelled evaluation; reported as a limitation\\
++Identity switches on moving footage & High & BoT-SORT re-identification and relinking; count split interactions during evaluation\\
++Pose judge too lenient or too strict & Medium & Benchmark with and without the judge; tune facing angle and fraction on labelled clips\\
+ \bottomrule
+ \end{tabular}
+ \end{table}
+@@ -108,12 +109,11 @@
+ 
+ \section{Current Limitations}
+ \begin{itemize}
+-\item Vision-derived dashboard metrics still use prototype or demo data, and the agent status page shows mock data.
++\item Vision-derived dashboard metrics still use prototype or demo data; system status is available as a backend endpoint only.
+ \item The pipeline is offline/batch, not real time.
+ \item Single-store prototype; no multi-store deployment is claimed.
+ \item Current authentication uses stored accounts; role-navigation checks cover representative views rather than every application route.
+-\item The temporary floor calibration uses estimated dimensions and approximate screenshot correspondences; all distance outputs are provisional/approximate.
+-\item The sampled moving clip supported only the reference snapshot. Whole-clip metric coverage and motion compensation are not established.
+-\item Box-bottom proxies can be wrong for seated or occluded people, including those in the reference-frame pair.
+-\item Trained role detection and metric outputs are available through CLI, but their integration with temporal interaction events and the dashboard remains pending.
++\item The floor-distance prototype was descoped, so no distances in metres are produced; interaction distance is relative to body height and cannot fully resolve depth.
++\item Interaction accuracy is measured on one labelled clip only; identity switches on moving footage can split one interaction into several.
++\item Interaction results are available through the CLI; dashboard integration remains pending.
+ \end{itemize}
+--- chapters/conclusion.tex (original)
++++ chapters/conclusion.tex (updated)
+@@ -1,4 +1,4 @@
+ \chapter{Conclusion}
+ Retailers hold CCTV footage that could answer everyday operational questions but is rarely used for that purpose, and small and mid-sized stores often cannot afford specialised analytics. RetailPulse addresses this with a CPU-friendly, non-biometric, multi-agent design that reuses existing cameras. Research on detection, tracking, and re-identification, and a feasibility triage, shaped the scope: a single-store, three-camera prototype focused on person detection, role identification, interaction cues and distance estimation.
+ 
+-At the mid-report stage the requirements and architecture are defined. The web application with manager and employee roles, secure session handling and person-analysis prototypes form the current implementation; report export remains a planned feature on the tested branch. The floor-distance CLI now reuses the trained employee/customer detector and ByteTrack, exports provisional floor positions/distances, and rejects unsupported alignment. Seventeen historical focused floor checks and 24 current role/engagement/identity/tracker tests passed, and sampled actual-video exports were verified. Dashboard vision metrics still rely on prototype data; the CLI exports approximate floor-distance observations and their quality states. The main risks are CPU throughput, classification accuracy, and interaction interpretation. FYP-2 will integrate the vision agents evaluate them on labelled store footage, and harden the system for the final demonstration.
++At the mid-report stage the requirements and architecture are defined. The web application with manager and employee roles, secure session handling and person-analysis prototypes form the current implementation; report export remains a planned feature on the tested branch. An interaction pipeline combines the trained employee/customer detector, body-height-normalised proximity and a YOLO pose judge that confirms an interaction only when someone faces the other person; on the one labelled clip the judge raises interaction precision from 0.50 to 1.00, and the detector reaches mAP50 0.969 on 455 held-out images. A floor-distance CLI passed seventeen focused checks before it was descoped, and 44 current interaction unit tests pass. Dashboard vision metrics still rely on prototype data. The main risks are CPU throughput, classification accuracy, and interaction interpretation. FYP-2 will integrate the vision agents evaluate them on labelled store footage, and harden the system for the final demonstration.
+--- evidence/README.md (original)
++++ evidence/README.md (updated)
+@@ -1,15 +1,27 @@
+ # Mid-iteration report evidence, 20 October 2026
+ 
+-`verification_20261020.json` contains the 15 retained in-scope local HTTP assertions and the corrected-scope unit-test result. One assertion checks the absent PDF report route; this is not a passed feature test. The original broader execution records are retained outside the report in the ignored local execution directory.
++`verification_20261020.json` contains the 15 retained in-scope local HTTP assertions and the earlier corrected-scope unit-test result. One assertion checks the absent PDF report route; this is not a passed feature test. The original broader execution records are retained outside the report in the ignored local execution directory.
+ 
+-The role, engagement, identity and tracker suites were rerun for the corrected scope: **24 passed in 2.66 seconds**. Run from the repository root with the virtual environment, `PYTHONPATH` set to the backend directory and `TEMP` / `TMP` set to a writable local test directory:
++## Unit tests (rerun 20 October 2026, after the interaction-judge port)
+ 
+-```powershell
+-.venv/Scripts/python.exe -m pytest backend/interaction/test_engagement.py backend/interaction/test_cust_emp_classifier.py backend/interaction/test_role_classifier.py backend/interaction/test_identity.py backend/interaction/test_tracker.py -q
++All interaction suites: **44 passed in 1.72 seconds** (engagement 8, customer/employee classifier 4, role classifier 5, identity 4, tracker 5, pose judge 7, benchmark 3, streaming frame processor 8). Camera-handoff core: **5 passed**. Run from the repository root with the virtual environment:
++
++```
++python -m pytest backend/interaction -q
++PYTHONPATH=backend python -m pytest backend/test_handoff_core.py -q
+ ```
+ 
+-`unit_tests_20261020.txt` records that rerun. `source_audit_20261020.json` records source-reference checks and confirmed LaTeX compilation.
++`unit_tests_20261020.txt` records the earlier 24-test run of the five original suites.
++
++## Benchmark and batch run
++
++- `benchmark_20261020.json`: output of `python -m backend.interaction.benchmark backend/interaction/benchmarks/benchmark.json` on a CPU-only laptop (every 10th frame scored and tracked). Detector KPIs on the 455-image held-out split; interaction precision/recall on the one labelled clip (IMG_8829), for proximity alone and with the pose judge; per-clip speed and the candidates found on all 11 clips.
++- `interaction_judge_batch_20261020.csv`: per-clip results of the interaction CLI with the pose judge on 11 local clips (`--every 10 --track-every 3`): candidates, confirmed and rejected interactions with start time, duration and body band.
++
++The ten clips other than IMG_8829 are not labelled; their counts are pipeline outputs, not accuracy.
++
++## Other
+ 
+ Representative UI screenshots show demonstration data rather than measured vision accuracy. Role navigation remains partial. The earlier development server exhausted a 768 MB Node heap and was restarted at 2048 MB. Authentication checks used isolated local databases; credentials, cookies, databases and raw video are excluded from this folder.
+ 
+-Historical floor-distance results refer to commit `4a9023a`, before source removal in `8c3a6fe`. The inspected code snapshot was `feature/interaction`, HEAD `52f651e`. This report update changes documentation only.
++Historical floor-distance results refer to commit `4a9023a`, before source removal in `8c3a6fe`. The inspected code snapshot was `feature/interaction` at `6560403`.

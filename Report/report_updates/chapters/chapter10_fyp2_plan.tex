@@ -1,0 +1,63 @@
+\chapter{Remaining FYP Plan}
+\label{ch:fyp2plan}
+\section{Remaining Scope}
+Integrate and evaluate the vision agents, bind real outputs to the dashboard, and prepare the final demonstration. Items listed as out of scope in Chapter~\ref{ch:intro} remain future work.
+
+\section{Remaining Modules and Features}
+\begin{itemize}
+\item Integrate and evaluate Detection, Classification, Engagement and Trajectory agents; detection, classification and interaction detection with the pose judge are already implemented in the interaction CLI.
+\item Evaluate interaction detection (proximity, duration, pass-by filter and pose judge) on labelled clips, including close pass-bys that are not assistance; ten local clips await labels.
+\item Insight Narration agent over real analytics.
+\item Real data in Dashboard, Customer Info, Employee Info, Spatial Analytics, Alerts, and System Status.
+\item Implement camera handoff in the next phase: associate a person leaving one camera with a person entering another using timing, direction and appearance evidence. This is outside the mid-iteration deliverables; ambiguous associations must remain unresolved. An experimental two-camera handoff script and \texttt{/camera/*} job routes already exist.
+\end{itemize}
+
+\section{Remaining Iterations}
+\begin{table}[H]
+\centering
+\caption{Planned FYP-2 iterations}
+\begin{tabular}{P{0.15\textwidth}P{0.72\textwidth}}
+\toprule
+Iteration & Focus\\
+\midrule
+2 & Vision-component integration, real data in dashboard pages and planned cross-camera association\\
+3 & Evaluation on labelled clips, tuning of thresholds and heuristics, alerts on real events\\
+4 & Hardening, security, performance, documentation, and final demonstration\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Implementation Plan}
+Bind agents one at a time to the dashboard, beginning with Detection and footfall, then Classification, Engagement, and Trajectory, keeping prototype data as a fallback until each agent passes its checks. Develop and evaluate cross-camera association separately from same-camera person-distance estimation.
+
+\section{Testing and Validation Plan}
+Label a set of clips for staff/customer, interactions, and zone dwell. Report precision, recall, and error analysis per agent. Re-run Appendix test cases after each integration and record results. Check performance on CPU and record throughput.
+
+\section{Deployment Plan}
+The deliverable is a local deployment run with the documented \texttt{npm run dev:all} flow and production build commands (\texttt{npm run build}, \texttt{npm start}). A pilot with a real retail partner is future work.
+
+\section{Tentative Timeline}
+\begin{table}[H]
+\centering
+\caption{Tentative FYP-2 timeline (to be confirmed with the supervisor)}
+\begin{tabular}{P{0.2\textwidth}P{0.67\textwidth}}
+\toprule
+Period & Activity\\
+\midrule
+Weeks 1--3 & Detection and footfall integration\\
+Weeks 4--6 & Classification and engagement integration\\
+Weeks 7--9 & Trajectory, narration, dashboard binding\\
+Weeks 10--12 & Labelled role/interaction evaluation and tuning\\
+Weeks 13--14 & Hardening, security, documentation\\
+Weeks 15--16 & Final testing, demonstration, and report\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Expected Final Deliverables}
+\begin{itemize}
+\item Working RetailPulse system with real vision analytics and role-aware web access.
+\item Evaluation report with detector and interaction results (with and without the pose judge) and CPU throughput.
+\item Source repository with documentation and run instructions.
+\item Final report and demonstration.
+\end{itemize}

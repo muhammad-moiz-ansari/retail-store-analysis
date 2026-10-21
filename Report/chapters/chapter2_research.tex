@@ -1,0 +1,88 @@
+\chapter{Research and Existing Solutions}
+\label{ch:research}
+\section{Research Method / Approach}
+Research combined three activities: (i) reviewing the foundational literature on object detection, multi-object tracking, person re-identification, pose-based orientation cues, and planar visual metrology (the last for the descoped floor prototype); (ii) surveying publicly described retail-analytics products and their stated capabilities; and (iii) a feasibility triage of candidate features against hardware (no dedicated GPU), timeline, and dependency constraints. Tools and libraries were then selected by prototyping on the supplied store videos.
+
+\section{Existing Solutions / Products}
+\textbf{Commercial retail analytics.} RetailNext describes traffic counts, staffing and interaction-rate analytics \cite{retailnextTraffic}. Sensormatic describes shopper traffic and journey insights, including labour and store-traffic information \cite{sensormaticInsights}. Amazon Just Walk Out describes camera/sensor-based shopping and automated checkout, including weight-sensor and RFID variants \cite{amazonJwo}. These are vendor descriptions, not independently reproduced performance results.
+
+\textbf{Research building blocks.} The YOLO family \cite{redmon2016yolo} provides fast single-stage detectors with CPU-feasible small variants, available through the Ultralytics implementation \cite{ultralytics}. SORT \cite{bewley2016sort} and ByteTrack \cite{zhang2022bytetrack} associate detections across frames into tracks. Person re-identification across cameras is surveyed in \cite{ye2022reid} and typically depends on learned embeddings and substantial compute.
+
+\section{Comparison of Existing Solutions}
+\begin{table}[H]
+\centering
+\caption{Qualitative comparison using official product descriptions, checked 20 October 2026}
+\begin{tabular}{P{0.21\textwidth}P{0.40\textwidth}P{0.29\textwidth}}
+\toprule
+Approach & Documented focus & Evidence boundary\\
+\midrule
+RetailNext & Traffic, conversion, staffing and interaction-rate analytics \cite{retailnextTraffic} & Pricing and CCTV compatibility not assessed.\\
+Sensormatic & Shopper traffic/journeys and staffing context \cite{sensormaticInsights} & No claim of absent engagement features.\\
+Just Walk Out & Shopper/product sensing and automated checkout \cite{amazonJwo} & Different checkout-oriented objective; cost not assessed.\\
+RetailPulse prototype & Local-video role tracking and pose-checked interaction detection & CPU smoke tests and local UI evidence; no commercial accuracy or cost comparison.\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Limitations and Gaps}
+The reviewed commercial products already provide substantial retail analytics, including interaction-related metrics in RetailNext. The project's design objective is therefore an inspectable academic prototype using local footage and explicit heuristic rules, rather than a claim that commercial engagement analytics do not exist. Public product pages alone do not establish relative cost, deployment effort, privacy compliance or comparative accuracy.
+
+The technical gap the project isolates is narrower: separating a service interaction from a close pass-by using only a single ordinary camera. Proximity alone nominates any employee and customer who stay near each other, including two people walking away side by side; on the one labelled clip it reached precision 0.50 (Table~\ref{tab:interaction-kpi}). The project adds a pose-based facing check and measures its effect with and without it, so the contribution is an inspectable, locally run pipeline with a stated evaluation method rather than a new detector.
+
+\section{Proposed Solution}
+RetailPulse separates detection, classification, engagement, trajectory and interaction judging into distinct components. The mid-iteration implementation concentrates on these person-analysis components and the web interfaces. Lightweight YOLO detection with local tracker identifiers (BoT-SORT in the interaction pipeline, ByteTrack in the descoped floor prototype) keeps the pipeline CPU-friendly.
+
+\section{Complex Computing Problem}
+The complex computing problem is to derive reliable, per-person service and movement analytics from low-cost, uncontrolled CCTV video under tight compute limits. The problem involves several interacting difficulties:
+\begin{itemize}
+\item Conflicting requirements: accuracy against CPU-only throughput, and informativeness against privacy (no biometrics).
+\item Ambiguous ground truth: whether a staff member near a customer constitutes an ``interaction'' must be defined operationally from distance, orientation, and duration.
+\item Consistency of observations: role labels, boxes, distance estimates and interaction cues must refer to the same tracked person despite occlusions and identity switches.
+\item Non-technical users: results must be presented in a way that managers can act on without over-trusting heuristics.
+\end{itemize}
+
+\section{Technical Challenges}
+\begin{itemize}
+\item \textbf{CPU-only inference:} frame sampling and small detector variants are needed to keep batch processing practical.
+\item \textbf{Staff/customer separation without biometrics:} both learned appearance-based role detection and earlier zone rules require evaluation against clothing similarity and staff outside their expected zones.
+\item \textbf{Perspective and depth ambiguity:} pixel separations depend on image location and people at different depths can look close, so the pipeline uses body-height-normalised distance; a calibrated floor mapping to metres was tried and descoped.
+\item \textbf{Floor-contact uncertainty:} seated people, hidden feet, chairs, overlap and frame truncation made box-bottom estimates unreliable in the floor prototype and still affect the body bands used for proximity.
+\item \textbf{Camera movement:} a reference homography became misaligned on the moving-camera footage and insufficient static floor features meant unverified alignment, which led to descoping the floor prototype. Camera movement also causes identity switches.
+\item \textbf{Identity switches and occlusion:} ID switching in crowded scenes affects interaction durations and dwell times.
+\item \textbf{Security of the web tier:} manager-only operational data must not be unlocked by client-side state alone.
+\end{itemize}
+
+\section{Research Findings and Design Decisions}
+\subsection{Interaction Detection Findings}
+Proximity alone cannot separate a service interaction from a close pass-by. On the labelled clip IMG\_8829 it produced one true and one false interaction (precision 0.50). Adding the YOLO pose model as a judge, which requires a head to point within $60^\circ$ of the other person's head in at least half of four crops, removed the false positive (precision 1.00). This single-clip result motivates the design but does not establish its accuracy; FYP-2 evaluates it on more labelled clips (Chapter~\ref{ch:testing}).
+
+\subsection{Geometric Basis of the Descoped Floor-Distance Prototype}
+The floor-distance prototype was descoped (Section~\ref{sec:floor-descoped}); its research basis is kept because it explains why body-height-normalised distance replaced it.
+
+Projective geometry provides a mapping between two views of a plane through a homography \cite{hartley2004multiple,opencvHomography}. Single-view metrology establishes broader foundations for recovering geometric measurements from perspective images using scene information \cite{criminisi2000metrology}; the implemented prototype specifically uses explicit image/floor landmark correspondences rather than reproducing that paper's complete procedure. RetailPulse selects planar floor mapping because the intended quantity is separation along the floor and the existing camera and detector can be reused. It does not estimate a depth map or reconstruct arbitrary 3D scene geometry.
+
+Robust fitting with RANSAC \cite{fischler1981ransac} supports additional calibration correspondences and reference-alignment checks. ByteTrack \cite{zhang2022bytetrack} supplies per-camera association, while ORB \cite{rublee2011orb} supplies image features for the conservative motion monitor. These are established building blocks; the project's contribution is their integration with explicit position-quality states, configurable calibration and diagnostic exports. Published benchmark results for these methods are not claimed as RetailPulse performance.
+
+\begin{longtable}{P{0.38\textwidth}P{0.5\textwidth}}
+\caption{Findings and the decisions they influenced}\\
+\toprule
+Finding & Decision\\
+\midrule
+\endfirsthead
+\toprule
+Finding & Decision\\
+\midrule
+\endhead
+YOLO detectors have small variants usable without a GPU \cite{redmon2016yolo,ultralytics}. & Use a lightweight YOLO-based detector and sample frames.\\
+ByteTrack \cite{zhang2022bytetrack} gives stable local IDs without a separate appearance network. & Use ByteTrack for per-camera tracking.\\
+Learned re-identification \cite{ye2022reid} is compute-heavy and biometric-adjacent. & Keep cross-camera association outside the mid-iteration deliverables.\\
+Mixed vision responsibilities are harder to inspect and test. & Separate detection, role classification, interaction and distance logic.\\
+Appearance evidence can be ambiguous. & Keep role confidence and source evidence visible for review.\\
+Client-side role flags are easily altered. & Issue server-signed HttpOnly session cookies and require an internal secret on direct backend calls.\\
+Managers need explanations, not only numbers. & Add a narration agent over camera-derived operational evidence.\\
+Perspective changes pixel scale across the image \cite{hartley2004multiple,opencvHomography}. & Projected foot proxies into floor metres in the prototype; descoped and replaced by body-height-normalised distance.\\
+Proximity alone nominates close pass-bys as interactions. & Add a pass-by filter and a pose judge, and benchmark with and without the judge.\\
+Supplied floor dimensions determine metric scale. & Stored editable landmarks and dimensions in the descoped prototype, with estimated inputs identified in configuration.\\
+Camera movement can invalidate the reference mapping. & Checked alignment with ORB/RANSAC in the prototype and suppressed output when shifted or unverified; almost all frames were rejected, so the prototype was descoped.\\
+\bottomrule
+\end{longtable}
