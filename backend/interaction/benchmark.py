@@ -6,6 +6,7 @@ python -m backend.interaction.benchmark backend/interaction/benchmarks/benchmark
 from __future__ import annotations
 
 import argparse
+import csv
 import json
 import statistics
 import tempfile
@@ -77,23 +78,22 @@ def video_kpis(spec: dict, judge: str, device: str, min_iou: float) -> dict:
     from .types import CONFIRMED
 
     pipeline = InteractionPipeline(InteractionConfig(device=device, interaction_judge=judge))
-    judge_times: list[float] = []
+    judge_times, track_times, classify_times = [], [], []
     if pipeline.judge:
-        classify = pipeline.judge.classify_interaction
+        timed(pipeline.judge, "classify_interaction", judge_times)
+    timed(pipeline.tracker, "detect_and_track", track_times)  # detector + BoT-SORT (+ReID) + relink
+    timed(pipeline.classifier, "classify", classify_times)
+    track_ids, people = set(), []
 
-        def timed(*args, **kwargs):
-            started = time.perf_counter()
-            try:
-                return classify(*args, **kwargs)
-            finally:
-                judge_times.append(time.perf_counter() - started)
-        pipeline.judge.classify_interaction = timed
+    def seen(_frame_number, _frame, result):
+        track_ids.update(person["track_id"] for person in result["people"])
+        people.append(len(result["people"]))
     cap = cv2.VideoCapture(str(ROOT / spec["path"]))
     if not cap.isOpened():
         raise SystemExit(f"Cannot open video: {spec['path']}")
     fps = cap.get(cv2.CAP_PROP_FPS) or 25
     started = time.perf_counter()
-    run = analyse(cap, fps, pipeline, spec.get("every", 1), spec.get("track_every", 1))
+    run = analyse(cap, fps, pipeline, spec.get("every", 1), spec.get("track_every", 1), seen)
     elapsed = time.perf_counter() - started
     cap.release()
     events = list(run["interactions"].values())
@@ -111,8 +111,39 @@ def video_kpis(spec: dict, judge: str, device: str, min_iou: float) -> dict:
                   "frame_ms_p50": 1000 * latencies[len(latencies) // 2] if latencies else None,
                   "frame_ms_p95": 1000 * latencies[int(len(latencies) * 0.95)] if latencies else None,
                   "judge_calls": len(judge_times),
-                  "judge_ms_mean": 1000 * statistics.mean(judge_times) if judge_times else None},
+                  "judge_ms_mean": 1000 * statistics.mean(judge_times) if judge_times else None,
+                  "track_ms_mean": 1000 * statistics.mean(track_times) if track_times else None,
+                  "classify_ms_mean": 1000 * statistics.mean(classify_times) if classify_times else None,
+                  # Wall time outside the pipeline: mostly reading/decoding frames.
+                  "decode_s": elapsed - sum(track_times) - sum(classify_times) - sum(judge_times),
+                  "people_per_frame_mean": statistics.mean(people) if people else None},
+        # ID fragmentation proxy: more distinct IDs for the same footage = more ID switches.
+        "track_ids": len(track_ids),
     }
+
+
+def timed(obj, name: str, times: list[float]) -> None:
+    """Wrap obj.name so every call's duration is appended to times."""
+    original = getattr(obj, name)
+
+    def wrapper(*args, **kwargs):
+        started = time.perf_counter()
+        try:
+            return original(*args, **kwargs)
+        finally:
+            times.append(time.perf_counter() - started)
+    setattr(obj, name, wrapper)
+
+
+def log_row(label: str, report: dict) -> dict:
+    """One speed_log.csv row: the worst video's speed plus the accuracy guards."""
+    worst = min(report["videos"], key=lambda v: v["speed"]["realtime_factor"])
+    sp, judged = worst["speed"], report["interactions"]["with_judge"]
+    return {"label": label, "videos": len(report["videos"]), "worst_video": Path(worst["path"]).name,
+            "realtime_factor": round(sp["realtime_factor"], 3), "frame_ms_p50": round(sp["frame_ms_p50"]),
+            "frame_ms_p95": round(sp["frame_ms_p95"]), "decode_s": round(sp["decode_s"], 1),
+            "track_ms": round(sp["track_ms_mean"]), "judge_ms": None if sp["judge_ms_mean"] is None else round(sp["judge_ms_mean"]),
+            "track_ids": sum(v["track_ids"] for v in report["videos"]), "with_judge_f1": judged["f1"]}
 
 
 def check_targets(report: dict, targets: dict) -> list[str]:
@@ -135,8 +166,12 @@ def main() -> None:
     parser.add_argument("--judge", choices=("pose", "off"), default="pose")
     parser.add_argument("--device", default=DEVICE)
     parser.add_argument("--skip-detector", action="store_true")
+    parser.add_argument("--only", help="Run only the videos whose path contains this text")
+    parser.add_argument("--label", help="Append a row under this label to benchmarks/speed_log.csv")
     args = parser.parse_args()
     spec = json.loads(args.spec.read_text())
+    if args.only:
+        spec["videos"] = [video for video in spec["videos"] if args.only in video["path"]]
     min_iou = spec.get("temporal_iou", 0.5)
     report: dict = {"judge": args.judge, "device": args.device}
     if not args.skip_detector:
@@ -148,6 +183,14 @@ def main() -> None:
     report["videos"] = videos
     report["target_failures"] = check_targets(report, spec.get("targets", {}))
     args.output.write_text(json.dumps(report, indent=2), encoding="utf-8")
+    if args.label:
+        log = Path(__file__).with_name("benchmarks") / "speed_log.csv"
+        row = log_row(args.label, report)
+        with log.open("a", newline="", encoding="utf-8") as handle:
+            writer = csv.DictWriter(handle, fieldnames=list(row))
+            if handle.tell() == 0:
+                writer.writeheader()
+            writer.writerow(row)
 
     show = lambda v: "n/a" if v is None else f"{v:.3f}"
     if "detector" in report:
@@ -163,7 +206,8 @@ def main() -> None:
     for v in videos:
         sp = v["speed"]
         print(f"speed {v['path']}: {sp['realtime_factor']:.2f}x realtime, frame p50 {show(sp['frame_ms_p50'])} ms "
-              f"p95 {show(sp['frame_ms_p95'])} ms, judge {sp['judge_calls']} calls x {show(sp['judge_ms_mean'])} ms")
+              f"p95 {show(sp['frame_ms_p95'])} ms, track {show(sp['track_ms_mean'])} ms, decode {sp['decode_s']:.1f} s, "
+              f"judge {sp['judge_calls']} calls x {show(sp['judge_ms_mean'])} ms, {v['track_ids']} IDs")
     print("targets: " + ("all met" if not report["target_failures"] else "; ".join(report["target_failures"])))
 
 

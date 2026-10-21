@@ -23,7 +23,7 @@
         "map50_95": 0.8649420913300336
       }
     },
-    "inference_ms_per_image": 73.11399678684401
+    "inference_ms_per_image": 59.5952081186824
   },
   "interactions": {
     "proximity_only": {
@@ -44,7 +44,7 @@
     }
   },
   "speed": {
-    "realtime_factor": 0.8036062201519478
+    "realtime_factor": 1.2514301073826877
   },
   "videos": [
     {
@@ -77,12 +77,17 @@
         }
       ],
       "speed": {
-        "realtime_factor": 1.3966139866951541,
-        "frame_ms_p50": 128.05879299958178,
-        "frame_ms_p95": 217.9591589992924,
+        "realtime_factor": 1.7257464477761595,
+        "frame_ms_p50": 97.05219700003909,
+        "frame_ms_p95": 150.51575000006778,
         "judge_calls": 5,
-        "judge_ms_mean": 400.8421915998042
-      }
+        "judge_ms_mean": 354.91956240002764,
+        "track_ms_mean": 104.96592881371298,
+        "classify_ms_mean": 0.17943067820936837,
+        "decode_s": 16.009213890999945,
+        "people_per_frame_mean": 1.4166666666666667
+      },
+      "track_ids": 5
     },
     {
       "path": "dummydataset/Copy of IMG_8878_part1_sq640.MOV",
@@ -102,12 +107,17 @@
         }
       ],
       "speed": {
-        "realtime_factor": 1.5369673590252195,
-        "frame_ms_p50": 119.72177799907513,
-        "frame_ms_p95": 228.28554299849202,
+        "realtime_factor": 1.9040109921620922,
+        "frame_ms_p50": 94.00923599991984,
+        "frame_ms_p95": 133.63012500008153,
         "judge_calls": 3,
-        "judge_ms_mean": 225.74760300085472
-      }
+        "judge_ms_mean": 152.55486266664775,
+        "track_ms_mean": 96.93642490653886,
+        "classify_ms_mean": 0.15022330932370714,
+        "decode_s": 16.227257484000347,
+        "people_per_frame_mean": 1.102803738317757
+      },
+      "track_ids": 6
     },
     {
       "path": "dummydataset/Copy of IMG_8880_part1_sq640.MOV",
@@ -122,12 +132,17 @@
         }
       ],
       "speed": {
-        "realtime_factor": 1.408135719454866,
-        "frame_ms_p50": 132.82015999902796,
-        "frame_ms_p95": 208.18909899935534,
+        "realtime_factor": 1.456129342748656,
+        "frame_ms_p50": 110.52580600016881,
+        "frame_ms_p95": 240.52286500000264,
         "judge_calls": 1,
-        "judge_ms_mean": 258.8837390012486
-      }
+        "judge_ms_mean": 144.09193500000583,
+        "track_ms_mean": 131.20055550675224,
+        "classify_ms_mean": 0.17959668879299606,
+        "decode_s": 14.09158333000164,
+        "people_per_frame_mean": 1.6283783783783783
+      },
+      "track_ids": 4
     },
     {
       "path": "dummydataset/Copy of IMG_8881_part1_sq640.MOV",
@@ -152,12 +167,17 @@
         }
       ],
       "speed": {
-        "realtime_factor": 1.3079670251097835,
-        "frame_ms_p50": 146.2662880003336,
-        "frame_ms_p95": 238.7954890000401,
+        "realtime_factor": 1.2514301073826877,
+        "frame_ms_p50": 128.32199100012076,
+        "frame_ms_p95": 360.74213300003066,
         "judge_calls": 4,
-        "judge_ms_mean": 315.46538925022105
-      }
+        "judge_ms_mean": 369.4390132500871,
+        "track_ms_mean": 155.9841208745049,
+        "classify_ms_mean": 0.19538229273538787,
+        "decode_s": 25.65687179900101,
+        "people_per_frame_mean": 1.562753036437247
+      },
+      "track_ids": 7
     },
     {
       "path": "dummydataset/Copy of IMG_8885_part1_sq640.MOV",
@@ -166,12 +186,17 @@
       "with_judge": null,
       "candidates": [],
       "speed": {
-        "realtime_factor": 1.3650040560616215,
-        "frame_ms_p50": 126.34430300022359,
-        "frame_ms_p95": 182.17234299845586,
+        "realtime_factor": 1.3283079925903891,
+        "frame_ms_p50": 122.52288299987413,
+        "frame_ms_p95": 290.5447420000655,
         "judge_calls": 0,
-        "judge_ms_mean": null
-      }
+        "judge_ms_mean": null,
+        "track_ms_mean": 143.05284295430633,
+        "classify_ms_mean": 0.2306066523845272,
+        "decode_s": 21.18139374600105,
+        "people_per_frame_mean": 1.0659898477157361
+      },
+      "track_ids": 4
     },
     {
       "path": "dummydataset/Copy of IMG_8886_part1_sq640.MOV",
@@ -196,12 +221,17 @@
         }
       ],
       "speed": {
-        "realtime_factor": 1.232936992663531,
-        "frame_ms_p50": 138.13581400063413,
-        "frame_ms_p95": 268.7570489997597,
+        "realtime_factor": 1.5252525955817375,
+        "frame_ms_p50": 114.10616500006654,
+        "frame_ms_p95": 185.65611900021395,
         "judge_calls": 3,
-        "judge_ms_mean": 269.26343333373853
-      }
+        "judge_ms_mean": 186.960559333329,
+        "track_ms_mean": 123.5016688777806,
+        "classify_ms_mean": 0.17347553717178704,
+        "decode_s": 16.407798480996462,
+        "people_per_frame_mean": 1.6444444444444444
+      },
+      "track_ids": 5
     },
     {
       "path": "dummydataset/Copy of IMG_8890_part2_sq640.MOV",
@@ -221,12 +251,17 @@
         }
       ],
       "speed": {
-        "realtime_factor": 1.395811283426317,
-        "frame_ms_p50": 133.06841899975552,
-        "frame_ms_p95": 250.7925259997137,
+        "realtime_factor": 1.6958796266146814,
+        "frame_ms_p50": 104.15743199973804,
+        "frame_ms_p95": 157.8084510001645,
         "judge_calls": 2,
-        "judge_ms_mean": 249.39652500052034
-      }
+        "judge_ms_mean": 178.7860235001517,
+        "track_ms_mean": 108.4015856806256,
+        "classify_ms_mean": 0.16580997253542734,
+        "decode_s": 16.260516910003844,
+        "people_per_frame_mean": 1.3350785340314135
+      },
+      "track_ids": 5
     },
     {
       "path": "dummydataset/Copy of IMG_8893_part1_sq640.MOV",
@@ -251,12 +286,17 @@
         }
       ],
       "speed": {
-        "realtime_factor": 1.4297899479913307,
-        "frame_ms_p50": 125.37966000127199,
-        "frame_ms_p95": 290.26445599993167,
+        "realtime_factor": 1.6956645323287944,
+        "frame_ms_p50": 107.10289000007833,
+        "frame_ms_p95": 163.0727960000513,
         "judge_calls": 7,
-        "judge_ms_mean": 244.92787314271223
-      }
+        "judge_ms_mean": 169.4675677142316,
+        "track_ms_mean": 109.71469909821963,
+        "classify_ms_mean": 0.15502900537614486,
+        "decode_s": 18.09572785299406,
+        "people_per_frame_mean": 1.6651785714285714
+      },
+      "track_ids": 5
     },
     {
       "path": "dummydataset/Copy of IMG_8894_part1_sq640.MOV",
@@ -276,12 +316,17 @@
         }
       ],
       "speed": {
-        "realtime_factor": 1.1649733938796722,
-        "frame_ms_p50": 145.77315899987298,
-        "frame_ms_p95": 349.12888199869485,
+        "realtime_factor": 1.8710428231881508,
+        "frame_ms_p50": 94.68758799994248,
+        "frame_ms_p95": 142.63987599997563,
         "judge_calls": 2,
-        "judge_ms_mean": 363.71036149921565
-      }
+        "judge_ms_mean": 146.18232700013323,
+        "track_ms_mean": 96.13139313887082,
+        "classify_ms_mean": 0.16197647005670318,
+        "decode_s": 14.43651434000094,
+        "people_per_frame_mean": 1.2055555555555555
+      },
+      "track_ids": 4
     },
     {
       "path": "dummydataset/Copy of IMG_8895_part2_sq640.MOV",
@@ -306,12 +351,17 @@
         }
       ],
       "speed": {
-        "realtime_factor": 0.8036062201519478,
-        "frame_ms_p50": 171.04143500000646,
-        "frame_ms_p95": 731.1586069990881,
+        "realtime_factor": 1.7784384634502302,
+        "frame_ms_p50": 98.54088800011596,
+        "frame_ms_p95": 141.33112199988318,
         "judge_calls": 4,
-        "judge_ms_mean": 892.5710197499939
-      }
+        "judge_ms_mean": 156.46229800006495,
+        "track_ms_mean": 105.43288044651639,
+        "classify_ms_mean": 0.16614601748080618,
+        "decode_s": 12.24249886500047,
+        "people_per_frame_mean": 1.440251572327044
+      },
+      "track_ids": 6
     },
     {
       "path": "dummydataset/Copy of IMG_8897_part1_sq640.MOV",
@@ -326,15 +376,18 @@
         }
       ],
       "speed": {
-        "realtime_factor": 1.2340660810096564,
-        "frame_ms_p50": 138.38483700055804,
-        "frame_ms_p95": 322.70143700043263,
+        "realtime_factor": 1.841264418685746,
+        "frame_ms_p50": 98.25547100035692,
+        "frame_ms_p95": 136.82235900023443,
         "judge_calls": 2,
-        "judge_ms_mean": 328.6152655009573
-      }
+        "judge_ms_mean": 157.4006220002957,
+        "track_ms_mean": 100.83232138889697,
+        "classify_ms_mean": 0.1761477598550508,
+        "decode_s": 14.076942238994434,
+        "people_per_frame_mean": 1.4111111111111112
+      },
+      "track_ids": 4
     }
   ],
-  "target_failures": [
-    "speed.realtime_factor: 0.804 < 1.0"
-  ]
+  "target_failures": []
 }
