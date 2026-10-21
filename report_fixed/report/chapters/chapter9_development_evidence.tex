@@ -1,0 +1,137 @@
+\chapter{Project Management and Development Evidence}
+\label{ch:mgmt}
+\section{Work Completed}
+\begin{itemize}
+\item Next.js application with manager, employee, and shared pages.
+\item Role-aware access with signed session cookies and an internal secret header.
+\item Trained-role/ByteTrack foot-point preview and provisional floor-distance CLI: editable calibration, motion/reliability checks, metric smoothing and diagnostic exports (since descoped).
+\item Two-stage interaction pipeline: trained role detector, BoT-SORT tracking, body-height proximity with a pass-by filter, and a YOLO pose judge; plus a benchmark for detector, interaction and speed KPIs.
+\item Executed 17 historical focused floor-distance checks; 44 current interaction unit tests and 5 handoff tests pass; detector benchmarked on 455 held-out images and the interaction pipeline run on 11 local clips.
+\end{itemize}
+
+\section{Work Remaining}
+Integrating the vision agents with the dashboard, labelled detector/interaction evaluation, the Insight Narration agent on real data, and hardening. Details are in Chapter~\ref{ch:fyp2plan}.
+
+\section{Individual Responsibilities}
+\begin{table}[H]
+\centering
+\caption{Responsibilities}\label{tab:responsibilities}
+\begin{tabular}{P{0.25\textwidth}P{0.62\textwidth}}
+\toprule
+Member & Responsibility\\
+\midrule
+Moiz Ansari (23I-0523) & Frontend; distance between people; head, hips and feet band handling when the full-person position is rejected\\
+Saqib Atif (23I-0769) & Customer/employee pose detection and testing\\
+Ruhab Ahmad (23I-0559) & Frontend, report and classification\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Contribution of Each Team Member}
+Moiz worked on frontend development, person-to-person distance and the head/hips/feet band approach for rejected full-person positions; Saqib worked on customer/employee pose detection and testing; Ruhab worked on frontend development, the report and classification. The head/hips/feet categories describe body regions used for distance estimation, not employee/customer role classes.
+
+Git records attribute the provisional floor-distance implementation (\texttt{4a9023a}) and report addition (\texttt{80fb3fd}) to Moiz Ansari. They attribute the interaction detector (\texttt{e3fe2af}) and video-verification record (\texttt{6c25090}) to Ruhab Ahmad. The Git author \texttt{msaqibatifj} is recorded for temporal role classification (\texttt{882f7dc}), the shared OpenVINO model (\texttt{e2b71a5}) and moving-camera engagement (\texttt{face2b5}). Git author names are shown as recorded. These are commit-author records, not a claim that each author exclusively performed every change or a complete account of non-code work.
+
+\section{Repository and Version Control Evidence}
+The project is kept in the Git repository \path{muhammad-moiz-ansari/retail-store-analysis} on GitHub. Work is organised on feature branches, and this report corresponds to the \path{feature/interaction} branch, inspected on 20 October 2026 at commit \texttt{6560403}.
+
+\section{Milestones and Commit Evidence}
+The actual floor-distance implementation commit is \texttt{4a9023a} (19 October 2026, Moiz Ansari), titled ``feat(vision): add provisional floor-distance estimation pipeline''. A later commit removed the calibrated floor-distance pipeline (\texttt{8c3a6fe}, 20 October), attributed to Git author \texttt{msaqibatifj}. Therefore historical implementation evidence must be read with its commit context. The on-screen interaction flag and one-record-per-interaction output were committed on \path{feature/interaction-flag} (\texttt{20db4c6}, \texttt{ee7947f}, \texttt{0411408}, 19 October 2026, Git author \texttt{msaqibatifj}); the pose judge and benchmark were developed there and ported to \path{feature/interaction} in commit \texttt{6560403} (20 October 2026), after unused code was removed in \texttt{cffa30b}. No Git tags were present in the inspected repository. Selected commit and author-count evidence is reproduced in Appendix~\ref{app:repo}; no project-board or supervisor milestone evidence is inferred from commit dates.
+
+\section{Tools and Tool-Assisted Development}
+Development tools include Node.js and npm, a Python virtual environment, Git and GitHub, and the libraries listed in Chapter~\ref{ch:iter1}. We also used generative-AI assistants, disclosed in Table~\ref{tab:ai-use}.
+\begin{table}[H]
+\centering
+\caption{Generative-AI tool use and verification}\label{tab:ai-use}
+\begin{tabular}{P{0.15\textwidth}P{0.40\textwidth}P{0.33\textwidth}}
+\toprule
+Tool & Used for & How the output was checked\\
+\midrule
+Codex & Floor-distance implementation (since descoped), diagnostic runs, and revision of the report source. & Focused automated tests, local trained-model/video runs, inspection of preview and grid outputs, export readability and record-invariant checks.\\
+Claude Code & Porting the pose judge and benchmark to the main branch, the batch and benchmark runs, and the 20 October report revision. & Automated tests, a byte-identical comparison of pipeline outputs before and after the port, and inspection of annotated frames.\\
+Claude & General AI/development assistant. & Reviewed by the team member who owns the affected module (Table~\ref{tab:responsibilities}).\\
+\bottomrule
+\end{tabular}
+\end{table}
+AI assistance does not replace the recorded test and review evidence, and each team member must be able to explain the code and text in the area they own.
+
+\section{External Components and Dependencies}
+\begin{table}[H]
+\centering
+\caption{External components}
+\begin{tabular}{P{0.25\textwidth}P{0.62\textwidth}}
+\toprule
+Component & Use\\
+\midrule
+YOLO implementation \cite{ultralytics} & YOLOv8n pose model as interaction judge; standard YOLO detection for customer/employee classes\\
+OpenVINO & CPU inference runtime for the role detector\\
+ByteTrack \cite{zhang2022bytetrack} / BoT-SORT & Per-camera tracking (BoT-SORT with appearance re-identification in the interaction pipeline); \texttt{lap} supplies assignment support\\
+OpenCV / NumPy \cite{opencvHomography} & Image processing and video input/output; homography fitting, projection and ORB matching in the descoped floor prototype\\
+ORB \cite{rublee2011orb} and RANSAC \cite{fischler1981ransac} & Reference-alignment evidence and robust fitting in the descoped floor prototype\\
+FastAPI \cite{fastapi} & Application and camera API\\
+Next.js and React \cite{nextjs} & Frontend\\
+Recharts, Tailwind CSS & Charts, styling\\
+SQLite & Application, job and interaction storage\\
+\bottomrule
+\end{tabular}
+\end{table}
+\begin{longtable}{P{0.32\textwidth}P{0.55\textwidth}}
+\caption{Dependency licence review from installed metadata and upstream notices, 20 October 2026}\\
+\toprule
+Component & Licence / scope\\
+\midrule
+\endfirsthead
+\toprule
+Component & Licence / scope\\
+\midrule
+\endhead
+Ultralytics implementation & AGPL-3.0 or a separate Enterprise licence, according to its publisher \cite{ultralyticsLicense}. Academic use does not by itself remove applicable obligations.\\
+Original ByteTrack repository & MIT \cite{bytetrackLicense}; this does not replace the licence of the Ultralytics implementation used by the project.\\
+OpenCV & Apache-2.0 for current releases \cite{opencvLicense}.\\
+OpenVINO & Apache-2.0 (installed metadata, version 2026.4.1).\\
+FastAPI, pytest & MIT (installed distribution metadata).\\
+Uvicorn, HTTPX; lap & BSD-3-Clause; BSD-2-Clause for lap (installed metadata).\\
+NumPy and PyTorch & BSD-family and bundled-component notices; retain the complete installed distribution notices rather than assuming a single licence covers every component.\\
+Pillow & MIT-CMU (installed metadata).\\
+Next.js, React, ReactDOM, Recharts, Tailwind CSS & MIT (installed package metadata).\\
+Inter, Space Grotesk, JetBrains Mono & SIL Open Font License 1.1 \cite{interLicense,spaceGroteskLicense,jetbrainsMonoLicense}.\\
+SQLite & Public-domain software; the application's data rights remain separate.\\
+\bottomrule
+\end{longtable}
+This is a dependency-notice inventory, not a certification of licence compliance or ownership of trained weights/video. Distribution should preserve applicable notices and satisfy the relevant licence terms. Versions installed during testing can differ from manifest ranges; the test environment contained Next.js 16.3.3, React 19.2.8 and Ultralytics 8.4.138.
+
+\section{Risks and Mitigation}
+\begin{table}[H]
+\centering
+\caption{Risk register}
+\begin{tabular}{P{0.3\textwidth}P{0.1\textwidth}P{0.4\textwidth}}
+\toprule
+Risk & Level & Mitigation\\
+\midrule
+CPU-only inference too slow & High & Frame sampling, small models, batch processing\\
+Staff/customer misclassification & High & Zone rules plus appearance, labelled evaluation, manager review\\
+Limited footage for evaluation & Medium & Record or label additional clips early in FYP-2\\
+Integration slippage & Medium & Bind one agent at a time, keep prototype data fallback\\
+Privacy or misuse concerns & Medium & Non-biometric design, decision-support framing\\
+Depth ambiguity in a single image & High & Height-ratio check and pose judge; labelled evaluation; reported as a limitation\\
+Identity switches on moving footage & High & BoT-SORT re-identification and relinking; count split interactions during evaluation\\
+Pose judge too lenient or too strict & Medium & Benchmark with and without the judge; tune facing angle and fraction on labelled clips\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Security and Privacy Considerations}
+Manager routes require a signed HttpOnly session cookie, and direct backend calls require an internal secret header that only the server-side proxy supplies. Secrets come from environment variables. The current login verifies stored account credentials; the earlier arbitrary-email/six-character demo rule no longer describes the tested implementation. The access-control checks are described in Chapter~\ref{ch:testing}.
+
+Floor footage, calibration frames/configuration and generated diagnostics remain local under Git-ignored data directories. The report includes only selected local demonstration frames; no footage upload, persistent person crops or facial-identity records are required by the prototype.
+
+\section{Current Limitations}
+\begin{itemize}
+\item Vision-derived dashboard metrics still use prototype or demo data; system status is available as a backend endpoint only.
+\item The pipeline is offline/batch, not real time.
+\item Single-store prototype; no multi-store deployment is claimed.
+\item Current authentication uses stored accounts; role-navigation checks cover representative views rather than every application route.
+\item The floor-distance prototype was descoped, so no distances in metres are produced; interaction distance is relative to body height and cannot fully resolve depth.
+\item Interaction accuracy is measured on one labelled clip only; identity switches on moving footage can split one interaction into several.
+\item Interaction results are available through the CLI; dashboard integration remains pending.
+\end{itemize}

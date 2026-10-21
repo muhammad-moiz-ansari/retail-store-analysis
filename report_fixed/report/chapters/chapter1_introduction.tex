@@ -1,0 +1,115 @@
+\chapter{Introduction and Project Vision}
+\label{ch:intro}
+\section{Project Overview}
+RetailPulse (\textit{Agentic AI for Retail Store Intelligence}) is a system that converts existing in-store CCTV footage into live customer-engagement analytics, staff-performance insight, and store-traffic intelligence, without new cameras or specialised hardware. It is a Final Year Project that explores practical use of multi-agent AI systems in a resource-constrained retail environment.
+
+The system assumes a three-camera setup: one entrance-facing camera and two floor-facing cameras. Their feeds pass through a pipeline of specialised agents. The mid-iteration work covers person/role detection, interaction detection (proximity plus a pose-based facing check) and the web interfaces for managers and employees.
+
+\section{Problem Statement}
+Retail store owners and managers have no low-cost way to know whether customers on the floor are being attended to, how staff time is split between active engagement and idle time, and which areas of the store attract traffic and which are ignored. Existing CCTV footage is recorded but rarely reviewed, and dedicated retail-analytics hardware or analysts are often financially out of reach for small and mid-sized retailers.
+
+\section{Problem Context and Motivation}
+CCTV systems in most stores exist for theft prevention. The footage holds operational information (queues, approaches, dwell, idle time) that goes unused. Managers who want this information must watch footage manually, which does not scale, or buy specialised products.
+
+The motivation is threefold. First, service quality: customers who are not approached in a reasonable time may leave without buying. Second, fair and informed staffing: managers need visibility into floor coverage and idle periods. Third, accessibility: a CPU-only solution built on existing cameras lowers the barrier for retailers that cannot invest in new capital equipment. The project also emphasises privacy-conscious design, using non-biometric classification and presenting results as decision support rather than automated employee evaluation. Service expectations vary by store: frequent approaches may be inappropriate in luxury or low-contact settings. Unattended-customer flags and staff scores must therefore be interpreted against a store-defined service policy, not a universal expectation that staff should constantly approach shoppers.
+
+\section{Project Vision}
+RetailPulse aims to make store intelligence accessible to retailers of any size by reusing the cameras they already own, running on commodity CPUs, and giving managers clear and trustworthy answers to everyday operational questions.
+
+The project uses two distinct YOLO model roles: a YOLO pose model supplies body-keypoint evidence for interaction analysis, while a standard YOLO object-detection model with customer/employee classes supplies person boxes and role labels. The latter is a detector trained on role classes, not a separate image-classification-only network. Interaction events are derived from pose/proximity and temporal rules rather than treating a pose prediction itself as an interaction label.
+
+\section{Project Objectives}
+The project has the following measurable objectives.
+\begin{enumerate}[label=O\arabic*.]
+\item Count footfall from the entrance camera and report it per time interval.
+\item Detect people in each processed frame and classify them as staff or customer without biometric identification; the interaction pipeline uses a trained employee/customer detector, while earlier demo paths use zone and appearance heuristics.
+\item Compute engagement metrics: approach time, interaction duration, idle time, unattended-customer flags, and an employee score.
+\item Track movement to produce paths, zone dwell times, heatmaps, and crowd density.
+\item Provide a manager dashboard, an employee workspace, alerts, and exportable reports with narrative summaries.
+\item Detect employee--customer interactions by combining body-height-normalised proximity, duration and a pose-based facing check, and reject close pass-bys.
+\item Run the vision pipeline on CPU only.
+\end{enumerate}
+
+\section{Project Scope}
+\textbf{In scope:}
+\begin{itemize}
+\item Footfall counting (entrance camera).
+\item Staff/customer classification (non-biometric, including the trained role detector used by the interaction pipeline).
+\item Engagement analytics: approach time, interaction duration, idle detection, unattended flagging, and employee scoring.
+\item Trajectory and spatial behaviour: path tracking, zone dwell time, heatmaps, and crowd density.
+\item Interaction detection from body-height-normalised proximity, duration, a pass-by filter and a pose-based facing check, run through local command-line tools.
+\item Web application with manager and employee roles.
+\end{itemize}
+\textbf{Explicitly out of scope} (see Chapter~\ref{ch:fyp2plan} and Future Work):
+\begin{itemize}
+\item Cross-camera identity association; this is reserved for the next phase.
+\item Metric floor-plane distance estimation; a calibrated-homography prototype was built and then descoped (Section~\ref{sec:floor-descoped}).
+\item Full three-dimensional reconstruction and per-pixel depth-map generation.
+\item Shelf-level product interaction detection.
+\item Long-term store layout and promotional-effectiveness evaluation.
+\item Multi-store scaling and real-time processing as the primary deliverable (the current pipeline is offline/batch).
+\end{itemize}
+These exclusions were chosen after a feasibility triage against hardware (no dedicated GPU), timeline, and dependency constraints.
+
+\section{Project Modules}
+\begin{table}[H]
+\centering
+\caption{Major modules and responsibilities}
+\begin{tabular}{P{0.25\textwidth}P{0.65\textwidth}}
+\toprule
+Module & Responsibility\\
+\midrule
+Detection Agent & Person detection in each frame using a YOLO-based detector.\\
+Classification Agent & Non-biometric staff/customer classification; the interaction pipeline uses the trained role detector, and earlier demo paths use heuristics.\\
+Engagement Agent & Interaction duration, approach time, and idle detection.\\
+Trajectory Agent & Movement paths, zone dwell time, and heatmap generation.\\
+Insight Narration Agent & Generates natural-language report summaries on demand.\\
+Interaction pipeline & Role-labelled tracking, body-height proximity, pass-by filter and YOLO pose judge; local command-line tool with video and JSON outputs.\\
+Web Application & Next.js manager dashboard, employee workspace, alerts, reports, and settings.\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Stakeholders and User Classes}
+\begin{table}[H]
+\centering
+\caption{Stakeholders and user classes}
+\begin{tabular}{P{0.2\textwidth}P{0.7\textwidth}}
+\toprule
+Stakeholder & Characteristics and needs\\
+\midrule
+Store manager & Primary user. Needs store-wide analytics, alerts, and reports. Not necessarily technical.\\
+Employee & Needs a personal view of shift, score, trend, and zone assignment. Sees only employee-relevant data.\\
+Store owner & Interested in service quality, staffing, and floor-coverage decisions at a summary level.\\
+Customers & Appear in footage. Are not identified biometrically. Affected indirectly through service quality and privacy.\\
+Project team and supervisor & Develop, evaluate, and supervise the system.\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Success Criteria}
+The supervisor agreed to the 70-video dataset shown by the team. No numeric classification/interaction accuracy or dashboard response-time threshold was agreed. The criteria below describe the evaluation evidence to report; dataset acceptance does not establish model accuracy.
+\begin{itemize}
+\item The pipeline processes the supplied videos end to end on a CPU-only machine.
+\item Staff/customer classification and interaction detection are evaluated against manually labelled clips, with accuracy reported. No numeric pass threshold has been agreed; report the measured results and evaluation method without inventing a target.
+\item Interaction detection is benchmarked with and without the pose judge on labelled clips, reporting precision, recall and the effect of the judge.
+\item Dashboard metrics should correspond to the relevant tracked entities and source observations.
+\item Manager-only routes are not reachable without a valid signed session.
+\item Reports can be generated and exported as PDF.
+\end{itemize}
+
+\section{Constraints and Assumptions}
+\textbf{Constraints.} No dedicated GPU is available. The timeline is limited to the two FYP semesters. The available video dataset constrains evaluation coverage. Processing is offline/batch rather than real time.
+
+\textbf{Assumptions.} Cameras are fixed, and the store has an entrance-facing camera and two floor-facing cameras. Camera views overlap or adjoin so that people leaving one view enter another within a bounded time window. Staff are distinguishable by zone and appearance cues (for example, working areas and uniforms).
+
+\textbf{Distance assumption.} Interaction distance is measured in image space and normalised by body height, so it is dimensionless and cannot fully resolve depth. A metric floor-distance prototype, which assumed an approximately planar floor and a fixed camera, was descoped (Section~\ref{sec:floor-descoped}) because the moving-camera footage supported almost no floor projections.
+
+\section{Ethical, Legal and DEI Considerations}
+\textbf{Privacy.} The system does not use face recognition or any other biometric identification. The trained role detector uses learned appearance-based role labels without facial identity storage; earlier demo classification paths use zone/appearance heuristics. Runtime footage remains local and is excluded from Git.
+
+\textbf{Fair use of results.} The system is designed for manager decision support rather than automated employee evaluation. Employee scores are indicators for discussion, and the limitations of the heuristics must be communicated to users.
+
+\textbf{Legal and consent.} Deployment requires a review of applicable law, store policy and appropriate notice/consent arrangements. Pakistan's Ministry of Information Technology and Telecommunication lists personal-data-protection material as draft legislation on its official legislation page \cite{pakistanMoittLegislation}. That listing is not a comprehensive statement of all applicable law. The prototype follows data-minimisation principles informed by the GDPR \cite{gdpr2016}; this design reference does not establish legal compliance or a lawful basis for deployment.
+
+\textbf{Accessibility and inclusion.} The web interface uses readable fonts, clear contrast, and charts with textual values. Appearance-based classification can perform unevenly across clothing styles, and this is recorded as a fairness-related limitation to evaluate in FYP-2.

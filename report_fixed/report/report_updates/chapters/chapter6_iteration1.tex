@@ -1,0 +1,191 @@
+\chapter{Iteration 1: Design and Implementation}
+\label{ch:iter1}
+\section{Iteration Objectives}
+Build the application platform and data services that later vision analytics plug into, secure it, and demonstrate person/role analysis, interaction cues and distance estimation.
+
+\section{Selected Use Cases / Features}
+UC-01--UC-05, UC-08--UC-11, UC-13 and the operator-facing UC-14 (Chapter~\ref{ch:req}), covering the application and person-analysis features and the additional FR-21--FR-28 floor-distance prototype. The floor-distance prototype has since been descoped and removed from the current branch (commit \texttt{8c3a6fe}); its sections below are kept as historical evidence.
+
+\section{Design}
+The design follows Chapter~\ref{ch:design}: a Next.js frontend with a server-side proxy, a FastAPI service for application and \texttt{/camera/*} workflows, SQLite for application records, and local person-distance diagnostics.
+
+\section{Implementation}
+The frontend follows the App Router layout, with one folder per page (landing, login, signup, dashboard, customer-info, employee-info, spatial-analytics, alerts, settings, employee-home, my-performance, profile, about, camera-handoff, compare-people, voice-agent). Shared UI primitives (RetroWindow, RetroCard, RetroButton, Navbar, Footer) live in \texttt{src/components/ui}, and session-signing helpers live in \texttt{src/lib}. The backend lives in \texttt{backend/}.
+
+\subsection{Two-Model Vision Approach}
+The project uses two distinct YOLO model roles, as confirmed by the team: a YOLO pose model supplies body-keypoint evidence for interaction analysis, while a standard YOLO object-detection model with customer/employee classes supplies person boxes and role labels. The latter is a detector trained on role classes, not a separate image-classification-only network. Interaction events are derived from pose/proximity and temporal rules rather than treating a pose prediction itself as an interaction label.
+
+In the interaction pipeline the trained customer/employee detector (\path{best.pt}, run as an OpenVINO export on CPU) supplies role-labelled boxes, and the pose model (\path{yolov8n-pose.pt}) acts as an interaction judge: once distance and duration rules nominate an employee/customer pair, it confirms the pair only if someone's head is turned towards the other person. These responsibilities are distinct from tracking (BoT-SORT with appearance re-identification) and from the distance/duration rules that nominate candidates. The head/hips/feet approximation used when a full-person position is rejected belongs to the distance logic and should not be confused with employee/customer role classification.
+
+\subsection{Interaction Pipeline and Pose Judge}
+\path{python -m backend.interaction.cli} runs the interaction pipeline on a video. Interaction detection has two stages. Proximity nominates a candidate: an employee and a customer must stay within a body-height-normalised distance (1.0, 0.8 or 0.6 body heights measured at the feet, hips or head band) for at least two seconds, and a customer whose position relative to the employee drifts by more than 0.5 body heights in that time is treated as walking past. The pose judge then takes four crops of the pair from the last two seconds and confirms the candidate only if, in at least half of them, someone's head (nose relative to the ears) points within $60^\circ$ of the other person's head. If no pose is found or the judge fails, the verdict is \texttt{unverified} and the proximity result stands; a rejected pair is re-judged every four seconds while it stays close. For each video the CLI writes an annotated MP4 with an INTERACTION ON/OFF indicator, \texttt{.interactions.json} (confirmed), \texttt{.rejected\_interactions.json} (vetoed), \texttt{.detections.json} and \texttt{.people.json}. \path{python -m backend.interaction.benchmark} measures detector, interaction and speed KPIs (Chapter~\ref{ch:testing}).
+
+\subsection{Floor-Distance Command-Line Prototype (Descoped)}
+\label{sec:floor-descoped}
+This prototype was implemented in commit \texttt{4a9023a} and removed in commit \texttt{8c3a6fe}; the files named in this and the following floor sections exist only in that history. It was descoped because the available moving-camera footage supported almost no floor projections, and body-height-normalised distance replaced it. The implementation reused the existing local trained \path{models/best.pt} weights, whose classes are employee and customer, without retraining or replacement weights. Shared loading/tracking helpers in \path{backend/vision_inference.py} provide the YOLO/ByteTrack inference route for the floor-distance prototype. The floor CLI selects both role classes; it does not substitute the earlier vertical-position role heuristic.
+
+The entry points are \path{scripts/preview_floor_points.py}, \path{scripts/calibrate_floor.py}, \path{scripts/run_floor_distance.py}, and \path{scripts/evaluate_floor_distance.py}. Geometry, calibration diagnostics, motion monitoring, metric smoothing and evaluation are separate backend modules. The preview runs without calibration; the distance demo exports only supported metre observations and explicit unavailable states. No frontend changes were needed for this prototype.
+
+\section{Completed Features / Module}
+\begin{table}[H]
+\centering
+\caption{Features completed in Iteration 1}
+\begin{tabular}{P{0.3\textwidth}P{0.4\textwidth}P{0.17\textwidth}}
+\toprule
+Feature & Detail & Status\\
+\midrule
+Manager dashboard pages & Dashboard, Customer Info, Employee Info, Spatial Analytics, Alerts, System Status, Settings & Done (prototype data for vision metrics)\\
+Employee workspace & My Workspace and My Performance with rubric and daily log & Done (prototype data)\\
+Shared pages & Landing, Login/Signup, About, Profile & Done\\
+Reports & Configurable builder, narrative summary, PDF export & Not on tested branch (route returns 404)\\
+Secure access & Stored accounts (PBKDF2 password hashes), signed HttpOnly session cookie and internal secret header & Done\\
+Floor-distance prototype & Trained roles/track IDs, foot preview, calibration, alignment checks and diagnostic exports & Implemented, then descoped (\texttt{8c3a6fe})\\
+Interaction pipeline & Trained role detector, BoT-SORT tracking, body-height proximity, pass-by filter and YOLO pose judge; annotated video and JSON outputs & Implemented (local CLI)\\
+Benchmark & Detector, interaction (with and without the judge) and speed KPIs & Implemented\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Technical Implementation Details}
+\textbf{Running the system.} \texttt{npm run dev:all} starts Next.js on port 3000 and FastAPI on \texttt{127.0.0.1:8011}. \texttt{npm run backend:api} starts the application backend and its \texttt{/camera/*} routes. The package scripts use Unix-style environment assignment; Windows users should use the documented platform-compatible launcher or set environment variables explicitly.
+
+
+\textbf{Authentication.} Login verifies stored account credentials and creates a server-signed HttpOnly session cookie. Protected manager backend routes require the signed session and server-side role checks. Internal secrets are supplied through environment variables. The executed access-control checks are recorded in Chapter~\ref{ch:testing}.
+
+\subsection{Calibration Configuration and Coordinate Conventions (Floor Prototype)}
+Detections use original-frame $[x_1,y_1,x_2,y_2]$ pixels. Ultralytics already restores \texttt{xyxy} boxes after preprocessing, so coordinates are not unletterboxed again. Frame/configuration dimension mismatches, invalid projections and stale homographies are rejected. No lens undistortion is applied; calibration and runtime share the same distorted pixel space. Intrinsic/distortion metadata slots are retained, but correction would require an explicitly consistent update of both paths.
+
+The provisional rectangle follows A--B--D--C: AB = DC = 3.13225 ft and BD = CA = 4.2075 ft, equivalent to width 0.9547098 m and depth 1.282446 m. The configuration records the rectangle geometry and estimated lengths. Dot centres in the 479-by-479 marked screenshot were mapped to the original 1080-by-1080 video using pixel-centre resize coordinates. Frame zero was selected after image-difference comparison and visual inspection; the resized/modified screenshot correspondence remains approximate. Operational coverage is restricted to the marked rectangle.
+
+The rectangle dimensions and original-pixel points are editable in configuration. Regeneration writes the image-to-floor matrix and fitting diagnostics without changing trained weights. Saved measurements are labelled estimated, calibration is provisional and runtime values are approximate. Point-click selection supports numbered correspondences, undo, reset and save; the headless JSON route was exercised.
+
+\subsection{Reproducible Execution (Floor Prototype)}
+These commands ran at commit \texttt{4a9023a}; the scripts are not on the current branch. From the repository root, use the existing virtual environment. The following three command groups reproduce the sampled temporary-video workflow; join wrapped continuation lines when entering each command:
+\begin{quote}\small\ttfamily
+.venv/Scripts/python.exe scripts/preview\_floor\_points.py\\
+\hspace*{1em}--video data/videos/raw/queue\_temp.mp4 --sample-every 30 --headless
+\par
+.venv/Scripts/python.exe scripts/calibrate\_floor.py\\
+\hspace*{1em}--video data/videos/raw/queue\_temp.mp4 --timestamp 0\\
+\hspace*{1em}--landmarks data/calibration/queue\_temp.landmarks.json\\
+\hspace*{1em}--output data/calibration/queue\_temp.json --headless
+\par
+.venv/Scripts/python.exe scripts/run\_floor\_distance.py\\
+\hspace*{1em}--video data/videos/raw/queue\_temp.mp4\\
+\hspace*{1em}--calibration data/calibration/queue\_temp.json\\
+\hspace*{1em}--motion-mode monitor --sample-every 30 --headless
+\end{quote}
+The displayed line breaks are for typesetting; join continuation lines when entering a command. The output directory contains annotated video, top-down video, JSONL observations and summary/coverage records. Actual decoded timestamps are exported. Repository usage instructions are in \path{docs/floor_distance_usage.md}.
+
+\section{Algorithms and Technical Decisions}
+\subsection{Person Floor-Position Approximation (Floor Prototype)}
+For a box $B=(x_1,y_1,x_2,y_2)$, the homogeneous floor-contact proxy is
+\begin{equation}
+\mathbf{p}=\begin{bmatrix}(x_1+x_2)/2 & y_2 & 1\end{bmatrix}^{\mathsf T}.
+\label{eq:floor-foot}
+\end{equation}
+This is an observed proxy rather than proof that feet are visible. Boundary truncation, person overlap and manual exclusion polygons provide provisional rejection signals; seated people and chair occlusion remain limitations. An optional future foot/keypoint locator can replace this step without changing the projection interface.
+
+\subsection{Homography-Based Projection and Distance (Floor Prototype)}
+An image-to-floor homography maps the proxy into metre coordinates \cite{hartley2004multiple,opencvHomography}:
+\begin{equation}
+\mathbf{q}=H_{\mathrm{image}\rightarrow\mathrm{floor}}\mathbf{p},\qquad
+X=q_1/q_3,\quad Y=q_2/q_3.
+\label{eq:floor-project}
+\end{equation}
+Non-finite values or a denominator near zero are rejected. For two supported observations from the same camera and timestamp,
+\begin{equation}
+d_{AB}=\sqrt{(X_A-X_B)^2+(Y_A-Y_B)^2}\quad\text{metres}.
+\label{eq:floor-distance}
+\end{equation}
+Four non-degenerate landmark pairs provide a direct calibration fit. With additional correspondences, the implementation fits floor-to-image using RANSAC with an explicit pixel-space threshold, then inverts the result \cite{fischler1981ransac}. Inliers and fitting residuals are exported as calibration diagnostics.
+
+\subsection{Camera Alignment and Measurement Reliability (Floor Prototype)}
+The monitor compares ORB features \cite{rublee2011orb} within the supported floor region, masking detected people and manual exclusions. Matches are checked using RANSAC, inlier count/ratio, spatial spread, residual displacement and supported-region displacement limits. Insufficient evidence produces \texttt{motion\_unverified}; supported alignment shifts produce \texttt{motion\_invalid}. Neither state allows a supported metre output. Modes \texttt{monitor} and \texttt{fixed} both enforce these checks; \texttt{snapshot} supports only the reference frame. Motion compensation is deferred because reliable distributed floor evidence was not established on the temporary clip.
+
+Accepted positions are smoothed in metres using timestamps. Configurable speed/jump gates, short prediction limits, a separate last-reliable-observation time and track expiry preserve quality information. Predictions are excluded from supported pair distances, and alignment failures clear smoothing state. Role labels remain separate observations from the trained detector; their confidence is the joint detection/class score, not two independent probabilities. Selected track pairs or a capped set of all pairs can be exported.
+
+\section{Tools, Frameworks and Technologies}
+\begin{table}[H]
+\centering
+\caption{Technology stack}
+\begin{tabular}{P{0.28\textwidth}P{0.6\textwidth}}
+\toprule
+Layer & Technology\\
+\midrule
+Frontend & Next.js (App Router), React\\
+Styling & Tailwind CSS, custom retro-industrial design system\\
+Charts & Recharts\\
+Computer vision & YOLO pose model as interaction judge; trained YOLO role detector (OpenVINO, CPU), BoT-SORT with ReID, OpenCV, NumPy; \texttt{lap} for tracking assignment; OpenCV homography/ORB in the descoped floor prototype\\
+Application and camera API & FastAPI, SQLite\\
+Fonts & Space Grotesk, Inter, JetBrains Mono\\
+Runtime & Node.js 18+, Python 3.12+ (virtual environment)\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Demonstration Evidence}
+Local UI screenshots were captured on 20 October 2026 using isolated test databases. The displayed analytics are demonstration data, not measured vision accuracy. The PDF-report route returned HTTP 404 on the tested branch, so no screenshot is claimed for that feature.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.96\textwidth]{ThesisFigs/todo_dashboard.jpg}
+\caption{Manager dashboard with demonstration values}
+\label{fig:todo-dashboard}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.96\textwidth]{ThesisFigs/todo_customer_info.jpg}
+\caption{Customer information view with demonstration values}
+\label{fig:todo-customer-info}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.96\textwidth]{ThesisFigs/todo_employee_info.jpg}
+\caption{Employee information view with demonstration values}
+\label{fig:todo-employee-info}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.96\textwidth]{ThesisFigs/todo_employee_workspace.jpg}
+\caption{Employee workspace after authenticated employee login}
+\label{fig:todo-employee-workspace}
+\end{figure}
+
+\subsection{Interaction Pipeline Output}
+Figure~\ref{fig:judge-examples} shows annotated output of the current interaction CLI on two local clips.
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.96\textwidth]{ThesisFigs/interaction_judge_examples.jpg}
+\caption{Interaction pipeline output. Left (IMG\_8880, 30\,s): employee and customer facing each other during a handover; the pose judge confirms the interaction. Right (IMG\_8829, 8\,s): employee and customer close together but walking away side by side; the pose judge rejects the candidate and the indicator stays OFF.}
+\label{fig:judge-examples}
+\end{figure}
+
+\subsection{Floor-Distance Demonstration (Descoped Prototype)}
+Figures~\ref{fig:floor-preview}--\ref{fig:floor-map} show actual local prototype outputs from commit \texttt{4a9023a}. They demonstrate inference, calibration visualization and export.
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.72\textwidth]{ThesisFigs/floor_foot_preview.jpg}
+\caption{Trained role detections and track IDs with box-bottom proxies; uncalibrated preview}
+\label{fig:floor-preview}
+\end{figure}
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.72\textwidth]{ThesisFigs/floor_provisional_grid.jpg}
+\caption{Provisional A--B--D--C calibration and floor grid based on estimated dimensions}
+\label{fig:floor-grid}
+\end{figure}
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.52\textwidth]{ThesisFigs/floor_top_down.jpg}
+\caption{Approximate top-down person-position proxies in the reference snapshot}
+\label{fig:floor-map}
+\end{figure}
+
+\section{Iteration Outcome}
+Iteration 1 covers the application platform, role-aware access, person/role analysis, interaction cues and the distance-estimation prototypes. The vision-derived dashboard metrics still use prototype data, and binding them to real agent output is the first goal of Iteration 2.
+
+The floor-distance CLI prototype demonstrated trained role detection, tracking, provisional calibration and conservative metric export; it was descoped because the moving-camera footage supported almost no floor projections, and body-height-normalised distance replaced it. The interaction pipeline now combines trained roles, proximity, duration and a pose judge.
