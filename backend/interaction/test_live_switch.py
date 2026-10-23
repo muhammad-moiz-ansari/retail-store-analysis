@@ -63,3 +63,14 @@ def test_raw_feed_records_every_camera_frame(monkeypatch, tmp_path):
     cam.release()
     cam.reader.join(1)
     assert (tmp_path / "live.raw.mp4").stat().st_size > 0
+
+
+def test_headless_key_source_stops_without_window(monkeypatch, tmp_path):
+    stop = tmp_path / "live.stop"
+    monkeypatch.setattr(cli.cv2, "VideoCapture", lambda source: FakeCapture(source))
+    monkeypatch.setattr(cli.cv2, "waitKey", lambda _: (_ for _ in ()).throw(AssertionError("no window in headless mode")))
+    cam = cli.CameraSwitch({"laptop": "0", "phone": "http://phone:4747/video"}, "phone",
+                           keys=lambda: ord("q") if stop.exists() else -1)
+    assert cam.read() == (True, "http://phone:4747/video")
+    stop.touch()
+    assert cam.read() == (False, None)

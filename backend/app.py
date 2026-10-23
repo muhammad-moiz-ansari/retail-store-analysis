@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import json
 import os
+import re
 import sqlite3
 import subprocess
 import sys
@@ -13,7 +14,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Annotated, Any
 
 from fastapi import Depends, FastAPI, Header, HTTPException, Query
-from fastapi.responses import StreamingResponse
+from fastapi.responses import FileResponse, StreamingResponse
 
 from .camera_service import REPO_ROOT, resolve_video
 from .camera_service import app as camera_app
@@ -186,19 +187,63 @@ async def start_interaction_run(body: dict) -> dict[str, str]:
     track_every = int_field(body, "track_every", 1, 1, 100)
     output = OUTPUT_DIR / "interaction-runs" / uuid.uuid4().hex / f"{video.stem}.mp4"
     output.parent.mkdir(parents=True, exist_ok=True)
-
-    def read_result() -> dict[str, Any]:
-        people = json.loads(output.with_suffix(".people.json").read_text(encoding="utf-8"))
-        return {
-            "video": str(video.relative_to(REPO_ROOT)),
-            "output": str(output.relative_to(REPO_ROOT)),
-            "interactions": json.loads(output.with_suffix(".interactions.json").read_text(encoding="utf-8")),
-            "people": people["people"],
-        }
-
     args = ["-m", "backend.interaction.cli", str(video), "--output", str(output), "--judge", judge,
             "--every", str(every), "--track-every", str(track_every)]
-    return start_job(args, read_result)
+    return start_job(args, lambda: interaction_result(output, str(video.relative_to(REPO_ROOT))))
+
+
+def interaction_result(output, source: str) -> dict[str, Any]:
+    people = json.loads(output.with_suffix(".people.json").read_text(encoding="utf-8"))
+    return {
+        "video": source,
+        "output": str(output.relative_to(REPO_ROOT)),
+        "interactions": json.loads(output.with_suffix(".interactions.json").read_text(encoding="utf-8")),
+        "people": people["people"],
+    }
+
+
+_live_runs: dict[str, Any] = {}  # job id -> output path of a live DroidCam run
+
+
+@app.post("/interaction/live", dependencies=[Depends(require_manager)])
+async def start_live_run(body: dict) -> dict[str, str]:
+    """Live DroidCam feed over Wi-Fi (WSL has no webcams, but reaches the phone's stream)."""
+    host = str(body.get("host") or "").strip()
+    if not re.fullmatch(r"[A-Za-z0-9.-]{1,253}", host):
+        raise HTTPException(status_code=400, detail="host must be the phone IP or hostname shown in DroidCam")
+    port = int_field(body, "port", 4747, 1, 65535)
+    judge = body.get("judge", "pose")
+    if judge not in {"pose", "off"}:
+        raise HTTPException(status_code=400, detail="judge must be 'pose' or 'off'")
+    every = int_field(body, "every", 3, 1, 100)
+    output = OUTPUT_DIR / "interaction-runs" / f"live-{datetime.now():%Y%m%d-%H%M%S}-{uuid.uuid4().hex[:6]}" / "live.mp4"
+    output.parent.mkdir(parents=True, exist_ok=True)
+    source = f"http://{host}:{port}/video"
+    args = ["-m", "backend.interaction.cli", "--live", "phone", "--phone-cam", source, "--output", str(output),
+            "--judge", judge, "--every", str(every), "--track-every", "1", "--stop-file", str(output.with_suffix(".stop"))]
+    started = start_job(args, lambda: interaction_result(output, source))
+    _live_runs[started["id"]] = output
+    return started
+
+
+def live_output(job_id: str):
+    if job_id not in _live_runs:
+        raise HTTPException(status_code=404, detail="Live run not found")
+    return _live_runs[job_id]
+
+
+@app.post("/interaction/live/{job_id}/stop", dependencies=[Depends(require_manager)])
+def stop_live_run(job_id: str) -> dict[str, str]:
+    live_output(job_id).with_suffix(".stop").touch()
+    return {"id": job_id, "status": "stopping"}
+
+
+@app.get("/interaction/live/{job_id}/preview", dependencies=[Depends(require_manager)])
+def live_preview(job_id: str) -> FileResponse:
+    preview = live_output(job_id).with_suffix(".preview.jpg")
+    if not preview.is_file():
+        raise HTTPException(status_code=404, detail="No frame yet")
+    return FileResponse(preview, media_type="image/jpeg", headers={"Cache-Control": "no-store"})
 
 
 @app.post("/analyze-frame", dependencies=[Depends(require_manager)])

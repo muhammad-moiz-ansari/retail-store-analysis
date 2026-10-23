@@ -20,7 +20,7 @@ type Result = { video: string; output: string; interactions: Interaction[]; peop
 
 type FrameCheck = { total_people: number; employee_count: number; customer_count: number; interaction: { status: string; message: string; score: number } };
 
-const defaults = { video: "backend/videos/ShopAssistant1cor.mp4", judge: "pose", every: "1", trackEvery: "1" };
+const defaults = { video: "backend/videos/ShopAssistant1cor.mp4", judge: "pose", every: "1", trackEvery: "1", host: "", port: "4747" };
 
 export default function InteractionsPage() {
   const [form, setForm] = useState(defaults);
@@ -31,6 +31,11 @@ export default function InteractionsPage() {
   const [frame, setFrame] = useState<FrameCheck | null>(null);
   const [frameError, setFrameError] = useState("");
   const [frameBusy, setFrameBusy] = useState(false);
+  const [source, setSource] = useState<"recording" | "live">("recording");
+  const [liveId, setLiveId] = useState("");
+  const [tick, setTick] = useState(0);
+  const [previewReady, setPreviewReady] = useState(false);
+  const [stopping, setStopping] = useState(false);
 
   async function checkFrame(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
@@ -57,13 +62,24 @@ export default function InteractionsPage() {
 
   async function run(event: FormEvent) {
     event.preventDefault();
-    setBusy(true); setError(""); setLogs(""); setResult(null);
+    setBusy(true); setError(""); setLogs(""); setResult(null); setLiveId(""); setPreviewReady(false); setStopping(false);
     try {
-      const body = { video: form.video, judge: form.judge, every: Number(form.every), track_every: Number(form.trackEvery) };
-      const job = await runBackendJob<Result>("interaction/runs", "jobs", body, (update) => setLogs(update.logs.join("\n")));
+      const job = source === "live"
+        ? await runBackendJob<Result>("interaction/live", "jobs",
+          { host: form.host, port: Number(form.port), judge: form.judge, every: Number(form.every) },
+          (update) => { setLiveId(update.id); setTick((value) => value + 1); setLogs(update.logs.join("\n")); })
+        : await runBackendJob<Result>("interaction/runs", "jobs",
+          { video: form.video, judge: form.judge, every: Number(form.every), track_every: Number(form.trackEvery) },
+          (update) => setLogs(update.logs.join("\n")));
       setResult(job.result);
     } catch (caught) { setError(caught instanceof Error ? caught.message : "Processing failed."); }
-    finally { setBusy(false); }
+    finally { setBusy(false); setLiveId(""); }
+  }
+
+  async function stopLive() {
+    setStopping(true);
+    const response = await fetch(`/api/backend/interaction/live/${liveId}/stop`, { method: "POST" });
+    if (!response.ok) { setStopping(false); setError("Could not stop the live run."); }
   }
 
   const people = result?.people ?? [];
@@ -73,12 +89,21 @@ export default function InteractionsPage() {
   return <main className="mx-auto w-full max-w-6xl px-4 py-8 md:px-8">
     <p className="font-mono text-xs uppercase tracking-[0.18em] text-accent">Engagement Tracking</p>
     <h1 className="mt-2 font-heading text-3xl font-bold text-text">Interactions</h1>
-    <p className="mt-2 max-w-2xl text-sm text-text-muted">Detect, track and classify people in a recording, then find employee-customer interactions confirmed by the pose judge.</p>
+    <p className="mt-2 max-w-2xl text-sm text-text-muted">Detect, track and classify people in a recording or a live DroidCam feed, then find employee-customer interactions confirmed by the pose judge.</p>
     <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(280px,0.7fr)]">
       <RetroWindow title="Processing Configuration">
         <form onSubmit={run} className="space-y-4">
-          <RetroInput label="Video (inside the project)" value={form.video} onChange={(event) => setForm({ ...form, video: event.target.value })} />
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <div className="flex gap-2" role="radiogroup" aria-label="Source">
+            {([["recording", "Recording"], ["live", "Live DroidCam"]] as const).map(([value, label]) => <RetroButton key={value} type="button" role="radio" aria-checked={source === value} variant={source === value ? "primary" : "secondary"} disabled={busy} className="!px-3 !py-1.5 !text-xs" onClick={() => setSource(value)}>{label}</RetroButton>)}
+          </div>
+          {source === "recording" ? <RetroInput label="Video (inside the project)" value={form.video} onChange={(event) => setForm({ ...form, video: event.target.value })} /> : <>
+            <div className="grid grid-cols-[minmax(0,1fr)_7rem] gap-3">
+              <RetroInput label="Phone IP (shown in the DroidCam app)" placeholder="192.168.1.20" value={form.host} onChange={(event) => setForm({ ...form, host: event.target.value })} />
+              <RetroInput label="Port" value={form.port} onChange={(event) => setForm({ ...form, port: event.target.value })} />
+            </div>
+            <p className="text-xs text-text-muted">Phone and computer on the same Wi-Fi; close the DroidCam PC client first, since the phone serves one viewer at a time.</p>
+          </>}
+          <div className={`grid grid-cols-1 gap-3 ${source === "recording" ? "sm:grid-cols-3" : "sm:grid-cols-2"}`}>
             <label className="flex flex-col gap-1 text-sm font-medium text-text">
               Judge
               <select value={form.judge} onChange={(event) => setForm({ ...form, judge: event.target.value })} className="border border-border-soft bg-surface px-3 py-2 text-sm text-text">
@@ -87,9 +112,12 @@ export default function InteractionsPage() {
               </select>
             </label>
             <RetroInput label="Score every Nth frame" value={form.every} onChange={(event) => setForm({ ...form, every: event.target.value })} />
-            <RetroInput label="Track every Nth frame" value={form.trackEvery} onChange={(event) => setForm({ ...form, trackEvery: event.target.value })} />
+            {source === "recording" && <RetroInput label="Track every Nth frame" value={form.trackEvery} onChange={(event) => setForm({ ...form, trackEvery: event.target.value })} />}
           </div>
-          <RetroButton type="submit" disabled={busy}>{busy ? "Processing..." : "Run Interaction Analysis"}</RetroButton>
+          <div className="flex flex-wrap gap-3">
+            <RetroButton type="submit" disabled={busy}>{busy ? (source === "live" ? "Live..." : "Processing...") : source === "live" ? "Start Live Analysis" : "Run Interaction Analysis"}</RetroButton>
+            {source === "live" && busy && liveId && <RetroButton type="button" variant="secondary" disabled={stopping} onClick={stopLive}>{stopping ? "Stopping..." : "Stop"}</RetroButton>}
+          </div>
         </form>
       </RetroWindow>
       <RetroWindow title="Run Summary">
@@ -100,6 +128,12 @@ export default function InteractionsPage() {
         {error && <p className="mt-4 border border-danger bg-surface-alt p-3 text-sm text-danger">{error}</p>}
       </RetroWindow>
     </div>
+    {source === "live" && liveId && <RetroWindow title="Live Preview" className="mt-6">
+      {/* eslint-disable-next-line @next/next/no-img-element -- a fresh JPEG every second from the backend, not a static asset */}
+      <img src={`/api/backend/interaction/live/${liveId}/preview?frame=${tick}`} alt="Newest annotated frame from the DroidCam feed" onLoad={() => setPreviewReady(true)} onError={() => setPreviewReady(false)} className={previewReady ? "w-full border border-border-soft" : "hidden"} />
+      {!previewReady && <p className="text-sm text-text-muted">Connecting to the phone and loading models...</p>}
+      <p className="mt-2 text-xs text-text-muted">Results (people and interactions) appear after you press Stop.</p>
+    </RetroWindow>}
     <RetroWindow title="Single Frame Check" className="mt-6">
       <label className="flex flex-col gap-2 text-sm font-medium text-text">
         Upload a still image for a quick person count and staffing check

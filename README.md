@@ -173,7 +173,7 @@ talks to FastAPI through the session-checked `/api/backend/*` proxy:
 | Page | FastAPI endpoint |
 |---|---|
 | `/dashboard` | `GET /system-status` |
-| `/interactions` | `POST /interaction/runs`, `GET /jobs/{id}`, `POST /analyze-frame` |
+| `/interactions` | `POST /interaction/runs`, `POST /interaction/live` (DroidCam), `/interaction/live/{id}/stop`, `/interaction/live/{id}/preview`, `GET /jobs/{id}`, `POST /analyze-frame` |
 | `/camera-handoff` | `POST /camera/handoff`, `GET /camera/jobs/{id}`, `GET /camera/people`, `PUT /camera/people/{id}/role` |
 | `/compare-people` | `POST /compare-people`, `GET /jobs/{id}` |
 | `/alerts` | `GET /alerts`, `POST /alerts/{id}/resolve`, `POST /tasks/dispatch` |

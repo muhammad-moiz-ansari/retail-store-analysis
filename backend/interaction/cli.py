@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import threading
 import time
 from pathlib import Path
@@ -19,8 +20,10 @@ from .types import CONFIRMED
 class CameraSwitch:
     """Live feed that flips between the laptop webcam and the phone cam when 's' is pressed in the preview window."""
 
-    def __init__(self, sources: dict[str, str], start: str, raw: Path | None = None):
+    def __init__(self, sources: dict[str, str], start: str, raw: Path | None = None, keys=None):
         self.sources, self.name, self.lock = sources, start, threading.Lock()
+        # Key source: the preview window by default; headless runs (the web UI) pass their own.
+        self.keys = keys or (lambda: cv2.waitKey(1) & 0xFF)
         self.raw, self.raw_writer = raw, None
         cap = self._open(start)
         if cap is None:
@@ -78,7 +81,7 @@ class CameraSwitch:
         print(f"switched to {other} camera")
 
     def read(self):
-        key = cv2.waitKey(1) & 0xFF
+        key = self.keys()
         if key == ord("q"):
             return False, None
         if key == ord("s"):
@@ -137,9 +140,16 @@ def main() -> None:
     parser.add_argument("--judge", choices=("pose", "off"), default="pose",
                         help="Second model that confirms each proximity interaction")
     parser.add_argument("--judge-device", help="Device for the judge, defaults to --device")
+    parser.add_argument("--stop-file", type=Path,
+                        help="Live without a preview window (for the web UI): stop when this file appears; "
+                             "the newest annotated frame is kept at <output>.preview.jpg")
     args = parser.parse_args()
+    headless = args.stop_file is not None
+    preview = args.output.with_suffix(".preview.jpg")
     if args.live:
-        cap = CameraSwitch({"laptop": args.laptop_cam, "phone": args.phone_cam}, args.live, args.output.with_suffix(".raw.mp4"))
+        keys = (lambda: ord("q") if args.stop_file.exists() else -1) if headless else None
+        cap = CameraSwitch({"laptop": args.laptop_cam, "phone": args.phone_cam}, args.live,
+                           args.output.with_suffix(".raw.mp4"), keys)
     elif args.video:
         cap = cv2.VideoCapture(str(args.video))
         if not cap.isOpened():
@@ -166,8 +176,13 @@ def main() -> None:
             else:
                 segments.append({"role": person["role"], "from": result["timestamp"], "to": result["timestamp"], "frames": 1})
         annotated = draw_result(frame, result)
+        if headless:
+            # Write then rename, so the web UI never reads a half-written JPEG.
+            cv2.imwrite(str(preview.with_suffix(".tmp.jpg")), annotated)
+            os.replace(preview.with_suffix(".tmp.jpg"), preview)
         if args.live:
-            cv2.imshow("interaction (s: switch camera, q: quit)", annotated)
+            if not headless:
+                cv2.imshow("interaction (s: switch camera, q: quit)", annotated)
             # The two cameras can differ in resolution; the writer needs one size.
             annotated = cv2.resize(annotated, (width, height))
         writer.write(annotated)
@@ -178,7 +193,7 @@ def main() -> None:
         run = analyse(cap, fps, pipeline, args.every, args.track_every, record, clock)
     finally:
         cap.release()
-        if args.live:
+        if args.live and not headless:
             cv2.destroyAllWindows()
     interactions, frame_number = run["interactions"], run["frames"]
     elapsed, duration = time.perf_counter() - started, frame_number / (fps or 25)
