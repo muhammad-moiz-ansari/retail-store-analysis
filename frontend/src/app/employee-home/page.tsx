@@ -51,9 +51,16 @@ export default function EmployeeHomePage() {
   const [tasks, setTasks] = useState<Task[]>([]);
 
   useEffect(() => {
-    fetch("/api/backend/tasks/me", { cache: "no-store" })
-      .then((response) => (response.ok ? response.json() : null))
-      .then((data) => setTasks(data?.tasks || []));
+    const load = () =>
+      fetch("/api/backend/tasks/me", { cache: "no-store" })
+        .then((response) => (response.ok ? response.json() : null))
+        .then((data) => setTasks(data?.tasks || []));
+    load();
+    // The backend task stream announces changes; refetch on each event so new dispatches appear without a reload.
+    const events = new EventSource("/api/backend/tasks/events");
+    events.addEventListener("ready", load);
+    events.onmessage = load;
+    return () => events.close();
   }, []);
 
   async function transitionTask(taskId: string, state: Task["state"]) {

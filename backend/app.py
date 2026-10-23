@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 import os
 import sqlite3
+import subprocess
+import sys
 import uuid
 from datetime import datetime, timedelta, timezone
 from typing import Annotated, Any
@@ -12,6 +15,7 @@ from typing import Annotated, Any
 from fastapi import Depends, FastAPI, Header, HTTPException, Query
 from fastapi.responses import StreamingResponse
 
+from .camera_service import REPO_ROOT, resolve_video
 from .camera_service import app as camera_app
 from .store_core import (
     accept_invitation,
@@ -115,6 +119,115 @@ def store_context(conn) -> dict[str, Any]:
     ).fetchone()["total"]
     zones = [row_to_dict(row) for row in conn.execute("SELECT id, name, type, capacity FROM zones ORDER BY name")]
     return {"activeAlerts": active_alerts, "activeTasks": active_tasks, "zones": zones}
+
+
+OUTPUT_DIR = REPO_ROOT / "backend" / "output"
+_jobs: dict[str, dict[str, Any]] = {}
+
+
+def run_script(job_id: str, args: list[str], read_result) -> None:
+    """Run one CV script to completion, streaming its output into the job log (polled by the page)."""
+    job = _jobs[job_id]
+    job["status"] = "running"
+    try:
+        process = subprocess.Popen(
+            [sys.executable, "-u", *args],
+            cwd=REPO_ROOT,
+            env={**os.environ, "PYTHONUNBUFFERED": "1", "PYTHONPATH": str(REPO_ROOT)},
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            errors="replace",
+        )
+        for line in process.stdout:
+            job["logs"].append(line.rstrip())
+        if process.wait() != 0:
+            raise RuntimeError(job["logs"][-1] if job["logs"] else f"Exited with code {process.returncode}")
+        job.update(status="completed", result=read_result())
+    except Exception as exc:  # surfaced through the job API, never leaked as a traceback
+        job.update(status="failed", error=str(exc))
+
+
+def start_job(args: list[str], read_result) -> dict[str, str]:
+    job_id = uuid.uuid4().hex
+    _jobs[job_id] = {"id": job_id, "status": "queued", "logs": [], "result": None}
+    asyncio.get_running_loop().run_in_executor(None, run_script, job_id, args, read_result)
+    return {"id": job_id, "status": "queued"}
+
+
+def int_field(body: dict, key: str, default: int, low: int, high: int) -> int:
+    try:
+        value = int(body.get(key, default))
+    except (TypeError, ValueError) as exc:
+        raise HTTPException(status_code=400, detail=f"{key} must be an integer") from exc
+    if not low <= value <= high:
+        raise HTTPException(status_code=400, detail=f"{key} must be between {low} and {high}")
+    return value
+
+
+@app.post("/compare-people", dependencies=[Depends(require_manager)])
+async def compare_people(body: dict) -> dict[str, str]:
+    video1 = resolve_video(body.get("video1"), "video1")
+    video2 = resolve_video(body.get("video2"), "video2")
+    interval = int_field(body, "frame_interval", 30, 1, 10_000)
+    # shortcut: the script always writes one fixed file, so concurrent comparisons overwrite each other; pass an output path if that matters.
+    output = OUTPUT_DIR / "people_comparison.json"
+    script = str(REPO_ROOT / "backend" / "compare_people.py")
+    return start_job([script, str(video1), str(video2), str(interval)], lambda: json.loads(output.read_text(encoding="utf-8")))
+
+
+@app.post("/interaction/runs", dependencies=[Depends(require_manager)])
+async def start_interaction_run(body: dict) -> dict[str, str]:
+    video = resolve_video(body.get("video"), "video")
+    judge = body.get("judge", "pose")
+    if judge not in {"pose", "off"}:
+        raise HTTPException(status_code=400, detail="judge must be 'pose' or 'off'")
+    every = int_field(body, "every", 1, 1, 100)
+    track_every = int_field(body, "track_every", 1, 1, 100)
+    output = OUTPUT_DIR / "interaction-runs" / uuid.uuid4().hex / f"{video.stem}.mp4"
+    output.parent.mkdir(parents=True, exist_ok=True)
+
+    def read_result() -> dict[str, Any]:
+        people = json.loads(output.with_suffix(".people.json").read_text(encoding="utf-8"))
+        return {
+            "video": str(video.relative_to(REPO_ROOT)),
+            "output": str(output.relative_to(REPO_ROOT)),
+            "interactions": json.loads(output.with_suffix(".interactions.json").read_text(encoding="utf-8")),
+            "people": people["people"],
+        }
+
+    args = ["-m", "backend.interaction.cli", str(video), "--output", str(output), "--judge", judge,
+            "--every", str(every), "--track-every", str(track_every)]
+    return start_job(args, read_result)
+
+
+@app.post("/analyze-frame", dependencies=[Depends(require_manager)])
+def analyze_frame(body: dict) -> dict[str, Any]:
+    frame = body.get("image_base64")
+    if not isinstance(frame, str) or not frame or len(frame) > 20_000_000:
+        raise HTTPException(status_code=400, detail="image_base64 is required (max ~15 MB image)")
+    aisle = str(body.get("aisle") or "aisle")[:64]
+    try:
+        done = subprocess.run(
+            [sys.executable, "-u", str(REPO_ROOT / "backend" / "analyze_frame.py"), aisle],
+            input=frame, capture_output=True, text=True, cwd=REPO_ROOT, timeout=180,
+        )
+    except subprocess.TimeoutExpired as exc:
+        raise HTTPException(status_code=504, detail="Frame analysis timed out") from exc
+    try:
+        result = json.loads(done.stdout.strip().splitlines()[-1])
+    except (IndexError, json.JSONDecodeError):
+        result = {"error": done.stderr.strip().splitlines()[-1] if done.stderr.strip() else "Frame analysis failed"}
+    if done.returncode != 0 or "error" in result:
+        raise HTTPException(status_code=400 if done.returncode == 1 else 500, detail=result.get("error", "Frame analysis failed"))
+    return result
+
+
+@app.get("/jobs/{job_id}", dependencies=[Depends(require_manager)])
+def job_status(job_id: str) -> dict[str, Any]:
+    if job_id not in _jobs:
+        raise HTTPException(status_code=404, detail="Job not found")
+    return _jobs[job_id]
 
 
 @app.get("/health")

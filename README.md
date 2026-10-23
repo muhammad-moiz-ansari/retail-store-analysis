@@ -166,14 +166,23 @@ npm install
 npm run dev
 ```
 
-To start the frontend and the unified backend together with one command, use:
+This one command starts FastAPI on `http://127.0.0.1:8011` and Next.js on
+`http://localhost:3000`. Press Ctrl+C once to stop both processes. Every page
+talks to FastAPI through the session-checked `/api/backend/*` proxy:
 
-```bash
-npm run dev:all
-```
+| Page | FastAPI endpoint |
+|---|---|
+| `/dashboard` | `GET /system-status` |
+| `/interactions` | `POST /interaction/runs`, `GET /jobs/{id}`, `POST /analyze-frame` |
+| `/camera-handoff` | `POST /camera/handoff`, `GET /camera/jobs/{id}`, `GET /camera/people`, `PUT /camera/people/{id}/role` |
+| `/compare-people` | `POST /compare-people`, `GET /jobs/{id}` |
+| `/alerts` | `GET /alerts`, `POST /alerts/{id}/resolve`, `POST /tasks/dispatch` |
+| `/voice-agent` | `GET /voice-agent/status`, `POST /voice-agent/generate`, `POST /orchestrator/events` |
+| `/settings` | `/settings/*`, `/accounts/*` |
+| `/employee-home` | `GET /tasks/me`, `POST /tasks/{id}/transition`, `GET /tasks/events` |
+| `/login`, `/signup` | `POST /auth/login`, `POST /auth/invitations/accept` (via `/api/auth/*`) |
 
-This starts Next.js on `http://localhost:3000` and FastAPI on
-`http://127.0.0.1:8011`. Press Ctrl+C once to stop both processes.
+`npm run dev:frontend` starts only Next.js.
 
 Manager routes require a signed HttpOnly session cookie. In the local FYP demo, choosing Manager with any valid email and a 6+ character password creates that cookie. Configure these secrets before running:
 
@@ -234,7 +243,7 @@ Run it from the repository root with:
     --sample-every 5
 ```
 
-The result is written to `backend/output/camera_handoff.json`. The frontend exposes the same batch process at `/camera-handoff` through `/api/camera-handoff`, with configurable normalized boundaries and timing thresholds.
+The result is written to `backend/output/camera_handoff.json`. The frontend exposes the same batch process at `/camera-handoff` through FastAPI (`POST /camera/handoff`), with configurable normalized boundaries and timing thresholds.
 
 Role resolution is deliberately separate from appearance. New Global Person IDs are
 `unknown`. A manager can register an observed ID as an employee through

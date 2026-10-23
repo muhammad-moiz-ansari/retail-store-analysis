@@ -79,6 +79,7 @@ export default function AlertsPage() {
   const [status, setStatus] = useState<Status>("active");
   const [sortOrder, setSortOrder] = useState<SortOrder>("recent");
   const [loading, setLoading] = useState(true);
+  const [notice, setNotice] = useState("");
 
   useEffect(() => {
     fetch("/api/backend/alerts?status=all", { cache: "no-store" })
@@ -123,6 +124,16 @@ export default function AlertsPage() {
     }
   }
 
+  async function dispatchStaff(alert: Alert) {
+    const response = await fetch("/api/backend/tasks/dispatch", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ alertId: alert.id, instruction: `Please respond to: ${alert.title}`, evidence: { alertTitle: alert.title } }),
+    });
+    const data = await response.json().catch(() => ({}));
+    setNotice(response.ok ? `Staff dispatched for "${alert.title}".` : data.detail || data.error || "Dispatch failed.");
+  }
+
   function clearFilters() {
     setSelectedCategories(CATEGORIES);
     setStatus("active");
@@ -157,6 +168,7 @@ export default function AlertsPage() {
               <StatPill label={`Total: ${alerts.length}`} className="border-border-soft bg-surface-alt text-text-muted" />
             </div>
           </div>
+          {notice && <p role="status" className="mt-4 font-mono text-xs font-semibold text-text">{notice}</p>}
         </RetroWindow>
 
         <section aria-labelledby="filters-heading">
@@ -224,7 +236,7 @@ export default function AlertsPage() {
               </RetroCard>
             ) : filteredAlerts.length > 0 ? (
               filteredAlerts.map((alert) => (
-                <AlertFeedCard key={alert.id} alert={alert} onResolve={markResolved} />
+                <AlertFeedCard key={alert.id} alert={alert} onResolve={markResolved} onDispatch={dispatchStaff} />
               ))
             ) : (
               <RetroCard className="flex flex-col items-center justify-center gap-4 py-12 text-center">
@@ -241,7 +253,7 @@ export default function AlertsPage() {
   );
 }
 
-function AlertFeedCard({ alert, onResolve }: { alert: Alert; onResolve: (id: string) => void }) {
+function AlertFeedCard({ alert, onResolve, onDispatch }: { alert: Alert; onResolve: (id: string) => void; onDispatch: (alert: Alert) => void }) {
   const isResolved = alert.status === "resolved";
   const severityLabel = alert.severity === "high" ? "HIGH" : alert.severity === "medium" ? "MEDIUM" : "LOW";
 
@@ -271,6 +283,7 @@ function AlertFeedCard({ alert, onResolve }: { alert: Alert; onResolve: (id: str
         ) : (
           <div className="flex flex-wrap items-center gap-4">
             <RetroButton type="button" variant="secondary" className="!px-3 !py-1.5 !text-xs" aria-label={`Mark ${alert.title} as resolved`} onClick={() => onResolve(alert.id)}>Mark Resolved</RetroButton>
+            <RetroButton type="button" variant="secondary" className="!px-3 !py-1.5 !text-xs" aria-label={`Dispatch staff for ${alert.title}`} onClick={() => onDispatch(alert)}>Dispatch Staff</RetroButton>
             <Link href={alert.href} className="text-sm font-semibold text-accent underline underline-offset-2 transition-colors hover:text-accent-hover">
               View Details →
             </Link>
