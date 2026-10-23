@@ -48,3 +48,15 @@ uvicorn backend.interaction.service:app --port 8012
 ```
 
 It accepts `POST /frame` with `image_base64` and an optional `timestamp`.
+
+## Live camera (laptop or phone)
+
+WSL2 cannot see webcams, so live mode runs on Windows Python. Install a phone-webcam app (DroidCam, Iriun or Camo) on the phone and its Windows client; it shows up as an extra webcam (usually index `1`) or, for DroidCam, also as a stream URL `http://<phone-ip>:4747/video`. Then:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\run-interaction-live.ps1 -Camera laptop -PhoneCam 1
+```
+
+The first run creates `.venv-win` and installs `requirements-cv.txt`. In the preview window press `s` to switch between the laptop and phone camera (if the other camera cannot be opened, the feed stays where it is) and `q` to stop; outputs go to `backend\output\live-<time>.*`, plus `live-<time>.raw.mp4` with every unprocessed camera frame. Frames are read on a background thread that keeps only the newest, so a slow pipeline skips frames instead of lagging (and the phone does not report dropped frames). Live timestamps come from the wall clock, not the camera's nominal FPS. Directly: `python -m backend.interaction.cli --live phone --phone-cam http://<phone-ip>:4747/video`.
+
+From WSL, DroidCam works over Wi-Fi without the Windows client (close it first; the phone serves one viewer): `scripts/run-interaction.sh live <phone-ip>`. Camera switching is unavailable there, since WSL has no laptop webcam.

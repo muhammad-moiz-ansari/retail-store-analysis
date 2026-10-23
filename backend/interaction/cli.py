@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import threading
 import time
 from pathlib import Path
 
@@ -15,16 +16,98 @@ from .renderer import draw_result
 from .types import CONFIRMED
 
 
-def analyse(cap, fps: float, pipeline: InteractionPipeline, every: int = 1, track_every: int = 1, on_result=None) -> dict:
-    """Run the pipeline over a video; returns one record per interaction (its last snapshot) and per-frame latencies."""
+class CameraSwitch:
+    """Live feed that flips between the laptop webcam and the phone cam when 's' is pressed in the preview window."""
+
+    def __init__(self, sources: dict[str, str], start: str, raw: Path | None = None):
+        self.sources, self.name, self.lock = sources, start, threading.Lock()
+        self.raw, self.raw_writer = raw, None
+        cap = self._open(start)
+        if cap is None:
+            raise SystemExit(f"Cannot open {start} camera: {sources[start]}")
+        self._watch(cap)
+
+    def _open(self, name: str):
+        source = self.sources[name]
+        # A digit is a Windows camera index (phone apps like DroidCam/Iriun add a virtual webcam); anything else is a stream URL.
+        cap = cv2.VideoCapture(int(source)) if source.isdigit() else cv2.VideoCapture(source)
+        return cap if cap.isOpened() else None
+
+    def _watch(self, cap) -> None:
+        with self.lock:
+            self.cap, self.latest, self.fresh = cap, (False, None), threading.Event()
+        self.reader = threading.Thread(target=self._drain, args=(cap,), daemon=True)
+        self.reader.start()
+
+    def _drain(self, cap) -> None:
+        # Pull frames as fast as the camera sends them and keep only the newest, so a slow pipeline
+        # never backs up the stream (DroidCam drops frames and the preview lags when it does).
+        while True:
+            ok, frame = cap.read()
+            with self.lock:
+                if cap is not self.cap:
+                    break
+                self.latest = ok, frame
+                self.fresh.set()
+                if ok and self.raw:
+                    self._record(cap, frame)
+            if not ok:
+                break
+        # Released here, not by the switcher: releasing mid-read from another thread can crash OpenCV.
+        cap.release()
+
+    def _record(self, cap, frame) -> None:
+        # Every camera frame, not just the ones the pipeline gets to. Sized by the first camera, like the annotated output.
+        if self.raw_writer is None:
+            self.raw_size = frame.shape[1], frame.shape[0]
+            self.raw_writer = cv2.VideoWriter(str(self.raw), cv2.VideoWriter_fourcc(*"mp4v"),
+                                              cap.get(cv2.CAP_PROP_FPS) or 25, self.raw_size)
+        self.raw_writer.write(cv2.resize(frame, self.raw_size))
+
+    def get(self, prop):
+        return self.cap.get(prop)
+
+    def switch(self) -> None:
+        other = next(name for name in self.sources if name != self.name)
+        cap = self._open(other)
+        if cap is None:
+            print(f"cannot open {other} camera ({self.sources[other]}), staying on {self.name}")
+            return
+        self._watch(cap)  # the old reader sees it is stale and releases its camera
+        self.name = other
+        print(f"switched to {other} camera")
+
+    def read(self):
+        key = cv2.waitKey(1) & 0xFF
+        if key == ord("q"):
+            return False, None
+        if key == ord("s"):
+            self.switch()
+        if not self.fresh.wait(timeout=5):  # stream went silent
+            return False, None
+        with self.lock:
+            self.fresh.clear()
+            return self.latest
+
+    def release(self) -> None:
+        with self.lock:
+            self.cap = None
+            if self.raw_writer:
+                self.raw_writer.release()
+
+
+def analyse(cap, fps: float, pipeline: InteractionPipeline, every: int = 1, track_every: int = 1, on_result=None, clock=None) -> dict:
+    """Run the pipeline over a video; returns one record per interaction (its last snapshot) and per-frame latencies.
+    Live feeds pass a wall-clock `clock`, since a camera's nominal FPS is not its delivered rate."""
     frame_number, interactions, latencies = 0, {}, []
     while True:
         ok, frame = cap.read()
         if not ok:
             break
+        timestamp = clock() if clock else frame_number / (fps or 25)
         if frame_number % max(1, every) == 0:
             started = time.perf_counter()
-            result = pipeline.process_frame(frame, frame_number / (fps or 25))
+            result = pipeline.process_frame(frame, timestamp)
             latencies.append(time.perf_counter() - started)
             for event in result["interactions"]:
                 # One record per interaction: later snapshots overwrite earlier ones with the final state.
@@ -33,14 +116,19 @@ def analyse(cap, fps: float, pipeline: InteractionPipeline, every: int = 1, trac
                 on_result(frame_number, frame, result)
         elif frame_number % max(1, track_every) == 0:
             # Keep the tracker fed between scored frames so IDs survive crossings.
-            pipeline.tracker.detect_and_track(frame, frame_number / (fps or 25))
+            pipeline.tracker.detect_and_track(frame, timestamp)
         frame_number += 1
     return {"interactions": interactions, "frames": frame_number, "latencies": latencies}
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Run employee/customer interaction analytics on a video.")
-    parser.add_argument("video", type=Path)
+    parser.add_argument("video", type=Path, nargs="?", help="Recorded video; omit with --live")
+    parser.add_argument("--live", choices=("laptop", "phone"),
+                        help="Analyse a live camera instead, starting on this one; press s to switch, q to stop")
+    parser.add_argument("--laptop-cam", default="0", help="Laptop webcam index")
+    parser.add_argument("--phone-cam", default="1",
+                        help="Phone camera: the virtual webcam index its app adds, or its stream URL (e.g. http://<phone-ip>:4747/video)")
     parser.add_argument("--output", type=Path, default=Path("interaction_output.mp4"))
     parser.add_argument("--roles", type=Path, help="YOLO role model trained on the bib-labelled dataset")
     parser.add_argument("--every", type=int, default=1, help="Score roles and write output on every Nth frame")
@@ -50,9 +138,14 @@ def main() -> None:
                         help="Second model that confirms each proximity interaction")
     parser.add_argument("--judge-device", help="Device for the judge, defaults to --device")
     args = parser.parse_args()
-    cap = cv2.VideoCapture(str(args.video))
-    if not cap.isOpened():
-        raise SystemExit(f"Cannot open video: {args.video}")
+    if args.live:
+        cap = CameraSwitch({"laptop": args.laptop_cam, "phone": args.phone_cam}, args.live, args.output.with_suffix(".raw.mp4"))
+    elif args.video:
+        cap = cv2.VideoCapture(str(args.video))
+        if not cap.isOpened():
+            raise SystemExit(f"Cannot open video: {args.video}")
+    else:
+        parser.error("give a video path or --live")
     fps, width, height = cap.get(cv2.CAP_PROP_FPS), int(cap.get(3)), int(cap.get(4))
     writer = cv2.VideoWriter(str(args.output), cv2.VideoWriter_fourcc(*"mp4v"), fps or 25, (width, height))
     pipeline = InteractionPipeline(InteractionConfig(role_model=args.roles, device=args.device,
@@ -72,13 +165,27 @@ def main() -> None:
                 segments[-1]["frames"] += 1
             else:
                 segments.append({"role": person["role"], "from": result["timestamp"], "to": result["timestamp"], "frames": 1})
-        writer.write(draw_result(frame, result))
+        annotated = draw_result(frame, result)
+        if args.live:
+            cv2.imshow("interaction (s: switch camera, q: quit)", annotated)
+            # The two cameras can differ in resolution; the writer needs one size.
+            annotated = cv2.resize(annotated, (width, height))
+        writer.write(annotated)
 
     started = time.perf_counter()
-    run = analyse(cap, fps, pipeline, args.every, args.track_every, record)
+    clock = (lambda: time.perf_counter() - started) if args.live else None
+    try:
+        run = analyse(cap, fps, pipeline, args.every, args.track_every, record, clock)
+    finally:
+        cap.release()
+        if args.live:
+            cv2.destroyAllWindows()
     interactions, frame_number = run["interactions"], run["frames"]
     elapsed, duration = time.perf_counter() - started, frame_number / (fps or 25)
-    print(f"processed {duration:.1f}s of video in {elapsed:.1f}s ({duration / elapsed:.2f}x realtime)")
+    if args.live:  # stale frames are skipped, so frame count is not video time; throughput is what matters
+        print(f"live: {elapsed:.1f}s, {frame_number} frames processed ({frame_number / elapsed:.1f} fps)")
+    else:
+        print(f"processed {duration:.1f}s of video in {elapsed:.1f}s ({duration / elapsed:.2f}x realtime)")
     writer.release()
     kept = [event for event in interactions.values() if event["verdict"] in CONFIRMED]
     rejected = [event for event in interactions.values() if event["verdict"] not in CONFIRMED]
