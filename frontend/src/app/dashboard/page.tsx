@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, FormEvent } from "react";
+import React, { useEffect, useState, FormEvent } from "react";
 import {
   RetroWindow,
   CRTFrame,
@@ -279,11 +279,52 @@ function AIAgentBar() {
    Dashboard Page
    ═══════════════════════════════════════════════════════════════ */
 
+type SystemStatus = {
+  workers: Record<string, string>;
+  activeAlerts: number;
+  activeTasks: number;
+  cameras: { total: number; online: number };
+};
+
+function SystemStatusStrip() {
+  const [status, setStatus] = useState<SystemStatus | null>(null);
+  const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/backend/system-status", { cache: "no-store" })
+      .then((response) => (response.ok ? response.json() : Promise.reject()))
+      .then(setStatus)
+      .catch(() => setFailed(true));
+  }, []);
+
+  if (failed) return <p role="status" className="font-mono text-xs font-semibold text-danger">Backend unavailable: system status could not be loaded.</p>;
+  if (!status) return <p role="status" className="font-mono text-xs text-text-muted">Loading system status...</p>;
+  const items = [
+    ["Active alerts", status.activeAlerts],
+    ["Active tasks", status.activeTasks],
+    ["Cameras online", `${status.cameras.online}/${status.cameras.total}`],
+    ...Object.entries(status.workers).map(([name, state]) => [name, state.replace(/_/g, " ")]),
+  ];
+  return (
+    <RetroWindow title="System Status">
+      <dl className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+        {items.map(([label, value]) => (
+          <div key={label} className="border border-border-soft bg-surface-alt p-3">
+            <dt className="font-mono text-[10px] uppercase tracking-wider text-text-muted">{label}</dt>
+            <dd className="mt-1 font-mono text-lg font-bold text-text">{value}</dd>
+          </div>
+        ))}
+      </dl>
+    </RetroWindow>
+  );
+}
+
 export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-bg flex flex-col">
       {/* ── Main content (scrollable, padded for sticky bar) ── */}
       <main className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-6 md:py-8 space-y-8 md:space-y-10 pb-28">
+        <SystemStatusStrip />
         {/* ── Section: Camera Feeds ── */}
         <section>
           <h2 className="font-heading text-lg font-bold text-text mb-4 flex items-center gap-2">

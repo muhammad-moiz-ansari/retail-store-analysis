@@ -3,9 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "PYTHON_BIN=./.venv/bin/python next dev frontend",
-    "build": "PYTHON_BIN=./.venv/bin/python next build frontend",
-    "start": "PYTHON_BIN=./.venv/bin/python next start frontend",
+    "dev": "node scripts/run-dev.mjs",
+    "dev:frontend": "next dev frontend",
+    "build": "next build frontend",
+    "start": "next start frontend",
     "dev:all": "node scripts/run-dev.mjs",
     "lint": "eslint frontend --config frontend/eslint.config.mjs",
     "backend:api": "PYTHONPATH=. ./.venv/bin/uvicorn backend.app:app --host 127.0.0.1 --port 8011"

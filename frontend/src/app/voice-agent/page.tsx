@@ -60,6 +60,7 @@ export default function VoiceAgentPage() {
   const [result, setResult] = useState<GenerateResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [orchestration, setOrchestration] = useState("");
 
   useEffect(() => {
     fetch("/api/backend/voice-agent/status", { cache: "no-store" })
@@ -100,6 +101,33 @@ export default function VoiceAgentPage() {
       setResult(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Voice agent generation failed");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // Full orchestrator path: records the event, raises an alert, auto-dispatches staff and writes the voice script.
+  async function sendToOrchestrator() {
+    setLoading(true);
+    setError("");
+    setResult(null);
+    setOrchestration("");
+    try {
+      const response = await fetch("/api/backend/orchestrator/events", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          eventType, severity, title, context, instruction,
+          category: "System", source: "manager-demo", voiceAgent: true,
+          evidence: { zoneName },
+        }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || data.detail || "Orchestrator request failed");
+      setOrchestration(`Decision: ${data.decision}. ${data.reason}`);
+      if (data.voiceAgent) setResult({ script: data.voiceAgent, audio: null });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Orchestrator request failed");
     } finally {
       setLoading(false);
     }
@@ -164,8 +192,12 @@ export default function VoiceAgentPage() {
               <RetroButton type="submit" variant="primary" disabled={loading}>
                 {loading ? "Generating..." : "Generate Voice Agent Output"}
               </RetroButton>
+              <RetroButton type="button" variant="secondary" disabled={loading} onClick={sendToOrchestrator}>
+                Send to Orchestrator
+              </RetroButton>
               {error && <span className="text-sm font-semibold text-danger">{error}</span>}
             </div>
+            {orchestration && <p role="status" className="font-mono text-xs font-semibold text-text">{orchestration} See Alerts for the new alert.</p>}
           </form>
         </RetroWindow>
 

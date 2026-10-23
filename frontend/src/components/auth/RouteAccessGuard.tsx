@@ -12,6 +12,9 @@ const MANAGER_ROUTES = [
   "/settings",
   "/alerts",
   "/voice-agent",
+  "/interactions",
+  "/camera-handoff",
+  "/compare-people",
 ];
 const EMPLOYEE_ROUTES = ["/employee-home", "/my-performance", "/employee"];
 const SHARED_AUTHENTICATED_ROUTES = ["/profile"];
