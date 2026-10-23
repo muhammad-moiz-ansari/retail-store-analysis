@@ -74,3 +74,14 @@ def test_headless_key_source_stops_without_window(monkeypatch, tmp_path):
     assert cam.read() == (True, "http://phone:4747/video")
     stop.touch()
     assert cam.read() == (False, None)
+
+
+def test_square_crops_the_centre_of_each_live_frame(monkeypatch):
+    frame = np.arange(480 * 640).reshape(480, 640, 1).astype(np.int32)
+    monkeypatch.setattr(FakeCapture, "read", lambda self: (True, frame))
+    monkeypatch.setattr(cli.cv2, "VideoCapture", lambda source: FakeCapture(source))
+    cam = cli.CameraSwitch({"laptop": "0", "phone": "x"}, "phone", keys=lambda: -1, square=True)
+    ok, cropped = cam.read()
+    assert ok and cropped.shape[:2] == (480, 480)
+    assert (cropped == frame[:, 80:560]).all()
+    cam.release()

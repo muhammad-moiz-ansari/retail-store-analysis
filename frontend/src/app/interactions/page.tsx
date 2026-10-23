@@ -1,6 +1,6 @@
 "use client";
 
-import { ChangeEvent, FormEvent, useState } from "react";
+import { ChangeEvent, FormEvent, useEffect, useState } from "react";
 import { RetroButton, RetroInput, RetroWindow } from "@/components/ui";
 import { runBackendJob } from "@/lib/backend-job";
 
@@ -20,7 +20,7 @@ type Result = { video: string; output: string; interactions: Interaction[]; peop
 
 type FrameCheck = { total_people: number; employee_count: number; customer_count: number; interaction: { status: string; message: string; score: number } };
 
-const defaults = { video: "backend/videos/ShopAssistant1cor.mp4", judge: "pose", every: "1", trackEvery: "1", host: "", port: "4747" };
+const defaults = { video: "backend/videos/ShopAssistant1cor.mp4", judge: "pose", every: "1", trackEvery: "1", host: "", port: "4747", resolution: "640x480" };
 
 export default function InteractionsPage() {
   const [form, setForm] = useState(defaults);
@@ -33,7 +33,6 @@ export default function InteractionsPage() {
   const [frameBusy, setFrameBusy] = useState(false);
   const [source, setSource] = useState<"recording" | "live">("recording");
   const [liveId, setLiveId] = useState("");
-  const [tick, setTick] = useState(0);
   const [previewReady, setPreviewReady] = useState(false);
   const [stopping, setStopping] = useState(false);
 
@@ -66,8 +65,8 @@ export default function InteractionsPage() {
     try {
       const job = source === "live"
         ? await runBackendJob<Result>("interaction/live", "jobs",
-          { host: form.host, port: Number(form.port), judge: form.judge, every: Number(form.every) },
-          (update) => { setLiveId(update.id); setTick((value) => value + 1); setLogs(update.logs.join("\n")); })
+          { host: form.host, port: Number(form.port), resolution: form.resolution, judge: form.judge, every: Number(form.every) },
+          (update) => { setLiveId(update.id); setLogs(update.logs.join("\n")); })
         : await runBackendJob<Result>("interaction/runs", "jobs",
           { video: form.video, judge: form.judge, every: Number(form.every), track_every: Number(form.trackEvery) },
           (update) => setLogs(update.logs.join("\n")));
@@ -75,6 +74,15 @@ export default function InteractionsPage() {
     } catch (caught) { setError(caught instanceof Error ? caught.message : "Processing failed."); }
     finally { setBusy(false); setLiveId(""); }
   }
+
+  // Leaving the page must not keep the phone and CPU busy; a beacon still goes out while the tab closes.
+  useEffect(() => {
+    if (!liveId) return;
+    const stop = () => navigator.sendBeacon(`/api/backend/interaction/live/${liveId}/stop`);
+    window.addEventListener("pagehide", stop);
+    // Also on unmount (navigating away in-app); stopping a run that already ended is a no-op.
+    return () => { window.removeEventListener("pagehide", stop); stop(); };
+  }, [liveId]);
 
   async function stopLive() {
     setStopping(true);
@@ -101,6 +109,17 @@ export default function InteractionsPage() {
               <RetroInput label="Phone IP (shown in the DroidCam app)" placeholder="192.168.1.20" value={form.host} onChange={(event) => setForm({ ...form, host: event.target.value })} />
               <RetroInput label="Port" value={form.port} onChange={(event) => setForm({ ...form, port: event.target.value })} />
             </div>
+            <label className="flex flex-col gap-1 text-sm font-medium text-text">
+              Resolution
+              <select value={form.resolution} onChange={(event) => setForm({ ...form, resolution: event.target.value })} className="border border-border-soft bg-surface px-3 py-2 text-sm text-text">
+                <option value="">Phone default</option>
+                <option value="1280x720">1280x720</option>
+                <option value="640x480">640x480 (faster)</option>
+                <option value="320x240">320x240 (fastest, less accurate)</option>
+                <option value="480x480">480x480 square (centre crop)</option>
+                <option value="240x240">240x240 square (centre crop)</option>
+              </select>
+            </label>
             <p className="text-xs text-text-muted">Phone and computer on the same Wi-Fi; close the DroidCam PC client first, since the phone serves one viewer at a time.</p>
           </>}
           <div className={`grid grid-cols-1 gap-3 ${source === "recording" ? "sm:grid-cols-3" : "sm:grid-cols-2"}`}>
@@ -129,8 +148,8 @@ export default function InteractionsPage() {
       </RetroWindow>
     </div>
     {source === "live" && liveId && <RetroWindow title="Live Preview" className="mt-6">
-      {/* eslint-disable-next-line @next/next/no-img-element -- a fresh JPEG every second from the backend, not a static asset */}
-      <img src={`/api/backend/interaction/live/${liveId}/preview?frame=${tick}`} alt="Newest annotated frame from the DroidCam feed" onLoad={() => setPreviewReady(true)} onError={() => setPreviewReady(false)} className={previewReady ? "w-full border border-border-soft" : "hidden"} />
+      {/* eslint-disable-next-line @next/next/no-img-element -- live MJPEG stream from the backend, not a static asset */}
+      <img src={`/api/backend/interaction/live/${liveId}/stream`} alt="Live annotated DroidCam feed" onLoad={() => setPreviewReady(true)} className="w-full border border-border-soft" />
       {!previewReady && <p className="text-sm text-text-muted">Connecting to the phone and loading models...</p>}
       <p className="mt-2 text-xs text-text-muted">Results (people and interactions) appear after you press Stop.</p>
     </RetroWindow>}

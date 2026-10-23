@@ -17,11 +17,19 @@ from .renderer import draw_result
 from .types import CONFIRMED
 
 
+def center_square(frame):
+    """Middle square of a frame; phone camera apps only stream 4:3/16:9 sizes."""
+    height, width = frame.shape[:2]
+    side = min(height, width)
+    top, left = (height - side) // 2, (width - side) // 2
+    return frame[top:top + side, left:left + side]
+
+
 class CameraSwitch:
     """Live feed that flips between the laptop webcam and the phone cam when 's' is pressed in the preview window."""
 
-    def __init__(self, sources: dict[str, str], start: str, raw: Path | None = None, keys=None):
-        self.sources, self.name, self.lock = sources, start, threading.Lock()
+    def __init__(self, sources: dict[str, str], start: str, raw: Path | None = None, keys=None, square=False):
+        self.sources, self.name, self.lock, self.square = sources, start, threading.Lock(), square
         # Key source: the preview window by default; headless runs (the web UI) pass their own.
         self.keys = keys or (lambda: cv2.waitKey(1) & 0xFF)
         self.raw, self.raw_writer = raw, None
@@ -47,6 +55,8 @@ class CameraSwitch:
         # never backs up the stream (DroidCam drops frames and the preview lags when it does).
         while True:
             ok, frame = cap.read()
+            if ok and self.square:
+                frame = center_square(frame)
             with self.lock:
                 if cap is not self.cap:
                     break
@@ -91,6 +101,11 @@ class CameraSwitch:
         with self.lock:
             self.fresh.clear()
             return self.latest
+
+    def peek(self):
+        """Newest camera frame without consuming it (for the web preview)."""
+        with self.lock:
+            return self.latest[1]
 
     def release(self) -> None:
         with self.lock:
@@ -140,23 +155,42 @@ def main() -> None:
     parser.add_argument("--judge", choices=("pose", "off"), default="pose",
                         help="Second model that confirms each proximity interaction")
     parser.add_argument("--judge-device", help="Device for the judge, defaults to --device")
+    parser.add_argument("--square", action="store_true", help="Live: crop each camera frame to its centre square")
     parser.add_argument("--stop-file", type=Path,
                         help="Live without a preview window (for the web UI): stop when this file appears; "
-                             "the newest annotated frame is kept at <output>.preview.jpg")
+                             "the newest camera frame, with the latest detections drawn, is kept at <output>.preview.jpg")
     args = parser.parse_args()
     headless = args.stop_file is not None
     preview = args.output.with_suffix(".preview.jpg")
     if args.live:
         keys = (lambda: ord("q") if args.stop_file.exists() else -1) if headless else None
         cap = CameraSwitch({"laptop": args.laptop_cam, "phone": args.phone_cam}, args.live,
-                           args.output.with_suffix(".raw.mp4"), keys)
+                           args.output.with_suffix(".raw.mp4"), keys, args.square)
     elif args.video:
         cap = cv2.VideoCapture(str(args.video))
         if not cap.isOpened():
             raise SystemExit(f"Cannot open video: {args.video}")
     else:
         parser.error("give a video path or --live")
+    latest_result, preview_done = {}, threading.Event()
+
+    def write_preview():
+        # Camera rate, not model rate: the newest frame with the newest detections drawn on it, so the
+        # web view stays smooth while boxes update as fast as the model runs (~3 fps on CPU).
+        while not preview_done.wait(1 / 15):
+            frame = cap.peek()
+            if frame is None:
+                continue
+            result = latest_result.get("result")
+            # Write then rename, so the web UI never reads a half-written JPEG.
+            cv2.imwrite(str(preview.with_suffix(".tmp.jpg")), draw_result(frame, result) if result else frame)
+            os.replace(preview.with_suffix(".tmp.jpg"), preview)
+
+    if args.live and headless:  # started before the models load, so the camera shows up straight away
+        threading.Thread(target=write_preview, daemon=True).start()
     fps, width, height = cap.get(cv2.CAP_PROP_FPS), int(cap.get(3)), int(cap.get(4))
+    if args.live and args.square:  # the camera reports its stream size, not the cropped one
+        width = height = min(width, height)
     writer = cv2.VideoWriter(str(args.output), cv2.VideoWriter_fourcc(*"mp4v"), fps or 25, (width, height))
     pipeline = InteractionPipeline(InteractionConfig(role_model=args.roles, device=args.device,
                                                      interaction_judge=args.judge, judge_device=args.judge_device))
@@ -175,11 +209,8 @@ def main() -> None:
                 segments[-1]["frames"] += 1
             else:
                 segments.append({"role": person["role"], "from": result["timestamp"], "to": result["timestamp"], "frames": 1})
+        latest_result["result"] = result
         annotated = draw_result(frame, result)
-        if headless:
-            # Write then rename, so the web UI never reads a half-written JPEG.
-            cv2.imwrite(str(preview.with_suffix(".tmp.jpg")), annotated)
-            os.replace(preview.with_suffix(".tmp.jpg"), preview)
         if args.live:
             if not headless:
                 cv2.imshow("interaction (s: switch camera, q: quit)", annotated)
@@ -192,6 +223,7 @@ def main() -> None:
     try:
         run = analyse(cap, fps, pipeline, args.every, args.track_every, record, clock)
     finally:
+        preview_done.set()
         cap.release()
         if args.live and not headless:
             cv2.destroyAllWindows()

@@ -26,9 +26,18 @@ export async function runBackendJob<T>(
       body: JSON.stringify(body),
     }),
   );
+  let failures = 0;
   while (true) {
     await new Promise((resolve) => setTimeout(resolve, 1000));
-    const job: BackendJob<T> = await readJson(await fetch(`/api/backend/${jobsPath}/${started.id}`, { cache: "no-store" }));
+    let job: BackendJob<T>;
+    try {
+      job = await readJson(await fetch(`/api/backend/${jobsPath}/${started.id}`, { cache: "no-store" }));
+      failures = 0;
+    } catch (error) {
+      // A dev-server recompile or network blip must not orphan a job that is still running.
+      if (++failures >= 10) throw error;
+      continue;
+    }
     onUpdate(job);
     if (job.status === "failed") throw new Error(job.error || "Processing failed.");
     if (job.status === "completed") return job;

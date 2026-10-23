@@ -14,7 +14,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Annotated, Any
 
 from fastapi import Depends, FastAPI, Header, HTTPException, Query
-from fastapi.responses import FileResponse, StreamingResponse
+from fastapi.responses import StreamingResponse
 
 from .camera_service import REPO_ROOT, resolve_video
 from .camera_service import app as camera_app
@@ -216,11 +216,19 @@ async def start_live_run(body: dict) -> dict[str, str]:
     if judge not in {"pose", "off"}:
         raise HTTPException(status_code=400, detail="judge must be 'pose' or 'off'")
     every = int_field(body, "every", 3, 1, 100)
+    resolution = body.get("resolution") or ""
+    # DroidCam serves the requested size itself (/video?640x480), cutting Wi-Fi traffic and decode time.
+    # It has no square sizes, so a square is the centre crop of the 4:3 size with the same height.
+    streams = {"": "", "1280x720": "1280x720", "640x480": "640x480", "320x240": "320x240",
+               "480x480": "640x480", "240x240": "320x240"}
+    if resolution not in streams:
+        raise HTTPException(status_code=400, detail=f"resolution must be one of {', '.join(sorted(r for r in streams if r))}")
+    square, resolution = resolution in {"480x480", "240x240"}, streams[resolution]
     output = OUTPUT_DIR / "interaction-runs" / f"live-{datetime.now():%Y%m%d-%H%M%S}-{uuid.uuid4().hex[:6]}" / "live.mp4"
     output.parent.mkdir(parents=True, exist_ok=True)
-    source = f"http://{host}:{port}/video"
+    source = f"http://{host}:{port}/video" + (f"?{resolution}" if resolution else "")
     args = ["-m", "backend.interaction.cli", "--live", "phone", "--phone-cam", source, "--output", str(output),
-            "--judge", judge, "--every", str(every), "--track-every", "1", "--stop-file", str(output.with_suffix(".stop"))]
+            "--judge", judge, "--every", str(every), "--track-every", "1", "--stop-file", str(output.with_suffix(".stop"))] + (["--square"] if square else [])
     started = start_job(args, lambda: interaction_result(output, source))
     _live_runs[started["id"]] = output
     return started
@@ -238,12 +246,26 @@ def stop_live_run(job_id: str) -> dict[str, str]:
     return {"id": job_id, "status": "stopping"}
 
 
-@app.get("/interaction/live/{job_id}/preview", dependencies=[Depends(require_manager)])
-def live_preview(job_id: str) -> FileResponse:
+@app.get("/interaction/live/{job_id}/stream", dependencies=[Depends(require_manager)])
+async def live_stream(job_id: str) -> StreamingResponse:
+    """MJPEG of the run's preview frames; an <img> plays it directly and it ends when the run does."""
     preview = live_output(job_id).with_suffix(".preview.jpg")
-    if not preview.is_file():
-        raise HTTPException(status_code=404, detail="No frame yet")
-    return FileResponse(preview, media_type="image/jpeg", headers={"Cache-Control": "no-store"})
+
+    async def frames():
+        sent = None
+        while _jobs[job_id]["status"] in {"queued", "running"}:
+            try:
+                stamp = preview.stat().st_mtime_ns
+                if stamp != sent:
+                    jpeg = preview.read_bytes()
+                    sent = stamp
+                    yield b"--frame\r\nContent-Type: image/jpeg\r\nContent-Length: " + str(len(jpeg)).encode() + b"\r\n\r\n" + jpeg + b"\r\n"
+            except FileNotFoundError:  # no frame yet, or replaced mid-read
+                pass
+            await asyncio.sleep(1 / 30)
+
+    return StreamingResponse(frames(), media_type="multipart/x-mixed-replace; boundary=frame",
+                             headers={"Cache-Control": "no-store"})
 
 
 @app.post("/analyze-frame", dependencies=[Depends(require_manager)])

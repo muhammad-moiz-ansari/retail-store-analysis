@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import "tailwindcss" source("..");  /* scan only frontend/src: the repo root holds live CV output that changes many times a second */
 
 /* ── Design System: Elegant Retro OS ── */
 
