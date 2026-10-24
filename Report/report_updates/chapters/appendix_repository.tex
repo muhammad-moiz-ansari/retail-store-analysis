@@ -1,0 +1,30 @@
+\chapter{Repository and Contribution Evidence}
+\label{app:repo}
+Repository: \path{github.com/muhammad-moiz-ansari/retail-store-analysis}. Inspected branch: \path{feature/interaction}; HEAD: \texttt{6560403}; evidence date: 20 October 2026.
+
+\begin{longtable}{P{0.13\textwidth}P{0.16\textwidth}P{0.18\textwidth}P{0.41\textwidth}}
+\caption{Selected commits verified from local Git history}\\
+\toprule
+Hash & Date & Git author & Recorded change\\
+\midrule
+\endhead
+\texttt{e3fe2af} & 16 Oct 2026 & Ruhab Ahmad & Add interaction detection model.\\
+\texttt{6c25090} & 16 Oct 2026 & Ruhab Ahmad & Record video interaction verification.\\
+\texttt{882f7dc} & 16 Oct 2026 & \texttt{msaqibatifj} & Weighted customer/employee classifier with three-second hold.\\
+\texttt{4a9023a} & 19 Oct 2026 & Moiz Ansari & Add provisional floor-distance estimation pipeline.\\
+\texttt{e2b71a5} & 19 Oct 2026 & \texttt{msaqibatifj} & Single OpenVINO role model.\\
+\texttt{face2b5} & 20 Oct 2026 & \texttt{msaqibatifj} & Distance-based engagement for moving camera.\\
+\texttt{8c3a6fe} & 20 Oct 2026 & \texttt{msaqibatifj} & Remove calibrated floor-distance pipeline.\\
+\texttt{80fb3fd} & 20 Oct 2026 & Moiz Ansari & Add mid-1 report.\\
+\texttt{20db4c6} & 19 Oct 2026 & \texttt{msaqibatifj} & On-screen interaction flag (\path{feature/interaction-flag}).\\
+\texttt{4cbe655} & 20 Oct 2026 & \texttt{msaqibatifj} & Remove unused vision-language-model stage.\\
+\texttt{cffa30b} & 20 Oct 2026 & \texttt{msaqibatifj} & Remove unused code (interaction dataset, evaluation and model loader).\\
+\texttt{6560403} & 20 Oct 2026 & \texttt{msaqibatifj} & Pose judge, pass-by filter and benchmark.\\
+\bottomrule
+\end{longtable}
+
+\section{Authorship and Milestone Evidence}
+At the inspected HEAD, \texttt{git shortlog -sne HEAD} records 43 commits for Moiz Ansari, 41 for \texttt{msaqibatifj} and 28 for Ruhab Ahmad, including merge commits. Counts describe recorded authorship and are not measures of effort or contribution quality. The mapping of account aliases and non-code responsibilities requires team confirmation. \texttt{git tag --list} returned no tags. No task-board history or supervisor-approved milestone record was available for this check, so none is fabricated. Textual Git evidence is supplied instead of an unverified contribution-graph screenshot.
+
+\section{Floor-Distance Implementation Evidence}
+Commit \texttt{4a9023a} records the shared inference helper, geometry/calibration/motion/smoothing/evaluation modules, four CLI scripts, focused tests, camera schema/examples and usage documentation. The selected report figures preserve local prototype outputs from that implementation. Commit \texttt{8c3a6fe} subsequently removed the source pipeline; current-branch availability must not be inferred from these historical figures. Raw video and generated diagnostics remain outside the report's tracked evidence. The new test summary is at \path{evidence/verification_20261020.json}; the benchmark report and interaction batch results are at \path{evidence/benchmark_20261020.json} and \path{evidence/interaction_judge_batch_20261020.csv}.

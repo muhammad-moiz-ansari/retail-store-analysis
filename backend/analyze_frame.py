@@ -18,6 +18,8 @@ import cv2
 import numpy as np
 from ultralytics import YOLO
 
+from device import DEVICE
+
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 MODEL_PATH = PROJECT_ROOT / "backend" / "yolov8n.pt"
 
@@ -173,7 +175,7 @@ def main():
 
     # Run YOLO
     model = get_model()
-    results = model(frame, verbose=False, classes=[0], device="cpu")
+    results = model(frame, verbose=False, classes=[0], device=DEVICE)
 
     boxes = []
     for r in results:

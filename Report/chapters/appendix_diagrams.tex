@@ -1,0 +1,53 @@
+\chapter{Additional Design Diagrams}
+The main architecture, tier and domain diagrams are in Chapter~\ref{ch:design} (including Figures~\ref{fig:arch} and \ref{fig:tiers}). Figure~\ref{fig:implemented-schema} is derived from the current SQLite foreign-key relationships in \path{backend/store_core.py}; it shows a selected subset, not the complete conceptual domain model.
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[>=Stealth,font=\small,node distance=0.9cm and 1.0cm,
+ box/.style={draw,rounded corners,text width=2.8cm,minimum height=1cm,align=center}]
+\node[box] (users) {users\\id (PK)};
+\node[box,right=of users] (rosters) {rosters\\user\_id, zone\_id};
+\node[box,right=of rosters] (zones) {zones\\id (PK)};
+\node[box,below=of rosters] (tasks) {tasks\\employee\_id\\target/source\_zone\_id};
+\node[box,below=of zones] (cameras) {cameras\\zone\_id};
+\node[box,below=of users] (events) {task\_events\\task\_id, actor\_id};
+\draw[->] (rosters) -- (users);
+\draw[->] (rosters) -- (zones);
+\draw[->] (cameras) -- (zones);
+\draw[->] (tasks) -- (users);
+\draw[->] (tasks) -- (zones);
+\draw[->] (events) -- (tasks);
+\draw[->] (events) -- (users);
+\end{tikzpicture}
+\caption{Selected implemented SQLite relationships; arrows point from referencing tables to referenced tables}
+\label{fig:implemented-schema}
+\end{figure}
+
+\section{Floor Calibration Schema and Failure States}
+The floor process is shown in Figure~\ref{fig:floor-pipeline}; actual preview, calibration and map examples are in Figures~\ref{fig:floor-preview}--\ref{fig:floor-map}. The authoritative correspondence order for the provisional rectangle is A--B--D--C. Floor coordinates are $(0,0)$, $(w,0)$, $(w,d)$ and $(0,d)$ in metres for that order.
+
+\begin{tabular}{P{0.28\textwidth}P{0.59\textwidth}}
+\toprule
+Record group & Key information\\
+\midrule
+Identity / geometry & Schema version, camera/calibration ID, source reference, frame index/timestamp, frame size, coordinate space.\\
+Landmarks / mapping & Original-pixel and metre correspondences, authoritative dimensions, image-to-floor H, inliers/residuals.\\
+Operational quality & Supported polygon, exclusions, distortion handling, motion thresholds, smoothing/prediction limits.\\
+Measurement status & Estimated calibration inputs and approximate-output metadata.\\
+Runtime observation & Track ID, role/score, pixel foot proxy, nullable floor coordinates, motion/position state and reasons.\\
+\bottomrule
+\end{tabular}
+
+States include \texttt{uncalibrated}, \texttt{observed\_proxy}, \texttt{predicted}, \texttt{unreliable}, \texttt{out\_of\_region}, \texttt{motion\_unverified} and \texttt{motion\_invalid}. Only supported observed proxies contribute to approximate pair distances. The localization equations are given in Equations~\ref{eq:floor-foot}--\ref{eq:floor-distance}; no 3D reconstruction is implied. These records belong to the descoped floor prototype (Section~\ref{sec:floor-descoped}).
+
+\section{Interaction Verdict States}
+Each interaction candidate in the current pipeline carries one verdict; annotated output is in Figure~\ref{fig:judge-examples}.
+
+\begin{tabular}{P{0.22\textwidth}P{0.65\textwidth}}
+\toprule
+Verdict & Meaning\\
+\midrule
+\texttt{interaction} & The pose judge found a head turned towards the other person in at least half of the judged frames.\\
+\texttt{no\_interaction} & Poses were found but nobody faced the other person; written to \texttt{.rejected\_interactions.json} and re-judged every four seconds while the pair stays close.\\
+\texttt{unverified} & Judge switched off, no pose found, or the judge failed; the proximity result stands.\\
+\bottomrule
+\end{tabular}

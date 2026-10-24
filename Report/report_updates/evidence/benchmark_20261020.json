@@ -1,0 +1,340 @@
+{
+  "judge": "pose",
+  "device": "cpu",
+  "detector": {
+    "model": "backend/models/best_320_openvino_model",
+    "dataset": "~/data/split/test",
+    "images": 455,
+    "map50": 0.9687435954686402,
+    "map50_95": 0.8958114629436145,
+    "precision": 0.9626745514700767,
+    "recall": 0.9527433185803047,
+    "classes": {
+      "employee": {
+        "precision": 0.9677639652428075,
+        "recall": 0.9899193548387096,
+        "map50": 0.9824635578231945,
+        "map50_95": 0.9266808345571954
+      },
+      "customer": {
+        "precision": 0.9575851376973459,
+        "recall": 0.9155672823218998,
+        "map50": 0.9550236331140859,
+        "map50_95": 0.8649420913300336
+      }
+    },
+    "inference_ms_per_image": 73.11399678684401
+  },
+  "interactions": {
+    "proximity_only": {
+      "tp": 1,
+      "fp": 1,
+      "fn": 0,
+      "precision": 0.5,
+      "recall": 1.0,
+      "f1": 0.6666666666666666
+    },
+    "with_judge": {
+      "tp": 1,
+      "fp": 0,
+      "fn": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    }
+  },
+  "speed": {
+    "realtime_factor": 0.8036062201519478
+  },
+  "videos": [
+    {
+      "path": "dummydataset/IMG_8829_part1_sq640.MOV",
+      "duration_s": 67.73333333333333,
+      "proximity_only": {
+        "tp": 1,
+        "fp": 1,
+        "fn": 0,
+        "start_error_s": 0.2666666666666657,
+        "end_error_s": 0.23333333333333428
+      },
+      "with_judge": {
+        "tp": 1,
+        "fp": 0,
+        "fn": 0,
+        "start_error_s": 0.2666666666666657,
+        "end_error_s": 0.23333333333333428
+      },
+      "candidates": [
+        {
+          "start": 1.7,
+          "end": 15.3,
+          "verdict": "no_interaction"
+        },
+        {
+          "start": 35.7,
+          "end": 43.7,
+          "verdict": "interaction"
+        }
+      ],
+      "speed": {
+        "realtime_factor": 1.3966139866951541,
+        "frame_ms_p50": 128.05879299958178,
+        "frame_ms_p95": 217.9591589992924,
+        "judge_calls": 5,
+        "judge_ms_mean": 400.8421915998042
+      }
+    },
+    {
+      "path": "dummydataset/Copy of IMG_8878_part1_sq640.MOV",
+      "duration_s": 71.33333333333333,
+      "proximity_only": null,
+      "with_judge": null,
+      "candidates": [
+        {
+          "start": 21.3,
+          "end": 27.3,
+          "verdict": "interaction"
+        },
+        {
+          "start": 29.3,
+          "end": 37.0,
+          "verdict": "interaction"
+        }
+      ],
+      "speed": {
+        "realtime_factor": 1.5369673590252195,
+        "frame_ms_p50": 119.72177799907513,
+        "frame_ms_p95": 228.28554299849202,
+        "judge_calls": 3,
+        "judge_ms_mean": 225.74760300085472
+      }
+    },
+    {
+      "path": "dummydataset/Copy of IMG_8880_part1_sq640.MOV",
+      "duration_s": 49.06666666666667,
+      "proximity_only": null,
+      "with_judge": null,
+      "candidates": [
+        {
+          "start": 17.7,
+          "end": 42.3,
+          "verdict": "interaction"
+        }
+      ],
+      "speed": {
+        "realtime_factor": 1.408135719454866,
+        "frame_ms_p50": 132.82015999902796,
+        "frame_ms_p95": 208.18909899935534,
+        "judge_calls": 1,
+        "judge_ms_mean": 258.8837390012486
+      }
+    },
+    {
+      "path": "dummydataset/Copy of IMG_8881_part1_sq640.MOV",
+      "duration_s": 82.26666666666667,
+      "proximity_only": null,
+      "with_judge": null,
+      "candidates": [
+        {
+          "start": 14.7,
+          "end": 25.7,
+          "verdict": "interaction"
+        },
+        {
+          "start": 37.3,
+          "end": 55.0,
+          "verdict": "interaction"
+        },
+        {
+          "start": 72.3,
+          "end": 81.3,
+          "verdict": "interaction"
+        }
+      ],
+      "speed": {
+        "realtime_factor": 1.3079670251097835,
+        "frame_ms_p50": 146.2662880003336,
+        "frame_ms_p95": 238.7954890000401,
+        "judge_calls": 4,
+        "judge_ms_mean": 315.46538925022105
+      }
+    },
+    {
+      "path": "dummydataset/Copy of IMG_8885_part1_sq640.MOV",
+      "duration_s": 65.63333333333334,
+      "proximity_only": null,
+      "with_judge": null,
+      "candidates": [],
+      "speed": {
+        "realtime_factor": 1.3650040560616215,
+        "frame_ms_p50": 126.34430300022359,
+        "frame_ms_p95": 182.17234299845586,
+        "judge_calls": 0,
+        "judge_ms_mean": null
+      }
+    },
+    {
+      "path": "dummydataset/Copy of IMG_8886_part1_sq640.MOV",
+      "duration_s": 59.86666666666667,
+      "proximity_only": null,
+      "with_judge": null,
+      "candidates": [
+        {
+          "start": 11.7,
+          "end": 18.0,
+          "verdict": "interaction"
+        },
+        {
+          "start": 37.3,
+          "end": 42.0,
+          "verdict": "interaction"
+        },
+        {
+          "start": 46.0,
+          "end": 54.3,
+          "verdict": "interaction"
+        }
+      ],
+      "speed": {
+        "realtime_factor": 1.232936992663531,
+        "frame_ms_p50": 138.13581400063413,
+        "frame_ms_p95": 268.7570489997597,
+        "judge_calls": 3,
+        "judge_ms_mean": 269.26343333373853
+      }
+    },
+    {
+      "path": "dummydataset/Copy of IMG_8890_part2_sq640.MOV",
+      "duration_s": 63.36666666666667,
+      "proximity_only": null,
+      "with_judge": null,
+      "candidates": [
+        {
+          "start": 3.7,
+          "end": 15.0,
+          "verdict": "interaction"
+        },
+        {
+          "start": 39.3,
+          "end": 58.3,
+          "verdict": "interaction"
+        }
+      ],
+      "speed": {
+        "realtime_factor": 1.395811283426317,
+        "frame_ms_p50": 133.06841899975552,
+        "frame_ms_p95": 250.7925259997137,
+        "judge_calls": 2,
+        "judge_ms_mean": 249.39652500052034
+      }
+    },
+    {
+      "path": "dummydataset/Copy of IMG_8893_part1_sq640.MOV",
+      "duration_s": 74.46666666666667,
+      "proximity_only": null,
+      "with_judge": null,
+      "candidates": [
+        {
+          "start": 5.0,
+          "end": 33.0,
+          "verdict": "interaction"
+        },
+        {
+          "start": 48.0,
+          "end": 60.3,
+          "verdict": "interaction"
+        },
+        {
+          "start": 62.0,
+          "end": 67.7,
+          "verdict": "interaction"
+        }
+      ],
+      "speed": {
+        "realtime_factor": 1.4297899479913307,
+        "frame_ms_p50": 125.37966000127199,
+        "frame_ms_p95": 290.26445599993167,
+        "judge_calls": 7,
+        "judge_ms_mean": 244.92787314271223
+      }
+    },
+    {
+      "path": "dummydataset/Copy of IMG_8894_part1_sq640.MOV",
+      "duration_s": 60.0,
+      "proximity_only": null,
+      "with_judge": null,
+      "candidates": [
+        {
+          "start": 6.0,
+          "end": 32.3,
+          "verdict": "interaction"
+        },
+        {
+          "start": 34.7,
+          "end": 40.0,
+          "verdict": "interaction"
+        }
+      ],
+      "speed": {
+        "realtime_factor": 1.1649733938796722,
+        "frame_ms_p50": 145.77315899987298,
+        "frame_ms_p95": 349.12888199869485,
+        "judge_calls": 2,
+        "judge_ms_mean": 363.71036149921565
+      }
+    },
+    {
+      "path": "dummydataset/Copy of IMG_8895_part2_sq640.MOV",
+      "duration_s": 52.766666666666666,
+      "proximity_only": null,
+      "with_judge": null,
+      "candidates": [
+        {
+          "start": 0.0,
+          "end": 6.0,
+          "verdict": "interaction"
+        },
+        {
+          "start": 22.7,
+          "end": 30.0,
+          "verdict": "interaction"
+        },
+        {
+          "start": 44.7,
+          "end": 51.7,
+          "verdict": "interaction"
+        }
+      ],
+      "speed": {
+        "realtime_factor": 0.8036062201519478,
+        "frame_ms_p50": 171.04143500000646,
+        "frame_ms_p95": 731.1586069990881,
+        "judge_calls": 4,
+        "judge_ms_mean": 892.5710197499939
+      }
+    },
+    {
+      "path": "dummydataset/Copy of IMG_8897_part1_sq640.MOV",
+      "duration_s": 60.0,
+      "proximity_only": null,
+      "with_judge": null,
+      "candidates": [
+        {
+          "start": 32.3,
+          "end": 53.3,
+          "verdict": "interaction"
+        }
+      ],
+      "speed": {
+        "realtime_factor": 1.2340660810096564,
+        "frame_ms_p50": 138.38483700055804,
+        "frame_ms_p95": 322.70143700043263,
+        "judge_calls": 2,
+        "judge_ms_mean": 328.6152655009573
+      }
+    }
+  ],
+  "target_failures": [
+    "speed.realtime_factor: 0.804 < 1.0"
+  ]
+}

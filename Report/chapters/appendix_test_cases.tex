@@ -1,0 +1,58 @@
+\chapter{Detailed Test Cases}
+\label{app:tests}
+\begin{longtable}{P{0.09\textwidth}P{0.35\textwidth}P{0.3\textwidth}P{0.14\textwidth}}
+\caption{Detailed test cases: application and interaction}\\
+\toprule
+ID & Steps & Expected & Result\\
+\midrule
+\endfirsthead
+\toprule
+ID & Steps & Expected & Result\\
+\midrule
+\endhead
+TC-01 & Log in with a valid existing Manager account; test wrong password, role mismatch and logout. & Signed cookie and dashboard; invalid credentials rejected. & Passed 20 Oct 2026\\
+TC-02 & Request current settings proxy anonymously; call backend with missing/wrong secret; try employee credentials. & HTTP 401/403 as appropriate. & Passed adapted case\\
+TC-12 & Inspect representative manager/employee views and route-guard source. & Role-specific pages and consistent restrictions. & Partial; representative views only; not exhaustive\\
+TC-13 & Build a report and export PDF. & PDF opens with selected sections. & Unavailable: report route removed (404)\\
+TC-07, TC-08 & Run the benchmark with the detector section enabled on the held-out split. & Overall and per-class precision, recall and mAP. & Measured 20 Oct 2026\\
+TC-09, TC-10 & Defined in FYP-2 against labelled clips. & See Chapter~\ref{ch:testing}. & Pending\\
+TC-21--TC-23 & Run \path{test_judge.py}, \path{test_engagement.py} and \path{test_benchmark.py}. & All checks pass. & Passed\\
+TC-24 & Run the interaction CLI with \texttt{--every 10 --track-every 3} on each local clip; reopen videos and JSON. & All clips complete; confirmed and rejected interactions written. & Passed (11 clips)\\
+TC-25 & Run the CLI twice on IMG\_8829 with identical settings; compare JSON files. & Byte-identical outputs. & Passed\\
+\bottomrule
+\end{longtable}
+
+\section{Floor-Distance Test Procedures (Descoped Prototype)}
+\begin{longtable}{P{0.09\textwidth}P{0.35\textwidth}P{0.30\textwidth}P{0.14\textwidth}}
+\caption{Detailed test cases: descoped floor-distance prototype}\\
+\toprule
+ID & Steps & Expected outcome & Executed status\\
+\midrule
+\endfirsthead
+\toprule
+ID & Steps & Expected outcome & Executed status\\
+\midrule
+\endhead
+TC-14 & Run uncalibrated preview on the local video with trained weights; inspect labels, IDs, red points and records. & Readable preview; no invented metres. Missing weights produce an actionable error. & Passed integration\\
+TC-15 & Fit the saved estimated A--B--D--C landmarks headlessly; inspect grid and generated JSON. & Correct units/order and provisional status; H and residuals saved. & Passed\\
+TC-16 & Omit headless mode; click numbered points, undo/reset, save and compare original-pixel coordinates. & Explicit correspondence order and correct display-coordinate recovery. & Interface implemented\\
+TC-17 & Run focused synthetic projection, distance, robust-fit, unit/frame and preprocessing tests. & Expected numerical geometry; reject incompatible/stale calibration. & Automated checks passed\\
+TC-18 & Exercise invalid boxes/denominators, occlusion/exclusion, out-of-region, prediction and missing tracks. & Null/unavailable distances with explicit reasons; no fabricated zeroes. & Automated and CLI checks passed\\
+TC-19 & Apply synthetic camera shift and no-feature frames; run the temporary clip monitor. & Shifted/unverified frames suppress supported metric output. & Passed tested cases\\
+TC-20 & Run sampled demo; reopen both videos, inspect timestamps, provisional metadata and null coordinates. & 148 frames in each video; valid records with explicit approximate/failure states. & Passed\\
+\bottomrule
+\end{longtable}
+The focused suite is invoked from the repository root with
+\begin{quote}\small\ttfamily
+.venv/Scripts/python.exe -m unittest\\
+\hspace*{1em}backend.tests.test\_floor\_distance -v
+\end{quote}
+It contains 17 tests. The local coverage evaluation command is
+\begin{quote}\small\ttfamily
+.venv/Scripts/python.exe scripts/evaluate\_floor\_distance.py\\
+\hspace*{1em}--metrics data/outputs/distance/demo/metrics.jsonl\\
+\hspace*{1em}--output data/outputs/distance/demo/evaluation.json
+\end{quote}
+
+\section{Current-Branch Reproduction}
+The 20 October check ran these existing files with pytest: \path{backend/interaction/test_engagement.py}, \path{test_cust_emp_classifier.py}, \path{test_role_classifier.py}, \path{test_identity.py}, \path{test_tracker.py} (all under the same interaction directory). Set \texttt{PYTHONPATH} to the backend directory and \texttt{TEMP}/\texttt{TMP} to a writable local test directory. Corrected-scope rerun: 24 passed in 2.66 seconds. After the pose judge and benchmark were added, \texttt{python -m pytest backend/interaction -q} passed 44 tests in 1.72 seconds. The benchmark is run with \texttt{python -m backend.interaction.benchmark backend/interaction/benchmarks/benchmark.json}. Historical floor-suite commands above refer to the implementation before its removal, not current-branch availability.

@@ -1,7 +1,8 @@
 "use client";
 
-import { FormEvent, useState } from "react";
-import { RetroButton, RetroCard, RetroInput, RetroWindow } from "@/components/ui";
+import { FormEvent, useCallback, useEffect, useState } from "react";
+import { RetroButton, RetroInput, RetroWindow } from "@/components/ui";
+import { runBackendJob } from "@/lib/backend-job";
 
 type Handoff = {
   status: "confirmed" | "uncertain" | "unmatched";
@@ -16,6 +17,8 @@ type Handoff = {
 
 type Result = { handoffs: Handoff[]; processing?: { elapsed_seconds: number; appearance_method: string }; cameras?: { camera_id: string; events: unknown[]; tracks: unknown[] }[] };
 
+type GlobalPerson = { global_person_id: string; role: "employee" | "customer" | "unknown"; role_source: string; created_at: string };
+
 const defaults = { cam1: "backend/videos/cam1.mp4", cam2: "backend/videos/cam2.mp4", sampleEvery: "5", minGap: "1", maxGap: "45", cam1Boundary: "0.85", cam2Boundary: "0.15" };
 
 export default function CameraHandoffPage() {
@@ -24,31 +27,37 @@ export default function CameraHandoffPage() {
   const [result, setResult] = useState<Result | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [people, setPeople] = useState<GlobalPerson[]>([]);
+
+  const loadPeople = useCallback(async () => {
+    const response = await fetch("/api/backend/camera/people", { cache: "no-store" });
+    if (response.ok) setPeople(await response.json());
+  }, []);
+
+  useEffect(() => { loadPeople(); }, [loadPeople]);
+
+  async function setRole(id: string, role: "employee" | "unknown") {
+    const response = await fetch(`/api/backend/camera/people/${id}/role`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ role, assigned_by: "manager", reason: "Set from the Camera Handoff page" }),
+    });
+    if (!response.ok) setError((await response.json().catch(() => ({}))).detail || "Role update failed.");
+    await loadPeople();
+  }
 
   async function run(event: FormEvent) {
     event.preventDefault();
     setBusy(true); setError(""); setLogs(""); setResult(null);
     try {
-      const response = await fetch("/api/camera-handoff", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(form) });
-      if (!response.ok || !response.body) throw new Error((await response.json()).error || "Unable to start processing.");
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = "";
-      while (true) {
-        const chunk = await reader.read();
-        if (chunk.done) break;
-        buffer += decoder.decode(chunk.value, { stream: true });
-        const messages = buffer.split("\n\n"); buffer = messages.pop() || "";
-        for (const message of messages) {
-          const eventName = message.match(/^event: (.+)$/m)?.[1];
-          const data = message.match(/^data: (.+)$/m)?.[1];
-          if (!eventName || !data) continue;
-          const payload = JSON.parse(data);
-          if (eventName === "log") setLogs((current) => current + payload.text);
-          if (eventName === "result") setResult(payload.data);
-          if (eventName === "error") setError(payload.message);
-        }
-      }
+      const body = {
+        cam1: form.cam1, cam2: form.cam2,
+        sample_every: Number(form.sampleEvery), min_gap: Number(form.minGap), max_gap: Number(form.maxGap),
+        cam1_boundary: Number(form.cam1Boundary), cam2_boundary: Number(form.cam2Boundary),
+      };
+      const job = await runBackendJob<Result>("camera/handoff", "camera/jobs", body, (update) => setLogs(update.logs.join("\n")));
+      setResult(job.result);
+      await loadPeople();
     } catch (caught) { setError(caught instanceof Error ? caught.message : "Processing failed."); }
     finally { setBusy(false); }
   }
@@ -81,6 +90,9 @@ export default function CameraHandoffPage() {
     </div>
     <RetroWindow title="Handoff Evidence" className="mt-6">
       {handoffs.length === 0 ? <p className="text-sm text-text-muted">Run an analysis to view directional events and identity decisions.</p> : <div className="overflow-x-auto"><table className="w-full text-left text-xs"><thead><tr className="border-b border-border-soft font-mono uppercase tracking-wider text-text-muted"><th className="p-2">Status</th><th className="p-2">Master ID</th><th className="p-2">Tracks</th><th className="p-2">Score</th><th className="p-2">Evidence</th></tr></thead><tbody>{handoffs.map((item, index) => <tr key={`${item.source_event_id}-${item.target_event_id}-${index}`} className="border-b border-border-soft/50"><td className="p-2 font-semibold text-text">{item.status}</td><td className="p-2 font-mono text-accent">{item.master_id || "-"}</td><td className="p-2 font-mono">{item.source_track_id || "-"} → {item.target_track_id || "-"}</td><td className="p-2 font-mono">{item.score.toFixed(2)}</td><td className="p-2 text-text-muted">appearance {item.evidence.appearance_similarity?.toFixed(2) || "-"}, gap {item.evidence.gap_seconds?.toFixed(1) || "-"}s</td></tr>)}</tbody></table></div>}
+    </RetroWindow>
+    <RetroWindow title="Global People" className="mt-6">
+      {people.length === 0 ? <p className="text-sm text-text-muted">No global identities yet. Run a handoff analysis to create them.</p> : <div className="overflow-x-auto"><table className="w-full text-left text-xs"><thead><tr className="border-b border-border-soft font-mono uppercase tracking-wider text-text-muted"><th className="p-2">Global ID</th><th className="p-2">Role</th><th className="p-2">Source</th><th className="p-2">Action</th></tr></thead><tbody>{people.map((person) => <tr key={person.global_person_id} className="border-b border-border-soft/50"><td className="p-2 font-mono text-accent">{person.global_person_id}</td><td className="p-2 font-semibold text-text">{person.role}</td><td className="p-2 text-text-muted">{person.role_source}</td><td className="p-2">{person.role === "employee" ? <RetroButton type="button" variant="secondary" className="!px-3 !py-1 !text-xs" onClick={() => setRole(person.global_person_id, "unknown")}>Clear role</RetroButton> : <RetroButton type="button" variant="secondary" className="!px-3 !py-1 !text-xs" onClick={() => setRole(person.global_person_id, "employee")}>Register employee</RetroButton>}</td></tr>)}</tbody></table></div>}
     </RetroWindow>
     <RetroWindow title="Processing Log" className="mt-6"><pre className="max-h-56 overflow-auto whitespace-pre-wrap font-mono text-xs text-text-muted">{logs || "No run yet."}</pre></RetroWindow>
   </main>;

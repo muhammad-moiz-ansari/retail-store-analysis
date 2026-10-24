@@ -121,7 +121,7 @@ export default function LoginPage() {
               ))}
             </div>
             <p className="mt-1.5 text-xs text-text-muted">
-              Demo access: choose a role and use any valid email with a 6+ character password.
+              Local demo: manager@retailpulse.local or employee@retailpulse.local with password123.
             </p>
           </div>
 

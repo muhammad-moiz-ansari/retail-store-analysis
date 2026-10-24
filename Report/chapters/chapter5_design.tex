@@ -1,0 +1,215 @@
+\chapter{System Design}
+\label{ch:design}
+\section{System Architecture}
+The mid-iteration design separates person detection, role classification, tracking, interaction judging and trajectory analysis. The Next.js frontend presents manager and employee views. The diagram shows component responsibilities; it does not imply that all vision outputs are already connected to the dashboard.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[>=Stealth, font=\small, node distance=0.55cm,
+ box/.style={draw,rectangle,minimum width=7.2cm,minimum height=0.8cm,align=center}]
+\node[box] (cam) {Camera feeds (entrance, floor 1, floor 2)};
+\node[box,below=of cam] (det) {Detection Agent: person detection (YOLO)};
+\node[box,below=of det] (cls) {Classification Agent: staff vs.\ customer (non-biometric)};
+\node[box,below=of cls] (trk) {Tracking + proximity candidates (BoT-SORT, pass-by filter)};
+\node[box,below=of trk] (judge) {Pose judge: confirm or reject candidates (YOLO pose)};
+\node[box,below=of judge] (eng) {Engagement Agent: approach time, interaction, idle};
+\node[box,below=of eng] (tra) {Trajectory Agent: paths, dwell time, heatmaps};
+\node[box,below=of tra] (dash) {Dashboard output (Next.js)};
+\foreach \a/\b in {cam/det,det/cls,cls/trk,trk/judge,judge/eng,eng/tra,tra/dash} \draw[->] (\a) -- (\b);
+\end{tikzpicture}
+\caption{RetailPulse target multi-agent pipeline; tracking, proximity candidates and the pose judge run in the interaction CLI and their downstream integration is pending}
+\label{fig:arch}
+\end{figure}
+
+The application tier is separate from the vision pipeline. The Next.js frontend serves the pages and proxies backend calls. A local FastAPI service supports application records and exposes \texttt{/camera/*} for camera-processing jobs.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[>=Stealth, font=\small,
+ box/.style={draw,rectangle,minimum width=2.0cm,minimum height=1cm,align=center,font=\scriptsize}]
+\node[box] (br) {Browser\\ (Manager / Employee)};
+\node[box,right=1.6cm of br] (nx) {Next.js\\ (port 3000)\\ pages + proxy};
+\node[box,right=1.6cm of nx] (fa) {FastAPI\\ (port 8011)\\ /camera/*};
+\node[box,below=1.1cm of fa] (db) {SQLite\\ (application records)};
+\node[box,right=1.2cm of fa] (cv) {YOLO models\\ person analysis};
+\draw[<->] (br) -- node[above,align=center,font=\scriptsize]{session\\cookie} (nx);
+\draw[<->] (nx) -- node[above,align=center,font=\scriptsize]{secret\\header} (fa);
+\draw[<->] (fa) -- (db);
+\draw[->] (fa) -- (cv);
+\end{tikzpicture}
+\caption{Application tier and service boundaries}
+\label{fig:tiers}
+\end{figure}
+
+\subsection{YOLO Model Responsibilities}
+The project uses two distinct YOLO model roles: a YOLO pose model supplies body-keypoint evidence for interaction analysis, while a standard YOLO object-detection model with customer/employee classes supplies person boxes and role labels. The latter is a detector trained on role classes, not a separate image-classification-only network. Interaction events are derived from pose/proximity and temporal rules rather than treating a pose prediction itself as an interaction label.
+
+The repository contains two related execution paths. In the interaction CLI, \path{InteractionPipeline} uses the role detector and bounding-box body bands to nominate candidate pairs, and the pose model then judges each nominated pair (Section~\ref{sec:interaction-impl}). Separately, \path{CVModels} in \path{backend/interaction/models.py} supports a detector and an optional pose checkpoint, and \path{FrameProcessor} matches pose boxes to tracked boxes and derives orientation evidence from keypoints. The head/hips/feet fallback is a geometric band-selection rule; it is not a third YOLO model and does not establish anatomical keypoint visibility. When the judge is switched off the pipeline runs on the role detector alone and candidates are reported as \texttt{unverified}.
+
+\section{Architectural Components}
+\begin{table}[H]
+\centering
+\caption{Architectural components}
+\begin{tabular}{P{0.26\textwidth}P{0.62\textwidth}}
+\toprule
+Component & Description\\
+\midrule
+Frontend & Next.js (App Router) and React pages, Tailwind CSS styling, Recharts charts, and jsPDF export. UI primitives live in \texttt{src/components/ui}.\\
+Proxy layer & Next.js server-side routes that forward calls to FastAPI and attach the internal secret.\\
+Vision agents & Detection, Classification, Engagement, and Trajectory agents; downstream web integration remains in progress.\\
+Interaction pipeline & Role-labelled detections, BoT-SORT tracking, body-height proximity with a pass-by filter, and a YOLO pose judge; runs as a local CLI and writes video and JSON outputs.\\
+Narration agent & Produces natural-language summaries for reports.\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Interfaces and Dependencies}
+\begin{itemize}
+\item Browser to Next.js: HTTP, with a signed HttpOnly session cookie for manager routes.
+\item Next.js to FastAPI: HTTP on \texttt{127.0.0.1:8011}, carrying an internal secret header added server-side.
+\item FastAPI to SQLite: local database files for accounts, cameras, alerts, tasks and interaction documents.
+\item Interaction CLI to filesystem: a local video and the model weights produce an annotated MP4 and JSON files (\texttt{.interactions.json}, \texttt{.rejected\_interactions.json}, \texttt{.detections.json}, \texttt{.people.json}). Dashboard integration of these outputs is pending.
+\item Configuration: session-signing and internal-service secrets are supplied through environment variables and held server-side.
+\item Key dependencies: Node.js 18+, Python 3.12+, Ultralytics YOLO, OpenVINO, BoT-SORT/ByteTrack, Recharts, jsPDF.
+\end{itemize}
+
+\section{Architecture Decisions and Rationale}
+\begin{table}[H]
+\centering
+\caption{Architecture decisions}
+\begin{tabular}{P{0.3\textwidth}P{0.58\textwidth}}
+\toprule
+Decision & Rationale\\
+\midrule
+CPU-only, lightweight YOLO & Matches hardware constraints and the target retailer.\\
+Non-biometric classification & Privacy-conscious design and simpler compliance.\\
+Next.js proxy with server-held secret & Keeps secrets and role checks out of the browser.\\
+SQLite for application records & Zero-administration storage that suits a single-store prototype.\\
+Offline/batch processing & Real-time guarantees are not feasible on CPU for the committed scope.\\
+Body-height-normalised proximity & Needs no calibration and works on moving-camera footage; it replaced a calibrated floor homography that supported almost no projections.\\
+Pose judge on proximity candidates & Separates a close pass-by from a face-to-face interaction; the verdict stays \texttt{unverified} when no pose is available.\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Design Evolution}
+The mid-iteration scope is focused on person/role analysis, interaction detection and the web application, using offline/batch video processing. Three changes since the proposal matter.
+\begin{enumerate}
+\item Authentication was upgraded from client-side role flags to server-signed session cookies and an internal secret header.
+\item A calibrated floor-homography prototype (commit \texttt{4a9023a}) was built to measure person separation in metres. It was descoped and removed (commit \texttt{8c3a6fe}) because the moving-camera footage supported almost no floor projections (Section~\ref{sec:floor-descoped}).
+\item Body-height-normalised proximity replaced it, and a YOLO pose judge was added (ported in commit \texttt{6560403}) because proximity alone reported close pass-bys as interactions (Table~\ref{tab:interaction-kpi}).
+\end{enumerate}
+None of this creates a common cross-camera coordinate system; cross-camera association remains next-phase work.
+
+\section{Domain Model}
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[font=\small, node distance=1.2cm and 1.6cm,
+ cls/.style={draw,rectangle,minimum width=2.6cm,minimum height=0.9cm,align=center}]
+\node[cls] (store) {Store};
+\node[cls,right=of store] (cam) {Camera};
+\node[cls,right=of cam] (zone) {Zone};
+\node[cls,below=of cam] (ent) {Tracked Entity\\ (staff / customer)};
+\node[cls,right=of ent] (int) {Interaction Event};
+\node[cls,below=of store] (user) {User\\ (Manager / Employee)};
+\node[cls,below=1.0cm of user] (emp) {Employee};
+\node[cls,below=of ent] (alert) {Alert};
+\node[cls,below=of int] (rep) {Report};
+\draw (store) -- node[above,font=\scriptsize]{has} (cam); \draw (cam) -- node[above,font=\scriptsize]{covers} (zone); \draw (cam) -- node[right,font=\scriptsize]{observes} (ent);
+\draw (ent) -- node[above,font=\scriptsize]{takes part in} (int); \draw (emp) -- node[above,font=\scriptsize]{is a} (ent); \draw (store) -- node[right,font=\scriptsize]{has} (user);
+\draw (ent) -- node[right,font=\scriptsize]{may raise} (alert); \draw (int) -- node[right,font=\scriptsize]{summarised in} (rep);
+\end{tikzpicture}
+\caption{Conceptual domain model}
+\end{figure}
+
+\section{Data Design}
+The following selected in-scope schema was verified against the branch on 20 October 2026 at commit \texttt{52f651e}. Commit \texttt{6560403} (pose judge and benchmark) was added afterwards and this table has not been re-checked against it.
+\begin{longtable}{P{0.27\textwidth}P{0.61\textwidth}}
+\caption{Implemented persistence and exported record structure}\\
+\toprule
+Source / table & Actual fields or structure\\
+\midrule
+\endfirsthead
+\toprule
+Source / table & Actual fields or structure\\
+\midrule
+\endhead
+\path{backend/store_core.py}: \texttt{users} & \path{id, name, email, role, password_hash, active, created_at, updated_at}\\
+\texttt{invitations} & \path{id, email, role, token, expires_at, accepted_at, created_by, created_at}\\
+\texttt{zones} & \path{id, name, type, capacity, min_staff, created_at, updated_at}\\
+\texttt{cameras} & \path{id, name, zone_id, role, source_type, source_url, online, created_at, updated_at}\\
+\texttt{rosters} & \path{id, user_id, zone_id, shift, available, created_at, updated_at}\\
+\texttt{settings}; \texttt{meta} & \path{key, value_json, updated_at}; \path{key, value} respectively.\\
+\texttt{alerts} & \path{id, category, severity, title, context, href, status, source, evidence_json, created_at, resolved_at, resolved_by}\\
+\texttt{dispatch\_decisions} & \path{id, event_id, alert_id, task_id, selected_employee_id, decision, reason, policy_json, created_at}\\
+\texttt{tasks} & \path{id, employee_id, target_zone_id, source_zone_id, instruction, state, trigger_alert_id, evidence_json, created_at, updated_at, due_at}\\
+\texttt{task\_events} & \path{id, task_id, state, actor_id, note, created_at}\\
+\path{backend/interaction/storage.py}: \texttt{documents} & \path{kind, store_id, id, data}; composite primary key on the first three columns; \texttt{data} contains JSON.\\
+\texttt{jobs} & \path{id, store_id, status, created_at, data}; index \texttt{job\_store} on \path{store_id, created_at}.\\
+Tracked person & \path{track_id, bbox, confidence, role, role_confidence, role_evidence}; serialised centre derived from the box.\\
+Interaction event & \path{employee_track_id, customer_track_id, started_at, last_seen_at, distance_body_heights, measured_by, active, duration_seconds}.\\
+\bottomrule
+\end{longtable}
+The standalone interaction distance is dimensionless body-height-normalised image separation. It must not be interpreted as the metres in the historical floor-homography records below. Figure~\ref{fig:implemented-schema} shows selected implemented relationships.
+
+\subsection{Floor Calibration and Runtime Records (Descoped Floor Prototype)}
+Versioned calibration JSON stores camera/calibration IDs, the video reference and timestamp, original frame dimensions, the coordinate-space definition, metre units, image/floor landmarks, an image-to-floor homography, operational/exclusion polygons, distortion metadata, motion/smoothing settings and fitting diagnostics. Measurement-status metadata identifies estimated calibration inputs.
+
+The local editable input is \path{data/calibration/queue_temp.landmarks.json}; generated calibration is \path{data/calibration/queue_temp.json}. The authoritative rectangle fields and original-frame landmark pixels are used to regenerate the matrix. A modified input with a stale stored matrix is rejected. Non-sensitive examples and the schema are stored under \path{config/cameras/}; footage, real calibration and diagnostics are excluded from Git.
+
+Runtime JSONL records store frame index, actual decoded timestamp, camera/calibration identity, track ID, role, joint detection/class confidence, pixel box and foot point, supported floor position, motion diagnostics, pair distances and explicit rejection reasons. Unavailable positions/distances are JSON \texttt{null}. \texttt{observed\_proxy} denotes an accepted box-bottom estimate, not verified foot visibility; \texttt{predicted} denotes short extrapolation and is excluded from supported pair measurements.
+
+\section{Process / Behavior Design}
+
+
+In the active standalone \path{backend/interaction/pipeline.py} path, \path{InteractionConfig} and \path{engagement.py} define engagement between employee/customer track pairs. The lowest common visible box band is selected: feet (65--100\% of box height), hips (25--70\%), then head (0--30\%). The edge-to-edge Euclidean band gap is divided by mean pair box height. The default thresholds are 1.0, 0.8 and 0.6 body heights respectively, with a minimum apparent-height ratio of 0.6. Frame-edge truncation and nearer-person occlusion can invalidate bands; the edge margin is four pixels.
+
+The candidate pair must persist for at least 2.0 seconds; a missing gap above 1.5 seconds ends continuity. This standalone proximity stage imposes no facing-angle test; in the interaction CLI it is followed by a pass-by filter and a pose judge (Section~\ref{sec:interaction-impl}). Its defaults use the trained OpenVINO role model, three-second role retention and the configured BoT-SORT/ReID tracker. A separate frame-processing path has other interaction settings; those settings are not substituted for these standalone defaults. Proximity is an operational engagement heuristic, not proof of conversation or service. The proposed unattended-customer alert flow requires separate integration evidence.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[>=Stealth,font=\scriptsize,node distance=0.45cm,
+ box/.style={draw,rectangle,text width=6.6cm,minimum height=0.65cm,align=center},
+ dec/.style={draw,diamond,aspect=3.2,text width=3.6cm,align=center,inner sep=0pt},
+ side/.style={draw,rectangle,text width=3.7cm,minimum height=0.65cm,align=center}]
+\node[box] (p1) {Video frames $\rightarrow$ role detector (OpenVINO) $\rightarrow$ BoT-SORT tracks};
+\node[box,below=of p1] (p2) {Select employee--customer track pairs};
+\node[dec,below=0.55cm of p2] (d1) {Within distance threshold for $\geq$ 2.0 s?};
+\node[dec,below=0.75cm of d1] (d2) {Relative drift $>$ 0.5 body heights?};
+\node[box,below=0.75cm of d2] (p3) {Pose judge: four crops of the pair from the last 2 s};
+\node[dec,below=0.75cm of p3] (d3) {Head within $60^\circ$ of the other head in $\geq$ half of crops?};
+\node[box,below=0.75cm of d3] (end) {Confirmed: INTERACTION ON; write JSON files and annotated video};
+\node[side,right=0.9cm of d1] (n1) {No candidate};
+\node[side,right=0.9cm of d2] (n2) {Pass-by: not an interaction};
+\node[side,right=0.9cm of d3] (n3) {Rejected (\texttt{no\_interaction}); re-judged every 4 s while the pair stays close};
+\node[side,left=0.9cm of p3] (n4) {No pose or judge failure: \texttt{unverified}, proximity result stands};
+\draw[->] (p1) -- (p2); \draw[->] (p2) -- (d1);
+\draw[->] (d1) -- node[right]{yes} (d2); \draw[->] (d1) -- node[above]{no} (n1);
+\draw[->] (d2) -- node[right]{no} (p3); \draw[->] (d2) -- node[above]{yes} (n2);
+\draw[->] (p3) -- (d3); \draw[->] (p3) -- (n4);
+\draw[->] (d3) -- node[right]{yes} (end); \draw[->] (d3) -- node[above]{no} (n3);
+\end{tikzpicture}
+\caption{Interaction detection process in the interaction CLI}
+\label{fig:interaction-process}
+\end{figure}
+
+Figure~\ref{fig:interaction-process} summarises the interaction decision flow. Candidate nomination uses only boxes and tracks; the pose judge is the only stage that uses body keypoints.
+
+\subsection{Floor-Distance Quality-Gating Process (Descoped Prototype)}
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[>=Stealth,font=\small,node distance=0.45cm,
+ box/.style={draw,rectangle,text width=10.6cm,minimum height=0.7cm,align=center}]
+\node[box] (fd1) {Local frame $\rightarrow$ trained employee/customer detector $\rightarrow$ ByteTrack};
+\node[box,below=of fd1] (fd2) {Calculate original-pixel box-bottom proxy};
+\node[box,below=of fd2] (fd3) {Check frame geometry, floor coverage, exclusions and reference alignment};
+\node[box,below=of fd3] (fd4) {Supported: project to metres; unsupported: explicit unavailable state};
+\node[box,below=of fd4] (fd5) {Smooth accepted positions; gate jumps; exclude predictions from supported distances};
+\node[box,below=of fd5] (fd6) {Export provisional video, floor map, timestamps and quality records};
+\foreach \a/\b in {fd1/fd2,fd2/fd3,fd3/fd4,fd4/fd5,fd5/fd6} \draw[->] (\a) -- (\b);
+\end{tikzpicture}
+\caption{Floor-distance localization and quality-checking pipeline}
+\label{fig:floor-pipeline}
+\end{figure}
+
+The reference frame supports a provisional snapshot. Other frames require sufficient distributed static floor evidence within configured tolerances. A lack of matches is unverified alignment, not a stationary-camera decision. The current implementation monitors and rejects movement; it does not compensate for it. Metric smoothing cannot repair camera mapping errors. Trained roles, body-height proximity, duration and the pose judge are now combined in the interaction CLI; dashboard integration remains a future step, and proximity alone is not proof of assistance.

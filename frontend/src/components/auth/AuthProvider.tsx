@@ -21,21 +21,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [role, setRole] = useState<UserRole | null>(null);
 
   useEffect(() => {
-    queueMicrotask(() => {
-      const storedSession = window.localStorage.getItem(SESSION_KEY);
-      if (storedSession === "Manager" || storedSession === "Employee") {
-        setRole(storedSession);
-        setAuthenticated(true);
-      }
-    });
+    const cachedRole = window.localStorage.getItem(SESSION_KEY);
+    if (cachedRole === "Manager" || cachedRole === "Employee") {
+      setRole(cachedRole);
+      setAuthenticated(true);
+    }
 
     fetch("/api/auth/session", { cache: "no-store" })
       .then((response) => (response.ok ? response.json() : null))
       .then((session) => {
-        if (session?.authenticated && session?.role === "Manager") {
-          window.localStorage.setItem(SESSION_KEY, "Manager");
-          setRole("Manager");
+        if (session?.authenticated && (session?.role === "Manager" || session?.role === "Employee")) {
+          window.localStorage.setItem(SESSION_KEY, session.role);
+          setRole(session.role);
           setAuthenticated(true);
+        } else {
+          window.localStorage.removeItem(SESSION_KEY);
         }
       })
       .finally(() => setReady(true));
@@ -51,11 +51,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const response = await fetch("/api/auth/session", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(credentials || {}),
+            body: JSON.stringify({ ...(credentials || {}), role: nextRole }),
           });
           if (!response.ok) {
             const data = await response.json().catch(() => ({}));
             throw new Error(data.error || "Manager sign-in failed");
+          }
+        } else {
+          const response = await fetch("/api/auth/session", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ ...(credentials || {}), role: nextRole }),
+          });
+          if (!response.ok) {
+            const data = await response.json().catch(() => ({}));
+            throw new Error(data.error || "Employee sign-in failed");
           }
         }
         window.localStorage.setItem(SESSION_KEY, nextRole);

@@ -11,6 +11,10 @@ const MANAGER_ROUTES = [
   "/spatial-analytics",
   "/settings",
   "/alerts",
+  "/voice-agent",
+  "/interactions",
+  "/camera-handoff",
+  "/compare-people",
 ];
 const EMPLOYEE_ROUTES = ["/employee-home", "/my-performance", "/employee"];
 const SHARED_AUTHENTICATED_ROUTES = ["/profile"];
@@ -41,8 +45,7 @@ export function RouteAccessGuard({ children }: { children: React.ReactNode }) {
 
   const mayView =
     !protectedRoute ||
-    (ready &&
-      authenticated &&
+    (authenticated &&
       (needsAuthenticatedSession ||
         (needsManager && role === "Manager") ||
         (needsEmployeeSession && role === "Employee")));

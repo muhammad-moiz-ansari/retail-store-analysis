@@ -8,7 +8,6 @@ import {
   YAxis,
   Tooltip,
   ResponsiveContainer,
-  Cell,
   Legend,
 } from "recharts";
 import { RetroWindow, RetroCard, Badge } from "@/components/ui";
@@ -404,13 +403,23 @@ function AlertCard({
    Section 4: Zone Conversion Rate
    ═══════════════════════════════════════════════════════════════ */
 
+type ConversionTooltipProps = {
+  active?: boolean;
+  label?: string;
+  payload?: Array<{
+    name: string;
+    value: number | string;
+    color: string;
+  }>;
+};
+
 /** Recharts tooltip matched to the design system */
-function ConversionTooltip({ active, payload, label }: any) {
+function ConversionTooltip({ active, payload, label }: ConversionTooltipProps) {
   if (!active || !payload?.length) return null;
   return (
     <div className="rounded-lg border border-border-soft bg-surface px-3 py-2 shadow-lg text-xs">
       <p className="font-heading font-semibold text-text mb-1">{label}</p>
-      {payload.map((entry: any) => (
+      {payload.map((entry) => (
         <p key={entry.name} className="font-mono text-text-muted">
           <span
             className="inline-block w-2.5 h-2.5 rounded-sm mr-1.5 align-middle"

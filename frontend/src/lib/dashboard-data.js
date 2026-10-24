@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 const peopleComparisonData = require("../data/people_comparison.json");
 const videoSimilarityData = require("../data/video_similarity.json");
 

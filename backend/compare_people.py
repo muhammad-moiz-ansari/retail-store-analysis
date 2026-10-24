@@ -11,13 +11,14 @@ Usage:
 import csv
 import json
 import math
-import random
 import sys
 import time
 from pathlib import Path
 
 import cv2
 from ultralytics import YOLO
+
+from device import DEVICE
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 MODEL_PATH = PROJECT_ROOT / "backend" / "yolov8n.pt"
@@ -42,7 +43,7 @@ def seek_and_read(video_path: str, timestamp_ms: float):
 
 
 def count_people(model, frame) -> int:
-    results = model(frame, verbose=False, classes=[0], device="cpu")
+    results = model(frame, verbose=False, classes=[0], device=DEVICE)
     count = sum(len(r.boxes) for r in results)
     return count
 
@@ -143,10 +144,10 @@ def main():
 
     print("-" * 70)
     print(f"\nCompleted in {elapsed:.1f}s ({valid}/{num_samples} samples)")
-    print(f"\nTotal people detected:")
+    print("\nTotal people detected:")
     print(f"  Video 1: {v1_total}")
     print(f"  Video 2: {v2_total}")
-    print(f"\nAverage per frame:")
+    print("\nAverage per frame:")
     print(f"  Video 1: {v1_total/valid:.2f}" if valid else "  Video 1: N/A")
     print(f"  Video 2: {v2_total/valid:.2f}" if valid else "  Video 2: N/A")
 

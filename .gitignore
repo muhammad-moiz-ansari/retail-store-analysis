@@ -12,11 +12,16 @@ __pycache__/
 *.py[cod]
 *.pyo
 *.pyd
+backend/interaction.sqlite3*
 .venv/
+.venv-interaction/
+.venv-win/
 venv/
 env/
 
 # Data / media artifacts
+backend/*.sqlite3
+backend/*.sqlite3-*
 *.mp4
 *.avi
 *.mov
@@ -30,6 +35,7 @@ env/
 # Environment files
 .env
 .env.*
+!.env.example
 
 # OS/editor files
 .DS_Store
@@ -49,3 +55,25 @@ coverage/
 # Build info
 *.tsbuildinfo
 *.sqlite3
+
+# Local analysis outputs and auto-downloaded BoT-SORT ReID model
+dummyoutputs/
+yolo26n-cls.pt
+
+/models/
+
+# Local raw footage and generated outputs (Ultralytics config dir lives under data/outputs)
+/data/videos/raw/
+/data/outputs/
+
+
+.claude/
+# Claude Code local state (worktrees, settings)
+.claude/
+
+# Generated outputs, uppercase-extension media, local credentials
+/outputs/
+/backend/output/
+*.MOV
+*.MP4
+dummydataset/creds.txt

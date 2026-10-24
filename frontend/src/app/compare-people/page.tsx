@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useMemo, useState } from "react";
+import { runBackendJob } from "@/lib/backend-job";
 
 type ComparisonResult = {
   video1: string;
@@ -23,8 +24,8 @@ type ComparisonResult = {
   }>;
 };
 
-const defaultVideo1 = "/home/mosaq/retail-store-analysis/backend/videos/cam1.mp4";
-const defaultVideo2 = "/home/mosaq/retail-store-analysis/backend/videos/cam2.mp4";
+const defaultVideo1 = "backend/videos/cam1.mp4";
+const defaultVideo2 = "backend/videos/cam2.mp4";
 
 export default function ComparePeoplePage() {
   const [video1, setVideo1] = useState(defaultVideo1);
@@ -55,61 +56,13 @@ export default function ComparePeoplePage() {
     setResult(null);
 
     try {
-      const response = await fetch("/api/compare-people", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ video1, video2, frameInterval: 30 }),
-      });
-
-      if (!response.ok || !response.body) {
-        const payload = await response.json().catch(() => ({}));
-        const message = payload.error || "Comparison failed";
-        setOutputLog(payload.output || message);
-        throw new Error(message);
-      }
-
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let partial = "";
-
-      while (true) {
-        const { value, done } = await reader.read();
-        if (done) break;
-
-        partial += decoder.decode(value, { stream: true });
-
-        const chunks = partial.split("\n\n");
-        partial = chunks.pop() ?? "";
-
-        for (const chunk of chunks) {
-          const lines = chunk.split("\n").filter(Boolean);
-          const eventLine = lines.find((line) => line.startsWith("event:"));
-          const dataLine = lines.find((line) => line.startsWith("data:"));
-
-          if (!eventLine || !dataLine) continue;
-
-          const event = eventLine.replace("event:", "").trim();
-          const payload = JSON.parse(dataLine.replace("data:", "").trim()) as {
-            text?: string;
-            data?: ComparisonResult;
-            message?: string;
-            output?: string;
-          };
-
-          if (event === "log" && payload.text) {
-            setOutputLog((prev) => `${prev}${payload.text}`);
-          }
-
-          if (event === "result" && payload.data) {
-            setResult(payload.data);
-          }
-
-          if (event === "error") {
-            setError(payload.message || "Comparison failed");
-            setOutputLog((prev) => `${prev}${payload.output || payload.message || ""}`);
-          }
-        }
-      }
+      const job = await runBackendJob<ComparisonResult>(
+        "compare-people",
+        "jobs",
+        { video1, video2, frame_interval: 30 },
+        (update) => setOutputLog(update.logs.join("\n")),
+      );
+      setResult(job.result);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unexpected error");
       setResult(null);

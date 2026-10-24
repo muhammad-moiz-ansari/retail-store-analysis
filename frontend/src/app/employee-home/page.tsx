@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { Badge, RetroButton, RetroCard, RetroWindow } from "@/components/ui";
 import {
@@ -39,7 +39,42 @@ const WEEKLY_SCORES = [
   { day: "Sun", score: 87 },
 ];
 
+type Task = {
+  id: string;
+  instruction: string;
+  state: "pending" | "delivered" | "acknowledged" | "in_progress" | "completed" | "declined" | "expired" | "cancelled";
+  created_at: string;
+  due_at?: string;
+};
+
 export default function EmployeeHomePage() {
+  const [tasks, setTasks] = useState<Task[]>([]);
+
+  useEffect(() => {
+    const load = () =>
+      fetch("/api/backend/tasks/me", { cache: "no-store" })
+        .then((response) => (response.ok ? response.json() : null))
+        .then((data) => setTasks(data?.tasks || []));
+    load();
+    // The backend task stream announces changes; refetch on each event so new dispatches appear without a reload.
+    const events = new EventSource("/api/backend/tasks/events");
+    events.addEventListener("ready", load);
+    events.onmessage = load;
+    return () => events.close();
+  }, []);
+
+  async function transitionTask(taskId: string, state: Task["state"]) {
+    const response = await fetch(`/api/backend/tasks/${taskId}/transition`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ state }),
+    });
+    const data = await response.json().catch(() => ({}));
+    if (response.ok) setTasks(data.tasks || []);
+  }
+
+  const activeTasks = tasks.filter((task) => ["pending", "delivered", "acknowledged", "in_progress"].includes(task.state));
+
   return (
     <div className="min-h-screen bg-bg">
       <main className="mx-auto w-full max-w-[1280px] px-4 py-10 md:px-6 md:py-14 lg:px-8">
@@ -72,6 +107,55 @@ export default function EmployeeHomePage() {
               <p className="mt-1 text-sm text-text-muted">{item.note}</p>
             </RetroCard>
           ))}
+        </section>
+
+        <section className="mt-12" aria-labelledby="task-heading">
+          <RetroWindow title="Task Inbox">
+            <h2 id="task-heading" className="sr-only">Task Inbox</h2>
+            <div className="space-y-3">
+              {activeTasks.length > 0 ? (
+                activeTasks.map((task) => (
+                  <RetroCard key={task.id} className="border-l-4 border-l-accent">
+                    <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                      <div>
+                        <Badge variant="accent">{task.state.replace("_", " ")}</Badge>
+                        <p className="mt-3 font-heading text-base font-semibold text-text">{task.instruction}</p>
+                        <p className="mt-1 font-mono text-xs text-text-muted">
+                          Delivered {new Date(task.created_at).toLocaleString()}
+                        </p>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {task.state === "delivered" && (
+                          <RetroButton type="button" variant="primary" className="!px-3 !py-1.5 !text-xs" onClick={() => transitionTask(task.id, "acknowledged")}>
+                            Acknowledge
+                          </RetroButton>
+                        )}
+                        {task.state === "acknowledged" && (
+                          <RetroButton type="button" variant="primary" className="!px-3 !py-1.5 !text-xs" onClick={() => transitionTask(task.id, "in_progress")}>
+                            Start
+                          </RetroButton>
+                        )}
+                        {task.state === "in_progress" && (
+                          <RetroButton type="button" variant="primary" className="!px-3 !py-1.5 !text-xs" onClick={() => transitionTask(task.id, "completed")}>
+                            Complete
+                          </RetroButton>
+                        )}
+                        {task.state !== "in_progress" && (
+                          <RetroButton type="button" variant="danger" className="!px-3 !py-1.5 !text-xs" onClick={() => transitionTask(task.id, "declined")}>
+                            Decline
+                          </RetroButton>
+                        )}
+                      </div>
+                    </div>
+                  </RetroCard>
+                ))
+              ) : (
+                <RetroCard>
+                  <p className="text-sm text-text-muted">No active dispatch tasks.</p>
+                </RetroCard>
+              )}
+            </div>
+          </RetroWindow>
         </section>
 
         <section className="mt-12" aria-labelledby="performance-heading">

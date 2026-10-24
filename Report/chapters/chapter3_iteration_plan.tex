@@ -1,0 +1,93 @@
+\chapter{Proposal Feedback and Iteration Plan}
+\label{ch:plan}
+\section{Proposal Feedback Summary}
+At the proposal defence on 11 September 2026, the evaluators identified weak technical understanding and preparation, unclear features and project explanation, and presentation weaknesses including repeated pacing. They challenged the assumption that all stores want employees to approach customers frequently, citing luxury retailers such as Gucci and Prada. They considered the project worthwhile if its scope and explanation were properly focused. Appendix~\ref{app:actions} reproduces the feedback text.
+
+The response is to define a focused camera-based service-analytics scope, explain each component and its evidence, and distinguish proximity from an actual service interaction. Employee behaviour must be interpreted against the individual store's service policy. This report does not claim that one approach-frequency rule generalises to every retail format.
+
+\section{Proposal Action Register}
+\begin{longtable}{P{0.06\textwidth}P{0.27\textwidth}P{0.29\textwidth}P{0.12\textwidth}P{0.16\textwidth}}
+\caption{Proposal action register}\\
+\toprule
+No. & Feedback / Required Change & Response / Next Action & Status & Evidence\\
+\midrule
+\endfirsthead
+\toprule
+No. & Feedback / Required Change & Response / Next Action & Status & Evidence\\
+\midrule
+\endhead
+1 & Improve technical understanding and preparation. & Document detection, classification and interaction rules; use executed tests to explain behaviour and limits. & Ongoing & Chapters~\ref{ch:design}, \ref{ch:iter1}, \ref{ch:testing}\\
+2 & Explain exact features and focus the project. & Focus scope on camera-based customer/staff analytics and the web application; make ownership and current feature status explicit. & Report updated & Chapters~\ref{ch:intro}, \ref{ch:mgmt}\\
+3 & Defend applicability across different retail service models. & Require store-specific service thresholds and interpretation; evaluate low-contact as well as assistance-oriented scenarios. & Design response; evaluation planned & Chapter~\ref{ch:req}, FR-29\\
+4 & Improve presentation clarity and avoid pacing. & Rehearse a structured feature demonstration, assign speakers and practise stationary delivery. & Planned & Mid-evaluation preparation\\
+\bottomrule
+\end{longtable}
+
+\section{Iteration Strategy}
+Development is iterative. The initial increment establishes the web application, secure access and camera-processing prototypes. Subsequent increments connect detection, classification, interaction and engagement outputs to the dashboard and evaluate them on store footage. Feature branches track implementation work. The evaluation milestones are listed below.
+\begin{table}[H]
+\centering
+\caption{Evaluation milestones}
+\begin{tabular}{P{0.40\textwidth}P{0.45\textwidth}}
+\toprule
+Milestone & Date\\
+\midrule
+Proposal defence & 11 September 2026\\
+Mid evaluation & 21 October 2026\\
+Final evaluation window & 23 November--4 December 2026\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Iteration 1 Plan}
+\textbf{Objectives:} establish the application shell and data flows that later analytics plug into, and demonstrate person detection, role classification and interaction detection.
+
+\textbf{Selected features:} manager and employee pages; role-aware authentication; reporting interface; alerts feed; system status page; person/role analysis and an interaction-detection pipeline (a floor-distance experiment was also built and later descoped).
+
+\textbf{Deliverables:} running frontend, local application backend, person-analysis and interaction outputs, and demonstration evidence (Chapter~\ref{ch:iter1}).
+
+\section{Iteration 2 Plan}
+\textbf{Objectives:} replace prototype data with real agent output and evaluate it.
+
+\textbf{Selected features:} Detection, Classification, Engagement (including interaction factors), and Trajectory agents; live data in the dashboard pages; the Insight Narration agent; and quantitative evaluation on labelled clips.
+
+\textbf{Deliverables:} vision-component integration, evaluation report, and updated dashboard bound to real outputs (Chapter~\ref{ch:fyp2plan}).
+
+\section{Work Breakdown and Responsibilities}
+\begin{table}[H]
+\centering
+\caption{Work distribution}
+\begin{tabular}{P{0.3\textwidth}P{0.45\textwidth}P{0.15\textwidth}}
+\toprule
+Work package & Description & Owner\\
+\midrule
+Frontend and UX & Shared frontend development & Moiz and Ruhab\\
+Customer/employee pose detection & Pose-detection work & Saqib\\
+Person distance & Distance between people; head/hips/feet band handling when a full person position is rejected (the metric floor-distance experiment was descoped) & Moiz\\
+Classification & Classification work & Ruhab\\
+Testing & Detection and pipeline testing & Saqib\\
+Report & Report preparation & Ruhab\\
+\bottomrule
+\end{tabular}
+\end{table}
+The table records assigned areas, not a claim that every assigned feature has been integrated or validated. Completed-work evidence is distinguished in Chapter~\ref{ch:mgmt}.
+
+\section{Progress Against Plan}
+\begin{table}[H]
+\centering
+\caption{Planned versus actual progress at mid-report}
+\begin{tabular}{P{0.34\textwidth}P{0.2\textwidth}P{0.3\textwidth}}
+\toprule
+Milestone & Planned & Actual\\
+\midrule
+Web application (manager and employee) & Iteration 1 & Implemented\\
+Floor-distance CLI & Current prototype increment & Built, then descoped (\texttt{8c3a6fe})\\
+Interaction pipeline with pose judge and benchmark & Iteration 1 & Implemented (local CLI)\\
+Vision agents wired to dashboard & Iteration 2 & In progress (prototype data)\\
+Labelled accuracy evaluation & Iteration 2 & Started: detector KPIs and one labelled clip; broader labelling pending\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Delays, Deviations and Recovery Plan}
+\textbf{Scope correction.} Cross-camera association is reserved for the next phase and is not a mid-iteration deliverable. \textbf{Deviation.} The floor-distance prototype was descoped on 20 October because the moving-camera footage supported almost no floor projections; body-height-normalised distance with a pose judge replaced it. \textbf{Residual gap.} The dashboard's camera-derived metrics still use prototype data. \textbf{Recovery:} the first FYP-2 sprint binds the Detection and Engagement outputs to the dashboard, and quantitative evaluation is scheduled for the middle of the semester so that tuning time remains.

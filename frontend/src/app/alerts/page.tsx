@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { RetroButton, RetroCard, RetroWindow } from "@/components/ui";
 
@@ -18,7 +18,7 @@ const CATEGORIES: Category[] = [
 
 type AlertSeverity = "high" | "medium" | "low";
 type Alert = {
-  id: number;
+  id: string;
   category: Category;
   severity: AlertSeverity;
   timestamp: string;
@@ -30,13 +30,25 @@ type Alert = {
   order: number;
 };
 
+type BackendAlert = {
+  id: string;
+  category: string;
+  severity: string;
+  created_at: string;
+  title: string;
+  context: string;
+  href?: string;
+  status: "active" | "resolved";
+  resolvedBy?: string;
+};
+
 const ALERTS: Alert[] = [
-  { id: 1, category: "Unstaffed Zones", severity: "high", timestamp: "2 minutes ago", title: "Aisle 2 — Beverages left unstaffed for 42 minutes", context: "No employee detected in this zone since 10:15 AM. Nearest staff: Staff 03, Checkout Counter.", href: "/employee-info", status: "active", order: 6 },
-  { id: 2, category: "Unattended Customers", severity: "high", timestamp: "8 minutes ago", title: "Customer waited 6m 03s unattended at Checkout Counter", context: "Customer activity was detected without a staff interaction during the service threshold.", href: "/customer-info", status: "active", order: 5 },
-  { id: 3, category: "High Idle Time", severity: "medium", timestamp: "10:42 AM", title: "Staff 04 idle time exceeds 2 hours this shift", context: "Idle duration is above the configured shift threshold. Current zone: Home Appliances.", href: "/employee-info", status: "active", order: 4 },
-  { id: 4, category: "Unusual Traffic", severity: "medium", timestamp: "10:15 AM", title: "Unusual traffic spike detected — Entrance, 2:00–2:15 PM", context: "Entrance footfall was 34% above the usual interval. Consider short-term coverage support.", href: "/spatial-analytics", status: "active", order: 3 },
-  { id: 5, category: "System", severity: "low", timestamp: "9:30 AM", title: "Weekly report generated and ready for review", context: "The latest store performance report is ready for review.", href: "/dashboard", status: "active", order: 2 },
-  { id: 6, category: "Unstaffed Zones", severity: "low", timestamp: "Yesterday, 4:22 PM", title: "Promo Display unstaffed for 28 minutes — resolved by Staff 01", context: "Coverage was restored and the zone has remained active since resolution.", href: "/employee-info", status: "resolved", resolvedBy: "Staff 01", order: 1 },
+  { id: '1', category: "Unstaffed Zones", severity: "high", timestamp: "2 minutes ago", title: "Aisle 2 — Beverages left unstaffed for 42 minutes", context: "No employee detected in this zone since 10:15 AM. Nearest staff: Staff 03, Checkout Counter.", href: "/employee-info", status: "active", order: 6 },
+  { id: '2', category: "Unattended Customers", severity: "high", timestamp: "8 minutes ago", title: "Customer waited 6m 03s unattended at Checkout Counter", context: "Customer activity was detected without a staff interaction during the service threshold.", href: "/customer-info", status: "active", order: 5 },
+  { id: '3', category: "High Idle Time", severity: "medium", timestamp: "10:42 AM", title: "Staff 04 idle time exceeds 2 hours this shift", context: "Idle duration is above the configured shift threshold. Current zone: Home Appliances.", href: "/employee-info", status: "active", order: 4 },
+  { id: '4', category: "Unusual Traffic", severity: "medium", timestamp: "10:15 AM", title: "Unusual traffic spike detected — Entrance, 2:00–2:15 PM", context: "Entrance footfall was 34% above the usual interval. Consider short-term coverage support.", href: "/spatial-analytics", status: "active", order: 3 },
+  { id: '5', category: "System", severity: "low", timestamp: "9:30 AM", title: "Weekly report generated and ready for review", context: "The latest store performance report is ready for review.", href: "/dashboard", status: "active", order: 2 },
+  { id: '6', category: "Unstaffed Zones", severity: "low", timestamp: "Yesterday, 4:22 PM", title: "Promo Display unstaffed for 28 minutes — resolved by Staff 01", context: "Coverage was restored and the zone has remained active since resolution.", href: "/employee-info", status: "resolved", resolvedBy: "Staff 01", order: 1 },
 ];
 
 const CATEGORY_STYLES: Record<Category, string> = {
@@ -53,11 +65,47 @@ const SEVERITY_BARS: Record<AlertSeverity, string> = {
   low: "border-l-accent-soft",
 };
 
+function toCategory(category: string): Category {
+  return CATEGORIES.includes(category as Category) ? (category as Category) : "System";
+}
+
+function toSeverity(severity: string): AlertSeverity {
+  return ["high", "medium", "low"].includes(severity) ? (severity as AlertSeverity) : "low";
+}
+
 export default function AlertsPage() {
-  const [alerts, setAlerts] = useState<Alert[]>(ALERTS);
+  const [alerts, setAlerts] = useState<Alert[]>([]);
   const [selectedCategories, setSelectedCategories] = useState<Category[]>(CATEGORIES);
   const [status, setStatus] = useState<Status>("active");
   const [sortOrder, setSortOrder] = useState<SortOrder>("recent");
+  const [loading, setLoading] = useState(true);
+  const [notice, setNotice] = useState("");
+
+  useEffect(() => {
+    fetch("/api/backend/alerts?status=all", { cache: "no-store" })
+      .then((response) => (response.ok ? response.json() : null))
+      .then((data) => {
+        if (data?.alerts) {
+          setAlerts(
+            (data.alerts as BackendAlert[]).map((alert, index) => ({
+              id: alert.id,
+              category: toCategory(alert.category),
+              severity: toSeverity(alert.severity),
+              timestamp: new Date(alert.created_at).toLocaleString(),
+              title: alert.title,
+              context: alert.context,
+              href: alert.href || "/alerts",
+              status: alert.status,
+              resolvedBy: alert.resolvedBy,
+              order: data.alerts.length - index,
+            }))
+          );
+        } else {
+          setAlerts(ALERTS.map((alert) => ({ ...alert, id: String(alert.id) })));
+        }
+      })
+      .finally(() => setLoading(false));
+  }, []);
 
   function toggleCategory(category: Category) {
     setSelectedCategories((current) =>
@@ -67,10 +115,23 @@ export default function AlertsPage() {
     );
   }
 
-  function markResolved(id: number) {
-    setAlerts((current) => current.map((alert) =>
-      alert.id === id ? { ...alert, status: "resolved", resolvedBy: "Staff 05" } : alert
-    ));
+  async function markResolved(id: string) {
+    const response = await fetch(`/api/backend/alerts/${id}/resolve`, { method: "POST" });
+    if (response.ok) {
+      setAlerts((current) => current.map((alert) =>
+        alert.id === id ? { ...alert, status: "resolved", resolvedBy: "Current manager" } : alert
+      ));
+    }
+  }
+
+  async function dispatchStaff(alert: Alert) {
+    const response = await fetch("/api/backend/tasks/dispatch", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ alertId: alert.id, instruction: `Please respond to: ${alert.title}`, evidence: { alertTitle: alert.title } }),
+    });
+    const data = await response.json().catch(() => ({}));
+    setNotice(response.ok ? `Staff dispatched for "${alert.title}".` : data.detail || data.error || "Dispatch failed.");
   }
 
   function clearFilters() {
@@ -102,11 +163,12 @@ export default function AlertsPage() {
               <p className="mt-2 max-w-2xl text-sm text-text-muted">Real-time flags from the RetailPulse monitoring agents — review and resolve as needed.</p>
             </div>
             <div className="flex flex-wrap gap-2">
-              <StatPill label="Active: 5" className="border-danger/40 bg-danger/15 text-danger" />
-              <StatPill label="Resolved Today: 12" className="border-success/40 bg-success/15 text-success" />
-              <StatPill label="Total This Week: 34" className="border-border-soft bg-surface-alt text-text-muted" />
+              <StatPill label={`Active: ${alerts.filter((alert) => alert.status === "active").length}`} className="border-danger/40 bg-danger/15 text-danger" />
+              <StatPill label={`Resolved: ${alerts.filter((alert) => alert.status === "resolved").length}`} className="border-success/40 bg-success/15 text-success" />
+              <StatPill label={`Total: ${alerts.length}`} className="border-border-soft bg-surface-alt text-text-muted" />
             </div>
           </div>
+          {notice && <p role="status" className="mt-4 font-mono text-xs font-semibold text-text">{notice}</p>}
         </RetroWindow>
 
         <section aria-labelledby="filters-heading">
@@ -168,9 +230,13 @@ export default function AlertsPage() {
         <section aria-labelledby="alert-feed-heading">
           <h2 id="alert-feed-heading" className="sr-only">Alert feed</h2>
           <div className="space-y-3">
-            {filteredAlerts.length > 0 ? (
+            {loading ? (
+              <RetroCard className="py-10 text-center">
+                <p className="font-heading text-base font-semibold text-text">Loading alerts...</p>
+              </RetroCard>
+            ) : filteredAlerts.length > 0 ? (
               filteredAlerts.map((alert) => (
-                <AlertFeedCard key={alert.id} alert={alert} onResolve={markResolved} />
+                <AlertFeedCard key={alert.id} alert={alert} onResolve={markResolved} onDispatch={dispatchStaff} />
               ))
             ) : (
               <RetroCard className="flex flex-col items-center justify-center gap-4 py-12 text-center">
@@ -187,7 +253,7 @@ export default function AlertsPage() {
   );
 }
 
-function AlertFeedCard({ alert, onResolve }: { alert: Alert; onResolve: (id: number) => void }) {
+function AlertFeedCard({ alert, onResolve, onDispatch }: { alert: Alert; onResolve: (id: string) => void; onDispatch: (alert: Alert) => void }) {
   const isResolved = alert.status === "resolved";
   const severityLabel = alert.severity === "high" ? "HIGH" : alert.severity === "medium" ? "MEDIUM" : "LOW";
 
@@ -217,6 +283,7 @@ function AlertFeedCard({ alert, onResolve }: { alert: Alert; onResolve: (id: num
         ) : (
           <div className="flex flex-wrap items-center gap-4">
             <RetroButton type="button" variant="secondary" className="!px-3 !py-1.5 !text-xs" aria-label={`Mark ${alert.title} as resolved`} onClick={() => onResolve(alert.id)}>Mark Resolved</RetroButton>
+            <RetroButton type="button" variant="secondary" className="!px-3 !py-1.5 !text-xs" aria-label={`Dispatch staff for ${alert.title}`} onClick={() => onDispatch(alert)}>Dispatch Staff</RetroButton>
             <Link href={alert.href} className="text-sm font-semibold text-accent underline underline-offset-2 transition-colors hover:text-accent-hover">
               View Details →
             </Link>
