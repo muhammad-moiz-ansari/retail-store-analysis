@@ -12,6 +12,8 @@ the interaction pipeline already produces.
 | [MODELS.md](MODELS.md) | Current YOLO weights and the consolidation to one detector + pose |
 | [CONTRACTS.md](CONTRACTS.md) | Existing pipeline JSON shapes and the new summary/API shapes |
 | [EVALUATION.md](EVALUATION.md) | Labelling the 10 clips, metrics to report, CPU throughput |
+| [CHECKLIST.md](CHECKLIST.md) | Branch per item, status, order of work |
+| [FUTURE_WORK.md](FUTURE_WORK.md) | Every remaining and out-of-scope item from the report, phased with step guides |
 
 ## Report gaps this closes
 
@@ -25,10 +27,7 @@ the interaction pipeline already produces.
 | "Interaction accuracy is measured on one labelled clip only" | 4 |
 | CPU throughput to record (deliverable 9.8) | 4 |
 
-## Not in this plan (stays future work, as the report already says)
+## Not in this plan
 
-- Cross-camera handoff: needs appearance re-ID, i.e. more models.
-- Shelf-level product interaction.
-- Metric floor distance (descoped, Section 6.4.3).
-- Multi-store, real-time as primary deliverable, retail-partner pilot.
-- Insight Narration / Query agents over real analytics: possible after Step 2 exists, not planned here.
+Everything outside Steps 0–4 (cross-camera handoff, shelf interaction, metric distance,
+narration/query agents, real-time, multi-store, pilot) is phased in [FUTURE_WORK.md](FUTURE_WORK.md).
