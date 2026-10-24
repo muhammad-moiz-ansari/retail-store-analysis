@@ -68,3 +68,29 @@ def test_full_frame_role_detection_is_matched_to_the_right_overlapping_person() 
     assert classifier._classify_with_model(frame, (100, 50, 205, 400)) == ("employee", 0.9)
     assert classifier._classify_with_model(frame, (500, 50, 600, 400)) is None  # nobody there
     assert len(calls) == 1  # one role-model pass per frame, not per person
+
+
+def test_role_model_labels_a_track_once_then_only_rechecks() -> None:
+    class Box:
+        def __init__(self, cls):
+            self.xyxy, self.cls, self.conf = np.array([(100, 50, 200, 400)], float), np.array([cls]), np.array([0.9])
+
+    label = [0]
+    calls = []
+
+    def model(frame, **_):
+        calls.append(1)
+        return [type("Result", (), {"names": {0: "employee", 1: "customer"}, "boxes": [Box(label[0])]})()]
+
+    classifier = RoleClassifier(InteractionConfig(role_mode="model", role_model_seconds=1.0, role_recheck_seconds=2.0), model)
+    frame = lambda: np.zeros((480, 640, 3), np.uint8)
+    yolo_role = lambda bbox, track, t: classifier.classify(frame(), bbox, track, t)[2]["yolo_role"]
+    assert [yolo_role((100, 50, 200, 400), 1, t) for t in (0.0, 0.5, 1.0)] == ["employee"] * 3
+    assert len(calls) == 1  # labelled on its first frame, then idle
+    label[0] = 1  # ID switch: a customer now holds track 1
+    assert yolo_role((100, 50, 200, 400), 1, 1.5) == "employee"  # kept between checks
+    assert yolo_role((100, 50, 200, 400), 1, 2.0) == "customer"  # corrected at the recheck
+    calls.clear()
+    # nobody under this box: tried on each frame of its first second, then once per recheck
+    assert [yolo_role((500, 50, 600, 400), 2, t) for t in (0.0, 0.5, 1.5, 3.0)] == [None] * 4
+    assert len(calls) == 3

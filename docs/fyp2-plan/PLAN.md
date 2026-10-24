@@ -2,13 +2,9 @@
 
 Order matters: each step uses the output of the one before it. Shapes are in [CONTRACTS.md](CONTRACTS.md).
 
-## Step 0: Model consolidation (half a day)
+## Step 0: Model consolidation (done)
 
-Swap the generic `yolov8n.pt` for `best.pt` and delete unused weights. Details in [MODELS.md](MODELS.md).
-
-**Files:** `backend/analyze_frame.py`, `backend/compare_people.py`, `backend/camera_service.py`,
-`backend/camera_handoff.py`.
-**Done when:** no `yolov8n.pt`/`yolo26n` references remain, existing tests pass, and analyze-frame still finds people.
+COCO tracks people, `best.pt` only labels roles. See [MODELS.md](MODELS.md).
 
 ## Step 1: Analytics from existing tracks (2–3 days)
 

@@ -46,14 +46,8 @@ This plan covers **every** item. Phase A reuses the existing fyp2-plan steps and
 
 ## Phase A — Finish the FYP-2 core (report weeks 1–12)
 
-### A0. Model consolidation (½ day)
-Follow `docs/fyp2-plan/MODELS.md` exactly. Summary:
-1. Point `MODEL_PATH` at `backend/models/best.pt` in `analyze_frame.py:24`, `compare_people.py:24`, `camera_service.py:35`, and the `camera_handoff.py:250` default.
-2. Delete `classes=[0]` at `analyze_frame.py:178`, `compare_people.py:46` and `camera_handoff.py:161`. In `best.pt`, class 0 is a role, not "person".
-3. Run `grep -rn "names\[" backend` and fix any code that compares against `"person"`.
-4. Delete `backend/yolov8n.pt` and the root `yolo26n-cls.pt`.
-
-**Done when:** grep for `yolov8n.pt|yolo26n` is empty, `python -m pytest backend` passes, and analyze-frame, compare-people and camera-handoff still return people.
+### A0. Model consolidation (done 2026-10-24)
+`best.pt` missed ~60% of people on non-store footage, so it did not replace COCO. COCO tracks, `best.pt` labels each new track and rechecks it every 2 s. Details and numbers in `MODELS.md`.
 
 ### A1. Analytics module (3–4 days)
 New file `backend/interaction/analytics.py`, made of pure functions. `summarise(detections, interactions, people, config) -> dict` returns the shape in `docs/fyp2-plan/CONTRACTS.md` plus two keys that contract lacks: `paths` and `crowding`.

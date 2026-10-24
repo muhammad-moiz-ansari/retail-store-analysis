@@ -35,12 +35,18 @@ class RoleClassifier:
     ) -> tuple[str, float, dict]:
         """Classify from YOLO role, bib colour, staff-zone and stationary evidence via the weighted agent.
 
-        `yolo` is the role the tracking model already gave this box; a separate role model is only run without it.
+        `yolo` is the role the tracking model already gave this box; a separate role model is only run without it,
+        and only until it first labels the track or role_model_seconds pass, so it is idle once every track has a role.
+        It rechecks each track every role_recheck_seconds: an ID switch hands the old label to someone else.
         """
-        if yolo is None and self.model is not None and self.config.role_mode == "model":
-            yolo = self._classify_with_model(frame, bbox)
-        bib_role, bib_confidence = self._classify_bib_colour(frame, bbox)
         history = self._update_history(track_id, bbox, timestamp, frame.shape[1], frame.shape[0])
+        if yolo is None and self.model is not None and self.config.role_mode == "model":
+            new = history.model_role is None and timestamp - history.first_seen_at <= self.config.role_model_seconds
+            if new or timestamp - history.model_checked_at >= self.config.role_recheck_seconds:
+                history.model_role = self._classify_with_model(frame, bbox) or history.model_role
+                history.model_checked_at = timestamp
+            yolo = history.model_role
+        bib_role, bib_confidence = self._classify_bib_colour(frame, bbox)
         # Temporal signals only reinforce an appearance signal or a configured
         # employee-only zone; browsing/dwelling elsewhere is not staff evidence.
         factors = {
@@ -85,7 +91,7 @@ class RoleClassifier:
         center = ((bbox[0] + bbox[2]) / 2, (bbox[1] + bbox[3]) / 2)
         history = self._history.get(track_id)
         if history is None:
-            history = _TrackHistory(center=center, last_seen_at=timestamp)
+            history = _TrackHistory(center=center, last_seen_at=timestamp, first_seen_at=timestamp, model_checked_at=timestamp)
             self._history[track_id] = history
             return history
         elapsed = max(0.0, min(timestamp - history.last_seen_at, 2.0))
@@ -143,6 +149,9 @@ def _iou(a: tuple[float, ...], b: tuple[float, ...]) -> float:
 class _TrackHistory:
     center: tuple[float, float]
     last_seen_at: float
+    first_seen_at: float
+    model_checked_at: float
+    model_role: tuple[str, float] | None = None  # the role model's latest label, kept between checks
     stationary_seconds: float = 0.0
     staff_zone_seconds: float = 0.0
     smoothed_employee_score: float = 0.0
