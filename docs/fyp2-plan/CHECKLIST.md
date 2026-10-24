@@ -5,7 +5,7 @@ and merges back into `fyp-2` when its "Done when" in [FUTURE_WORK.md](FUTURE_WOR
 
 ## Phase A: FYP-2 core
 
-- [ ] **A0** Model consolidation: `feature/fyp2-a0-model-consolidation`
+- [x] **A0** Model consolidation (COCO tracks, best.pt labels): `feature/fyp2-a0-model-consolidation`
 - [ ] **A1** Analytics module + `.summary.json`: `feature/fyp2-a1-analytics`
 - [ ] **A2** Analytics API + dashboard binding: `feature/fyp2-a2-dashboard-binding`
 - [ ] **A3** Real events → alerts → dispatch: `feature/fyp2-a3-real-alerts`
@@ -34,7 +34,7 @@ and merges back into `fyp-2` when its "Done when" in [FUTURE_WORK.md](FUTURE_WOR
 
 ## Order and how
 
-1. **A0** first: swap to `best.pt`, drop `classes=[0]`, delete unused weights, run `pytest backend`.
+1. **A0** done: `best.pt` missed most people outside store footage, so COCO tracks and `best.pt` labels roles.
 2. **A1**: `analytics.py` as pure functions plus `test_analytics.py` with hand-built tracks,
    then the CLI writes `.summary.json`. A1 is cut from `fyp-2` after A0 is merged.
 3. **A2 → A3 → B1**: each needs the summary from A1, so each is cut after the previous merge.

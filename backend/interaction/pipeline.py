@@ -27,11 +27,13 @@ class InteractionPipeline:
         self.config = config or InteractionConfig()
         from ultralytics import YOLO  # lazy: importing package does not require ML dependencies
 
-        person_model = Path(self.config.person_model)
-        if self.config.device != "cpu" and "openvino" in person_model.name:
-            person_model = person_model.with_name("best.pt")  # OpenVINO runs on CPU only; the GPU takes the .pt
-        self.person_model = YOLO(str(person_model), task="detect")
-        role_model = YOLO(str(self.config.role_model)) if self.config.role_model and Path(self.config.role_model).is_file() else None
+        def load(path: Path) -> YOLO:
+            if self.config.device != "cpu" and "openvino" in path.name:
+                path = path.with_name("best.pt")  # OpenVINO runs on CPU only; the GPU takes the .pt
+            return YOLO(str(path), task="detect")
+
+        self.person_model = load(Path(self.config.person_model))
+        role_model = load(Path(self.config.role_model)) if self.config.role_model and Path(self.config.role_model).exists() else None
         self.tracker = ByteTrackPersonTracker(self.person_model, self.config)
         self.classifier = RoleClassifier(self.config, role_model)
         self.engagement = EngagementDetector(self.config)

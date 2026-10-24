@@ -192,7 +192,7 @@ def main() -> None:
     if args.live and args.square:  # the camera reports its stream size, not the cropped one
         width = height = min(width, height)
     writer = cv2.VideoWriter(str(args.output), cv2.VideoWriter_fourcc(*"mp4v"), fps or 25, (width, height))
-    pipeline = InteractionPipeline(InteractionConfig(role_model=args.roles, device=args.device,
+    pipeline = InteractionPipeline(InteractionConfig(**({"role_model": args.roles} if args.roles else {}), device=args.device,
                                                      interaction_judge=args.judge, judge_device=args.judge_device))
     tracks, detections = {}, []
 
