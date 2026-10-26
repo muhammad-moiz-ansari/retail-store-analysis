@@ -47,7 +47,7 @@ class InteractionConfig:
     # gets their old ID back if a similar-looking person appears mid-frame within relink_seconds.
     exit_edge_margin: float = 0.05
     relink_seconds: float = 5.0
-    relink_min_similarity: float = 0.90
+    relink_min_similarity: float = 0.40  # torso histogram correlation: other people 0.0-0.25, same person 0.4-0.75
     min_interaction_seconds: float = 2.0
     # Walking pace is ~0.8 body heights/s, so a passer-by drifts well past this within min_interaction_seconds.
     max_relative_drift_heights: float = 0.5
