@@ -81,6 +81,9 @@ Zone and camera ids are the ones seeded in `store_core.py` (`z1`–`z6`, `c1`–
 - **Ingest a CV run** (idempotent on `run_id`):
   `python -m backend.events.ingest backend/output/run1/interaction --run-id run1 --camera c2 --zone z2 --start 2026-11-03T09:00:00+00:00`
   (default DB `backend/events.sqlite3`, or `EVENTS_DB_PATH`).
+- **Straight from the CLI**: add `--camera c2` (zone from the camera settings, or `--zone`), optionally `--start <UTC ISO>`
+  (default: when processing starts, which is right for live runs) and `--run-id`. `POST /interaction/runs` and
+  `POST /interaction/live` take an optional `"camera": "c2"` and pass it on.
 - **unattended_episodes** is derived, not detected: a customer whose wait from first sighting to their first confirmed
   interaction (or exit) is ≥ N s, N = settings `thresholds.unattendedWaitMinutes` × 60. `helped` says which ended it.
 - **Fixture day** for tools/agents/UI: `python -m backend.events.fixtures` → `backend/events/fixture.sqlite3`

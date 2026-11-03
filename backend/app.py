@@ -188,8 +188,20 @@ async def start_interaction_run(body: dict) -> dict[str, str]:
     output = OUTPUT_DIR / "interaction-runs" / uuid.uuid4().hex / f"{video.stem}.mp4"
     output.parent.mkdir(parents=True, exist_ok=True)
     args = ["-m", "backend.interaction.cli", str(video), "--output", str(output), "--judge", judge,
-            "--every", str(every), "--track-every", str(track_every)]
+            "--every", str(every), "--track-every", str(track_every)] + event_args(body)
     return start_job(args, lambda: interaction_result(output, str(video.relative_to(REPO_ROOT))))
+
+
+def event_args(body: dict) -> list[str]:
+    """--camera for the CLI when the request names a configured camera, so the run lands in the event store."""
+    camera = body.get("camera")
+    if not camera:
+        return []
+    with connect() as conn:
+        known = conn.execute("SELECT 1 FROM cameras WHERE id = ? AND zone_id IS NOT NULL", (str(camera),)).fetchone()
+    if not known:
+        raise HTTPException(status_code=400, detail="camera must be a configured camera with a zone")
+    return ["--camera", str(camera)]
 
 
 def interaction_result(output, source: str) -> dict[str, Any]:
@@ -228,7 +240,7 @@ async def start_live_run(body: dict) -> dict[str, str]:
     output.parent.mkdir(parents=True, exist_ok=True)
     source = f"http://{host}:{port}/video" + (f"?{resolution}" if resolution else "")
     args = ["-m", "backend.interaction.cli", "--live", "phone", "--phone-cam", source, "--output", str(output),
-            "--judge", judge, "--every", str(every), "--track-every", "1", "--stop-file", str(output.with_suffix(".stop"))] + (["--square"] if square else [])
+            "--judge", judge, "--every", str(every), "--track-every", "1", "--stop-file", str(output.with_suffix(".stop"))] + (["--square"] if square else []) + event_args(body)
     started = start_job(args, lambda: interaction_result(output, source))
     _live_runs[started["id"]] = output
     return started

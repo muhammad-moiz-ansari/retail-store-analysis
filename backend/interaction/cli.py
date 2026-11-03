@@ -7,6 +7,7 @@ import json
 import os
 import threading
 import time
+from datetime import datetime, timezone
 from pathlib import Path
 
 import cv2
@@ -162,7 +163,19 @@ def main() -> None:
     parser.add_argument("--stop-file", type=Path,
                         help="Live without a preview window (for the web UI): stop when this file appears; "
                              "the newest camera frame, with the latest detections drawn, is kept at <output>.preview.jpg")
+    parser.add_argument("--camera", help="Write the run into the event store (schema v1) as this camera, e.g. c2; "
+                                          "its zone comes from the camera settings")
+    parser.add_argument("--zone", help="zone_id override for --camera")
+    parser.add_argument("--run-id", help="Event store run_id (default: the output path); re-using one replaces that run")
+    parser.add_argument("--start", type=datetime.fromisoformat,
+                        help="UTC time of the video's first frame, e.g. 2026-11-03T09:00:00+00:00 (default: when processing starts)")
+    parser.add_argument("--events-db", type=Path, help="Event store path (default: EVENTS_DB_PATH or backend/events.sqlite3)")
     args = parser.parse_args()
+    if args.start and args.start.tzinfo is None:
+        parser.error("--start needs a UTC offset, e.g. 2026-11-03T09:00:00+00:00")
+    # Resolved before processing, so a typo'd camera fails now and not after a long run.
+    zone = args.zone or (camera_zone(args.camera) if args.camera else None)
+    args.output.parent.mkdir(parents=True, exist_ok=True)  # else the writer fails silently and the JSON writes crash
     headless = args.stop_file is not None
     preview = args.output.with_suffix(".preview.jpg")
     if args.live:
@@ -221,7 +234,7 @@ def main() -> None:
             annotated = cv2.resize(annotated, (width, height))
         writer.write(annotated)
 
-    started = time.perf_counter()
+    started, started_at = time.perf_counter(), args.start or datetime.now(timezone.utc)
     clock = (lambda: time.perf_counter() - started) if args.live else None
     try:
         run = analyse(cap, fps, pipeline, args.every, args.track_every, record, clock)
@@ -257,6 +270,25 @@ def main() -> None:
         json.dumps({"weights": pipeline.classifier.agent.weights, "threshold": pipeline.classifier.agent.threshold, "people": people}, indent=2),
         encoding="utf-8",
     )
+    if args.camera:
+        from ..events.ingest import DEFAULT_DB_PATH, connect, ingest_run, unattended_threshold
+
+        run_id = args.run_id or str(args.output.with_suffix(""))
+        with connect(args.events_db or DEFAULT_DB_PATH) as events:
+            counts = ingest_run(events, args.output, run_id, args.camera, zone, started_at,
+                                unattended_after_s=unattended_threshold())
+        print(f"event store: run {run_id} as {args.camera}/{zone}: {counts}")
+
+
+def camera_zone(camera_id: str) -> str:
+    """The zone a camera covers, from the manager's camera settings."""
+    from ..store_core import connect
+
+    with connect() as store:
+        row = store.execute("SELECT zone_id FROM cameras WHERE id = ?", (camera_id,)).fetchone()
+    if not row or not row["zone_id"]:
+        raise SystemExit(f"camera {camera_id!r} is not configured with a zone in settings (or pass --zone)")
+    return row["zone_id"]
 
 
 if __name__ == "__main__":
