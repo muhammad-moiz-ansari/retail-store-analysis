@@ -63,3 +63,19 @@ def line_crossing(xs: list[tuple[float, float]], boundary: float, in_direction: 
         return None
     last_change = [t for (_, a), (t, b) in zip(xs, xs[1:]) if boundary_side(a, boundary) != boundary_side(b, boundary)][-1]
     return ("in" if direction == in_direction else "out"), last_change
+
+
+def queue_lengths(detections: list[dict], frame_size: tuple[int, int], polygon: list, every_s: float) -> list[tuple[float, int]]:
+    """(t, customers whose feet are inside the queue polygon) every `every_s`, from the latest frame at or before t.
+    Staff behind or beside the till don't count; neither do people of unknown role."""
+    samples, latest, frames = [], None, iter(detections)
+    upcoming = next(frames, None)
+    t = 0.0
+    while detections and t <= detections[-1]["timestamp"]:
+        while upcoming is not None and upcoming["timestamp"] <= t:
+            latest, upcoming = upcoming, next(frames, None)
+        if latest is not None:
+            samples.append((t, sum(p["role"] == "customer" and contains(foot_point(p["bbox"], frame_size), [tuple(q) for q in polygon])
+                                   for p in latest["people"])))
+        t += every_s
+    return samples

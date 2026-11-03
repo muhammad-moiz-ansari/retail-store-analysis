@@ -40,7 +40,7 @@ def test_ingest_is_idempotent_and_derives_unattended(tmp_path) -> None:
     conn = connect(tmp_path / "events.sqlite3")
     for _ in range(2):  # re-ingesting the same run replaces it
         counts = ingest_run(conn, prefix, "r1", "c2", "z2", START, unattended_after_s=180)
-    assert counts == {"tracks": 4, "role_decisions": 5, "interactions": 2, "zone_dwell": 4, "footfall": 0, "heatmaps": 0, "unattended_episodes": 2}
+    assert counts == {"tracks": 4, "role_decisions": 5, "interactions": 2, "zone_dwell": 4, "footfall": 0, "queue_samples": 0, "heatmaps": 0, "unattended_episodes": 2}
     assert conn.execute("SELECT COUNT(*) FROM tracks").fetchone()[0] == 4
     episodes = {row["customer_track_id"]: (row["waited_s"], row["helped"]) for row in conn.execute("SELECT * FROM unattended_episodes")}
     assert episodes == {2: (200.0, 1), 4: (190.0, 0)}
@@ -122,3 +122,25 @@ def test_entrance_line_counts_net_crossings_once() -> None:
     assert line_crossing(list(reversed([(5 - t, x) for t, x in walk_in])), 0.5, "right")[0] == "out"
     assert line_crossing([(0, 0.2), (1, 0.7), (2, 0.3)], 0.5, "right") is None  # came back: browsing at the door
     assert line_crossing(walk_in, 0.5, "left") == ("out", 4)
+
+
+def test_queue_counts_customers_in_the_polygon_and_estimates_wait(tmp_path) -> None:
+    from .zones import queue_lengths
+
+    box = lambda x: [x, 0, x + 10, 100]  # feet at the bottom edge, x centre = x + 5 of a 100 px wide frame
+    detections = [{"timestamp": 0.0, "people": [{"bbox": box(0), "role": "customer"}, {"bbox": box(10), "role": "employee"}]},
+                  {"timestamp": 4.0, "people": [{"bbox": box(0), "role": "customer"}, {"bbox": box(20), "role": "customer"},
+                                                {"bbox": box(80), "role": "customer"}]},
+                  {"timestamp": 11.0, "people": []}]
+    queue = [[0, 0], [0.5, 0], [0.5, 1], [0, 1]]
+    assert queue_lengths(detections, (100, 100), queue, 5.0) == [(0.0, 1), (5.0, 2), (10.0, 2)]  # 10 s still sees the 4 s frame
+    prefix = tmp_path / "till"
+    for suffix, data in ((".people.json", {"frame_size": [100, 100], "people": []}),
+                         (".interactions.json", [{"employee_track_id": 1, "customer_track_id": 2, "started_at": 0.0,
+                                                  "last_seen_at": 60.0, "verdict": "interaction"}]),
+                         (".detections.json", [{**d, "people": [{**p, "track_id": i, "confidence": 0.9} for i, p in enumerate(d["people"])]}
+                                               for d in detections])):
+        prefix.with_suffix(suffix).write_text(json.dumps(data))
+    conn = connect(tmp_path / "events.sqlite3")
+    ingest_run(conn, prefix, "t", "c3", "z6", START, layout={"queue_zone": queue})
+    assert [tuple(r) for r in conn.execute("SELECT queue_length, est_wait_s FROM queue_samples ORDER BY ts_start")] == [(1, 60.0), (2, 120.0), (2, 120.0)]

@@ -41,6 +41,9 @@ class InteractionConfig:
     # started is one footfall, "in" when it moved toward entrance_in_direction ("right" or "left").
     entrance_line: float | None = None
     entrance_in_direction: Literal["right", "left"] = "right"
+    # Counter camera only: normalised polygon where customers queue; sampled every queue_sample_seconds.
+    queue_zone: list[list[float]] | None = None
+    queue_sample_seconds: float = 5.0
     stationary_distance_px: float = 18.0
     staff_zone_dwell_seconds: float = 12.0
     # Few-shot role references for this camera: torso descriptors of tracks a person labelled
