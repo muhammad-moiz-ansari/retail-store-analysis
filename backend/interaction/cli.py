@@ -149,6 +149,9 @@ def main() -> None:
                         help="Phone camera: the virtual webcam index its app adds, or its stream URL (e.g. http://<phone-ip>:4747/video)")
     parser.add_argument("--output", type=Path, default=Path("interaction_output.mp4"))
     parser.add_argument("--roles", type=Path, help="YOLO role model trained on the bib-labelled dataset")
+    parser.add_argument("--config", type=Path,
+                        help="Store/camera settings JSON (any InteractionConfig field: role_references from calibrate, "
+                             "bib colour, staff_zones, role_weights, thresholds)")
     parser.add_argument("--every", type=int, default=1, help="Score roles and write output on every Nth frame")
     parser.add_argument("--track-every", type=int, default=1, help="Run the tracker on every Nth frame (3 = 10 fps on 30 fps video)")
     parser.add_argument("--device", default=DEVICE, help="Inference device, e.g. cpu or cuda:0")
@@ -192,8 +195,8 @@ def main() -> None:
     if args.live and args.square:  # the camera reports its stream size, not the cropped one
         width = height = min(width, height)
     writer = cv2.VideoWriter(str(args.output), cv2.VideoWriter_fourcc(*"mp4v"), fps or 25, (width, height))
-    pipeline = InteractionPipeline(InteractionConfig(**({"role_model": args.roles} if args.roles else {}), device=args.device,
-                                                     interaction_judge=args.judge, judge_device=args.judge_device))
+    pipeline = InteractionPipeline(InteractionConfig.from_json(args.config, **({"role_model": args.roles} if args.roles else {}),
+                                                               device=args.device, interaction_judge=args.judge, judge_device=args.judge_device))
     tracks, detections = {}, []
 
     def record(frame_number, frame, result):
@@ -244,9 +247,10 @@ def main() -> None:
     people = [
         {"track_id": track_id, "first_seen": round(t["first_seen"], 2), "last_seen": round(t["last_seen"], 2),
          "frames_observed": len(t["factors"]), **pipeline.classifier.agent.classify_person(t["factors"]),
-         # Final role = the held (3 s debounced) role this ID kept the longest; segments expose ID swaps.
-         "role": max(("employee", "customer"), key=lambda r: sum(s["frames"] for s in t["role_segments"] if s["role"] == r)),
-         "role_segments": t["role_segments"]}
+         # Final role = the held (role_hold_seconds debounced) role this ID kept the longest; segments expose ID swaps.
+         "role": max({s["role"] for s in t["role_segments"]}, key=lambda r: sum(s["frames"] for s in t["role_segments"] if s["role"] == r)),
+         "role_segments": t["role_segments"],
+         "appearance": pipeline.classifier.appearance(track_id)}  # what calibrate stores when this track is labelled
         for track_id, t in sorted(tracks.items())
     ]
     args.output.with_suffix(".people.json").write_text(

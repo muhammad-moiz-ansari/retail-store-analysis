@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass
 from typing import Literal
 
-Role = Literal["employee", "customer"]
+Role = Literal["employee", "customer", "unknown"]  # unknown: only with role_unknown_band > 0
 # Judge verdicts that count as an interaction; unverified = judge off, failed or unsure, so proximity decides.
 CONFIRMED = ("interaction", "unverified")
 

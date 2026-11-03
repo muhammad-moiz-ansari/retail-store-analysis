@@ -23,3 +23,13 @@ def test_scores_and_targets() -> None:
     report = {"interactions": {"with_judge": s}}
     assert check_targets(report, {"interactions.with_judge.precision": 0.9, "detector.map50": 0.8}) == [
         "interactions.with_judge.precision: 0.500 < 0.9", "detector.map50: not measured"]
+
+
+def test_role_counts_treat_unknown_as_a_miss() -> None:
+    from .benchmark import role_counts
+
+    counts = role_counts({1: "employee", 2: "customer", 3: "unknown", 4: "employee"},
+                         {"1": "employee", "2": "employee", "3": "customer", "4": "customer", "9": "customer"})
+    assert counts["employee"] == {"tp": 1, "fp": 1, "fn": 1}
+    assert counts["customer"] == {"tp": 0, "fp": 1, "fn": 3}  # 3 unknown, 4 wrong, 9 never seen
+    assert (counts["tracks"], counts["correct"], counts["unknown"]) == (5, 1, 1)

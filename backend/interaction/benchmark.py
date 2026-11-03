@@ -48,6 +48,15 @@ def scores(counts: dict) -> dict:
     return {**counts, "precision": precision, "recall": recall, "f1": f1}
 
 
+def role_counts(predicted: dict[int, str], truth: dict[str, str]) -> dict:
+    """Per-role tp/fp/fn over the labelled tracks; an `unknown` prediction is a miss, not a false alarm."""
+    labelled = [(predicted.get(int(track_id), "unseen"), role) for track_id, role in truth.items()]
+    counts = {role: {"tp": sum(p == t == role for p, t in labelled), "fp": sum(p == role != t for p, t in labelled),
+                     "fn": sum(t == role != p for p, t in labelled)} for role in ("employee", "customer")}
+    return {**counts, "tracks": len(labelled), "correct": sum(p == t for p, t in labelled),
+            "unknown": sum(p == "unknown" for p, _ in labelled)}
+
+
 def detector_kpis(spec: dict, device: str) -> dict:
     """Ultralytics val on a YOLO-format folder (labels next to images)."""
     from ultralytics import YOLO
@@ -76,7 +85,9 @@ def video_kpis(spec: dict, judge: str, device: str, min_iou: float) -> dict:
     from .pipeline import InteractionPipeline
     from .types import CONFIRMED
 
-    pipeline = InteractionPipeline(InteractionConfig(device=device, interaction_judge=judge))
+    # A per-video store/camera config (e.g. with or without role_references) measures cross-store generalisation.
+    config = InteractionConfig.from_json(spec.get("config") and ROOT / spec["config"], device=device, interaction_judge=judge)
+    pipeline = InteractionPipeline(config)
     judge_times: list[float] = []
     if pipeline.judge:
         classify = pipeline.judge.classify_interaction
@@ -93,7 +104,13 @@ def video_kpis(spec: dict, judge: str, device: str, min_iou: float) -> dict:
         raise SystemExit(f"Cannot open video: {spec['path']}")
     fps = cap.get(cv2.CAP_PROP_FPS) or 25
     started = time.perf_counter()
-    run = analyse(cap, fps, pipeline, spec.get("every", 1), spec.get("track_every", 1))
+    role_frames: dict[int, dict[str, int]] = {}
+
+    def tally(_frame_number, _frame, result):
+        for person in result["people"]:
+            frames = role_frames.setdefault(person["track_id"], {})
+            frames[person["role"]] = frames.get(person["role"], 0) + 1
+    run = analyse(cap, fps, pipeline, spec.get("every", 1), spec.get("track_every", 1), tally)
     elapsed = time.perf_counter() - started
     cap.release()
     events = list(run["interactions"].values())
@@ -106,6 +123,8 @@ def video_kpis(spec: dict, judge: str, device: str, min_iou: float) -> dict:
         # Proximity alone = every candidate the judge saw; with judge = the ones it kept.
         "proximity_only": None if truth is None else match_events([interval(e) for e in events], truth, min_iou),
         "with_judge": None if truth is None else match_events([interval(e) for e in events if e["verdict"] in CONFIRMED], truth, min_iou),
+        # "roles": {"<track_id>": "employee" | "customer"} from a reviewed run with the same settings.
+        "roles": role_counts({t: max(f, key=f.get) for t, f in role_frames.items()}, spec["roles"]) if "roles" in spec else None,
         "candidates": [{"start": round(e["started_at"], 1), "end": round(e["last_seen_at"], 1), "verdict": e["verdict"]} for e in events],
         "speed": {"realtime_factor": run["frames"] / fps / elapsed,
                   "frame_ms_p50": 1000 * latencies[len(latencies) // 2] if latencies else None,
@@ -144,6 +163,13 @@ def main() -> None:
     videos = [video_kpis(video, args.judge, args.device, min_iou) for video in spec["videos"]]
     total = lambda key: {k: sum(v[key][k] for v in videos if v[key]) for k in ("tp", "fp", "fn")}
     report["interactions"] = {"proximity_only": scores(total("proximity_only")), "with_judge": scores(total("with_judge"))}
+    labelled_roles = [v["roles"] for v in videos if v["roles"]]
+    if labelled_roles:
+        tracks = sum(r["tracks"] for r in labelled_roles)
+        report["roles"] = {**{role: scores({k: sum(r[role][k] for r in labelled_roles) for k in ("tp", "fp", "fn")})
+                              for role in ("employee", "customer")},
+                           "accuracy": ratio(sum(r["correct"] for r in labelled_roles), tracks),
+                           "unknown_rate": ratio(sum(r["unknown"] for r in labelled_roles), tracks), "tracks": tracks}
     report["speed"] = {"realtime_factor": min(v["speed"]["realtime_factor"] for v in videos)}  # worst video
     report["videos"] = videos
     report["target_failures"] = check_targets(report, spec.get("targets", {}))
@@ -160,6 +186,11 @@ def main() -> None:
     print(f"interaction accuracy from {labelled} of {len(videos)} videos (the rest are not labelled yet)")
     for name, s in report["interactions"].items():
         print(f"interactions {name:15} P {show(s['precision'])}  R {show(s['recall'])}  F1 {show(s['f1'])}  (tp {s['tp']} fp {s['fp']} fn {s['fn']})")
+    if "roles" in report:
+        r = report["roles"]
+        print(f"roles on {r['tracks']} labelled tracks: accuracy {show(r['accuracy'])}  unknown {show(r['unknown_rate'])}  "
+              f"employee P {show(r['employee']['precision'])} R {show(r['employee']['recall'])}  "
+              f"customer P {show(r['customer']['precision'])} R {show(r['customer']['recall'])}")
     for v in videos:
         sp = v["speed"]
         print(f"speed {v['path']}: {sp['realtime_factor']:.2f}x realtime, frame p50 {show(sp['frame_ms_p50'])} ms "

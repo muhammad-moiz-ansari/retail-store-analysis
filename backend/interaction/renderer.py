@@ -9,7 +9,7 @@ from .engagement import BODY_PARTS
 from .types import CONFIRMED
 
 
-ROLE_COLORS = {"employee": (0, 180, 255), "customer": (255, 180, 0)}
+ROLE_COLORS = {"employee": (0, 180, 255), "customer": (255, 180, 0), "unknown": (160, 160, 160)}
 
 
 def draw_result(frame: np.ndarray, result: dict) -> np.ndarray:

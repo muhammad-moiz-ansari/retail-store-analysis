@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Literal
@@ -33,9 +34,15 @@ class InteractionConfig:
     staff_zones: tuple[tuple[float, float, float, float], ...] = ()
     stationary_distance_px: float = 18.0
     staff_zone_dwell_seconds: float = 12.0
-    role_smoothing: float = 0.65
+    # Few-shot role references for this camera: torso descriptors of tracks a person labelled
+    # (written by `python -m backend.interaction.calibrate`). They teach a new store its uniform without retraining.
+    role_references: dict[str, list[list[float]]] = field(default_factory=dict)
+    role_reference_margin: float = 0.3  # employee-minus-customer similarity that counts as full evidence
+    role_weights: dict[str, float] = field(default_factory=dict)  # per-store overrides of the agent's weights
+    role_unknown_band: float = 0.0  # scores within threshold ± band are "unknown"; 0 always picks a role
+    role_smoothing: float = 0.65  # share of the old employee score kept per 0.1 s, whatever the frame rate
     employee_score_threshold: float = 0.45
-    role_hold_seconds: float = 3.0
+    role_hold_seconds: float = 1.5
     confidence: float = 0.35
     tracker: str = str(Path(__file__).with_name("botsort_reid.yaml"))
     # Interaction distance in body heights (mean box height of the pair), no floor calibration.
@@ -60,5 +67,11 @@ class InteractionConfig:
     min_facing_fraction: float = 0.5  # share of judged frames in which someone faces the other
     judge_device: str | None = None  # None = same as device; e.g. YOLO on cpu, judge on cuda:0
     judge_frames: int = 4  # frames sampled across the last min_interaction_seconds
-    judge_recheck_seconds: float = 4.0  # a rejected pair is re-judged this often while still close
+    judge_recheck_seconds: float = 1.0  # a rejected pair is re-judged this often while still close
     device: str = DEVICE  # "cuda:0" runs YOLO on the GPU (the .pt model; OpenVINO is CPU-only)
+
+    @classmethod
+    def from_json(cls, path: Path | None, **overrides) -> "InteractionConfig":
+        """Per-store/camera settings from a JSON file (any field above); `overrides` win. Unknown keys raise."""
+        values = json.loads(Path(path).read_text(encoding="utf-8")) if path else {}
+        return cls(**{**values, **overrides})

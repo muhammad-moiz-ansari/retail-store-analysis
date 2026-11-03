@@ -2,6 +2,7 @@
 
 The preferred mode uses a YOLO model trained with employee/staff/bib labels.
 For early dataset validation, a configurable HSV bib-colour fallback is supplied.
+A calibrated camera adds few-shot references, so another store's uniform needs labels, not retraining.
 """
 
 from __future__ import annotations
@@ -15,6 +16,7 @@ import numpy as np
 
 from .config import InteractionConfig
 from .cust_emp_classifier import CustEmpClassifier
+from .tracker import appearance_descriptor, appearance_similarity
 
 if TYPE_CHECKING:
     from ultralytics import YOLO
@@ -24,7 +26,7 @@ class RoleClassifier:
     def __init__(self, config: InteractionConfig, model: "YOLO | None" = None) -> None:
         self.config = config
         self.model = model
-        self.agent = CustEmpClassifier(threshold=config.employee_score_threshold)
+        self.agent = CustEmpClassifier(config.role_weights, config.employee_score_threshold, config.role_unknown_band)
         self._history: dict[int, _TrackHistory] = {}
         self._role_frame: np.ndarray | None = None
         self._role_detections: list[tuple[tuple[float, ...], str, float]] = []
@@ -39,6 +41,7 @@ class RoleClassifier:
         and only until it first labels the track or role_model_seconds pass, so it is idle once every track has a role.
         It rechecks each track every role_recheck_seconds: an ID switch hands the old label to someone else.
         """
+        previous = self._history[track_id].last_seen_at if track_id in self._history else timestamp
         history = self._update_history(track_id, bbox, timestamp, frame.shape[1], frame.shape[0])
         if yolo is None and self.model is not None and self.config.role_mode == "model":
             new = history.model_role is None and timestamp - history.first_seen_at <= self.config.role_model_seconds
@@ -47,9 +50,15 @@ class RoleClassifier:
                 history.model_checked_at = timestamp
             yolo = history.model_role
         bib_role, bib_confidence = self._classify_bib_colour(frame, bbox)
+        descriptor = appearance_descriptor(frame, list(bbox))
+        if descriptor:
+            history.descriptor_frames += 1
+            history.descriptor = descriptor if history.descriptor is None else [
+                old + (new - old) / history.descriptor_frames for old, new in zip(history.descriptor, descriptor)]
         # Temporal signals only reinforce an appearance signal or a configured
         # employee-only zone; browsing/dwelling elsewhere is not staff evidence.
         factors = {
+            "reference": self._reference_evidence(descriptor),
             "yolo": None if yolo is None else (yolo[1] if yolo[0] == "employee" else -yolo[1]),
             "bib_colour": bib_confidence if bib_role == "employee" else 0.0,
             "staff_zone": min(1.0, history.staff_zone_seconds / max(1.0, self.config.staff_zone_dwell_seconds)),
@@ -59,13 +68,12 @@ class RoleClassifier:
         if history.observations == 0:
             history.smoothed_employee_score = raw_score
         else:
-            history.smoothed_employee_score = (
-                self.config.role_smoothing * history.smoothed_employee_score
-                + (1.0 - self.config.role_smoothing) * raw_score
-            )
+            # Per second, not per frame: live runs ~3 fps, so a per-frame weight made labels settle 3x slower.
+            keep = self.config.role_smoothing ** (10 * max(0.0, timestamp - previous))
+            history.smoothed_employee_score = keep * history.smoothed_employee_score + (1.0 - keep) * raw_score
         history.observations += 1
         score = history.smoothed_employee_score
-        frame_role = "employee" if score >= self.agent.threshold else "customer"
+        frame_role = self.agent.role_for(score)
         # A role locks once it has held for role_hold_seconds (until then the per-frame role
         # is shown); a locked role only flips after the opposite has held that long too.
         # Ignores flicker, but still corrects an ID that jumped to another person.
@@ -86,6 +94,20 @@ class RoleClassifier:
             "employee_score": round(score, 3),
         }
         return (history.role or frame_role, score, evidence)
+
+    def appearance(self, track_id: int) -> list[float] | None:
+        """Mean torso descriptor of a track, the vector `calibrate` stores as a role reference."""
+        history = self._history.get(track_id)
+        return history.descriptor if history else None
+
+    def _reference_evidence(self, descriptor: list[float]) -> float | None:
+        """Signed: nearest employee reference vs nearest customer reference. Nearest, not the mean, so a
+        store with several uniforms or very different customers still matches. None when uncalibrated."""
+        references = self.config.role_references
+        if not descriptor or not references.get("employee") or not references.get("customer"):
+            return None
+        nearest = {role: max(appearance_similarity(descriptor, ref) for ref in references[role]) for role in ("employee", "customer")}
+        return max(-1.0, min(1.0, (nearest["employee"] - nearest["customer"]) / self.config.role_reference_margin))
 
     def _update_history(self, track_id: int, bbox: tuple[int, int, int, int], timestamp: float, width: int, height: int) -> "_TrackHistory":
         center = ((bbox[0] + bbox[2]) / 2, (bbox[1] + bbox[3]) / 2)
@@ -152,6 +174,8 @@ class _TrackHistory:
     first_seen_at: float
     model_checked_at: float
     model_role: tuple[str, float] | None = None  # the role model's latest label, kept between checks
+    descriptor: list[float] | None = None  # running mean torso descriptor
+    descriptor_frames: int = 0
     stationary_seconds: float = 0.0
     staff_zone_seconds: float = 0.0
     smoothed_employee_score: float = 0.0

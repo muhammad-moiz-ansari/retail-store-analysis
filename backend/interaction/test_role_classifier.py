@@ -94,3 +94,31 @@ def test_role_model_labels_a_track_once_then_only_rechecks() -> None:
     # nobody under this box: tried on each frame of its first second, then once per recheck
     assert [yolo_role((500, 50, 600, 400), 2, t) for t in (0.0, 0.5, 1.5, 3.0)] == [None] * 4
     assert len(calls) == 3
+
+
+def test_role_score_settles_at_the_same_speed_at_any_frame_rate() -> None:
+    yellow = np.full((120, 80, 3), (0, 255, 255), dtype=np.uint8)
+    grey = np.full((120, 80, 3), (128, 128, 128), dtype=np.uint8)
+    scores = []
+    for fps in (3, 10):
+        classifier = RoleClassifier(InteractionConfig(role_mode="bib_color"))
+        classifier.classify(grey, (0, 0, 80, 120), 1, 0.0)
+        scores.append([classifier.classify(yellow, (0, 0, 80, 120), 1, i / fps)[1] for i in range(1, fps + 1)][-1])
+    assert abs(scores[0] - scores[1]) < 0.01  # same score 1 s after the bib appears (stationary evidence differs a hair)
+
+
+def test_calibrated_camera_learns_a_uniform_the_bib_rules_have_never_seen() -> None:
+    from .tracker import appearance_descriptor
+
+    red = np.full((120, 80, 3), (0, 0, 220), dtype=np.uint8)  # BGR red uniform: no yellow bib
+    blue = np.full((120, 80, 3), (200, 80, 0), dtype=np.uint8)
+    noise = lambda frame: np.clip(frame.astype(int) + np.random.default_rng(1).integers(-20, 20, frame.shape), 0, 255).astype(np.uint8)
+    box = (0, 0, 80, 120)
+    references = {"employee": [appearance_descriptor(noise(red), list(box))], "customer": [appearance_descriptor(noise(blue), list(box))]}
+    calibrated = RoleClassifier(InteractionConfig(role_mode="bib_color", role_references=references, role_smoothing=0.0))
+    assert calibrated.classify(noise(red), box, 1, 0.0)[0] == "employee"
+    assert calibrated.classify(noise(blue), box, 2, 0.0)[0] == "customer"
+    assert calibrated.appearance(1) is not None
+    uncalibrated = RoleClassifier(InteractionConfig(role_mode="bib_color", role_smoothing=0.0))
+    role, _, evidence = uncalibrated.classify(noise(red), box, 1, 0.0)
+    assert role == "customer" and evidence["factors"]["reference"] is None

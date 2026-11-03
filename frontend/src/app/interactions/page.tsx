@@ -14,7 +14,7 @@ type Interaction = {
   verdict?: string;
 };
 
-type Person = { track_id: number; role: "employee" | "customer"; first_seen: number; last_seen: number; frames_observed: number; employee_score: number };
+type Person = { track_id: number; role: "employee" | "customer" | "unknown"; first_seen: number; last_seen: number; frames_observed: number; employee_score: number };
 
 type Result = { video: string; output: string; interactions: Interaction[]; people: Person[] };
 

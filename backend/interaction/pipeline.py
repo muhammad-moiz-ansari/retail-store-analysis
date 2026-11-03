@@ -63,12 +63,13 @@ class InteractionPipeline:
             for event in events:
                 self._judge(event, timestamp)
         employees = sum(person.role == "employee" for person in people)
-        customers = len(people) - employees
+        customers = sum(person.role == "customer" for person in people)
         return {
             "timestamp": timestamp,
             "people": [person.to_dict() for person in people],
             "employee_count": employees,
             "customer_count": customers,
+            "unknown_count": len(people) - employees - customers,
             # Every proximity candidate, with the judge's verdict; only CONFIRMED ones count as interactions.
             "interactions": [{**event.to_dict(), "verdict": self.verdict(event)} for event in events],
             # On while any employee/customer interaction past min_interaction_seconds is ongoing.
