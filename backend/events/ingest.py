@@ -16,7 +16,7 @@ import sqlite3
 from datetime import datetime, timedelta
 from pathlib import Path
 
-from .zones import foot_point, heatmap, zone_of, zone_segments
+from .zones import foot_point, heatmap, line_crossing, zone_of, zone_segments
 
 SCHEMA = Path(__file__).with_name("schema.sql")
 DEFAULT_DB_PATH = Path(os.getenv("EVENTS_DB_PATH", Path(__file__).resolve().parents[1] / "events.sqlite3"))
@@ -25,7 +25,7 @@ TABLES = ("tracks", "role_decisions", "interactions", "zone_dwell", "footfall", 
 COMMON = ("event_id", "run_id", "store_id", "camera_id", "zone_id", "ts_start", "ts_end")
 DEFAULT_UNATTENDED_S = 180.0  # store_core's default thresholds.unattendedWaitMinutes (3)
 # Camera layout keys of a camera's --config file (InteractionConfig fields) that ingestion uses.
-LAYOUT = {"floor_zones": {}, "zone_hold_seconds": 1.0, "heatmap_grid": (32, 18)}
+LAYOUT = {"floor_zones": {}, "zone_hold_seconds": 1.0, "heatmap_grid": (32, 18), "entrance_line": None, "entrance_in_direction": "right"}
 
 
 def connect(path: Path | str = DEFAULT_DB_PATH) -> sqlite3.Connection:
@@ -104,10 +104,14 @@ def ingest_run(conn: sqlite3.Connection, prefix: Path | str, run_id: str, camera
     key = f"{run_id}:{{}}:{camera_id}:{{}}"
 
     samples: dict[int, list[tuple[float, str]]] = {}
+    xs: dict[int, list[tuple[float, float]]] = {}  # normalised foot x over time, for the entrance line
     for frame in detections:
         for person in frame["people"]:
-            zone = zone_of(foot_point(person["bbox"], frame_size), layout["floor_zones"], zone_id) if frame_size else zone_id
+            foot = foot_point(person["bbox"], frame_size) if frame_size else None
+            zone = zone_of(foot, layout["floor_zones"], zone_id) if foot else zone_id
             samples.setdefault(person["track_id"], []).append((frame["timestamp"], zone))
+            if foot:
+                xs.setdefault(person["track_id"], []).append((frame["timestamp"], foot[0]))
     segments = {p["track_id"]: zone_segments(samples.get(p["track_id"]) or [(p["first_seen"], zone_id), (p["last_seen"], zone_id)],
                                              layout["zone_hold_seconds"]) for p in people}
     role_of = {p["track_id"]: p["role"] for p in people}
@@ -129,6 +133,10 @@ def ingest_run(conn: sqlite3.Connection, prefix: Path | str, run_id: str, camera
                      "zone_id": zone_at(e["customer_track_id"], e["started_at"]), "ts_start": at(e["started_at"]), "ts_end": at(e["last_seen_at"]),
                      "employee_track_id": e["employee_track_id"], "customer_track_id": e["customer_track_id"],
                      "duration_s": round(e["last_seen_at"] - e["started_at"], 3), "verdict": e["verdict"]} for e in events]
+    crossings = {track_id: line_crossing(track_xs, layout["entrance_line"], layout["entrance_in_direction"])
+                 for track_id, track_xs in xs.items()} if layout["entrance_line"] is not None else {}
+    footfall = [{**base, "event_id": key.format("footfall", track_id), "ts_start": at(t), "ts_end": at(t), "track_id": track_id,
+                 "direction": direction} for track_id, crossing in sorted(crossings.items()) if crossing for direction, t in [crossing]]
     # Heatmaps per wall-clock hour: shift clip time by how far into its hour the clip started.
     hour0 = started_at.replace(minute=0, second=0, microsecond=0)
     offset = (started_at - hour0).total_seconds()
@@ -139,12 +147,12 @@ def ingest_run(conn: sqlite3.Connection, prefix: Path | str, run_id: str, camera
                 ] if frame_size else []
     with conn:
         delete_run(conn, run_id)
-        for table, table_rows in (("tracks", tracks), ("role_decisions", roles), ("interactions", interactions), ("zone_dwell", dwell),
+        for table, table_rows in (("tracks", tracks), ("role_decisions", roles), ("interactions", interactions), ("zone_dwell", dwell), ("footfall", footfall),
                                   ("pipeline_health", health_rows(detections, at, base)), ("heatmaps", heatmaps)):
             insert(conn, table, table_rows)
         unattended = derive_unattended(conn, run_id, unattended_after_s)
     return {"tracks": len(tracks), "role_decisions": len(roles), "interactions": len(interactions), "zone_dwell": len(dwell),
-            "heatmaps": len(heatmaps), "unattended_episodes": unattended}
+            "footfall": len(footfall), "heatmaps": len(heatmaps), "unattended_episodes": unattended}
 
 
 def validate(conn: sqlite3.Connection) -> list[str]:

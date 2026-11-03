@@ -7,6 +7,7 @@ works at any resolution. Floor zones are normalised polygons keyed by store zone
 
 from __future__ import annotations
 
+from ..handoff_core import boundary_side, crossing_direction
 from ..interaction.core import contains
 
 
@@ -50,3 +51,15 @@ def heatmap(detections: list[dict], frame_size: tuple[int, int], grid: tuple[int
             x, y = foot_point(person["bbox"], frame_size)
             cells[min(rows - 1, max(0, int(y * rows)))][min(cols - 1, max(0, int(x * cols)))] += 1
     return hours
+
+
+def line_crossing(xs: list[tuple[float, float]], boundary: float, in_direction: str) -> tuple[str, float] | None:
+    """('in' | 'out', time) when a track ends on the other side of a vertical entrance line than it started, at the
+    time of its last side change; None otherwise. Net, not per frame, so feet jittering on the line count once."""
+    if len(xs) < 2:
+        return None
+    direction = crossing_direction(xs[0][1], xs[-1][1], boundary)
+    if direction is None:
+        return None
+    last_change = [t for (_, a), (t, b) in zip(xs, xs[1:]) if boundary_side(a, boundary) != boundary_side(b, boundary)][-1]
+    return ("in" if direction == in_direction else "out"), last_change

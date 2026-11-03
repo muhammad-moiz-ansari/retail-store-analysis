@@ -40,7 +40,7 @@ def test_ingest_is_idempotent_and_derives_unattended(tmp_path) -> None:
     conn = connect(tmp_path / "events.sqlite3")
     for _ in range(2):  # re-ingesting the same run replaces it
         counts = ingest_run(conn, prefix, "r1", "c2", "z2", START, unattended_after_s=180)
-    assert counts == {"tracks": 4, "role_decisions": 5, "interactions": 2, "zone_dwell": 4, "heatmaps": 0, "unattended_episodes": 2}
+    assert counts == {"tracks": 4, "role_decisions": 5, "interactions": 2, "zone_dwell": 4, "footfall": 0, "heatmaps": 0, "unattended_episodes": 2}
     assert conn.execute("SELECT COUNT(*) FROM tracks").fetchone()[0] == 4
     episodes = {row["customer_track_id"]: (row["waited_s"], row["helped"]) for row in conn.execute("SELECT * FROM unattended_episodes")}
     assert episodes == {2: (200.0, 1), 4: (190.0, 0)}
@@ -102,8 +102,9 @@ def test_ingest_splits_tracks_into_floor_zones_and_hourly_heatmaps(tmp_path) -> 
     layout = {"floor_zones": {"z2": [[0, 0], [0.5, 0], [0.5, 1], [0, 1]], "z3": [[0.5, 0], [1, 0], [1, 1], [0.5, 1]]},
               "heatmap_grid": (4, 2)}
     started = datetime(2026, 11, 3, 9, 59, 50, tzinfo=timezone.utc)  # crosses 10:00, so two hourly heatmaps
-    counts = ingest_run(conn, prefix, "r", "c2", "z1", started, layout=layout)
-    assert (counts["zone_dwell"], counts["heatmaps"]) == (3, 2)
+    counts = ingest_run(conn, prefix, "r", "c2", "z1", started, layout={**layout, "entrance_line": 0.5})
+    assert (counts["zone_dwell"], counts["heatmaps"], counts["footfall"]) == (3, 2, 1)
+    assert conn.execute("SELECT track_id, direction, ts_start FROM footfall").fetchone()[:] == (1, "in", "2026-11-03T10:00:00+00:00")
     dwell = [(r["track_id"], r["zone_id"], r["dwell_s"]) for r in conn.execute("SELECT * FROM zone_dwell ORDER BY track_id, ts_start")]
     assert dwell == [(1, "z2", 10.0), (1, "z3", 9.0), (2, "z3", 19.0)]
     assert conn.execute("SELECT zone_id FROM interactions").fetchone()[0] == "z3"
@@ -111,3 +112,13 @@ def test_ingest_splits_tracks_into_floor_zones_and_hourly_heatmaps(tmp_path) -> 
     maps = conn.execute("SELECT ts_start, cells FROM heatmaps ORDER BY ts_start").fetchall()
     assert maps[0]["ts_start"] == "2026-11-03T09:00:00+00:00" and sum(map(sum, json.loads(maps[0]["cells"]))) == 20  # 10 frames x 2
     assert validate(conn) == []
+
+
+def test_entrance_line_counts_net_crossings_once() -> None:
+    from .zones import line_crossing
+
+    walk_in = [(0, 0.2), (1, 0.45), (2, 0.55), (3, 0.48), (4, 0.6), (5, 0.9)]  # jitters on the line at 0.5
+    assert line_crossing(walk_in, 0.5, "right") == ("in", 4)
+    assert line_crossing(list(reversed([(5 - t, x) for t, x in walk_in])), 0.5, "right")[0] == "out"
+    assert line_crossing([(0, 0.2), (1, 0.7), (2, 0.3)], 0.5, "right") is None  # came back: browsing at the door
+    assert line_crossing(walk_in, 0.5, "left") == ("out", 4)

@@ -37,6 +37,10 @@ class InteractionConfig:
     floor_zones: dict[str, list[list[float]]] = field(default_factory=dict)
     zone_hold_seconds: float = 1.0  # a track must stay this long in a new zone before it counts as a move
     heatmap_grid: tuple[int, int] = (32, 18)  # cols, rows
+    # Entrance camera only: a vertical line at this normalised x; a track ending on the other side of it from where it
+    # started is one footfall, "in" when it moved toward entrance_in_direction ("right" or "left").
+    entrance_line: float | None = None
+    entrance_in_direction: Literal["right", "left"] = "right"
     stationary_distance_px: float = 18.0
     staff_zone_dwell_seconds: float = 12.0
     # Few-shot role references for this camera: torso descriptors of tracks a person labelled

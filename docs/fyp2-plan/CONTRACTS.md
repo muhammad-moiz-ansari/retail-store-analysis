@@ -94,6 +94,9 @@ Zone and camera ids are the ones seeded in `store_core.py` (`z1`–`z6`, `c1`–
   polygon = the camera's zone); `zone_dwell` has one row per visit, ordered visits of a track are its zone transitions,
   `tracks.zone_id` is the zone it spent longest in and `interactions.zone_id` is the customer's zone at the start.
 - **heatmaps** (additive to v1): one row per camera per wall-clock hour, `cells` = JSON `rows` x `cols` foot-point counts.
-- **Not filled from real runs yet**: `footfall`, `queue_samples` (B4.3/B4.4), `pipeline_health.frozen_or_dark` (B4.5).
+- **footfall (B4.3)**: entrance camera config sets `entrance_line` (normalised x of a vertical line) and
+  `entrance_in_direction` ("right"/"left"). A track that ends on the other side from where it started is one row at
+  its last crossing time (net, so jitter on the line counts once; walking in and back out within one track counts 0).
+- **Not filled from real runs yet**: `queue_samples` (B4.4), `pipeline_health.frozen_or_dark` (B4.5).
 - **Contract test**: `backend/events/test_events.py` checks the fixture and every local CV run under `backend/output/`
   with `ingest.validate`.
