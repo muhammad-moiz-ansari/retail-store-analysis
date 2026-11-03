@@ -68,7 +68,7 @@ def derive_unattended(conn: sqlite3.Connection, run_id: str, min_seconds: float)
 
 
 def health_rows(detections: list[dict], at, base: dict) -> list[dict]:
-    """Per-minute pipeline health from the per-frame detections (frame check pending: frozen_or_dark NULL)."""
+    """Per-minute pipeline health from the per-frame detections."""
     minutes: dict[int, list[dict]] = {}
     for frame in detections:
         minutes.setdefault(int(frame["timestamp"] // 60), []).append(frame)
@@ -78,6 +78,7 @@ def health_rows(detections: list[dict], at, base: dict) -> list[dict]:
     for minute, frames in sorted(minutes.items()):
         people = [p for f in frames for p in f["people"]]
         ids = {p["track_id"] for p in people}
+        flags = [f["frozen_or_dark"] for f in frames if "frozen_or_dark" in f]  # none in runs from before the frame check
         gap = frames[-1]["timestamp"] - frames[-2]["timestamp"] if len(frames) > 1 else 1.0
         span = 60.0 if minute < last else min(frames[-1]["timestamp"] + gap - minute * 60, 60.0)  # the clip may end mid-minute
         rows.append({**base, "event_id": f"{base['run_id']}:health:{base['camera_id']}:{minute}",
@@ -85,7 +86,7 @@ def health_rows(detections: list[dict], at, base: dict) -> list[dict]:
                      "fps": round(len(frames) / span, 3),
                      "mean_confidence": round(sum(p["confidence"] for p in people) / len(people), 4) if people else None,
                      "unknown_role_share": round(sum(p["role"] == "unknown" for p in people) / len(people), 4) if people else None,
-                     "id_churn": len(ids - seen), "frozen_or_dark": None})
+                     "id_churn": len(ids - seen), "frozen_or_dark": int(sum(flags) > len(flags) / 2) if flags else None})
         seen |= ids
     return rows
 

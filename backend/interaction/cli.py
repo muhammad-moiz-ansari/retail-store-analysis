@@ -115,6 +115,16 @@ class CameraSwitch:
                 self.raw_writer.release()
 
 
+def frame_check(frame, timestamp: float, reference: dict, config: InteractionConfig) -> bool:
+    """Frozen or dark. A covered or unlit lens reads almost black; a hung stream repeats one frame, so the picture
+    hasn't changed from `reference` (the last frame that did change) for frozen_seconds. Sustained, not frame to
+    frame, because low-fps cameras re-encoded at 30 fps repeat each frame a few times."""
+    small = cv2.resize(cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY), (64, 36)).astype("float32")
+    if "image" not in reference or float(cv2.absdiff(small, reference["image"]).mean()) >= config.frozen_change:
+        reference.update(image=small, since=timestamp)
+    return bool(small.mean() < config.dark_brightness or timestamp - reference["since"] >= config.frozen_seconds)
+
+
 def analyse(cap, fps: float, pipeline: InteractionPipeline, every: int = 1, track_every: int = 1, on_result=None, clock=None) -> dict:
     """Run the pipeline over a video; returns one record per interaction (its last snapshot) and per-frame latencies.
     Live feeds pass a wall-clock `clock`, since a camera's nominal FPS is not its delivered rate."""
@@ -210,11 +220,12 @@ def main() -> None:
     writer = cv2.VideoWriter(str(args.output), cv2.VideoWriter_fourcc(*"mp4v"), fps or 25, (width, height))
     pipeline = InteractionPipeline(InteractionConfig.from_json(args.config, **({"role_model": args.roles} if args.roles else {}),
                                                                device=args.device, interaction_judge=args.judge, judge_device=args.judge_device))
-    tracks, detections = {}, []
+    tracks, detections, reference = {}, [], {}
 
     def record(frame_number, frame, result):
+        bad = frame_check(frame, result["timestamp"], reference, pipeline.config)
         detections.append({"frame": frame_number, "timestamp": round(result["timestamp"], 2),
-                           "interaction_active": result["interaction_active"], "people": result["people"]})
+                           "interaction_active": result["interaction_active"], "people": result["people"], "frozen_or_dark": bad})
         for person in result["people"]:
             track = tracks.setdefault(person["track_id"], {"first_seen": result["timestamp"], "factors": []})
             track["last_seen"] = result["timestamp"]

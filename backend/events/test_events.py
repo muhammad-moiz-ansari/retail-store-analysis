@@ -27,7 +27,7 @@ def write_run(prefix: Path) -> None:
                                                         {"role": "customer", "from": 70.0, "to": 250.0, "frames": 180}]}]
     interactions = [{"employee_track_id": 1, "customer_track_id": 2, "started_at": 210.0, "last_seen_at": 240.0, "verdict": "interaction"},
                     {"employee_track_id": 1, "customer_track_id": 3, "started_at": 50.0, "last_seen_at": 80.0, "verdict": "unverified"}]
-    detections = [{"frame": i, "timestamp": i * 1.0, "interaction_active": False,
+    detections = [{"frame": i, "timestamp": i * 1.0, "interaction_active": False, "frozen_or_dark": i >= 80,
                    "people": [{"track_id": 1 if i < 60 else 4, "confidence": 0.8, "role": "employee" if i < 90 else "unknown"}]}
                   for i in range(120)]
     for suffix, data in ((".people.json", {"people": people}), (".interactions.json", interactions), (".detections.json", detections)):
@@ -46,7 +46,8 @@ def test_ingest_is_idempotent_and_derives_unattended(tmp_path) -> None:
     assert episodes == {2: (200.0, 1), 4: (190.0, 0)}
     health = conn.execute("SELECT * FROM pipeline_health ORDER BY ts_start").fetchall()
     assert [(h["fps"], h["id_churn"], h["unknown_role_share"]) for h in health] == [(1.0, 1, 0.0), (1.0, 1, 0.5)]
-    assert health[0]["ts_start"] == "2026-11-03T09:00:00+00:00" and health[0]["frozen_or_dark"] is None
+    assert health[0]["ts_start"] == "2026-11-03T09:00:00+00:00"
+    assert [h["frozen_or_dark"] for h in health] == [0, 1]  # 40 of the second minute's 60 frames flagged
     assert validate(conn) == []
 
 

@@ -85,3 +85,15 @@ def test_square_crops_the_centre_of_each_live_frame(monkeypatch):
     assert ok and cropped.shape[:2] == (480, 480)
     assert (cropped == frame[:, 80:560]).all()
     cam.release()
+
+
+def test_frame_check_flags_dark_and_sustained_frozen_frames() -> None:
+    from .config import InteractionConfig
+
+    config, rng, reference = InteractionConfig(device="cpu"), np.random.default_rng(0), {}
+    still = rng.integers(60, 200, (360, 640, 3), dtype=np.uint8)
+    assert cli.frame_check(still, 0.0, reference, config) is False
+    assert cli.frame_check(still.copy(), 1.0, reference, config) is False  # a repeated frame is normal for a moment
+    assert cli.frame_check(still.copy(), 2.5, reference, config) is True  # unchanged for 2.5 s: frozen
+    assert cli.frame_check(rng.integers(60, 200, (360, 640, 3), dtype=np.uint8), 3.0, reference, config) is False
+    assert cli.frame_check(np.full((360, 640, 3), 5, np.uint8), 3.5, reference, config) is True  # covered lens

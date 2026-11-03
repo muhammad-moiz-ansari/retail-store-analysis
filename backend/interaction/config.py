@@ -44,6 +44,11 @@ class InteractionConfig:
     # Counter camera only: normalised polygon where customers queue; sampled every queue_sample_seconds.
     queue_zone: list[list[float]] | None = None
     queue_sample_seconds: float = 5.0
+    # Pipeline health frame check: mean grey (0-255) below this is a dark/covered lens; a picture changing less than
+    # frozen_change (mean, 64x36 grey thumbnail) for frozen_seconds is a frozen stream (cam1.mp4 ends with one).
+    dark_brightness: float = 20.0
+    frozen_change: float = 0.3
+    frozen_seconds: float = 2.0
     stationary_distance_px: float = 18.0
     staff_zone_dwell_seconds: float = 12.0
     # Few-shot role references for this camera: torso descriptors of tracks a person labelled

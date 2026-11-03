@@ -100,6 +100,8 @@ Zone and camera ids are the ones seeded in `store_core.py` (`z1`–`z6`, `c1`–
 - **queue_samples (B4.4)**: counter camera config sets `queue_zone` (normalised polygon) and `queue_sample_seconds` (5).
   Every sample counts customers (not staff, not unknown) whose feet are in the polygon; `est_wait_s` = length x the
   run's mean interaction duration (NULL when the run has no interactions).
-- **Not filled from real runs yet**: `pipeline_health.frozen_or_dark` (B4.5).
+- **pipeline_health.frozen_or_dark (B4.5)**: the CLI flags each processed frame (`frozen_or_dark` in detections.json):
+  mean grey < `dark_brightness` (20), or the picture unchanged (< `frozen_change`) for `frozen_seconds` (2 s). The minute
+  is 1 when most of its frames are flagged; NULL for runs recorded before the check existed.
 - **Contract test**: `backend/events/test_events.py` checks the fixture and every local CV run under `backend/output/`
   with `ingest.validate`.
