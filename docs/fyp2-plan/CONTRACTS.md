@@ -70,3 +70,23 @@ One row in the existing `alerts` table per unattended event:
 | `source` | `vision` |
 | `evidence_json` | the unattended entry plus the run name |
 | `id` | `vision:<run>:<customer_track_id>:<from>` so re-importing a run does not duplicate alerts |
+
+## Event schema v1 (shared contract 1)
+
+`backend/events/schema.sql`: eight tables (`tracks`, `role_decisions`, `interactions`, `zone_dwell`, `footfall`,
+`queue_samples`, `unattended_episodes`, `pipeline_health`). Every row has `event_id` (stable, `<run>:<kind>:<camera>:<key>`),
+`run_id`, `store_id`, `camera_id`, `zone_id`, `ts_start`, `ts_end` (UTC ISO 8601; instants have `ts_end = ts_start`).
+Zone and camera ids are the ones seeded in `store_core.py` (`z1`–`z6`, `c1`–`c3`). Indexed on `(store_id, zone_id, ts_start)`.
+
+- **Ingest a CV run** (idempotent on `run_id`):
+  `python -m backend.events.ingest backend/output/run1/interaction --run-id run1 --camera c2 --zone z2 --start 2026-11-03T09:00:00+00:00`
+  (default DB `backend/events.sqlite3`, or `EVENTS_DB_PATH`).
+- **unattended_episodes** is derived, not detected: a customer whose wait from first sighting to their first confirmed
+  interaction (or exit) is ≥ N s, N = settings `thresholds.unattendedWaitMinutes` × 60. `helped` says which ended it.
+- **Fixture day** for tools/agents/UI: `python -m backend.events.fixtures` → `backend/events/fixture.sqlite3`
+  (seeded, identical every run; not committed since `*.sqlite3` is ignored). 09:00–21:00 UTC, planted patterns:
+  17:00–19:00 rush, understaffed `z3`, camera `c2` blocked 14:00–14:40 (`pipeline_health.frozen_or_dark = 1`).
+- **Not filled from real runs yet**: `zone_dwell`, `footfall`, `queue_samples` (B4), `pipeline_health.frozen_or_dark` (B4.5).
+  Until zones (B4.2) land, a real run's rows all carry the camera's `zone_id`.
+- **Contract test**: `backend/events/test_events.py` checks the fixture and every local CV run under `backend/output/`
+  with `ingest.validate`.
