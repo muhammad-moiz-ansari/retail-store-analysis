@@ -57,6 +57,22 @@ def role_counts(predicted: dict[int, str], truth: dict[str, str]) -> dict:
             "unknown": sum(p == "unknown" for p, _ in labelled)}
 
 
+def timing_error(matches: list[dict]) -> dict:
+    """Start/end error over every matched interaction, each video weighted by its true positives."""
+    tp = sum(m["tp"] for m in matches if m["start_error_s"] is not None)
+    mean = lambda key: sum(m[key] * m["tp"] for m in matches if m[key] is not None) / tp if tp else None
+    return {"start_error_s": mean("start_error_s"), "end_error_s": mean("end_error_s")}
+
+
+def tracking_kpis(track_roles: dict[int, list[str]], minutes: float, people: int | None) -> dict:
+    """Track stability without per-frame ground truth. With the reviewed number of distinct people in the clip,
+    every extra track ID is a fragment (an ID switch or a lost-and-new track); role flips count held-role changes."""
+    flips = sum(sum(a != b for a, b in zip(roles, roles[1:])) for roles in track_roles.values())
+    per_min = lambda n: n / minutes if minutes else None
+    return {"tracks": len(track_roles), "minutes": minutes, "people": people, "role_flips_per_min": per_min(flips),
+            "id_switches_per_min": per_min(max(0, len(track_roles) - people)) if people is not None else None}
+
+
 def detector_kpis(spec: dict, device: str) -> dict:
     """Ultralytics val on a YOLO-format folder (labels next to images)."""
     from ultralytics import YOLO
@@ -105,11 +121,13 @@ def video_kpis(spec: dict, judge: str, device: str, min_iou: float) -> dict:
     fps = cap.get(cv2.CAP_PROP_FPS) or 25
     started = time.perf_counter()
     role_frames: dict[int, dict[str, int]] = {}
+    track_roles: dict[int, list[str]] = {}  # role sequence per track, for flips
 
     def tally(_frame_number, _frame, result):
         for person in result["people"]:
             frames = role_frames.setdefault(person["track_id"], {})
             frames[person["role"]] = frames.get(person["role"], 0) + 1
+            track_roles.setdefault(person["track_id"], []).append(person["role"])
     run = analyse(cap, fps, pipeline, spec.get("every", 1), spec.get("track_every", 1), tally)
     elapsed = time.perf_counter() - started
     cap.release()
@@ -125,6 +143,8 @@ def video_kpis(spec: dict, judge: str, device: str, min_iou: float) -> dict:
         "with_judge": None if truth is None else match_events([interval(e) for e in events if e["verdict"] in CONFIRMED], truth, min_iou),
         # "roles": {"<track_id>": "employee" | "customer"} from a reviewed run with the same settings.
         "roles": role_counts({t: max(f, key=f.get) for t, f in role_frames.items()}, spec["roles"]) if "roles" in spec else None,
+        # "people": distinct people a reviewer counted in the clip; extra track IDs are fragments.
+        "tracking": tracking_kpis(track_roles, run["frames"] / fps / 60, spec.get("people")),
         "candidates": [{"start": round(e["started_at"], 1), "end": round(e["last_seen_at"], 1), "verdict": e["verdict"]} for e in events],
         "speed": {"realtime_factor": run["frames"] / fps / elapsed,
                   "frame_ms_p50": 1000 * latencies[len(latencies) // 2] if latencies else None,
@@ -162,7 +182,13 @@ def main() -> None:
         report["detector"] = detector_kpis(spec["detector"], args.device)
     videos = [video_kpis(video, args.judge, args.device, min_iou) for video in spec["videos"]]
     total = lambda key: {k: sum(v[key][k] for v in videos if v[key]) for k in ("tp", "fp", "fn")}
-    report["interactions"] = {"proximity_only": scores(total("proximity_only")), "with_judge": scores(total("with_judge"))}
+    report["interactions"] = {key: {**scores(total(key)), **timing_error([v[key] for v in videos if v[key]])}
+                              for key in ("proximity_only", "with_judge")}
+    tracked = [v["tracking"] for v in videos]
+    minutes, counted = sum(t["minutes"] for t in tracked), [t for t in tracked if t["people"] is not None]
+    report["tracking"] = {"role_flips_per_min": ratio(sum(t["role_flips_per_min"] * t["minutes"] for t in tracked), minutes),
+                          "id_switches_per_min": ratio(sum(t["id_switches_per_min"] * t["minutes"] for t in counted),
+                                                       sum(t["minutes"] for t in counted)) if counted else None}
     labelled_roles = [v["roles"] for v in videos if v["roles"]]
     if labelled_roles:
         tracks = sum(r["tracks"] for r in labelled_roles)
@@ -185,7 +211,10 @@ def main() -> None:
     labelled = sum(v["proximity_only"] is not None for v in videos)
     print(f"interaction accuracy from {labelled} of {len(videos)} videos (the rest are not labelled yet)")
     for name, s in report["interactions"].items():
-        print(f"interactions {name:15} P {show(s['precision'])}  R {show(s['recall'])}  F1 {show(s['f1'])}  (tp {s['tp']} fp {s['fp']} fn {s['fn']})")
+        print(f"interactions {name:15} P {show(s['precision'])}  R {show(s['recall'])}  F1 {show(s['f1'])}  (tp {s['tp']} fp {s['fp']} fn {s['fn']})"
+              f"  start err {show(s['start_error_s'])} s  end err {show(s['end_error_s'])} s")
+    t = report["tracking"]
+    print(f"tracking: ID switches {show(t['id_switches_per_min'])}/min (videos with a people count), role flips {show(t['role_flips_per_min'])}/min")
     if "roles" in report:
         r = report["roles"]
         print(f"roles on {r['tracks']} labelled tracks: accuracy {show(r['accuracy'])}  unknown {show(r['unknown_rate'])}  "
