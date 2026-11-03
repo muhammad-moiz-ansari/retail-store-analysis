@@ -12,6 +12,7 @@ python -m backend.events.fixtures [--db backend/events/fixture.sqlite3]
 from __future__ import annotations
 
 import argparse
+import json
 import random
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -22,6 +23,7 @@ RUN_ID = "fixture-2026-11-03"
 STORE = "store-1"
 OPEN = datetime(2026, 11, 3, 9, tzinfo=timezone.utc)
 MINUTES = 12 * 60
+HOME_ZONE = {"c1": "z1", "c2": "z2", "c3": "z6"}  # store_core's seeded camera zones
 CAMERA_OF = {"z1": "c1", "z5": "c1", "z2": "c2", "z3": "c2", "z4": "c2", "z6": "c3"}
 STAFF = {"z1": 1, "z2": 1, "z4": 1, "z6": 2}  # z3 has none on its own; z5 (promo) needs none
 RUSH = (17 * 60 - 9 * 60, 19 * 60 - 9 * 60)  # minutes after opening
@@ -33,7 +35,7 @@ def generate(conn, seed: int = 7, unattended_after_s: float = 180.0) -> dict:
     rnd = random.Random(seed)
     at = lambda minute: (OPEN + timedelta(minutes=minute)).isoformat()
     rows: dict[str, list[dict]] = {t: [] for t in ("tracks", "role_decisions", "interactions", "zone_dwell", "footfall",
-                                                   "queue_samples", "pipeline_health")}
+                                                   "queue_samples", "pipeline_health", "heatmaps")}
     next_id = {c: 0 for c in ("c1", "c2", "c3")}
     started = {c: [0] * MINUTES for c in next_id}  # tracks first seen per minute, for id_churn
     present: list[tuple[str, float, float]] = []  # (zone, from, to) of every customer visit, for the queue
@@ -99,7 +101,7 @@ def generate(conn, seed: int = 7, unattended_after_s: float = 180.0) -> dict:
                                       "zone_id": "z6", "ts_start": at(minute), "ts_end": at(minute), "queue_length": length,
                                       "est_wait_s": round(length * 90 / STAFF["z6"], 1)})
 
-    for camera, zone in (("c1", "z1"), ("c2", "z2"), ("c3", "z6")):
+    for camera, zone in HOME_ZONE.items():
         for minute in range(MINUTES):
             dark = blocked(camera, minute, minute + 1)
             rows["pipeline_health"].append({"event_id": f"{RUN_ID}:health:{camera}:{minute}", "run_id": RUN_ID, "store_id": STORE,
@@ -108,6 +110,16 @@ def generate(conn, seed: int = 7, unattended_after_s: float = 180.0) -> dict:
                                             "mean_confidence": None if dark else round(rnd.uniform(0.72, 0.86), 3),
                                             "unknown_role_share": None if dark else round(rnd.uniform(0.0, 0.08), 3),
                                             "id_churn": started[camera][minute], "frozen_or_dark": int(dark)})
+
+    # 32x18 foot-point grids per camera per hour: traffic scaled by that hour's tracks, peaking at a per-camera hotspot.
+    hotspots = {"c1": (16, 14), "c2": (8, 10), "c3": (24, 12)}
+    for camera, (hx, hy) in hotspots.items():
+        for hour in range(12):
+            busy = sum(started[camera][hour * 60:hour * 60 + 60])
+            cells = [[int(busy * 30 / (1 + ((c - hx) ** 2 + (r - hy) ** 2) / 8) * rnd.uniform(0.7, 1.3)) for c in range(32)] for r in range(18)]
+            rows["heatmaps"].append({"event_id": f"{RUN_ID}:heatmap:{camera}:{hour}", "run_id": RUN_ID, "store_id": STORE, "camera_id": camera,
+                                     "zone_id": HOME_ZONE[camera], "ts_start": at(hour * 60),
+                                     "ts_end": at(hour * 60 + 60), "cols": 32, "rows": 18, "cells": json.dumps(cells)})
 
     with conn:
         delete_run(conn, RUN_ID)

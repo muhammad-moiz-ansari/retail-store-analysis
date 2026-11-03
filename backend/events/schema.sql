@@ -70,6 +70,15 @@ CREATE TABLE IF NOT EXISTS pipeline_health (
   frozen_or_dark INTEGER          -- NULL until the frame check (B4.5) runs
 );
 
+-- Additive to v1: foot-point counts per camera per wall-clock hour, cells = JSON rows x cols grid over the frame.
+CREATE TABLE IF NOT EXISTS heatmaps (
+  event_id TEXT PRIMARY KEY, run_id TEXT NOT NULL, store_id TEXT NOT NULL, camera_id TEXT NOT NULL,
+  zone_id TEXT NOT NULL, ts_start TEXT NOT NULL, ts_end TEXT NOT NULL,
+  cols INTEGER NOT NULL,
+  rows INTEGER NOT NULL,
+  cells TEXT NOT NULL
+);
+
 CREATE INDEX IF NOT EXISTS tracks_szt ON tracks(store_id, zone_id, ts_start);
 CREATE INDEX IF NOT EXISTS role_decisions_szt ON role_decisions(store_id, zone_id, ts_start);
 CREATE INDEX IF NOT EXISTS interactions_szt ON interactions(store_id, zone_id, ts_start);
@@ -78,4 +87,5 @@ CREATE INDEX IF NOT EXISTS footfall_szt ON footfall(store_id, zone_id, ts_start)
 CREATE INDEX IF NOT EXISTS queue_samples_szt ON queue_samples(store_id, zone_id, ts_start);
 CREATE INDEX IF NOT EXISTS unattended_episodes_szt ON unattended_episodes(store_id, zone_id, ts_start);
 CREATE INDEX IF NOT EXISTS pipeline_health_szt ON pipeline_health(store_id, zone_id, ts_start);
+CREATE INDEX IF NOT EXISTS heatmaps_szt ON heatmaps(store_id, zone_id, ts_start);
 CREATE INDEX IF NOT EXISTS tracks_run ON tracks(run_id);

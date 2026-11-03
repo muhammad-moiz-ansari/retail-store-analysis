@@ -89,7 +89,11 @@ Zone and camera ids are the ones seeded in `store_core.py` (`z1`–`z6`, `c1`–
 - **Fixture day** for tools/agents/UI: `python -m backend.events.fixtures` → `backend/events/fixture.sqlite3`
   (seeded, identical every run; not committed since `*.sqlite3` is ignored). 09:00–21:00 UTC, planted patterns:
   17:00–19:00 rush, understaffed `z3`, camera `c2` blocked 14:00–14:40 (`pipeline_health.frozen_or_dark = 1`).
-- **Not filled from real runs yet**: `zone_dwell`, `footfall`, `queue_samples` (B4), `pipeline_health.frozen_or_dark` (B4.5).
-  Until zones (B4.2) land, a real run's rows all carry the camera's `zone_id`.
+- **Zones and dwell (B4.2)**: the camera's `--config` JSON may hold `floor_zones` (normalised polygons keyed by store
+  `zone_id`), `zone_hold_seconds` (1.0) and `heatmap_grid` ([32, 18]). A track's foot point picks its zone (outside every
+  polygon = the camera's zone); `zone_dwell` has one row per visit, ordered visits of a track are its zone transitions,
+  `tracks.zone_id` is the zone it spent longest in and `interactions.zone_id` is the customer's zone at the start.
+- **heatmaps** (additive to v1): one row per camera per wall-clock hour, `cells` = JSON `rows` x `cols` foot-point counts.
+- **Not filled from real runs yet**: `footfall`, `queue_samples` (B4.3/B4.4), `pipeline_health.frozen_or_dark` (B4.5).
 - **Contract test**: `backend/events/test_events.py` checks the fixture and every local CV run under `backend/output/`
   with `ingest.validate`.

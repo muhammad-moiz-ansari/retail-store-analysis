@@ -267,16 +267,17 @@ def main() -> None:
         for track_id, t in sorted(tracks.items())
     ]
     args.output.with_suffix(".people.json").write_text(
-        json.dumps({"weights": pipeline.classifier.agent.weights, "threshold": pipeline.classifier.agent.threshold, "people": people}, indent=2),
+        json.dumps({"weights": pipeline.classifier.agent.weights, "threshold": pipeline.classifier.agent.threshold,
+                    "frame_size": [width, height], "people": people}, indent=2),
         encoding="utf-8",
     )
     if args.camera:
-        from ..events.ingest import DEFAULT_DB_PATH, connect, ingest_run, unattended_threshold
+        from ..events.ingest import DEFAULT_DB_PATH, connect, ingest_run, layout_from, unattended_threshold
 
         run_id = args.run_id or str(args.output.with_suffix(""))
         with connect(args.events_db or DEFAULT_DB_PATH) as events:
             counts = ingest_run(events, args.output, run_id, args.camera, zone, started_at,
-                                unattended_after_s=unattended_threshold())
+                                unattended_after_s=unattended_threshold(), layout=layout_from(pipeline.config))
         print(f"event store: run {run_id} as {args.camera}/{zone}: {counts}")
 
 

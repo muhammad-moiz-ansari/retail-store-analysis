@@ -40,7 +40,7 @@ def test_ingest_is_idempotent_and_derives_unattended(tmp_path) -> None:
     conn = connect(tmp_path / "events.sqlite3")
     for _ in range(2):  # re-ingesting the same run replaces it
         counts = ingest_run(conn, prefix, "r1", "c2", "z2", START, unattended_after_s=180)
-    assert counts == {"tracks": 4, "role_decisions": 5, "interactions": 2, "unattended_episodes": 2}
+    assert counts == {"tracks": 4, "role_decisions": 5, "interactions": 2, "zone_dwell": 4, "heatmaps": 0, "unattended_episodes": 2}
     assert conn.execute("SELECT COUNT(*) FROM tracks").fetchone()[0] == 4
     episodes = {row["customer_track_id"]: (row["waited_s"], row["helped"]) for row in conn.execute("SELECT * FROM unattended_episodes")}
     assert episodes == {2: (200.0, 1), 4: (190.0, 0)}
@@ -76,4 +76,38 @@ def test_real_cv_runs_meet_schema_v1(tmp_path, people) -> None:
     """Contract: whatever the CLI wrote locally must load and fill every common field (skipped without runs)."""
     conn = connect(tmp_path / "events.sqlite3")
     ingest_run(conn, people.with_name(people.name.removesuffix(".people.json")), "real", "c2", "z2", START)
+    assert validate(conn) == []
+
+
+def test_zone_segments_ignore_border_flicker() -> None:
+    from .zones import zone_segments
+
+    samples = [(0, "z2"), (1, "z2"), (1.5, "z3"), (2, "z2"), (3, "z3"), (3.5, "z3"), (4.5, "z3"), (5, "z2")]
+    assert zone_segments(samples, 1.0) == [("z2", 0, 3), ("z3", 3, 4.5)]  # the 0.5 s blip and the final sample don't count
+
+
+def test_ingest_splits_tracks_into_floor_zones_and_hourly_heatmaps(tmp_path) -> None:
+    prefix = tmp_path / "run"
+    # Track 1 (customer) walks from the left half (z2) into the right half (z3) at 10 s; track 2 (employee) stays right.
+    detections = [{"frame": i, "timestamp": float(i), "people": [
+        {"track_id": 1, "bbox": [10 + 18 * i, 0, 30 + 18 * i, 100], "confidence": 0.9, "role": "customer"},
+        {"track_id": 2, "bbox": [300, 0, 320, 100], "confidence": 0.9, "role": "employee"}]} for i in range(20)]
+    people = [{"track_id": 1, "first_seen": 0.0, "last_seen": 19.0, "frames_observed": 20, "role": "customer"},
+              {"track_id": 2, "first_seen": 0.0, "last_seen": 19.0, "frames_observed": 20, "role": "employee"}]
+    interactions = [{"employee_track_id": 2, "customer_track_id": 1, "started_at": 15.0, "last_seen_at": 19.0, "verdict": "interaction"}]
+    for suffix, data in ((".people.json", {"frame_size": [400, 100], "people": people}),
+                         (".interactions.json", interactions), (".detections.json", detections)):
+        prefix.with_suffix(suffix).write_text(json.dumps(data))
+    conn = connect(tmp_path / "events.sqlite3")
+    layout = {"floor_zones": {"z2": [[0, 0], [0.5, 0], [0.5, 1], [0, 1]], "z3": [[0.5, 0], [1, 0], [1, 1], [0.5, 1]]},
+              "heatmap_grid": (4, 2)}
+    started = datetime(2026, 11, 3, 9, 59, 50, tzinfo=timezone.utc)  # crosses 10:00, so two hourly heatmaps
+    counts = ingest_run(conn, prefix, "r", "c2", "z1", started, layout=layout)
+    assert (counts["zone_dwell"], counts["heatmaps"]) == (3, 2)
+    dwell = [(r["track_id"], r["zone_id"], r["dwell_s"]) for r in conn.execute("SELECT * FROM zone_dwell ORDER BY track_id, ts_start")]
+    assert dwell == [(1, "z2", 10.0), (1, "z3", 9.0), (2, "z3", 19.0)]
+    assert conn.execute("SELECT zone_id FROM interactions").fetchone()[0] == "z3"
+    assert dict(conn.execute("SELECT track_id, zone_id FROM tracks").fetchall()) == {1: "z2", 2: "z3"}
+    maps = conn.execute("SELECT ts_start, cells FROM heatmaps ORDER BY ts_start").fetchall()
+    assert maps[0]["ts_start"] == "2026-11-03T09:00:00+00:00" and sum(map(sum, json.loads(maps[0]["cells"]))) == 20  # 10 frames x 2
     assert validate(conn) == []

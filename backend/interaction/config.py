@@ -32,6 +32,11 @@ class InteractionConfig:
     # Normalised (x1, y1, x2, y2) regions reserved for staff workstations,
     # counters, tills, or stock-room doors. They must be calibrated per camera.
     staff_zones: tuple[tuple[float, float, float, float], ...] = ()
+    # Event-store layout of this camera (B4): normalised floor polygons keyed by store zone_id, e.g.
+    # {"z2": [[0, 0.4], [0.5, 0.4], [0.5, 1], [0, 1]]}; feet outside every polygon count toward the camera's zone.
+    floor_zones: dict[str, list[list[float]]] = field(default_factory=dict)
+    zone_hold_seconds: float = 1.0  # a track must stay this long in a new zone before it counts as a move
+    heatmap_grid: tuple[int, int] = (32, 18)  # cols, rows
     stationary_distance_px: float = 18.0
     staff_zone_dwell_seconds: float = 12.0
     # Few-shot role references for this camera: torso descriptors of tracks a person labelled

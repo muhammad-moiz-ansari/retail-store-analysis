@@ -16,12 +16,16 @@ import sqlite3
 from datetime import datetime, timedelta
 from pathlib import Path
 
+from .zones import foot_point, heatmap, zone_of, zone_segments
+
 SCHEMA = Path(__file__).with_name("schema.sql")
 DEFAULT_DB_PATH = Path(os.getenv("EVENTS_DB_PATH", Path(__file__).resolve().parents[1] / "events.sqlite3"))
 TABLES = ("tracks", "role_decisions", "interactions", "zone_dwell", "footfall", "queue_samples",
-          "unattended_episodes", "pipeline_health")
+          "unattended_episodes", "pipeline_health", "heatmaps")
 COMMON = ("event_id", "run_id", "store_id", "camera_id", "zone_id", "ts_start", "ts_end")
 DEFAULT_UNATTENDED_S = 180.0  # store_core's default thresholds.unattendedWaitMinutes (3)
+# Camera layout keys of a camera's --config file (InteractionConfig fields) that ingestion uses.
+LAYOUT = {"floor_zones": {}, "zone_hold_seconds": 1.0, "heatmap_grid": (32, 18)}
 
 
 def connect(path: Path | str = DEFAULT_DB_PATH) -> sqlite3.Connection:
@@ -86,31 +90,61 @@ def health_rows(detections: list[dict], at, base: dict) -> list[dict]:
 
 
 def ingest_run(conn: sqlite3.Connection, prefix: Path | str, run_id: str, camera_id: str, zone_id: str,
-               started_at: datetime, store_id: str = "store-1", unattended_after_s: float = DEFAULT_UNATTENDED_S) -> dict:
-    """Replace `run_id`'s rows with this CV run. `zone_id` is the camera's zone until per-zone dwell (B4.2) exists."""
+               started_at: datetime, store_id: str = "store-1", unattended_after_s: float = DEFAULT_UNATTENDED_S,
+               layout: dict | None = None) -> dict:
+    """Replace `run_id`'s rows with this CV run. `zone_id` is the camera's zone; `layout` (LAYOUT keys) splits the
+    frame into floor zones. Runs written before the CLI recorded frame_size get the camera zone only, no heatmap."""
     prefix = Path(prefix)
+    layout = {**LAYOUT, **(layout or {})}
     read = lambda suffix: json.loads(prefix.with_suffix(suffix).read_text(encoding="utf-8"))
-    people, events, detections = read(".people.json")["people"], read(".interactions.json"), read(".detections.json")
+    summary, events, detections = read(".people.json"), read(".interactions.json"), read(".detections.json")
+    people, frame_size = summary["people"], summary.get("frame_size")
     at = lambda seconds: (started_at + timedelta(seconds=seconds)).isoformat()
     base = {"run_id": run_id, "store_id": store_id, "camera_id": camera_id, "zone_id": zone_id}
     key = f"{run_id}:{{}}:{camera_id}:{{}}"
-    tracks = [{**base, "event_id": key.format("track", p["track_id"]), "ts_start": at(p["first_seen"]), "ts_end": at(p["last_seen"]),
+
+    samples: dict[int, list[tuple[float, str]]] = {}
+    for frame in detections:
+        for person in frame["people"]:
+            zone = zone_of(foot_point(person["bbox"], frame_size), layout["floor_zones"], zone_id) if frame_size else zone_id
+            samples.setdefault(person["track_id"], []).append((frame["timestamp"], zone))
+    segments = {p["track_id"]: zone_segments(samples.get(p["track_id"]) or [(p["first_seen"], zone_id), (p["last_seen"], zone_id)],
+                                             layout["zone_hold_seconds"]) for p in people}
+    role_of = {p["track_id"]: p["role"] for p in people}
+    dwell = [{**base, "event_id": key.format("dwell", f"{track_id}:{i}"), "zone_id": zone, "ts_start": at(t0), "ts_end": at(t1),
+              "track_id": track_id, "role": role_of[track_id], "dwell_s": round(t1 - t0, 3)}
+             for track_id, runs in segments.items() for i, (zone, t0, t1) in enumerate(runs)]
+    main_zone = {track_id: max({z for z, _, _ in runs}, key=lambda z: sum(t1 - t0 for zz, t0, t1 in runs if zz == z))
+                 for track_id, runs in segments.items()}
+    zone_at = lambda track_id, t: next((z for z, t0, t1 in segments.get(track_id, []) if t0 <= t <= t1), main_zone.get(track_id, zone_id))
+
+    tracks = [{**base, "event_id": key.format("track", p["track_id"]), "zone_id": main_zone[p["track_id"]],
+               "ts_start": at(p["first_seen"]), "ts_end": at(p["last_seen"]),
                "track_id": p["track_id"], "role": p["role"], "employee_score": p.get("employee_score"),
                "frames_observed": p["frames_observed"]} for p in people]
     roles = [{**base, "event_id": key.format("role", f"{p['track_id']}:{i}"), "ts_start": at(s["from"]), "ts_end": at(s["to"]),
               "track_id": p["track_id"], "role": s["role"], "frames": s["frames"]}
              for p in people for i, s in enumerate(p.get("role_segments", []))]
     interactions = [{**base, "event_id": key.format("interaction", f"{e['employee_track_id']}:{e['customer_track_id']}:{e['started_at']:.3f}"),
-                     "ts_start": at(e["started_at"]), "ts_end": at(e["last_seen_at"]),
+                     "zone_id": zone_at(e["customer_track_id"], e["started_at"]), "ts_start": at(e["started_at"]), "ts_end": at(e["last_seen_at"]),
                      "employee_track_id": e["employee_track_id"], "customer_track_id": e["customer_track_id"],
                      "duration_s": round(e["last_seen_at"] - e["started_at"], 3), "verdict": e["verdict"]} for e in events]
+    # Heatmaps per wall-clock hour: shift clip time by how far into its hour the clip started.
+    hour0 = started_at.replace(minute=0, second=0, microsecond=0)
+    offset = (started_at - hour0).total_seconds()
+    cols, rows = layout["heatmap_grid"]
+    heatmaps = [{**base, "event_id": key.format("heatmap", hour), "ts_start": (hour0 + timedelta(hours=hour)).isoformat(),
+                 "ts_end": (hour0 + timedelta(hours=hour + 1)).isoformat(), "cols": cols, "rows": rows, "cells": json.dumps(cells)}
+                for hour, cells in heatmap([{**f, "timestamp": f["timestamp"] + offset} for f in detections], frame_size, (cols, rows)).items()
+                ] if frame_size else []
     with conn:
         delete_run(conn, run_id)
-        for table, rows in (("tracks", tracks), ("role_decisions", roles), ("interactions", interactions),
-                            ("pipeline_health", health_rows(detections, at, base))):
-            insert(conn, table, rows)
+        for table, table_rows in (("tracks", tracks), ("role_decisions", roles), ("interactions", interactions), ("zone_dwell", dwell),
+                                  ("pipeline_health", health_rows(detections, at, base)), ("heatmaps", heatmaps)):
+            insert(conn, table, table_rows)
         unattended = derive_unattended(conn, run_id, unattended_after_s)
-    return {"tracks": len(tracks), "role_decisions": len(roles), "interactions": len(interactions), "unattended_episodes": unattended}
+    return {"tracks": len(tracks), "role_decisions": len(roles), "interactions": len(interactions), "zone_dwell": len(dwell),
+            "heatmaps": len(heatmaps), "unattended_episodes": unattended}
 
 
 def validate(conn: sqlite3.Connection) -> list[str]:
@@ -125,6 +159,12 @@ def validate(conn: sqlite3.Connection) -> list[str]:
             bad = conn.execute(f"SELECT COUNT(*) FROM {table} WHERE ts_end < ts_start").fetchone()[0]
             problems += [f"{table}: {bad} rows end before they start"] if bad else []
     return problems
+
+
+def layout_from(config) -> dict:
+    """LAYOUT keys from a camera config, as a dict (the JSON file) or an InteractionConfig."""
+    get = config.get if isinstance(config, dict) else lambda name, default: getattr(config, name, default)
+    return {name: get(name, default) for name, default in LAYOUT.items()}
 
 
 def unattended_threshold() -> float:
@@ -147,12 +187,14 @@ def main() -> None:
     parser.add_argument("--store", default="store-1")
     parser.add_argument("--db", type=Path, default=DEFAULT_DB_PATH)
     parser.add_argument("--unattended-after", type=float, help="Seconds; default from settings thresholds")
+    parser.add_argument("--config", type=Path, help="The camera's --config JSON; its floor_zones etc. split the frame into zones")
     args = parser.parse_args()
     if args.start.tzinfo is None:
         parser.error("--start needs a UTC offset, e.g. 2026-11-03T09:00:00+00:00")
     with connect(args.db) as conn:
         counts = ingest_run(conn, args.prefix, args.run_id, args.camera, args.zone, args.start, args.store,
-                            args.unattended_after if args.unattended_after is not None else unattended_threshold())
+                            args.unattended_after if args.unattended_after is not None else unattended_threshold(),
+                            layout_from(json.loads(args.config.read_text(encoding="utf-8")) if args.config else {}))
         problems = validate(conn)
     print(f"{args.run_id} -> {args.db}: {counts}")
     if problems:
