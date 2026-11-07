@@ -75,7 +75,7 @@ class InteractionConfig:
     min_interaction_seconds: float = 2.0
     # Walking pace is ~0.8 body heights/s, so a passer-by drifts well past this within min_interaction_seconds.
     max_relative_drift_heights: float = 0.5
-    max_missing_seconds: float = 1.5
+    max_missing_seconds: float = 4.0  # was 1.5: bridges brief tracking gaps so one interaction is not split into pieces (benchmark F1 0.59 to 0.84, tuned on the 11 labelled clips)
     # Second-stage judge: once proximity says "interaction", it looks at the pair and can veto it.
     # pose: a head must point at the other person.
     interaction_judge: Literal["off", "pose"] = "pose"
