@@ -13,6 +13,7 @@ from pathlib import Path
 import cv2
 
 from .config import DEVICE, InteractionConfig
+from .engagement import merge_spans
 from .pipeline import InteractionPipeline
 from .renderer import draw_result
 from .types import CONFIRMED
@@ -261,7 +262,7 @@ def main() -> None:
     else:
         print(f"processed {duration:.1f}s of video in {elapsed:.1f}s ({duration / elapsed:.2f}x realtime)")
     writer.release()
-    kept = [event for event in interactions.values() if event["verdict"] in CONFIRMED]
+    kept = merge_spans([event for event in interactions.values() if event["verdict"] in CONFIRMED], pipeline.config.max_missing_seconds)
     rejected = [event for event in interactions.values() if event["verdict"] not in CONFIRMED]
     args.output.with_suffix(".interactions.json").write_text(json.dumps(kept, indent=2), encoding="utf-8")
     if pipeline.judge:

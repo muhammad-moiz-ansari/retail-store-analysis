@@ -98,6 +98,7 @@ def video_kpis(spec: dict, judge: str, device: str, min_iou: float) -> dict:
 
     from .cli import analyse
     from .config import InteractionConfig
+    from .engagement import merge_spans
     from .pipeline import InteractionPipeline
     from .types import CONFIRMED
 
@@ -131,7 +132,7 @@ def video_kpis(spec: dict, judge: str, device: str, min_iou: float) -> dict:
     run = analyse(cap, fps, pipeline, spec.get("every", 1), spec.get("track_every", 1), tally)
     elapsed = time.perf_counter() - started
     cap.release()
-    events = list(run["interactions"].values())
+    events = merge_spans(list(run["interactions"].values()), config.max_missing_seconds)
     interval = lambda e: (e["started_at"], e["last_seen_at"])
     latencies = sorted(run["latencies"])
     # A video without reviewed "interactions" is not labelled yet: speed only, no accuracy.
@@ -140,12 +141,13 @@ def video_kpis(spec: dict, judge: str, device: str, min_iou: float) -> dict:
         "path": spec["path"], "duration_s": run["frames"] / fps,
         # Proximity alone = every candidate the judge saw; with judge = the ones it kept.
         "proximity_only": None if truth is None else match_events([interval(e) for e in events], truth, min_iou),
-        "with_judge": None if truth is None else match_events([interval(e) for e in events if e["verdict"] in CONFIRMED], truth, min_iou),
+        "with_judge": None if truth is None else match_events([interval(e) for e in merge_spans([e for e in run["interactions"].values() if e["verdict"] in CONFIRMED], config.max_missing_seconds)], truth, min_iou),
         # "roles": {"<track_id>": "employee" | "customer"} from a reviewed run with the same settings.
         "roles": role_counts({t: max(f, key=f.get) for t, f in role_frames.items()}, spec["roles"]) if "roles" in spec else None,
         # "people": distinct people a reviewer counted in the clip; extra track IDs are fragments.
         "tracking": tracking_kpis(track_roles, run["frames"] / fps / 60, spec.get("people")),
-        "candidates": [{"start": round(e["started_at"], 1), "end": round(e["last_seen_at"], 1), "verdict": e["verdict"]} for e in events],
+        "candidates": [{"start": round(e["started_at"], 1), "end": round(e["last_seen_at"], 1), "verdict": e["verdict"],
+                        "pair": [e["employee_track_id"], e["customer_track_id"]]} for e in events],
         "speed": {"realtime_factor": run["frames"] / fps / elapsed,
                   "frame_ms_p50": 1000 * latencies[len(latencies) // 2] if latencies else None,
                   "frame_ms_p95": 1000 * latencies[int(len(latencies) * 0.95)] if latencies else None,
