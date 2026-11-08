@@ -6,8 +6,6 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 
-from ..camera_handoff import appearance_descriptor
-from ..handoff_core import appearance_similarity
 from .config import InteractionConfig
 
 if TYPE_CHECKING:
@@ -108,6 +106,29 @@ class ByteTrackPersonTracker:
                     break
         self._live_prev = live
         return people
+
+
+def appearance_descriptor(frame: np.ndarray, bbox: list[int]) -> list[float]:
+    """Hue-saturation histogram of the middle torso: shirt colour without floor and wall.
+
+    The whole-box histogram scored every pair of people ~0.92 alike, so a customer stepping in
+    front of an employee took over the employee's ID.
+    """
+    import cv2
+
+    x1, y1, x2, y2 = max(0, bbox[0]), max(0, bbox[1]), min(frame.shape[1], bbox[2]), min(frame.shape[0], bbox[3])
+    torso = frame[y1 + (y2 - y1) // 4:y1 + 3 * (y2 - y1) // 4, x1 + (x2 - x1) // 5:x2 - (x2 - x1) // 5]
+    if torso.size == 0:
+        return []
+    histogram = cv2.calcHist([cv2.cvtColor(torso, cv2.COLOR_BGR2HSV)], [0, 1], None, [16, 8], [0, 180, 0, 256]).flatten()
+    return (histogram / histogram.sum()).tolist()
+
+
+def appearance_similarity(first: list[float], second: list[float]) -> float:
+    """Histogram correlation: 1 same colours, ~0 unrelated, negative opposite."""
+    if not first or not second or np.std(first) == 0 or np.std(second) == 0:
+        return 0.0
+    return float(np.corrcoef(first, second)[0, 1])
 
 
 def _inside_fraction(inner: tuple[int, int, int, int], outer: tuple[int, int, int, int]) -> float:

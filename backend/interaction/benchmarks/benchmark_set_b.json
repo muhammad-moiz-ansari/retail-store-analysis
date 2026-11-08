@@ -1,0 +1,252 @@
+{
+  "temporal_iou": 0.5,
+  "detector": {
+    "model": "backend/models/best_320_openvino_model",
+    "imgsz": 320,
+    "dataset": "~/data/split/test",
+    "note": "Set B: held-out clips (detector test/val recordings), labels from CVAT project 3 reviewed in CVAT."
+  },
+  "videos": [
+    {
+      "path": "dummyoutputs/square_640/20261010_155639_part1_sq640.mp4",
+      "every": 10,
+      "track_every": 10,
+      "interactions": [
+        {
+          "start": 11.2,
+          "end": 15.8
+        },
+        {
+          "start": 19.5,
+          "end": 28.4
+        },
+        {
+          "start": 34.3,
+          "end": 36.7
+        }
+      ],
+      "pass_bys": [
+        {
+          "start": 36.8,
+          "end": 38.6
+        }
+      ],
+      "people": 3
+    },
+    {
+      "path": "dummyoutputs/square_640/20261010_162139_part1_sq640.mp4",
+      "every": 10,
+      "track_every": 10,
+      "interactions": [
+        {
+          "start": 23.5,
+          "end": 49.7
+        }
+      ],
+      "pass_bys": [],
+      "people": 2
+    },
+    {
+      "path": "dummyoutputs/square_640/Copy of IMG_8884_part1_sq640.MOV",
+      "every": 10,
+      "track_every": 10,
+      "interactions": [
+        {
+          "start": 17.2,
+          "end": 30.9
+        }
+      ],
+      "pass_bys": [
+        {
+          "start": 50.3,
+          "end": 53.0
+        }
+      ],
+      "people": 3
+    },
+    {
+      "path": "dummyoutputs/square_640/Copy of IMG_8888_part1_sq640.MOV",
+      "every": 10,
+      "track_every": 10,
+      "interactions": [
+        {
+          "start": 26.7,
+          "end": 32.5
+        },
+        {
+          "start": 36.3,
+          "end": 42.2
+        }
+      ],
+      "pass_bys": [],
+      "people": 3
+    },
+    {
+      "path": "dummyoutputs/square_640/IMG_8826_part1_sq640.MOV",
+      "every": 10,
+      "track_every": 10,
+      "interactions": [],
+      "pass_bys": [
+        {
+          "start": 0.8,
+          "end": 3.7
+        },
+        {
+          "start": 31.7,
+          "end": 40.0
+        }
+      ],
+      "people": 2
+    },
+    {
+      "path": "dummyoutputs/square_640/IMG_8828_part1_sq640.MOV",
+      "every": 10,
+      "track_every": 10,
+      "interactions": [
+        {
+          "start": 57.0,
+          "end": 61.0
+        }
+      ],
+      "pass_bys": [],
+      "people": 3
+    },
+    {
+      "path": "dummyoutputs/square_640/IMG_8830_part1_sq640.MOV",
+      "every": 10,
+      "track_every": 10,
+      "interactions": [
+        {
+          "start": 47.5,
+          "end": 58.1
+        }
+      ],
+      "pass_bys": [],
+      "people": 2
+    },
+    {
+      "path": "dummyoutputs/square_640/IMG_8831_part1_sq640.MOV",
+      "every": 10,
+      "track_every": 10,
+      "interactions": [
+        {
+          "start": 11.0,
+          "end": 21.7
+        },
+        {
+          "start": 51.7,
+          "end": 62.2
+        }
+      ],
+      "pass_bys": [
+        {
+          "start": 22.0,
+          "end": 25.7
+        }
+      ],
+      "people": 3
+    },
+    {
+      "path": "dummyoutputs/square_640/IMG_8832_part1_sq640.MOV",
+      "every": 10,
+      "track_every": 10,
+      "interactions": [],
+      "pass_bys": [
+        {
+          "start": 11.3,
+          "end": 13.7
+        }
+      ],
+      "people": 2
+    },
+    {
+      "path": "dummyoutputs/square_640/IMG_8834_part1_sq640.MOV",
+      "every": 10,
+      "track_every": 10,
+      "interactions": [
+        {
+          "start": 18.7,
+          "end": 28.4
+        },
+        {
+          "start": 41.0,
+          "end": 44.7
+        }
+      ],
+      "pass_bys": [
+        {
+          "start": 51.5,
+          "end": 53.4
+        }
+      ],
+      "people": 3
+    },
+    {
+      "path": "dummyoutputs/square_640/IMG_8836_part1_sq640.MOV",
+      "every": 10,
+      "track_every": 10,
+      "interactions": [
+        {
+          "start": 45.3,
+          "end": 59.7
+        }
+      ],
+      "pass_bys": [
+        {
+          "start": 60.7,
+          "end": 65.2
+        }
+      ],
+      "people": 3
+    },
+    {
+      "path": "dummyoutputs/square_640/IMG_8838_part1_sq640.MOV",
+      "every": 10,
+      "track_every": 10,
+      "interactions": [],
+      "pass_bys": [],
+      "people": 2
+    },
+    {
+      "path": "dummyoutputs/square_640/IMG_8838_part2_sq640.MOV",
+      "every": 10,
+      "track_every": 10,
+      "interactions": [
+        {
+          "start": 1.7,
+          "end": 7.2
+        }
+      ],
+      "pass_bys": [
+        {
+          "start": 20.0,
+          "end": 34.9
+        }
+      ],
+      "people": 2
+    },
+    {
+      "path": "dummyoutputs/square_640/IMG_8839_part1_sq640.MOV",
+      "every": 10,
+      "track_every": 10,
+      "interactions": [
+        {
+          "start": 10.8,
+          "end": 28.7
+        },
+        {
+          "start": 10.8,
+          "end": 28.7
+        }
+      ],
+      "pass_bys": [],
+      "people": 3
+    }
+  ],
+  "targets": {
+    "detector.map50": 0.8,
+    "interactions.with_judge.precision": 0.9,
+    "interactions.with_judge.recall": 0.7,
+    "speed.realtime_factor": 1.0
+  }
+}

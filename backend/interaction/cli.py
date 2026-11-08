@@ -7,11 +7,13 @@ import json
 import os
 import threading
 import time
+from datetime import datetime, timezone
 from pathlib import Path
 
 import cv2
 
 from .config import DEVICE, InteractionConfig
+from .engagement import merge_spans
 from .pipeline import InteractionPipeline
 from .renderer import draw_result
 from .types import CONFIRMED
@@ -114,6 +116,16 @@ class CameraSwitch:
                 self.raw_writer.release()
 
 
+def frame_check(frame, timestamp: float, reference: dict, config: InteractionConfig) -> bool:
+    """Frozen or dark. A covered or unlit lens reads almost black; a hung stream repeats one frame, so the picture
+    hasn't changed from `reference` (the last frame that did change) for frozen_seconds. Sustained, not frame to
+    frame, because low-fps cameras re-encoded at 30 fps repeat each frame a few times."""
+    small = cv2.resize(cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY), (64, 36)).astype("float32")
+    if "image" not in reference or float(cv2.absdiff(small, reference["image"]).mean()) >= config.frozen_change:
+        reference.update(image=small, since=timestamp)
+    return bool(small.mean() < config.dark_brightness or timestamp - reference["since"] >= config.frozen_seconds)
+
+
 def analyse(cap, fps: float, pipeline: InteractionPipeline, every: int = 1, track_every: int = 1, on_result=None, clock=None) -> dict:
     """Run the pipeline over a video; returns one record per interaction (its last snapshot) and per-frame latencies.
     Live feeds pass a wall-clock `clock`, since a camera's nominal FPS is not its delivered rate."""
@@ -149,6 +161,9 @@ def main() -> None:
                         help="Phone camera: the virtual webcam index its app adds, or its stream URL (e.g. http://<phone-ip>:4747/video)")
     parser.add_argument("--output", type=Path, default=Path("interaction_output.mp4"))
     parser.add_argument("--roles", type=Path, help="YOLO role model trained on the bib-labelled dataset")
+    parser.add_argument("--config", type=Path,
+                        help="Store/camera settings JSON (any InteractionConfig field: role_references from calibrate, "
+                             "bib colour, staff_zones, role_weights, thresholds)")
     parser.add_argument("--every", type=int, default=1, help="Score roles and write output on every Nth frame")
     parser.add_argument("--track-every", type=int, default=1, help="Run the tracker on every Nth frame (3 = 10 fps on 30 fps video)")
     parser.add_argument("--device", default=DEVICE, help="Inference device, e.g. cpu or cuda:0")
@@ -159,7 +174,19 @@ def main() -> None:
     parser.add_argument("--stop-file", type=Path,
                         help="Live without a preview window (for the web UI): stop when this file appears; "
                              "the newest camera frame, with the latest detections drawn, is kept at <output>.preview.jpg")
+    parser.add_argument("--camera", help="Write the run into the event store (schema v1) as this camera, e.g. c2; "
+                                          "its zone comes from the camera settings")
+    parser.add_argument("--zone", help="zone_id override for --camera")
+    parser.add_argument("--run-id", help="Event store run_id (default: the output path); re-using one replaces that run")
+    parser.add_argument("--start", type=datetime.fromisoformat,
+                        help="UTC time of the video's first frame, e.g. 2026-11-03T09:00:00+00:00 (default: when processing starts)")
+    parser.add_argument("--events-db", type=Path, help="Event store path (default: EVENTS_DB_PATH or backend/events.sqlite3)")
     args = parser.parse_args()
+    if args.start and args.start.tzinfo is None:
+        parser.error("--start needs a UTC offset, e.g. 2026-11-03T09:00:00+00:00")
+    # Resolved before processing, so a typo'd camera fails now and not after a long run.
+    zone = args.zone or (camera_zone(args.camera) if args.camera else None)
+    args.output.parent.mkdir(parents=True, exist_ok=True)  # else the writer fails silently and the JSON writes crash
     headless = args.stop_file is not None
     preview = args.output.with_suffix(".preview.jpg")
     if args.live:
@@ -192,13 +219,14 @@ def main() -> None:
     if args.live and args.square:  # the camera reports its stream size, not the cropped one
         width = height = min(width, height)
     writer = cv2.VideoWriter(str(args.output), cv2.VideoWriter_fourcc(*"mp4v"), fps or 25, (width, height))
-    pipeline = InteractionPipeline(InteractionConfig(**({"role_model": args.roles} if args.roles else {}), device=args.device,
-                                                     interaction_judge=args.judge, judge_device=args.judge_device))
-    tracks, detections = {}, []
+    pipeline = InteractionPipeline(InteractionConfig.from_json(args.config, **({"role_model": args.roles} if args.roles else {}),
+                                                               device=args.device, interaction_judge=args.judge, judge_device=args.judge_device))
+    tracks, detections, reference = {}, [], {}
 
     def record(frame_number, frame, result):
+        bad = frame_check(frame, result["timestamp"], reference, pipeline.config)
         detections.append({"frame": frame_number, "timestamp": round(result["timestamp"], 2),
-                           "interaction_active": result["interaction_active"], "people": result["people"]})
+                           "interaction_active": result["interaction_active"], "people": result["people"], "frozen_or_dark": bad})
         for person in result["people"]:
             track = tracks.setdefault(person["track_id"], {"first_seen": result["timestamp"], "factors": []})
             track["last_seen"] = result["timestamp"]
@@ -218,7 +246,7 @@ def main() -> None:
             annotated = cv2.resize(annotated, (width, height))
         writer.write(annotated)
 
-    started = time.perf_counter()
+    started, started_at = time.perf_counter(), args.start or datetime.now(timezone.utc)
     clock = (lambda: time.perf_counter() - started) if args.live else None
     try:
         run = analyse(cap, fps, pipeline, args.every, args.track_every, record, clock)
@@ -234,7 +262,7 @@ def main() -> None:
     else:
         print(f"processed {duration:.1f}s of video in {elapsed:.1f}s ({duration / elapsed:.2f}x realtime)")
     writer.release()
-    kept = [event for event in interactions.values() if event["verdict"] in CONFIRMED]
+    kept = merge_spans([event for event in interactions.values() if event["verdict"] in CONFIRMED], pipeline.config.max_missing_seconds)
     rejected = [event for event in interactions.values() if event["verdict"] not in CONFIRMED]
     args.output.with_suffix(".interactions.json").write_text(json.dumps(kept, indent=2), encoding="utf-8")
     if pipeline.judge:
@@ -244,15 +272,36 @@ def main() -> None:
     people = [
         {"track_id": track_id, "first_seen": round(t["first_seen"], 2), "last_seen": round(t["last_seen"], 2),
          "frames_observed": len(t["factors"]), **pipeline.classifier.agent.classify_person(t["factors"]),
-         # Final role = the held (3 s debounced) role this ID kept the longest; segments expose ID swaps.
-         "role": max(("employee", "customer"), key=lambda r: sum(s["frames"] for s in t["role_segments"] if s["role"] == r)),
-         "role_segments": t["role_segments"]}
+         # Final role = the held (role_hold_seconds debounced) role this ID kept the longest; segments expose ID swaps.
+         "role": max({s["role"] for s in t["role_segments"]}, key=lambda r: sum(s["frames"] for s in t["role_segments"] if s["role"] == r)),
+         "role_segments": t["role_segments"],
+         "appearance": pipeline.classifier.appearance(track_id)}  # what calibrate stores when this track is labelled
         for track_id, t in sorted(tracks.items())
     ]
     args.output.with_suffix(".people.json").write_text(
-        json.dumps({"weights": pipeline.classifier.agent.weights, "threshold": pipeline.classifier.agent.threshold, "people": people}, indent=2),
+        json.dumps({"weights": pipeline.classifier.agent.weights, "threshold": pipeline.classifier.agent.threshold,
+                    "frame_size": [width, height], "people": people}, indent=2),
         encoding="utf-8",
     )
+    if args.camera:
+        from ..events.ingest import DEFAULT_DB_PATH, connect, ingest_run, layout_from, unattended_threshold
+
+        run_id = args.run_id or str(args.output.with_suffix(""))
+        with connect(args.events_db or DEFAULT_DB_PATH) as events:
+            counts = ingest_run(events, args.output, run_id, args.camera, zone, started_at,
+                                unattended_after_s=unattended_threshold(), layout=layout_from(pipeline.config))
+        print(f"event store: run {run_id} as {args.camera}/{zone}: {counts}")
+
+
+def camera_zone(camera_id: str) -> str:
+    """The zone a camera covers, from the manager's camera settings."""
+    from ..store_core import connect
+
+    with connect() as store:
+        row = store.execute("SELECT zone_id FROM cameras WHERE id = ?", (camera_id,)).fetchone()
+    if not row or not row["zone_id"]:
+        raise SystemExit(f"camera {camera_id!r} is not configured with a zone in settings (or pass --zone)")
+    return row["zone_id"]
 
 
 if __name__ == "__main__":

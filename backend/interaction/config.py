@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Literal
@@ -31,11 +32,34 @@ class InteractionConfig:
     # Normalised (x1, y1, x2, y2) regions reserved for staff workstations,
     # counters, tills, or stock-room doors. They must be calibrated per camera.
     staff_zones: tuple[tuple[float, float, float, float], ...] = ()
+    # Event-store layout of this camera (B4): normalised floor polygons keyed by store zone_id, e.g.
+    # {"z2": [[0, 0.4], [0.5, 0.4], [0.5, 1], [0, 1]]}; feet outside every polygon count toward the camera's zone.
+    floor_zones: dict[str, list[list[float]]] = field(default_factory=dict)
+    zone_hold_seconds: float = 1.0  # a track must stay this long in a new zone before it counts as a move
+    heatmap_grid: tuple[int, int] = (32, 18)  # cols, rows
+    # Entrance camera only: a vertical line at this normalised x; a track ending on the other side of it from where it
+    # started is one footfall, "in" when it moved toward entrance_in_direction ("right" or "left").
+    entrance_line: float | None = None
+    entrance_in_direction: Literal["right", "left"] = "right"
+    # Counter camera only: normalised polygon where customers queue; sampled every queue_sample_seconds.
+    queue_zone: list[list[float]] | None = None
+    queue_sample_seconds: float = 5.0
+    # Pipeline health frame check: mean grey (0-255) below this is a dark/covered lens; a picture changing less than
+    # frozen_change (mean, 64x36 grey thumbnail) for frozen_seconds is a frozen stream (cam1.mp4 ends with one).
+    dark_brightness: float = 20.0
+    frozen_change: float = 0.3
+    frozen_seconds: float = 2.0
     stationary_distance_px: float = 18.0
     staff_zone_dwell_seconds: float = 12.0
-    role_smoothing: float = 0.65
+    # Few-shot role references for this camera: torso descriptors of tracks a person labelled
+    # (written by `python -m backend.interaction.calibrate`). They teach a new store its uniform without retraining.
+    role_references: dict[str, list[list[float]]] = field(default_factory=dict)
+    role_reference_margin: float = 0.3  # employee-minus-customer similarity that counts as full evidence
+    role_weights: dict[str, float] = field(default_factory=dict)  # per-store overrides of the agent's weights
+    role_unknown_band: float = 0.0  # scores within threshold ± band are "unknown"; 0 always picks a role
+    role_smoothing: float = 0.65  # share of the old employee score kept per 0.1 s, whatever the frame rate
     employee_score_threshold: float = 0.45
-    role_hold_seconds: float = 3.0
+    role_hold_seconds: float = 1.5
     confidence: float = 0.35
     tracker: str = str(Path(__file__).with_name("botsort_reid.yaml"))
     # Interaction distance in body heights (mean box height of the pair), no floor calibration.
@@ -47,11 +71,11 @@ class InteractionConfig:
     # gets their old ID back if a similar-looking person appears mid-frame within relink_seconds.
     exit_edge_margin: float = 0.05
     relink_seconds: float = 5.0
-    relink_min_similarity: float = 0.90
+    relink_min_similarity: float = 0.40  # torso histogram correlation: other people 0.0-0.25, same person 0.4-0.75
     min_interaction_seconds: float = 2.0
     # Walking pace is ~0.8 body heights/s, so a passer-by drifts well past this within min_interaction_seconds.
     max_relative_drift_heights: float = 0.5
-    max_missing_seconds: float = 1.5
+    max_missing_seconds: float = 4.0  # was 1.5: bridges brief tracking gaps so one interaction is not split into pieces (benchmark F1 0.59 to 0.84, tuned on the 11 labelled clips)
     # Second-stage judge: once proximity says "interaction", it looks at the pair and can veto it.
     # pose: a head must point at the other person.
     interaction_judge: Literal["off", "pose"] = "pose"
@@ -60,5 +84,11 @@ class InteractionConfig:
     min_facing_fraction: float = 0.5  # share of judged frames in which someone faces the other
     judge_device: str | None = None  # None = same as device; e.g. YOLO on cpu, judge on cuda:0
     judge_frames: int = 4  # frames sampled across the last min_interaction_seconds
-    judge_recheck_seconds: float = 4.0  # a rejected pair is re-judged this often while still close
+    judge_recheck_seconds: float = 1.0  # a rejected pair is re-judged this often while still close
     device: str = DEVICE  # "cuda:0" runs YOLO on the GPU (the .pt model; OpenVINO is CPU-only)
+
+    @classmethod
+    def from_json(cls, path: Path | None, **overrides) -> "InteractionConfig":
+        """Per-store/camera settings from a JSON file (any field above); `overrides` win. Unknown keys raise."""
+        values = json.loads(Path(path).read_text(encoding="utf-8")) if path else {}
+        return cls(**{**values, **overrides})

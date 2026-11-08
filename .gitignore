@@ -42,6 +42,7 @@ backend/*.sqlite3-*
 Thumbs.db
 .vscode/
 .idea/
+vault/
 
 # Test / coverage outputs
 coverage/

@@ -1,7 +1,7 @@
 """Dependency-light checks for interaction state transitions."""
 
 from .config import InteractionConfig
-from .engagement import EngagementDetector, body_distance
+from .engagement import EngagementDetector, body_distance, merge_spans
 from .types import TrackedPerson
 
 
@@ -66,3 +66,23 @@ def test_pair_moving_camera_still_interacts() -> None:
         shift = 10 * step
         events = detector.update([person(1, "employee", shift), person(2, "customer", 30 + shift)], step / 10)
     assert len(events) == 1
+
+
+def span(employee: int, customer: int, start: float, end: float, verdict: str = "interaction") -> dict:
+    return {"employee_track_id": employee, "customer_track_id": customer, "started_at": start, "last_seen_at": end,
+            "duration_seconds": end - start, "verdict": verdict}
+
+
+def test_merge_spans_one_per_customer() -> None:
+    # Set B IMG_8839: one employee serving two customers; employee ID 1 switches to 13 and back.
+    merged = merge_spans([span(1, 4, 5.7, 21.3), span(1, 5, 7.7, 18.7), span(13, 4, 21.0, 28.3),
+                          span(13, 5, 23.7, 28.3), span(1, 4, 27.7, 30.0), span(5, 4, 29.3, 32.3)], max_gap=4.0)
+    # Customer 5 drops out for 5 s (18.7 to 23.7), past max_gap, so that span stays split.
+    assert sorted((m["customer_track_id"], m["started_at"], m["last_seen_at"]) for m in merged) == [
+        (4, 5.7, 32.3), (5, 7.7, 18.7), (5, 23.7, 28.3)]
+
+
+def test_merge_spans_flipped_roles_gap_and_verdict() -> None:
+    # IMG_8831: same two people with roles swapped 2 s later is one interaction; a far-later span is not.
+    merged = merge_spans([span(1, 4, 9.7, 23.3, "no_interaction"), span(4, 1, 25.3, 30.0), span(1, 4, 40.0, 45.0)], max_gap=4.0)
+    assert [(m["started_at"], m["last_seen_at"], m["verdict"]) for m in merged] == [(9.7, 30.0, "interaction"), (40.0, 45.0, "interaction")]
