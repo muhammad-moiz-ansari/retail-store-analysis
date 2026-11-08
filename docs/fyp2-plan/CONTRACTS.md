@@ -70,3 +70,38 @@ One row in the existing `alerts` table per unattended event:
 | `source` | `vision` |
 | `evidence_json` | the unattended entry plus the run name |
 | `id` | `vision:<run>:<customer_track_id>:<from>` so re-importing a run does not duplicate alerts |
+
+## Event schema v1 (shared contract 1)
+
+`backend/events/schema.sql`: eight tables (`tracks`, `role_decisions`, `interactions`, `zone_dwell`, `footfall`,
+`queue_samples`, `unattended_episodes`, `pipeline_health`). Every row has `event_id` (stable, `<run>:<kind>:<camera>:<key>`),
+`run_id`, `store_id`, `camera_id`, `zone_id`, `ts_start`, `ts_end` (UTC ISO 8601; instants have `ts_end = ts_start`).
+Zone and camera ids are the ones seeded in `store_core.py` (`z1`–`z6`, `c1`–`c3`). Indexed on `(store_id, zone_id, ts_start)`.
+
+- **Ingest a CV run** (idempotent on `run_id`):
+  `python -m backend.events.ingest backend/output/run1/interaction --run-id run1 --camera c2 --zone z2 --start 2026-11-03T09:00:00+00:00`
+  (default DB `backend/events.sqlite3`, or `EVENTS_DB_PATH`).
+- **Straight from the CLI**: add `--camera c2` (zone from the camera settings, or `--zone`), optionally `--start <UTC ISO>`
+  (default: when processing starts, which is right for live runs) and `--run-id`. `POST /interaction/runs` and
+  `POST /interaction/live` take an optional `"camera": "c2"` and pass it on.
+- **unattended_episodes** is derived, not detected: a customer whose wait from first sighting to their first confirmed
+  interaction (or exit) is ≥ N s, N = settings `thresholds.unattendedWaitMinutes` × 60. `helped` says which ended it.
+- **Fixture day** for tools/agents/UI: `python -m backend.events.fixtures` → `backend/events/fixture.sqlite3`
+  (seeded, identical every run; not committed since `*.sqlite3` is ignored). 09:00–21:00 UTC, planted patterns:
+  17:00–19:00 rush, understaffed `z3`, camera `c2` blocked 14:00–14:40 (`pipeline_health.frozen_or_dark = 1`).
+- **Zones and dwell (B4.2)**: the camera's `--config` JSON may hold `floor_zones` (normalised polygons keyed by store
+  `zone_id`), `zone_hold_seconds` (1.0) and `heatmap_grid` ([32, 18]). A track's foot point picks its zone (outside every
+  polygon = the camera's zone); `zone_dwell` has one row per visit, ordered visits of a track are its zone transitions,
+  `tracks.zone_id` is the zone it spent longest in and `interactions.zone_id` is the customer's zone at the start.
+- **heatmaps** (additive to v1): one row per camera per wall-clock hour, `cells` = JSON `rows` x `cols` foot-point counts.
+- **footfall (B4.3)**: entrance camera config sets `entrance_line` (normalised x of a vertical line) and
+  `entrance_in_direction` ("right"/"left"). A track that ends on the other side from where it started is one row at
+  its last crossing time (net, so jitter on the line counts once; walking in and back out within one track counts 0).
+- **queue_samples (B4.4)**: counter camera config sets `queue_zone` (normalised polygon) and `queue_sample_seconds` (5).
+  Every sample counts customers (not staff, not unknown) whose feet are in the polygon; `est_wait_s` = length x the
+  run's mean interaction duration (NULL when the run has no interactions).
+- **pipeline_health.frozen_or_dark (B4.5)**: the CLI flags each processed frame (`frozen_or_dark` in detections.json):
+  mean grey < `dark_brightness` (20), or the picture unchanged (< `frozen_change`) for `frozen_seconds` (2 s). The minute
+  is 1 when most of its frames are flagged; NULL for runs recorded before the check existed.
+- **Contract test**: `backend/events/test_events.py` checks the fixture and every local CV run under `backend/output/`
+  with `ingest.validate`.

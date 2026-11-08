@@ -52,3 +52,15 @@ def test_young_duplicate_is_merged_when_old_partial_box_dies_inside_it() -> None
     tracker._relink(yellow, _person(1, head) + _person(5, MID), 0.5)
     assert tracker._relink(yellow, _person(5, MID), 0.6)[0]["track_id"] == 1
     assert tracker._relink(yellow, _person(5, MID), 0.7)[0]["track_id"] == 1
+
+
+def test_person_with_a_different_shirt_on_the_same_background_keeps_new_id() -> None:
+    # The old whole-box histogram let a customer stepping in front of an employee take the employee's ID.
+    tracker = ByteTrackPersonTracker(None, InteractionConfig())
+    def shirt(bgr):
+        frame = _frame(MID, (180, 200, 210))  # floor/wall colour fills most of the box
+        frame[175:325, 270:330] = bgr
+        return frame
+    tracker._relink(shirt((0, 230, 230)), _person(1, MID), 0.0)  # yellow bib
+    assert tracker._relink(shirt((120, 120, 120)), _person(12, MID), 0.5)[0]["track_id"] == 12  # grey shirt
+    assert tracker._relink(shirt((0, 230, 230)), _person(13, MID), 1.0)[0]["track_id"] == 1  # bib is back

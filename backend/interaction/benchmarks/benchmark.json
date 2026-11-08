@@ -13,191 +13,170 @@
       "track_every": 10,
       "interactions": [
         {
-          "start": 35.4,
-          "end": 43.9,
-          "note": "employee #1 faces the customer; bounds from the pipeline, confirmed by review"
+          "start": 33.0,
+          "end": 44.0
         }
       ],
-      "note": "1.2-15.5 s (employee and customer walking away side by side) is reviewed as NOT an interaction. This recording is in the detector's training split, so use it for interaction KPIs only."
+      "note": "1.2-15.5 s (employee and customer walking away side by side) is reviewed as NOT an interaction. This recording is in the detector's training split, so use it for interaction KPIs only.",
+      "pass_bys": [],
+      "people": 2
     },
     {
       "path": "dummydataset/Copy of IMG_8878_part1_sq640.MOV",
       "every": 10,
       "track_every": 10,
-      "note": "Not labelled yet. Watch the clip, move each real interaction from candidates_to_review into \"interactions\": [{\"start\": s, \"end\": e}] (fix the times if needed, add any the pipeline missed), then delete candidates_to_review. Until then this video counts for speed only.",
-      "candidates_to_review": [
+      "interactions": [
         {
-          "start": 21.3,
-          "end": 27.3,
-          "verdict": "interaction"
-        },
-        {
-          "start": 29.3,
-          "end": 37.0,
-          "verdict": "interaction"
+          "start": 21.0,
+          "end": 33.5
         }
-      ]
+      ],
+      "pass_bys": [],
+      "people": 2
     },
     {
       "path": "dummydataset/Copy of IMG_8880_part1_sq640.MOV",
       "every": 10,
       "track_every": 10,
-      "note": "Not labelled yet. Watch the clip, move each real interaction from candidates_to_review into \"interactions\": [{\"start\": s, \"end\": e}] (fix the times if needed, add any the pipeline missed), then delete candidates_to_review. Until then this video counts for speed only.",
-      "candidates_to_review": [
+      "interactions": [
         {
-          "start": 17.7,
-          "end": 42.3,
-          "verdict": "interaction"
+          "start": 18.0,
+          "end": 41.0
         }
-      ]
+      ],
+      "pass_bys": [],
+      "people": 2
     },
     {
       "path": "dummydataset/Copy of IMG_8881_part1_sq640.MOV",
       "every": 10,
       "track_every": 10,
-      "note": "Not labelled yet. Watch the clip, move each real interaction from candidates_to_review into \"interactions\": [{\"start\": s, \"end\": e}] (fix the times if needed, add any the pipeline missed), then delete candidates_to_review. Until then this video counts for speed only.",
-      "candidates_to_review": [
+      "interactions": [
         {
-          "start": 14.7,
-          "end": 25.7,
-          "verdict": "interaction"
+          "start": 36.0,
+          "end": 50.0
         },
         {
-          "start": 37.3,
-          "end": 55.0,
-          "verdict": "interaction"
-        },
-        {
-          "start": 72.3,
-          "end": 81.3,
-          "verdict": "interaction"
+          "start": 73.0,
+          "end": 78.0
         }
-      ]
+      ],
+      "pass_bys": [
+        {
+          "start": 13.0,
+          "end": 18.0
+        }
+      ],
+      "people": 2
     },
     {
       "path": "dummydataset/Copy of IMG_8885_part1_sq640.MOV",
       "every": 10,
       "track_every": 10,
-      "note": "Not labelled yet. Watch the clip, move each real interaction from candidates_to_review into \"interactions\": [{\"start\": s, \"end\": e}] (fix the times if needed, add any the pipeline missed), then delete candidates_to_review. Until then this video counts for speed only.",
-      "candidates_to_review": []
+      "interactions": [],
+      "pass_bys": [],
+      "people": 2
     },
     {
       "path": "dummydataset/Copy of IMG_8886_part1_sq640.MOV",
       "every": 10,
       "track_every": 10,
-      "note": "Not labelled yet. Watch the clip, move each real interaction from candidates_to_review into \"interactions\": [{\"start\": s, \"end\": e}] (fix the times if needed, add any the pipeline missed), then delete candidates_to_review. Until then this video counts for speed only.",
-      "candidates_to_review": [
+      "interactions": [
         {
-          "start": 11.7,
-          "end": 18.0,
-          "verdict": "interaction"
-        },
-        {
-          "start": 37.3,
-          "end": 42.0,
-          "verdict": "interaction"
-        },
-        {
-          "start": 46.0,
-          "end": 54.3,
-          "verdict": "interaction"
+          "start": 34.0,
+          "end": 51.0
         }
-      ]
+      ],
+      "pass_bys": [
+        {
+          "start": 5.0,
+          "end": 13.0
+        }
+      ],
+      "people": 2
     },
     {
       "path": "dummydataset/Copy of IMG_8890_part2_sq640.MOV",
       "every": 10,
       "track_every": 10,
-      "note": "Not labelled yet. Watch the clip, move each real interaction from candidates_to_review into \"interactions\": [{\"start\": s, \"end\": e}] (fix the times if needed, add any the pipeline missed), then delete candidates_to_review. Until then this video counts for speed only.",
-      "candidates_to_review": [
+      "interactions": [
         {
-          "start": 3.7,
-          "end": 15.0,
-          "verdict": "interaction"
+          "start": 5.0,
+          "end": 15.0
         },
         {
-          "start": 39.3,
-          "end": 58.3,
-          "verdict": "interaction"
+          "start": 43.0,
+          "end": 57.0
         }
-      ]
+      ],
+      "pass_bys": [],
+      "people": 2
     },
     {
       "path": "dummydataset/Copy of IMG_8893_part1_sq640.MOV",
       "every": 10,
       "track_every": 10,
-      "note": "Not labelled yet. Watch the clip, move each real interaction from candidates_to_review into \"interactions\": [{\"start\": s, \"end\": e}] (fix the times if needed, add any the pipeline missed), then delete candidates_to_review. Until then this video counts for speed only.",
-      "candidates_to_review": [
+      "interactions": [
         {
-          "start": 5.0,
-          "end": 33.0,
-          "verdict": "interaction"
-        },
-        {
-          "start": 48.0,
-          "end": 60.3,
-          "verdict": "interaction"
-        },
-        {
-          "start": 62.0,
-          "end": 67.7,
-          "verdict": "interaction"
+          "start": 49.0,
+          "end": 64.0
         }
-      ]
+      ],
+      "pass_bys": [
+        {
+          "start": 2.0,
+          "end": 8.0
+        }
+      ],
+      "people": 2
     },
     {
       "path": "dummydataset/Copy of IMG_8894_part1_sq640.MOV",
       "every": 10,
       "track_every": 10,
-      "note": "Not labelled yet. Watch the clip, move each real interaction from candidates_to_review into \"interactions\": [{\"start\": s, \"end\": e}] (fix the times if needed, add any the pipeline missed), then delete candidates_to_review. Until then this video counts for speed only.",
-      "candidates_to_review": [
+      "interactions": [
         {
-          "start": 6.0,
-          "end": 32.3,
-          "verdict": "interaction"
-        },
-        {
-          "start": 34.7,
-          "end": 40.0,
-          "verdict": "interaction"
+          "start": 7.0,
+          "end": 38.0
         }
-      ]
+      ],
+      "pass_bys": [],
+      "people": 2
     },
     {
       "path": "dummydataset/Copy of IMG_8895_part2_sq640.MOV",
       "every": 10,
       "track_every": 10,
-      "note": "Not labelled yet. Watch the clip, move each real interaction from candidates_to_review into \"interactions\": [{\"start\": s, \"end\": e}] (fix the times if needed, add any the pipeline missed), then delete candidates_to_review. Until then this video counts for speed only.",
-      "candidates_to_review": [
+      "interactions": [
         {
           "start": 0.0,
-          "end": 6.0,
-          "verdict": "interaction"
+          "end": 5.0
         },
         {
-          "start": 22.7,
-          "end": 30.0,
-          "verdict": "interaction"
-        },
-        {
-          "start": 44.7,
-          "end": 51.7,
-          "verdict": "interaction"
+          "start": 23.0,
+          "end": 29.0
         }
-      ]
+      ],
+      "pass_bys": [
+        {
+          "start": 43.0,
+          "end": 50.0
+        }
+      ],
+      "people": 3
     },
     {
       "path": "dummydataset/Copy of IMG_8897_part1_sq640.MOV",
       "every": 10,
       "track_every": 10,
-      "note": "Not labelled yet. Watch the clip, move each real interaction from candidates_to_review into \"interactions\": [{\"start\": s, \"end\": e}] (fix the times if needed, add any the pipeline missed), then delete candidates_to_review. Until then this video counts for speed only.",
-      "candidates_to_review": [
+      "interactions": [
         {
-          "start": 32.3,
-          "end": 53.3,
-          "verdict": "interaction"
+          "start": 31.0,
+          "end": 50.0
         }
-      ]
+      ],
+      "pass_bys": [],
+      "people": 3
     }
   ],
   "targets": {

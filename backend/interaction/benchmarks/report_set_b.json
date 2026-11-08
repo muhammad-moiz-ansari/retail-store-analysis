@@ -1,0 +1,723 @@
+{
+  "judge": "pose",
+  "device": "cpu",
+  "detector": {
+    "model": "backend/models/best_320_openvino_model",
+    "dataset": "~/data/split/test",
+    "images": 455,
+    "map50": 0.9687435954686402,
+    "map50_95": 0.8958114629436145,
+    "precision": 0.9626745514700767,
+    "recall": 0.9527433185803047,
+    "classes": {
+      "employee": {
+        "precision": 0.9677639652428075,
+        "recall": 0.9899193548387096,
+        "map50": 0.9824635578231945,
+        "map50_95": 0.9266808345571954
+      },
+      "customer": {
+        "precision": 0.9575851376973459,
+        "recall": 0.9155672823218998,
+        "map50": 0.9550236331140859,
+        "map50_95": 0.8649420913300336
+      }
+    },
+    "inference_ms_per_image": 76.17344849008637
+  },
+  "interactions": {
+    "proximity_only": {
+      "tp": 8,
+      "fp": 26,
+      "fn": 9,
+      "precision": 0.23529411764705882,
+      "recall": 0.47058823529411764,
+      "f1": 0.3137254901960785,
+      "start_error_s": 0.7333333333333347,
+      "end_error_s": 2.5541666666666663
+    },
+    "with_judge": {
+      "tp": 8,
+      "fp": 21,
+      "fn": 9,
+      "precision": 0.27586206896551724,
+      "recall": 0.47058823529411764,
+      "f1": 0.34782608695652173,
+      "start_error_s": 0.7333333333333347,
+      "end_error_s": 2.5541666666666663
+    }
+  },
+  "tracking": {
+    "role_flips_per_min": 1.6817845602834118,
+    "id_switches_per_min": 1.8219332736403628
+  },
+  "speed": {
+    "realtime_factor": 0.873555542108264
+  },
+  "videos": [
+    {
+      "path": "dummyoutputs/square_640/20261010_155639_part1_sq640.mp4",
+      "duration_s": 78.3,
+      "proximity_only": {
+        "tp": 0,
+        "fp": 2,
+        "fn": 3,
+        "start_error_s": null,
+        "end_error_s": null
+      },
+      "with_judge": {
+        "tp": 0,
+        "fp": 2,
+        "fn": 3,
+        "start_error_s": null,
+        "end_error_s": null
+      },
+      "roles": null,
+      "tracking": {
+        "tracks": 3,
+        "minutes": 1.305,
+        "people": 3,
+        "role_flips_per_min": 0.0,
+        "id_switches_per_min": 0.0
+      },
+      "candidates": [
+        {
+          "start": 9.7,
+          "end": 38.3,
+          "verdict": "interaction"
+        },
+        {
+          "start": 54.0,
+          "end": 65.3,
+          "verdict": "interaction"
+        }
+      ],
+      "speed": {
+        "realtime_factor": 0.873555542108264,
+        "frame_ms_p50": 114.82910700033244,
+        "frame_ms_p95": 1631.1733619986626,
+        "judge_calls": 2,
+        "judge_ms_mean": 4084.0923705000023
+      }
+    },
+    {
+      "path": "dummyoutputs/square_640/20261010_162139_part1_sq640.mp4",
+      "duration_s": 68.43333333333334,
+      "proximity_only": {
+        "tp": 1,
+        "fp": 0,
+        "fn": 0,
+        "start_error_s": 0.16666666666666785,
+        "end_error_s": 1.2999999999999972
+      },
+      "with_judge": {
+        "tp": 1,
+        "fp": 0,
+        "fn": 0,
+        "start_error_s": 0.16666666666666785,
+        "end_error_s": 1.2999999999999972
+      },
+      "roles": null,
+      "tracking": {
+        "tracks": 2,
+        "minutes": 1.1405555555555555,
+        "people": 2,
+        "role_flips_per_min": 0.0,
+        "id_switches_per_min": 0.0
+      },
+      "candidates": [
+        {
+          "start": 23.7,
+          "end": 51.0,
+          "verdict": "interaction"
+        }
+      ],
+      "speed": {
+        "realtime_factor": 1.4450688685991002,
+        "frame_ms_p50": 93.02083599868638,
+        "frame_ms_p95": 280.8281649995479,
+        "judge_calls": 1,
+        "judge_ms_mean": 359.8195409995242
+      }
+    },
+    {
+      "path": "dummyoutputs/square_640/Copy of IMG_8884_part1_sq640.MOV",
+      "duration_s": 75.63333333333334,
+      "proximity_only": {
+        "tp": 1,
+        "fp": 2,
+        "fn": 0,
+        "start_error_s": 0.13333333333333286,
+        "end_error_s": 6.566666666666666
+      },
+      "with_judge": {
+        "tp": 1,
+        "fp": 1,
+        "fn": 0,
+        "start_error_s": 0.13333333333333286,
+        "end_error_s": 6.566666666666666
+      },
+      "roles": null,
+      "tracking": {
+        "tracks": 5,
+        "minutes": 1.2605555555555557,
+        "people": 3,
+        "role_flips_per_min": 3.173204054649625,
+        "id_switches_per_min": 1.5866020273248125
+      },
+      "candidates": [
+        {
+          "start": 17.3,
+          "end": 24.3,
+          "verdict": "interaction"
+        },
+        {
+          "start": 27.3,
+          "end": 30.7,
+          "verdict": "interaction"
+        },
+        {
+          "start": 52.3,
+          "end": 60.3,
+          "verdict": "no_interaction"
+        }
+      ],
+      "speed": {
+        "realtime_factor": 1.4640323995484088,
+        "frame_ms_p50": 83.30232099979185,
+        "frame_ms_p95": 292.18642900013947,
+        "judge_calls": 12,
+        "judge_ms_mean": 215.5355134165499
+      }
+    },
+    {
+      "path": "dummyoutputs/square_640/Copy of IMG_8888_part1_sq640.MOV",
+      "duration_s": 58.63333333333333,
+      "proximity_only": {
+        "tp": 0,
+        "fp": 1,
+        "fn": 2,
+        "start_error_s": null,
+        "end_error_s": null
+      },
+      "with_judge": {
+        "tp": 0,
+        "fp": 1,
+        "fn": 2,
+        "start_error_s": null,
+        "end_error_s": null
+      },
+      "roles": null,
+      "tracking": {
+        "tracks": 4,
+        "minutes": 0.9772222222222222,
+        "people": 3,
+        "role_flips_per_min": 1.023308698123934,
+        "id_switches_per_min": 1.023308698123934
+      },
+      "candidates": [
+        {
+          "start": 27.7,
+          "end": 45.0,
+          "verdict": "interaction"
+        }
+      ],
+      "speed": {
+        "realtime_factor": 1.8135650923083386,
+        "frame_ms_p50": 79.28544199967291,
+        "frame_ms_p95": 176.26956599997357,
+        "judge_calls": 1,
+        "judge_ms_mean": 247.21191699973133
+      }
+    },
+    {
+      "path": "dummyoutputs/square_640/IMG_8826_part1_sq640.MOV",
+      "duration_s": 58.43333333333333,
+      "proximity_only": {
+        "tp": 0,
+        "fp": 2,
+        "fn": 0,
+        "start_error_s": null,
+        "end_error_s": null
+      },
+      "with_judge": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "start_error_s": null,
+        "end_error_s": null
+      },
+      "roles": null,
+      "tracking": {
+        "tracks": 4,
+        "minutes": 0.9738888888888888,
+        "people": 2,
+        "role_flips_per_min": 0.0,
+        "id_switches_per_min": 2.053622361665716
+      },
+      "candidates": [
+        {
+          "start": 1.7,
+          "end": 12.3,
+          "verdict": "no_interaction"
+        },
+        {
+          "start": 33.3,
+          "end": 41.7,
+          "verdict": "no_interaction"
+        }
+      ],
+      "speed": {
+        "realtime_factor": 1.6183674311466993,
+        "frame_ms_p50": 83.51975000005041,
+        "frame_ms_p95": 333.7304150009004,
+        "judge_calls": 20,
+        "judge_ms_mean": 211.27519160008887
+      }
+    },
+    {
+      "path": "dummyoutputs/square_640/IMG_8828_part1_sq640.MOV",
+      "duration_s": 73.76666666666667,
+      "proximity_only": {
+        "tp": 0,
+        "fp": 1,
+        "fn": 1,
+        "start_error_s": null,
+        "end_error_s": null
+      },
+      "with_judge": {
+        "tp": 0,
+        "fp": 1,
+        "fn": 1,
+        "start_error_s": null,
+        "end_error_s": null
+      },
+      "roles": null,
+      "tracking": {
+        "tracks": 5,
+        "minutes": 1.2294444444444443,
+        "people": 3,
+        "role_flips_per_min": 0.0,
+        "id_switches_per_min": 1.6267510167193855
+      },
+      "candidates": [
+        {
+          "start": 58.0,
+          "end": 68.0,
+          "verdict": "interaction"
+        }
+      ],
+      "speed": {
+        "realtime_factor": 1.856354707318688,
+        "frame_ms_p50": 75.91032500022266,
+        "frame_ms_p95": 163.04825299994263,
+        "judge_calls": 1,
+        "judge_ms_mean": 246.04439399990952
+      }
+    },
+    {
+      "path": "dummyoutputs/square_640/IMG_8830_part1_sq640.MOV",
+      "duration_s": 59.0,
+      "proximity_only": {
+        "tp": 1,
+        "fp": 1,
+        "fn": 0,
+        "start_error_s": 1.8333333333333357,
+        "end_error_s": 0.10000000000000142
+      },
+      "with_judge": {
+        "tp": 1,
+        "fp": 1,
+        "fn": 0,
+        "start_error_s": 1.8333333333333357,
+        "end_error_s": 0.10000000000000142
+      },
+      "roles": null,
+      "tracking": {
+        "tracks": 3,
+        "minutes": 0.9833333333333333,
+        "people": 2,
+        "role_flips_per_min": 2.0338983050847457,
+        "id_switches_per_min": 1.0169491525423728
+      },
+      "candidates": [
+        {
+          "start": 6.7,
+          "end": 24.3,
+          "verdict": "interaction"
+        },
+        {
+          "start": 49.3,
+          "end": 58.0,
+          "verdict": "interaction"
+        }
+      ],
+      "speed": {
+        "realtime_factor": 1.7778934539143092,
+        "frame_ms_p50": 79.82179400096356,
+        "frame_ms_p95": 175.82386100002623,
+        "judge_calls": 2,
+        "judge_ms_mean": 215.45233750020998
+      }
+    },
+    {
+      "path": "dummyoutputs/square_640/IMG_8831_part1_sq640.MOV",
+      "duration_s": 69.83333333333333,
+      "proximity_only": {
+        "tp": 2,
+        "fp": 2,
+        "fn": 0,
+        "start_error_s": 0.6833333333333362,
+        "end_error_s": 1.0499999999999972
+      },
+      "with_judge": {
+        "tp": 2,
+        "fp": 1,
+        "fn": 0,
+        "start_error_s": 0.6833333333333362,
+        "end_error_s": 1.0499999999999972
+      },
+      "roles": null,
+      "tracking": {
+        "tracks": 6,
+        "minutes": 1.1638888888888888,
+        "people": 3,
+        "role_flips_per_min": 1.7183770883054894,
+        "id_switches_per_min": 2.577565632458234
+      },
+      "candidates": [
+        {
+          "start": 9.7,
+          "end": 23.3,
+          "verdict": "interaction"
+        },
+        {
+          "start": 25.3,
+          "end": 30.0,
+          "verdict": "no_interaction"
+        },
+        {
+          "start": 51.0,
+          "end": 61.3,
+          "verdict": "interaction"
+        },
+        {
+          "start": 51.7,
+          "end": 62.7,
+          "verdict": "interaction"
+        }
+      ],
+      "speed": {
+        "realtime_factor": 1.5297859588793767,
+        "frame_ms_p50": 85.02469999984896,
+        "frame_ms_p95": 290.47160200025246,
+        "judge_calls": 12,
+        "judge_ms_mean": 219.95330033329688
+      }
+    },
+    {
+      "path": "dummyoutputs/square_640/IMG_8832_part1_sq640.MOV",
+      "duration_s": 32.1,
+      "proximity_only": {
+        "tp": 0,
+        "fp": 1,
+        "fn": 0,
+        "start_error_s": null,
+        "end_error_s": null
+      },
+      "with_judge": {
+        "tp": 0,
+        "fp": 1,
+        "fn": 0,
+        "start_error_s": null,
+        "end_error_s": null
+      },
+      "roles": null,
+      "tracking": {
+        "tracks": 2,
+        "minutes": 0.535,
+        "people": 2,
+        "role_flips_per_min": 0.0,
+        "id_switches_per_min": 0.0
+      },
+      "candidates": [
+        {
+          "start": 13.3,
+          "end": 26.0,
+          "verdict": "interaction"
+        }
+      ],
+      "speed": {
+        "realtime_factor": 1.6220773454604231,
+        "frame_ms_p50": 81.79387800009863,
+        "frame_ms_p95": 354.5928270013974,
+        "judge_calls": 6,
+        "judge_ms_mean": 221.39365366698863
+      }
+    },
+    {
+      "path": "dummyoutputs/square_640/IMG_8834_part1_sq640.MOV",
+      "duration_s": 56.9,
+      "proximity_only": {
+        "tp": 1,
+        "fp": 4,
+        "fn": 1,
+        "start_error_s": 0.9666666666666686,
+        "end_error_s": 0.6000000000000014
+      },
+      "with_judge": {
+        "tp": 1,
+        "fp": 4,
+        "fn": 1,
+        "start_error_s": 0.9666666666666686,
+        "end_error_s": 0.6000000000000014
+      },
+      "roles": null,
+      "tracking": {
+        "tracks": 6,
+        "minutes": 0.9483333333333334,
+        "people": 3,
+        "role_flips_per_min": 0.0,
+        "id_switches_per_min": 3.1634446397188047
+      },
+      "candidates": [
+        {
+          "start": 18.3,
+          "end": 21.0,
+          "verdict": "interaction"
+        },
+        {
+          "start": 19.7,
+          "end": 29.0,
+          "verdict": "interaction"
+        },
+        {
+          "start": 23.7,
+          "end": 29.3,
+          "verdict": "interaction"
+        },
+        {
+          "start": 40.7,
+          "end": 53.0,
+          "verdict": "interaction"
+        },
+        {
+          "start": 41.7,
+          "end": 53.0,
+          "verdict": "interaction"
+        }
+      ],
+      "speed": {
+        "realtime_factor": 1.736503779024319,
+        "frame_ms_p50": 87.92166999955953,
+        "frame_ms_p95": 203.250754999317,
+        "judge_calls": 6,
+        "judge_ms_mean": 206.89208033369746
+      }
+    },
+    {
+      "path": "dummyoutputs/square_640/IMG_8836_part1_sq640.MOV",
+      "duration_s": 69.33333333333333,
+      "proximity_only": {
+        "tp": 1,
+        "fp": 3,
+        "fn": 0,
+        "start_error_s": 1.3666666666666671,
+        "end_error_s": 4.966666666666669
+      },
+      "with_judge": {
+        "tp": 1,
+        "fp": 2,
+        "fn": 0,
+        "start_error_s": 1.3666666666666671,
+        "end_error_s": 4.966666666666669
+      },
+      "roles": null,
+      "tracking": {
+        "tracks": 7,
+        "minutes": 1.1555555555555554,
+        "people": 3,
+        "role_flips_per_min": 6.923076923076923,
+        "id_switches_per_min": 3.4615384615384617
+      },
+      "candidates": [
+        {
+          "start": 16.7,
+          "end": 25.7,
+          "verdict": "interaction"
+        },
+        {
+          "start": 17.7,
+          "end": 25.7,
+          "verdict": "no_interaction"
+        },
+        {
+          "start": 46.7,
+          "end": 64.7,
+          "verdict": "interaction"
+        },
+        {
+          "start": 52.7,
+          "end": 66.7,
+          "verdict": "interaction"
+        }
+      ],
+      "speed": {
+        "realtime_factor": 1.600045567266937,
+        "frame_ms_p50": 100.1836560008087,
+        "frame_ms_p95": 295.14113100049144,
+        "judge_calls": 24,
+        "judge_ms_mean": 194.3337717915862
+      }
+    },
+    {
+      "path": "dummyoutputs/square_640/IMG_8838_part1_sq640.MOV",
+      "duration_s": 60.0,
+      "proximity_only": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "start_error_s": null,
+        "end_error_s": null
+      },
+      "with_judge": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "start_error_s": null,
+        "end_error_s": null
+      },
+      "roles": null,
+      "tracking": {
+        "tracks": 6,
+        "minutes": 1.0,
+        "people": 2,
+        "role_flips_per_min": 0.0,
+        "id_switches_per_min": 4.0
+      },
+      "candidates": [],
+      "speed": {
+        "realtime_factor": 1.9387228011548276,
+        "frame_ms_p50": 76.7332270006591,
+        "frame_ms_p95": 164.2439809984353,
+        "judge_calls": 0,
+        "judge_ms_mean": null
+      }
+    },
+    {
+      "path": "dummyoutputs/square_640/IMG_8838_part2_sq640.MOV",
+      "duration_s": 35.766666666666666,
+      "proximity_only": {
+        "tp": 1,
+        "fp": 1,
+        "fn": 0,
+        "start_error_s": 0.033333333333333215,
+        "end_error_s": 4.8
+      },
+      "with_judge": {
+        "tp": 1,
+        "fp": 1,
+        "fn": 0,
+        "start_error_s": 0.033333333333333215,
+        "end_error_s": 4.8
+      },
+      "roles": null,
+      "tracking": {
+        "tracks": 3,
+        "minutes": 0.5961111111111111,
+        "people": 2,
+        "role_flips_per_min": 0.0,
+        "id_switches_per_min": 1.6775396085740912
+      },
+      "candidates": [
+        {
+          "start": 1.7,
+          "end": 12.0,
+          "verdict": "interaction"
+        },
+        {
+          "start": 20.3,
+          "end": 34.7,
+          "verdict": "interaction"
+        }
+      ],
+      "speed": {
+        "realtime_factor": 1.8006101574463527,
+        "frame_ms_p50": 80.41580299868656,
+        "frame_ms_p95": 176.52296000051138,
+        "judge_calls": 2,
+        "judge_ms_mean": 199.44877000034467
+      }
+    },
+    {
+      "path": "dummyoutputs/square_640/IMG_8839_part1_sq640.MOV",
+      "duration_s": 60.1,
+      "proximity_only": {
+        "tp": 0,
+        "fp": 6,
+        "fn": 2,
+        "start_error_s": null,
+        "end_error_s": null
+      },
+      "with_judge": {
+        "tp": 0,
+        "fp": 6,
+        "fn": 2,
+        "start_error_s": null,
+        "end_error_s": null
+      },
+      "roles": null,
+      "tracking": {
+        "tracks": 6,
+        "minutes": 1.0016666666666667,
+        "people": 3,
+        "role_flips_per_min": 6.988352745424293,
+        "id_switches_per_min": 2.995008319467554
+      },
+      "candidates": [
+        {
+          "start": 5.7,
+          "end": 21.3,
+          "verdict": "interaction"
+        },
+        {
+          "start": 7.7,
+          "end": 18.7,
+          "verdict": "interaction"
+        },
+        {
+          "start": 21.0,
+          "end": 28.3,
+          "verdict": "interaction"
+        },
+        {
+          "start": 23.7,
+          "end": 28.3,
+          "verdict": "interaction"
+        },
+        {
+          "start": 27.7,
+          "end": 30.0,
+          "verdict": "interaction"
+        },
+        {
+          "start": 29.3,
+          "end": 32.3,
+          "verdict": "interaction"
+        }
+      ],
+      "speed": {
+        "realtime_factor": 1.7523110830627864,
+        "frame_ms_p50": 82.55970299978799,
+        "frame_ms_p95": 186.96870100029628,
+        "judge_calls": 7,
+        "judge_ms_mean": 247.0767444286009
+      }
+    }
+  ],
+  "target_failures": [
+    "interactions.with_judge.precision: 0.276 < 0.9",
+    "interactions.with_judge.recall: 0.471 < 0.7",
+    "speed.realtime_factor: 0.874 < 1.0"
+  ]
+}

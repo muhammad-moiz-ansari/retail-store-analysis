@@ -98,3 +98,29 @@ class EngagementDetector:
             if event.duration_seconds >= self.config.min_interaction_seconds:
                 output.append(event)
         return output
+
+
+def merge_spans(events: list[dict], max_gap: float) -> list[dict]:
+    """One record per customer interaction: join spans for the same customer (or the same two people with roles
+    flipped) that overlap or sit within `max_gap` s. Employee ID switches and a second staff member standing by
+    otherwise split one interaction into several. One employee with two customers stays two interactions."""
+    from .types import CONFIRMED
+
+    groups: list[dict] = []
+    for event in sorted(events, key=lambda e: e["started_at"]):
+        pair = frozenset((event["employee_track_id"], event["customer_track_id"]))
+        group = next((g for g in groups if event["started_at"] <= g["record"]["last_seen_at"] + max_gap
+                      and (event["customer_track_id"] in g["customers"] or pair in g["pairs"])), None)
+        if group is None:
+            groups.append({"record": dict(event), "customers": {event["customer_track_id"]}, "pairs": {pair}})
+            continue
+        record = group["record"]
+        if event["duration_seconds"] > record["duration_seconds"]:  # longest span's people and verdict represent it
+            record.update({k: v for k, v in event.items() if k not in ("started_at", "last_seen_at")})
+        if event["verdict"] in CONFIRMED and record["verdict"] not in CONFIRMED:
+            record["verdict"] = event["verdict"]
+        record["last_seen_at"] = max(record["last_seen_at"], event["last_seen_at"])
+        record["duration_seconds"] = round(record["last_seen_at"] - record["started_at"], 3)
+        group["customers"].add(event["customer_track_id"])
+        group["pairs"].add(pair)
+    return [g["record"] for g in groups]

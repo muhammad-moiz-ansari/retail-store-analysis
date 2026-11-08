@@ -23,3 +23,24 @@ def test_scores_and_targets() -> None:
     report = {"interactions": {"with_judge": s}}
     assert check_targets(report, {"interactions.with_judge.precision": 0.9, "detector.map50": 0.8}) == [
         "interactions.with_judge.precision: 0.500 < 0.9", "detector.map50: not measured"]
+
+
+def test_role_counts_treat_unknown_as_a_miss() -> None:
+    from .benchmark import role_counts
+
+    counts = role_counts({1: "employee", 2: "customer", 3: "unknown", 4: "employee"},
+                         {"1": "employee", "2": "employee", "3": "customer", "4": "customer", "9": "customer"})
+    assert counts["employee"] == {"tp": 1, "fp": 1, "fn": 1}
+    assert counts["customer"] == {"tp": 0, "fp": 1, "fn": 3}  # 3 unknown, 4 wrong, 9 never seen
+    assert (counts["tracks"], counts["correct"], counts["unknown"]) == (5, 1, 1)
+
+
+def test_timing_error_and_tracking_kpis() -> None:
+    from .benchmark import timing_error, tracking_kpis
+
+    matches = [{"tp": 1, "start_error_s": 1.0, "end_error_s": 0.0}, {"tp": 3, "start_error_s": 3.0, "end_error_s": 2.0},
+               {"tp": 0, "start_error_s": None, "end_error_s": None}]
+    assert timing_error(matches) == {"start_error_s": 2.5, "end_error_s": 1.5}
+    kpis = tracking_kpis({1: ["customer", "employee", "employee"], 2: ["customer"], 3: ["employee", "customer", "employee"]}, 2.0, 2)
+    assert (kpis["role_flips_per_min"], kpis["id_switches_per_min"]) == (1.5, 0.5)
+    assert tracking_kpis({}, 1.0, None)["id_switches_per_min"] is None
