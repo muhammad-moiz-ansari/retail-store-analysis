@@ -74,6 +74,14 @@ The historical B1/B2/B3/B5 status above is not a fresh label/benchmark audit. Ex
 
 ## Current camera/map sequence
 
+Separate Moiz UI sequence (not tool/graph phase numbering):
+
+- [x] M-UI-P1: typed validated provider, five synthetic display scenarios and offline tests; 16 provider tests plus frontend typecheck/targeted lint/legacy regression passed. No page binding.
+- [ ] M-UI-P2: bind dashboard, replace fabricated analytics, display provenance/quality/freshness and verify request lifecycle/UI states.
+- [ ] M-UI-P3: authenticated real backend provider, trusted observation context and real-data/agent integration validation with Saqib/Ruhab.
+
+M-UI-P1 does not complete legacy A2/B6, real business agents, map registration or the following camera/map acceptance items.
+
 - [ ] MAP-1 (Saqib): real camera/CV/event/health verification.
 - [ ] MAP-2 (Saqib spatial/backend, Moiz binding, Ruhab QA): supplied-map registration and visibility metadata.
 - [ ] MAP-3 (Ruhab semantics, Saqib feeds, Moiz readers/rendering): exactly four dynamic categories and separate customer/employee/confirmed-interaction layers.
