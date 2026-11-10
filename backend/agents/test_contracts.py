@@ -1,7 +1,10 @@
 """Offline Phase 1 validation. No SQL tools, CV models, or live providers."""
 import json
+import inspect
+import re
 import sqlite3
 from datetime import datetime, timezone
+from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
@@ -167,3 +170,32 @@ def test_public_models_publish_json_schemas():
                   FootfallResult, ZoneDwellResult, InteractionsResult, UnattendedResult, CoverageResult):
         schema = json.loads(json.dumps(model.model_json_schema()))
         assert schema['additionalProperties'] is False
+
+
+def test_shared_documentation_result_example_is_valid():
+    path = Path(__file__).resolve().parents[2] / "docs/fyp2-plan/CONTRACTS.md"
+    section = path.read_text(encoding="utf-8").split("## Agent read-tool contracts", 1)[1]
+    examples = re.findall(r"```json\s*\n(.*?)\n```", section, re.S)
+    assert examples, "Shared contract must include a consumable result example"
+    for example in examples:
+        result = FootfallResult.model_validate_json(example)
+        assert result.synthetic and result.buckets[0].entries.value == 1
+        assert result.occupancy.value is None
+
+
+def test_five_published_callable_signatures_keep_scope_separate():
+    from .tools import AnalyticsTools
+    shapes = {
+        "get_footfall": (FootfallRequest, FootfallResult),
+        "get_zone_dwell": (ZoneDwellRequest, ZoneDwellResult),
+        "get_interactions": (InteractionsRequest, InteractionsResult),
+        "get_unattended": (UnattendedRequest, UnattendedResult),
+        "get_coverage": (CoverageRequest, CoverageResult),
+    }
+    for name, (request, result) in shapes.items():
+        signature = inspect.signature(getattr(AnalyticsTools, name))
+        assert list(signature.parameters) == ["self", "scope", "request"]
+        assert signature.parameters['scope'].kind == inspect.Parameter.KEYWORD_ONLY
+        assert signature.parameters['scope'].annotation is TrustedAccessScope
+        assert signature.parameters['request'].annotation is request
+        assert signature.return_annotation is result

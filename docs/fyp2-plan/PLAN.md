@@ -2,6 +2,22 @@
 
 Order matters: each step uses the output of the one before it. Shapes are in [CONTRACTS.md](CONTRACTS.md).
 
+## Current shared ownership and agent phases (2026-11-10)
+
+This tracked table preserves the agreed member division independently of local/ignored handoffs. The Steps 0–4 below remain the original CV/dashboard implementation plan, not the same numbering as Moiz's four tool/graph phases. Current evidence and dependencies are in [PROGRESS.md](PROGRESS.md) and [PENDING.md](PENDING.md).
+
+| Owner | Retained responsibility |
+|---|---|
+| Moiz Ansari | Read-only tools; LangGraph Orchestrator; Query and supporting reasoning (Anomaly/next-day planning); manager/dashboard analytics, data visualization, frontend binding/integration. Completed Interaction detection reused; data integration/evaluation/UI binding remain independent work. |
+| Saqib Atif | Canonical CV/event schema, fixture generator and ingestion; backend/AI integration and CV feeds; labels/split audit, CV benchmarks and handoff evaluation; actual employee selection, source-zone safety, task persistence/idempotency, delivery/voice and deployment. |
+| Ruhab Ahmad | Customer Behavior and Employee Activity business logic; model fine-tuning using Saqib's labels/factors; manager/employee interface refinement; Insight Narration/Digest and Clip Review; QA, documentation, presentation, output validation and acceptance. |
+
+Finalized top-level architecture: Customer Behavior (Ruhab), Employee Activity (Ruhab), Interaction (Moiz, existing), Employee Task Assignment (Saqib), Insight Narration (Ruhab), Query (Moiz), Orchestrator (Moiz). Classification/tracking/zones are shared CV tools; supporting reasoning does not silently become extra top-level agents.
+
+Moiz phases: **M-P1** typed contract/fixture foundation (this task); **M-P2** five concrete read-only tools; **M-P3** injectable grounded LangGraph and specialist hooks; **M-P4** isolated fake-only operational dispatch adapter. Wider A1 tools, real-agent/provider evaluation and frontend integration remain separate pending work. Moiz's Protocols/adapters do not complete Ruhab's business agents or Saqib's operational service.
+
+Direct aisle dispatch requires no manager approval or manager-enabled auto mode. Separate next-day schedule/roster proposals can retain their own approval workflow. Metric floor calibration and POS analytics are not reopened by these phases.
+
 ## Step 0: Model consolidation (done)
 
 COCO tracks people, `best.pt` only labels roles. See [MODELS.md](MODELS.md).

@@ -47,7 +47,7 @@ Branch `feature/fyp2-b0-event-store` (B0 to B5 code). Contract details in [CONTR
 
 - [x] **B0** `backend/events/`: schema v1 (+ `heatmaps`), idempotent ingestion, derived unattended episodes,
       seeded fixture day (`python -m backend.events.fixtures`), contract test over fixture and local runs.
-      CI wiring is Member 3's C1.
+      CI coordination is Ruhab's C1; Saqib supplies backend checks and Moiz frontend checks.
 - [ ] **B1** Labelling (manual): 1 of 11 clips reviewed; the other 10 have `candidates_to_review` in `benchmark.json`.
       Also add `"people"` (distinct people), `"roles"` and `"people_file"` per clip. 3 zone-dwell clips not started.
       Detector split is already by recording.
@@ -58,3 +58,16 @@ Branch `feature/fyp2-b0-event-store` (B0 to B5 code). Contract details in [CONTR
 - [x] **B4** CLI `--camera` writes runs to the store; `floor_zones` dwell/transitions/heatmaps, `entrance_line` footfall,
       `queue_zone` queue length/wait, frozen-or-dark frame check. Each camera still needs its polygons drawn in a `--config` file.
 - [~] **B5** `python -m backend.handoff_eval run.json labels.json`. Waits on labelled crossings.
+
+## Moiz tools/graph phases (separate from legacy A/B checklist numbering)
+
+Ownership and actual evidence: [PLAN.md](PLAN.md), [PROGRESS.md](PROGRESS.md), [PENDING.md](PENDING.md).
+
+- [x] **M-P1-CONTRACTS / M-P1-FIXTURE / M-P1-DOCS (Moiz)** Typed contracts and five callable interfaces, UTC/filter/result/evidence validation, unchanged Saqib fixture/schema, test-only second store and shared publication. Offline verified; no SQL readers or real-agent claim.
+- [ ] **M-P2-TOOLS (Moiz)** Concrete scoped read-only implementations and hand-calculated query tests.
+- [ ] **M-P3-GRAPH (Moiz)** Injectable LangGraph, grounded claims, scoped traces and Ruhab specialist hooks; trusted identity/store binding before public routes.
+- [ ] **M-P4-HOOK (Moiz adapter; Saqib operations)** Isolated fake dispatch adapter and integration handoff; no production delivery.
+- [ ] **R-BUSINESS-AGENTS / R-UX-NARRATION-QA (Ruhab)** Real business logic, fine-tuning, interface refinement, Narration/Digest/Clip Review and acceptance; Protocols do not complete these tasks.
+- [ ] **S-B0-VERDICT / S-B4-REALFEED / S-DEPLOY-INTEGRATION (Saqib)** Unattended verdict review, real feeds/configuration, operational assignment/voice and deployment.
+
+The historical B1/B2/B3/B5 status above is not a fresh label/benchmark audit. Existing labelled/benchmark commits are present; remaining labels, refit validation, throughput/error analysis and handoff evaluation retain independent pending status. No large evaluation rerun was performed in Moiz Phase 1.
