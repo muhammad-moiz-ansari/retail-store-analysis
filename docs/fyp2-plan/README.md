@@ -13,6 +13,7 @@ the interaction pipeline already produces.
 | [CONTRACTS.md](CONTRACTS.md) | Existing pipeline JSON shapes and the new summary/API shapes |
 | [EVALUATION.md](EVALUATION.md) | Labelling the 10 clips, metrics to report, CPU throughput |
 | [CHECKLIST.md](CHECKLIST.md) | Branch per item, status, order of work |
+| [FRONTEND_DEPLOYMENT.md](FRONTEND_DEPLOYMENT.md) | Vercel root/branch/build settings and local dependency consistency |
 | [FUTURE_WORK.md](FUTURE_WORK.md) | Every remaining and out-of-scope item from the report, phased with step guides |
 
 ## Current team/tool foundation (2026-11-10)
