@@ -1,0 +1,4 @@
+{
+  "role_weights": {"reference": 0.0, "yolo": 0.6097, "bib_colour": 0.3557, "staff_zone": 0.0, "stationary": 0.0346},
+  "employee_score_threshold": 0.0944
+}

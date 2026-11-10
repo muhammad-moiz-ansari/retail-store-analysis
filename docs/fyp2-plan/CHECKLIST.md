@@ -48,13 +48,15 @@ Branch `feature/fyp2-b0-event-store` (B0 to B5 code). Contract details in [CONTR
 - [x] **B0** `backend/events/`: schema v1 (+ `heatmaps`), idempotent ingestion, derived unattended episodes,
       seeded fixture day (`python -m backend.events.fixtures`), contract test over fixture and local runs.
       CI wiring is Member 3's C1.
-- [ ] **B1** Labelling (manual): 1 of 11 clips reviewed; the other 10 have `candidates_to_review` in `benchmark.json`.
-      Also add `"people"` (distinct people), `"roles"` and `"people_file"` per clip. 3 zone-dwell clips not started.
-      Detector split is already by recording.
-- [~] **B2** Benchmark: P/R/F1 proximity vs judge, start/end error, role accuracy, ID switches/min (needs `"people"`),
-      CPU realtime factor. To do: GPU throughput run, error analysis write-up.
-- [~] **B3** `python -m backend.interaction.refit`: leave-one-clip-out logistic regression vs hand-set, sweep plot.
-      Waits on B1 labels.
+- [x] **B1** Labelling: 11 tuning clips (`benchmark.json`, 13 interactions) and 14 held-out clips (`benchmark_set_b.json`,
+      17 interactions, reviewed in CVAT) with `"people"`, `"roles"` and `"people_file"` (`role_labels.py`, `persons.json`).
+      Open: labeller re-checks IMG_8838 p2 / IMG_8830; second annotator for the 11 clips. Zone-dwell clips dropped (no polygons).
+- [x] **B2** Benchmark on both sets: set B F1 0.462 with judge (headline), 11 clips 0.867 (tuned). Error analysis done.
+      To do: speed on an idle machine (0.87x realtime on CPU is the only clean figure).
+- [x] **B3** `python -m backend.interaction.refit`: leave-one-clip-out role accuracy hand-set 0.960 / 0.915 (11 clips / set B),
+      fitted 1.000 / 1.000; fitted on the 11 clips scores set B 59/59. Fitted weights as a store config:
+      `benchmarks/store_roles_fitted.json` (uncalibrated cameras only; reference factor absent from all clips).
 - [x] **B4** CLI `--camera` writes runs to the store; `floor_zones` dwell/transitions/heatmaps, `entrance_line` footfall,
-      `queue_zone` queue length/wait, frozen-or-dark frame check. Each camera still needs its polygons drawn in a `--config` file.
+      `queue_zone` queue length/wait, frozen-or-dark frame check. Zone polygons not drawn by decision: interactions use
+      person-to-person distance, so zone signals stay off until a camera has a `--config` with polygons.
 - [~] **B5** `python -m backend.handoff_eval run.json labels.json`. Waits on labelled crossings.
