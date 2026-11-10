@@ -124,7 +124,7 @@ All methods are keyword-only on an injected `AnalyticsTools` implementation:
 
 `scope: TrustedAccessScope` is supplied separately by the trusted server, never included in the model/tool argument payload. It carries actor ID, store ID, role, and optional run/camera/zone allowlists. `None` means no additional restriction **within that store**; a supplied allowlist must be nonempty. Request filters can only narrow access. When omitted, they do not remove scope restrictions. `scope.validate_filters(request.filters)` rejects explicit disallowed filters, but does not implement authentication or database isolation. Phase 2 readers must apply store and allowlists to every query; Phase 3 must bind them to real authenticated identity before any public endpoint. Existing role/internal-secret headers alone are not a proven multi-store policy.
 
-Example input construction (runnable today; the method invocation requires Phase 2):
+Example typed input construction (the concrete Phase 2 reader is shown below):
 
 ```python
 from backend.agents.contracts import FootfallRequest, TrustedAccessScope
@@ -136,7 +136,7 @@ request = FootfallRequest(window={"start": "2026-11-03T14:00:00+05:00",
                                   "end": "2026-11-03T16:00:00+05:00"},
                           filters={"camera_id": "c1"}, granularity="hour")
 scope.validate_filters(request.filters)
-# tools: AnalyticsTools = <injected Phase 2 reader, not present yet>
+# tools: AnalyticsTools = <server-injected SQLiteAnalyticsTools reader, shown below>
 # result = tools.get_footfall(scope=scope, request=request)
 ```
 
@@ -189,7 +189,7 @@ Follow-on interfaces (`get_queue`, `get_alerts`, `get_pipeline_health`, legacy `
 
 ## Executable event readers (Moiz Phase 2)
 
-`backend.agents.tools.analytics.EventAnalytics(path, synthetic=..., contexts=...)` now implements `get_footfall`, `get_zone_dwell` and `get_interactions` against the existing SQLite event schema. Inputs/results reuse the Phase 1 types above. Concrete unattended/coverage readers and registry integration are being added separately; Phase 1's SQL-free description is historical.
+`backend.agents.tools.analytics.EventAnalytics(path, synthetic=..., contexts=...)` now implements `get_footfall`, `get_zone_dwell` and `get_interactions` against the existing SQLite event schema. Inputs/results reuse the Phase 1 types above. The SQLiteAnalyticsTools subclass adds unattended/coverage readers, and ScopedToolRegistry integrates all five below. Phase 1's SQL-free description is historical.
 
 `backend.agents.tools.common.ObservationContext` is a trusted server-injected declaration of expected cameras per store/zone, with a context ID and optional shift/operating-window metadata. No request argument may redefine that declaration. Without expected-camera configuration and healthy observation over the full relevant interval, missing event counts return null instead of a proven zero. Health is camera-wide; its stored home-zone ID need not equal a mapped aisle zone, so only this validated camera mapping permits camera-wide health evidence. Camera/run allowlists and the store boundary still apply.
 
@@ -206,3 +206,53 @@ Unattended rows use stored `waited_s >= min_seconds` and overlap selection. The 
 Coverage merges employee-presence intervals and intersects them with the union of healthy intervals for **every expected camera**. A blocked/unknown-health record overrides an overlapping healthy record for that camera; run/camera allowlists remain enforced. The conservative policy does not treat one surviving camera as proof that a zone is fully observed. Without context or supporting health records, observation metrics stay null; with partial supported health, unknown time is the uncovered evaluated interval. Zero observed staffed seconds alongside a fully unknown interval is not a claim of zero employees.
 
 Optional server-injected `operating_windows` are merged and clipped to the request. When supplied, coverage metrics evaluate those windows; otherwise they evaluate the whole request and open-hours/ratio stay null. A requested shift must match a configured store/zone context; there is no fallback to the request window. Each `CoverageSummary` echoes `operating_context_id`, `operating_windows` and `evaluated_windows`. Health/dwell event citations ground observations; the separate echoed trusted configuration supplies the denominator, rather than a fictional configuration table. Ratios require a positive trusted denominator and no unknown observation in the evaluated windows. A closed/zero denominator yields a null ratio. This is observation coverage, not roster/break/account availability.
+
+### Runnable scoped registry and synthetic replay
+
+`backend.agents.tools.registry.ScopedToolRegistry(tools, scope)` binds all five methods to an injected trusted manager scope. `invoke(name, arguments)` validates the corresponding request model; arguments cannot supply store/actor scope, database paths, observation policy, SQL, or dispatch. `input_schemas()` publishes exactly the five request JSON Schemas. Employee scopes and unregistered names are rejected. This callable layer does not expose a new HTTP endpoint or turn role headers into authentication; Phase 3 still needs an authenticated server-side store binding.
+
+Approach metrics are unavailable under a zone-restricted trusted scope: unseen earlier assistance in another zone prevents proof of the first confirmed interaction. Counts/durations still use the permitted rows. A request zone filter alone may narrow interaction selection while history/track joins retain the full authorized camera/run scope.
+
+Runnable local example for **synthetic data only**, from the repository root (create the ignored parent folder first):
+
+```powershell
+New-Item -ItemType Directory -Force data/outputs/moiz-phase2 | Out-Null
+.venv/Scripts/python.exe -m backend.events.fixtures --db data/outputs/moiz-phase2/fixture.sqlite3
+```
+
+```python
+from backend.agents.contracts import TrustedAccessScope
+from backend.agents.tools.common import ObservationContext
+from backend.agents.tools.contextual import SQLiteAnalyticsTools
+from backend.agents.tools.registry import ScopedToolRegistry
+
+# A trusted server adapter must supply these in the actual application.
+# This local synthetic example is not a production login/store policy.
+context = ObservationContext(context_id="synthetic-entrance-config", store_id="store-1",
+    zone_id="z1", camera_ids=("c1",), available_sources=("footfall",))
+tools = SQLiteAnalyticsTools("data/outputs/moiz-phase2/fixture.sqlite3", synthetic=True,
+                            contexts=(context,))
+registry = ScopedToolRegistry(tools, TrustedAccessScope(actor_id="local-synthetic-manager",
+    store_id="store-1", role="manager", allowed_camera_ids=("c1",), allowed_zone_ids=("z1",)))
+result = registry.invoke("get_footfall", {
+    "window": {"start": "2026-11-03T09:00:00Z", "end": "2026-11-03T21:00:00Z"},
+    "filters": {"zone_id": "z1"}, "granularity": "hour"
+})
+assert result.synthetic and len(result.buckets) == 12
+print(result.model_dump_json(indent=2))
+```
+
+To configure a real reader, set `synthetic=False` only for a real event database, and obtain expected cameras, available feeds and operating windows from verified server-side camera/store configuration. Never infer them from the mere presence of event rows. Without that configuration, positive stored observations are still returned with partial-data limitations; absent counts and unsupported coverage/ratios remain null. Result `truncated` concerns returned buckets/roles/episodes/zones; evidence `truncated` concerns the supporting ID sample. Neither truncates the underlying aggregate.
+
+### Deferred follow-on interfaces (not registered or implemented here)
+
+| Proposed interface | Source and proposed result | Required limitations/dependencies |
+|---|---|---|
+| `get_queue(*, scope, window, counter=None, limit=100)` | `queue_samples`; length samples and nullable estimated wait seconds with per-metric event evidence | Confirm counter→camera/zone mapping. Label wait as heuristic (`estimated=true`), not measured waiting time; retain scoped UTC/health/truncation rules. |
+| `get_pipeline_health(*, scope, window, limit=100)` | `pipeline_health`; FPS, confidence, unknown-role share, churn and frozen/dark sample metrics/evidence | Null confidence/check fields remain unknown; camera-wide health uses authorized camera mapping. This is a proposed reporting interface, separate from the implemented internal observation helper. |
+| `get_alerts(*, scope, window, status=None, limit=100)` | Existing application alert records through a separately authorized read adapter; event evidence references when present | App alert tables are not in `events/schema.sql`. Store/actor ownership and evidence mapping must be agreed before implementing. No invented event-store alerts table. |
+| Legacy `get_pos_sales(*, scope, window, category=None)` | Unavailable: POS analytics is outside the agreed project scope | Retained only to resolve the older handoff name; no POS implementation, metric claim or registered callable is added. |
+
+These follow-on requests would use the same bounded/timezone-aware request, scoped access, status/null and evidence conventions after their source contracts are agreed. Arbitrary `run_readonly_sql` remains deferred. No graph, provider, business-agent policy, roster selection or operational task delivery is part of these readers.
+
+Observation configuration is also checked against cameras present in the selected event rows: an unexpected camera makes observation completeness unknown, even when a configured camera is healthy. Cross-run/camera event counts are stored-event counts, not deduplicated physical-person counts; apply a run filter when evaluating a specific CV run.

@@ -17,13 +17,13 @@ the interaction pipeline already produces.
 
 ## Current team/tool foundation (2026-11-10)
 
-The older Steps 0–4 and report-gap tables below remain the original plan. The active tool/graph phases and member responsibilities are tracked in [PLAN.md](PLAN.md). Saqib's committed event foundation is reused; Moiz Phase 1 publishes contracts only, without SQL readers, agents or UI binding.
+The older Steps 0–4 and report-gap tables below remain the original plan. The active tool/graph phases and member responsibilities are tracked in [PLAN.md](PLAN.md). Saqib's committed event foundation is reused; Moiz Phase 1 published typed contracts; Phase 2 now implements five scoped read-only tools and a fixed-name registry. Business agents, graph, trusted application identity integration and UI binding remain separate pending work.
 
 - [PROGRESS.md](PROGRESS.md): owner-tagged implementation versus verified/synthetic/real-data status, sources and exact checks.
 - [PENDING.md](PENDING.md): remaining Moiz/Saqib/Ruhab work, dependencies and semantic limitations.
-- [CONTRACTS.md](CONTRACTS.md#agent-read-tool-contracts--moiz-phase-1-2026-11-10): five typed callable interfaces, examples, UTC/evidence conventions and data-availability notes for Ruhab.
+- [CONTRACTS.md](CONTRACTS.md#agent-read-tool-contracts--moiz-phase-1-2026-11-10): five typed callable interfaces and runnable reader/registry examples, UTC/evidence conventions, trusted observation context and data-availability notes for Ruhab.
 
-Ignore local assistant handoffs under `docs/extra-docs/`; shared contracts/status remain tracked here. No report changes, CV training, production dispatch or later Moiz phases are part of Phase 1.
+Ignore local assistant handoffs under `docs/extra-docs/`; shared contracts/status remain tracked here. No report edits, CV training, production dispatch or later Moiz phases are part of the current tool implementation task.
 
 ## Report gaps this closes
 
