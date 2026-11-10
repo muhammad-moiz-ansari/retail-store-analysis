@@ -1,5 +1,9 @@
 # Data Contracts
 
+## Current decision — 11 November 2026
+
+The [combined team plan](RetailPulse_FYP2_Implementation_Plan.md) governs current work and ownership. Implement camera/CV first, then register the supplied map, then render live role occupancy and confirmed-interaction layers. Exactly four dynamic occupancy categories are allowed: **Customer, Employee, Customer–employee both, No one**. They are not fixed permitted-role polygons. Invalid/missing/unknown observation is separate quality metadata, never a fifth category or a false No one. Historical z1–z6, staff zones, queue/counter geometries and hot/gray terminology below are legacy technical references, not additional category requirements. No existing runtime/schema/fixture has been migrated by this documentation update.
+
 ## What the pipeline writes today
 
 `python -m backend.interaction.cli <video> --output backend/output/<run>/interaction.mp4`
@@ -455,3 +459,7 @@ print(second.model_dump_json(by_alias=True, indent=2))
 ```
 
 Only the fake callback above is invoked in this example. Production callback injection, source-zone safety, restart/concurrent deduplication and delivery are not verified by a simulated outcome. No new operational HTTP route or manager-question tool is introduced.
+
+## Planned map/category representation boundary
+
+Stable map-location IDs and existing zone_id scope keys must remain distinct from the live category attribute. Proposed category labels are customer / employee / customer_employee / no_one only; this is not yet a runtime schema/API. Each map layer must declare its observation window, value/unit, role filter, confirmed-interaction semantics, coordinate/map/config version and separate validity metadata. Do not recast unknown CV role or missing camera coverage as a fifth category or no_one, and do not change authorization scopes as occupancy changes. Exact camera-to-map transform, aggregation cadence and ambiguity handling remain MAP-2/MAP-3 decisions with owners in the combined plan.
