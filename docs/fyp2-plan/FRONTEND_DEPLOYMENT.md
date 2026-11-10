@@ -34,3 +34,5 @@ A root npm install does not remove an independently populated nested node_module
 The existing Next configuration skips type checking and linting during production builds. Build success therefore confirms compilation/page generation, not a full type/lint verification; this change does not add or change those bypasses.
 
 Verification: root `npm ci` restored locked Next 15.5.25; final `npm run build` passed compilation, all 26 page-generation steps and build tracing. Manifest/lock/config/output paths were checked. Vercel cloud deployment and live backend/auth behavior are not verified by this local build.
+
+User subsequently confirmed the frontend deployment works. That is user-reported cloud success; live Python/CV backend, login/proxy and real-data connectivity still need separate verification. Current work resumes from the combined team plan, not the old deployment-blocker assumption.

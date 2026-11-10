@@ -1,5 +1,9 @@
 # Models
 
+## Current decision — 11 November 2026
+
+The [combined team plan](RetailPulse_FYP2_Implementation_Plan.md) governs current work and ownership. Implement camera/CV first, then register the supplied map, then render live role occupancy and confirmed-interaction layers. Exactly four dynamic occupancy categories are allowed: **Customer, Employee, Customer–employee both, No one**. They are not fixed permitted-role polygons. Invalid/missing/unknown observation is separate quality metadata, never a fifth category or a false No one. Historical z1–z6, staff zones, queue/counter geometries and hot/gray terminology below are legacy technical references, not additional category requirements. No existing runtime/schema/fixture has been migrated by this documentation update.
+
 ## What is loaded
 
 | Weights | Loaded by | Purpose |
@@ -29,3 +33,7 @@ Benchmark (`benchmarks/benchmark.json`, CPU, judge on): with-judge F1 1.0 (uncha
 
 `yolo26n-cls.pt` is not in the repo. Ultralytics downloads it for BoT-SORT ReID only when the tracker
 runs an OpenVINO model; the COCO `.pt` tracker reuses its own features.
+
+## Refit status reconciliation
+
+Saqib reports completed role/refit work at d6783b2 and candidate fitted weights (0.61 YOLO, 0.36 bib, 0.03 stationary; threshold 0.094). That commit, role_labels.py and candidate artifact are not present here. These numbers are reported candidates, not adopted defaults. Ruhab retains model fine-tuning/validation ownership; Saqib supplies branch evidence. Adoption requires a user/team decision and matched before/after benchmarks. Missing reference/staff-zone factors mean unobserved in those clips, not proof of irrelevance; fixed staff-only zone categories are not part of the new map model.

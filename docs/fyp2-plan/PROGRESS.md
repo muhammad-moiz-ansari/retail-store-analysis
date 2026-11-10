@@ -1,6 +1,22 @@
 # FYP-2 progress
 
-Updated 2026-11-10. Current task: **frontend Vercel build configuration (Moiz)**; Phase 1–4 results below are retained as history. Ownership is maintained in [PLAN.md](PLAN.md); callable contracts and semantics are in [CONTRACTS.md](CONTRACTS.md). Checklists describe code/status, not automatic evidence of evaluation.
+## Current decision — 11 November 2026
+
+The [combined team plan](RetailPulse_FYP2_Implementation_Plan.md) governs current work and ownership. Implement camera/CV first, then register the supplied map, then render live role occupancy and confirmed-interaction layers. Exactly four dynamic occupancy categories are allowed: **Customer, Employee, Customer–employee both, No one**. They are not fixed permitted-role polygons. Invalid/missing/unknown observation is separate quality metadata, never a fifth category or a false No one. Historical z1–z6, staff zones, queue/counter geometries and hot/gray terminology below are legacy technical references, not additional category requirements. No existing runtime/schema/fixture has been migrated by this documentation update.
+
+## Latest reconciliation / next handoff
+
+- **DOC-CONSOLIDATION (Moiz, docs only):** combined Saqib's Nov-10 snapshot with unchanged member/agent ownership and inspected local artifacts. Tracked/local combined plans match. No camera/map/category implementation, refit adoption, evaluation rerun or runtime migration is claimed.
+- **CV-LOCAL (Saqib):** existing event producers and local merged reports support 11 tuning clips/13 interactions (F1 0.867), 14 set-B clips/17 interactions (F1 0.462). Snapshot says 10 pass-bys; local set-B lists contain 9. Keep that discrepancy open.
+- **CV-REPORTED (Saqib evidence, Ruhab tuning ownership):** role/refit completion at d6783b2, 109/113 matched role tracks, candidate weights/random-six reports and clean speed are reported from Saqib's separate branch. The commit/module are absent here; no integration/adoption/reproduction is asserted.
+- **MAP-1 / MAP-2 / MAP-3:** planned and pending. Existing generic grids/polygons do not implement supplied-map registration, role-separated heatmaps or the four live category state machine.
+- **M-P1–M-P4:** implemented/offline verified foundation retained (last recorded 139 passed / 1 missing-real-output skip); do not infer real agents, durable operational delivery or full Query/UI completion.
+- **M-UI-VERCEL:** user confirmed cloud frontend deployment works after the local configuration fix. This is user-confirmed frontend success, not independent live backend/login or real-data verification.
+- Continue at camera/CV verification with Saqib, supplied-map alignment jointly, and dynamic semantics with Ruhab. Moiz can continue fixture-backed UI binding, wider tools and Query/golden-set evaluation in parallel. No member waits for all other work to finish.
+
+## Historical task evidence (retained)
+
+Updated 2026-11-11. Current task: **frontend Vercel build configuration (Moiz)**; Phase 1–4 results below are retained as history. Ownership is maintained in [PLAN.md](PLAN.md); callable contracts and semantics are in [CONTRACTS.md](CONTRACTS.md). Checklists describe code/status, not automatic evidence of evaluation.
 
 | Task key | Owner | Scope / source | Implementation status | Verification / evidence | Remaining limitations and dependencies |
 |---|---|---|---|---|---|
@@ -116,3 +132,7 @@ No edits to `Report/`, generated report evidence, pushes, PRs, merges or deploym
 - Local root dependencies were stale Next 16; `npm ci --no-audit --no-fund --prefer-offline` restored locked Next 15.5.25. A second ignored Next 16 install under frontend/node_modules caused a mixed-version `this.load is not a function` page-data failure. That nested folder was preserved in ignored `data/outputs/vercel-check/frontend-node_modules-backup-20261110`; root and frontend now resolve root Next 15.5.25.
 - Final `npm run build` passed: optimized compilation, 26/26 page-generation steps, page optimization and build traces completed, including dynamic auth/backend proxy routes. Manifest/lock/config/output checks passed. Existing type/lint build skips were preserved; no full type/lint or live-backend verification is claimed.
 - Cloud root/branch selection and an actual Vercel deployment still require user action; local configuration cannot override the wrong selected project root. fyp2-moiz currently has no configured remote upstream, so Vercel cannot consume these local commits until they are published. No push, merge, Vercel settings change or deployment was performed. Report and backend/agent implementation are unchanged.
+
+## Documentation reconciliation checks (11 November 2026)
+
+The tracked/local combined plans match byte-for-byte; relative Markdown links resolve; edits are limited to planning Markdown; extra-docs remains ignored exactly once with no tracked files there. Local benchmark JSON/clip inventories were inspected, not regenerated. No runtime tests, CV evaluation, model adoption, schema/category migration, report edits, push or merge were performed for this docs-only task. The current next-developer queue is MAP-1 → MAP-2 → MAP-3 with owner-specific parallel work in the combined plan.

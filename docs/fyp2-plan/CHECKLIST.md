@@ -1,5 +1,9 @@
 # FYP-2 Checklist
 
+## Current decision — 11 November 2026
+
+The [combined team plan](RetailPulse_FYP2_Implementation_Plan.md) governs current work and ownership. Implement camera/CV first, then register the supplied map, then render live role occupancy and confirmed-interaction layers. Exactly four dynamic occupancy categories are allowed: **Customer, Employee, Customer–employee both, No one**. They are not fixed permitted-role polygons. Invalid/missing/unknown observation is separate quality metadata, never a fifth category or a false No one. Historical z1–z6, staff zones, queue/counter geometries and hot/gray terminology below are legacy technical references, not additional category requirements. No existing runtime/schema/fixture has been migrated by this documentation update.
+
 Integration branch: `fyp-2` (cut from `stage`). Each item gets its own branch off `fyp-2`
 and merges back into `fyp-2` when its "Done when" in [FUTURE_WORK.md](FUTURE_WORK.md) holds.
 
@@ -48,13 +52,9 @@ Branch `feature/fyp2-b0-event-store` (B0 to B5 code). Contract details in [CONTR
 - [x] **B0** `backend/events/`: schema v1 (+ `heatmaps`), idempotent ingestion, derived unattended episodes,
       seeded fixture day (`python -m backend.events.fixtures`), contract test over fixture and local runs.
       CI coordination is Ruhab's C1; Saqib supplies backend checks and Moiz frontend checks.
-- [ ] **B1** Labelling (manual): 1 of 11 clips reviewed; the other 10 have `candidates_to_review` in `benchmark.json`.
-      Also add `"people"` (distinct people), `"roles"` and `"people_file"` per clip. 3 zone-dwell clips not started.
-      Detector split is already by recording.
-- [~] **B2** Benchmark: P/R/F1 proximity vs judge, start/end error, role accuracy, ID switches/min (needs `"people"`),
-      CPU realtime factor. To do: GPU throughput run, error analysis write-up.
-- [~] **B3** `python -m backend.interaction.refit`: leave-one-clip-out logistic regression vs hand-set, sweep plot.
-      Waits on B1 labels.
+- [x] **B1 interaction-label inventory present**: 11 tuning clips / 13 interactions and 14 set-B clips / 17 interactions. Second review and role-artifact integration are separate remaining checks. Local set-B pass-by lists total 9 versus Saqib's reported 10; reconcile provenance.
+- [~] **B2** Local merged benchmark reports exist: tuned F1 0.867; set-B F1 0.462 (seen once while tuning). Clean idle CPU/GPU measurement, blind checks and gap/ID-switch follow-up remain; Saqib reports error analysis in his notes.
+- [~] **B3** Saqib reports completed refit/role labels at d6783b2 plus uncommitted artifacts; commit/module absent in this checkout. Publication/integration and user/team adoption decision remain. Ruhab retains fine-tuning validation ownership; do not relabel this as unstarted or locally adopted.
 - [x] **B4** CLI `--camera` writes runs to the store; `floor_zones` dwell/transitions/heatmaps, `entrance_line` footfall,
       `queue_zone` queue length/wait, frozen-or-dark frame check. Each camera still needs its polygons drawn in a `--config` file.
 - [~] **B5** `python -m backend.handoff_eval run.json labels.json`. Waits on labelled crossings.
@@ -71,3 +71,12 @@ Ownership and actual evidence: [PLAN.md](PLAN.md), [PROGRESS.md](PROGRESS.md), [
 - [ ] **S-B0-VERDICT / S-B4-REALFEED / S-DEPLOY-INTEGRATION (Saqib)** Unattended verdict review, real feeds/configuration, operational assignment/voice and deployment.
 
 The historical B1/B2/B3/B5 status above is not a fresh label/benchmark audit. Existing labelled/benchmark commits are present; remaining labels, refit validation, throughput/error analysis and handoff evaluation retain independent pending status. No large evaluation rerun was performed in Moiz Phase 1.
+
+## Current camera/map sequence
+
+- [ ] MAP-1 (Saqib): real camera/CV/event/health verification.
+- [ ] MAP-2 (Saqib spatial/backend, Moiz binding, Ruhab QA): supplied-map registration and visibility metadata.
+- [ ] MAP-3 (Ruhab semantics, Saqib feeds, Moiz readers/rendering): exactly four dynamic categories and separate customer/employee/confirmed-interaction layers.
+- [ ] TEAM-ACCEPTANCE: observe category transitions and genuine empty space without turning blocked/unknown observations into No one; complete actual dispatch/employee/manager workflow.
+
+These are planned, not implemented by this documentation reconciliation. Existing six-zone fixtures are historical test data, not the new category schema.
