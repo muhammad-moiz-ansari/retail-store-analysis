@@ -1,1 +1,1 @@
-"""Typed agent boundaries; SQL readers and graph execution are later phases."""
+"""Typed analytics boundaries and read-only tools; graph execution is a later phase."""

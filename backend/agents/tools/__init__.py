@@ -1,4 +1,4 @@
-"""Published read-tool interfaces; concrete readers are a Phase 2 deliverable."""
+"""Read-tool Protocol; implementations live in contextual and registry modules."""
 from typing import Protocol
 
 from ..contracts import (CoverageRequest, CoverageResult, FootfallRequest, FootfallResult,

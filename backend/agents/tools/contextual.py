@@ -20,7 +20,8 @@ class SQLiteAnalyticsTools(EventAnalytics):
                 rows = [r for r in rows if r['waited_s'] >= request.min_seconds and clipped([r], request.window)]
                 if any(r['helped'] not in (0, 1) for r in rows):
                     raise SourceUnavailable("Invalid stored unattended helped flag")
-                _, hrows, limits = health(session, scope, request, self.contexts, source='unattended_episodes')
+                _, hrows, limits = health(session, scope, request, self.contexts, source='unattended_episodes',
+                                          observed_cameras={r['camera_id'] for r in rows})
                 episodes = tuple(UnattendedEpisode(event_id=r['event_id'], run_id=r['run_id'], camera_id=r['camera_id'],
                     zone_id=r['zone_id'], customer_track_id=r['customer_track_id'], helped=bool(r['helped']),
                     window=TimeWindow(start=max(r['_start'], request.window.start), end=min(r['_end'], request.window.end)),
@@ -58,7 +59,8 @@ class SQLiteAnalyticsTools(EventAnalytics):
                     operating = intersect(merge((w.start, w.end) for w in context.operating_windows),
                                           [(request.window.start, request.window.end)]) if context and context.operating_windows else []
                     target = operating if context and context.operating_windows else [(request.window.start, request.window.end)]
-                    healthy, hrows, problems = health(session, scope, request, self.contexts, source='zone_dwell', zone=zone, shift=request.shift)
+                    healthy, hrows, problems = health(session, scope, request, self.contexts, source='zone_dwell',
+                        zone=zone, shift=request.shift, observed_cameras={r['camera_id'] for r in rows if r['zone_id'] == zone})
                     healthy = intersect(healthy, target)
                     staff = [r for r in rows if r['zone_id'] == zone and r['role'] == 'employee']
                     supported = [r for r in staff if seconds(intersect(clipped([r], request.window), healthy)) > 0]
