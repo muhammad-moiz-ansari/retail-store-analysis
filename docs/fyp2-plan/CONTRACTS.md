@@ -4,6 +4,44 @@
 
 The [combined team plan](RetailPulse_FYP2_Implementation_Plan.md) governs current work and ownership. Implement camera/CV first, then register the supplied map, then render live role occupancy and confirmed-interaction layers. Exactly four dynamic occupancy categories are allowed: **Customer, Employee, Customer–employee both, No one**. They are not fixed permitted-role polygons. Invalid/missing/unknown observation is separate quality metadata, never a fifth category or a false No one. Historical z1–z6, staff zones, queue/counter geometries and hot/gray terminology below are legacy technical references, not additional category requirements. No existing runtime/schema/fixture has been migrated by this documentation update.
 
+## Dashboard presentation provider — M-UI-P1 (Moiz)
+
+Implemented in `frontend/src/lib/analytics-provider/{contracts,provider,fixture}.ts`. This is a frontend-facing adapter boundary, not a replacement event schema, HTTP API, auth policy or business agent. No component consumes it yet; the legacy dashboard remains unchanged until M-UI-P2.
+
+`AnalyticsProvider` declares `mode: fixture | backend` and async `load(request, signal?) -> unknown`. `loadDashboard` validates the response before returning a typed state. Request fields are `storeId`, `window: {start,end}` and `filters: {runId?,cameraId?,zoneId?}`. Times use UTC ISO strings ending in Z; the half-open observation window is positive and at most 31 days. Requests describe desired scope, not authority. The future server adapter must derive permissions from authenticated records and preserve backend tool limits and trusted observation context. Never accept browser store IDs as authorization.
+
+Snapshot v1 echoes the exact store/window/filter selection, provenance (`mode`, explicit `synthetic`, visible `label`), retrieval/cache timestamps (`generatedAt`, `validUntil`), limitations and all eight metric keys. Cache freshness is separate from the historical observation window; an old observation window is not automatically stale. `snapshotState` can re-evaluate expiry without re-fetching. The consumer owns initial `loading`, refresh lifecycle and cancellation. After expiry a usable snapshot is `stale`; all-unavailable data remains `unavailable`; otherwise missing/partial metrics make the snapshot `partial`, with fully supported/observed-empty snapshots `ready`. Individual metric statuses remain visible even when the overall status is stale.
+
+| Presentation key | Unit | Existing tool source |
+|---|---|---|
+| entries / exits | count | get_footfall bucket entries/exits; later adapter must handle bucket truncation, not sum partial buckets as complete totals |
+| confirmedInteractions / unverifiedInteractions | count | get_interactions confirmed_count / unverified_count, kept separate |
+| meanConfirmedDuration | seconds | get_interactions mean_confirmed_duration, not a fabricated response/approach time |
+| customerDwellP50 | seconds | get_zone_dwell customer p50; explicit zone required by backend |
+| unattendedEpisodes | count | get_unattended episode_count; preserve stored_derivation_verdict_unfiltered limitation |
+| staffedOpenRatio | ratio | get_coverage selected zone staffed_open_ratio; null without trusted operating denominator |
+
+Each metric has nullable numeric `value`, `unit`, `status: ok | empty | partial | unavailable`, nullable `reason`, `estimated`, `limitations` and evidence entries (`query`, `source`, `ids`, `matchedCount`, `truncated`). The adapter must retain metric-specific unavailable reasons/estimates and source-result limitations, not upgrade partial tool outputs. Positive values require evidence; observed zero may have no row IDs, but needs the backend's actual observation/health justification. Undefined averages/ratios remain null even in an observed-empty window. Unavailable metrics cannot contain numbers. Non-finite/negative values, fractional counts, ratios outside 0–1, missing explanations and invalid evidence are rejected. No occupancy/net-inside claim is derived by subtracting crossings; initial occupancy is not established.
+
+Evidence tool/table pairs mirror existing sources (footfall; interactions/tracks; zone_dwell; unattended_episodes; zone_dwell/pipeline_health). Sampled evidence must retain matched count and truncation; evidence IDs alone are not a complete population. Shape checks cannot establish row authenticity, healthy observation or authorization. Those remain server responsibilities. Unsupported/malformed/cross-scope responses or provider exceptions return sanitized all-null unavailable results, never fixture fallback or backend exception text. Cancellation rejects for the UI to discard, rather than becoming an outage notice.
+
+`createFixtureProvider(scenario, now?)` supports ready, empty, partial, unavailable and stale scenarios. These are **hand-authored synthetic presentation scenarios**, separate from Saqib's canonical SQLite generator and not derived from CV data. They accept only `fixtureRequest` (demo-store, demo-region, 3 Nov 2026 09:00–10:00 UTC, no camera/run filters); unsupported valid selections return unavailable rather than relabel fixed numbers. Fixture IDs and numbers are illustrative, not real evidence. No database/network access or backend provider is implemented. No interaction rows, map registration, occupancy category assignment or heatmap data are invented by this boundary.
+
+Example for M-UI-P2 (local fixture preview only):
+
+```ts
+import { createFixtureProvider, fixtureRequest } from "@/lib/analytics-provider/fixture";
+import { loadDashboard } from "@/lib/analytics-provider/provider";
+const controller = new AbortController();
+const state = await loadDashboard(createFixtureProvider("partial"), fixtureRequest, {
+  signal: controller.signal,
+});
+// Render state.snapshot.provenance.label, metric units/reasons/limitations and status.
+// Re-evaluate cache expiry with snapshotState; abort/discard obsolete requests.
+```
+
+Offline verification: `npm run test:dashboard-provider` compiles these TypeScript modules/tests with installed TypeScript, then runs Node's test runner; generated JS stays under ignored `data/outputs/dashboard-provider-tests/`. No new dependency or model/provider call is required.
+
 ## What the pipeline writes today
 
 `python -m backend.interaction.cli <video> --output backend/output/<run>/interaction.mp4`
