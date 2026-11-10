@@ -1,0 +1,15 @@
+sequenceDiagram
+    actor A as User (Manager / Employee)
+    participant S as RetailPulse system
+    A->>S: openPersonalSettings()
+    S-->>A: permittedProfileAndPreferences()
+    A->>S: savePersonalSettings(allowedFields, notificationPreferences)
+    alt authorized valid changes and successful persistence
+    S-->>A: savedPersonalSettings(readBackValues)
+    else invalid fields, duplicate email, denied access or save failure
+    S-->>A: saveRejected(reason, previousSavedState)
+    end
+    opt password change is requested
+    A->>S: changePassword(requiredCredentials, newPassword)
+    S-->>A: passwordChangeResult(policyValidation, savedStatus)
+    end

@@ -1,0 +1,16 @@
+sequenceDiagram
+    actor A as Employee
+    participant S as RetailPulse system
+    Note over A,S: Trigger: supported aisle staffing need arrives. The system checks eligible accounts, current tasks, freshness and source-zone policy; no manager approval gate.
+    alt eligible employee and supported direct delivery
+    S->>A: aisleAssignment(taskId, targetAisle, instruction, reason)
+    A->>S: viewOwnAssignment(taskId)
+    S-->>A: assignmentDetails(currentState, dueAt)
+    opt employee acknowledges or reports progress
+    A->>S: updateOwnAssignment(taskId, acknowledged / inProgress / completed)
+    S-->>A: recordedTaskStatus(state, actor, time)
+    end
+    else no eligible account, policy conflict, stale evidence or delivery failure
+    Note over A,S: Record unresolved need and explicit dispatch/delivery outcome; no unsafe or duplicate instruction is promised.
+    end
+    Note over A,S: Current API state is in_progress; declined, expired and cancelled are also accepted. Stored delivered is not proof of receipt, arrival or completion.

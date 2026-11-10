@@ -1,0 +1,12 @@
+sequenceDiagram
+    actor A as Manager
+    participant S as RetailPulse system
+    A->>S: openCameraMonitoring()
+    S-->>A: configuredSources(availability)
+    A->>S: selectCamera(sourceId)
+    alt source and analytical observations are available
+    S-->>A: cameraView(availableOverlays, observedAt, processedAt)
+    else offline source, stale output or missing overlays
+    S-->>A: cameraAvailability(state, lastObservation, overlayLimitations)
+    end
+    Note over A,S: Observation freshness is explicit; the target view does not imply guaranteed real-time processing.

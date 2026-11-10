@@ -5,9 +5,9 @@ Integrate and evaluate the vision agents, bind real outputs to the dashboard, an
 
 \section{Remaining Modules and Features}
 \begin{itemize}
-\item Integrate and evaluate Detection, Classification, Engagement and Trajectory agents; detection, classification and interaction detection with the pose judge are already implemented in the interaction CLI.
+\item Integrate and evaluate Customer Behavior Agent, Employee Activity Agent, Interaction Agent and Employee Task Assignment Agent; detection, classification and interaction detection with the pose judge are already implemented in the interaction CLI.
 \item Evaluate interaction detection (proximity, duration, pass-by filter and pose judge) on labelled clips, including close pass-bys that are not assistance; ten local clips await labels.
-\item Insight Narration agent over real analytics.
+\item Insight Narration Agent and Query Agent over authorized real analytics; Orchestrator coordination using application code, with integration/evidence status tracked separately.
 \item Real data in Dashboard, Customer Info, Employee Info, Spatial Analytics, Alerts, and System Status.
 \item Implement camera handoff in the next phase: associate a person leaving one camera with a person entering another using timing, direction and appearance evidence. This is outside the mid-iteration deliverables; ambiguous associations must remain unresolved. An experimental two-camera handoff script and \texttt{/camera/*} job routes already exist.
 \end{itemize}
@@ -28,7 +28,7 @@ Iteration & Focus\\
 \end{table}
 
 \section{Implementation Plan}
-Bind agents one at a time to the dashboard, beginning with Detection and footfall, then Classification, Engagement, and Trajectory, keeping prototype data as a fallback until each agent passes its checks. Develop and evaluate cross-camera association separately from same-camera interaction detection.
+Bind agents one at a time to the dashboard, beginning with shared perception and Customer Behavior footfall, then Interaction, Employee Activity and direct account-based task assignment, keeping prototype data explicitly labelled until each capability passes its checks. Do not equate detected employee tracks with task-recipient accounts; verify the linkage and source-zone safety policy before location-based selection. Develop and evaluate cross-camera association separately from same-camera interaction detection.
 
 \section{Testing and Validation Plan}
 Label a set of clips for staff/customer, interactions, and zone dwell. Report precision, recall, and error analysis per agent. Re-run Appendix test cases after each integration and record results. Check performance on CPU and record throughput.

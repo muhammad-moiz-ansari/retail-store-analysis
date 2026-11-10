@@ -1,0 +1,11 @@
+sequenceDiagram
+    actor A as Operator / project team
+    participant S as RetailPulse system
+    A->>S: analyzeVideo(video, configuration, outputLocation)
+    alt input and required models are valid
+    S-->>A: processingAccepted(runId, samplingConfiguration)
+    S-->>A: analysisCompleted(runId, coverage, diagnosticOutputLocations)
+    else invalid input, missing model or interrupted processing
+    S-->>A: analysisFailed(reason, partialOutputStatus)
+    end
+    Note over A,S: A processed sample with no people is a valid empty observation; it is distinct from a failed frame.

@@ -1,0 +1,591 @@
+% Canonical active detailed use cases; included once by chapter4_requirements.tex.
+
+% PRIMARY_UC UC-01 FR-01
+\subsection*{UC-01: Analyze a video}
+\label{uc:01}
+System sequence diagram: Figure~\ref{fig:ssd-01}.
+
+\begin{longtable}{P{0.23\textwidth}P{0.67\textwidth}}
+\caption{UC-01: Analyze a video}\\
+\toprule
+Field / step & Specification\\
+\midrule
+\endfirsthead
+\toprule
+Field / step & Specification\\
+\midrule
+\endhead
+Primary FR & FR-01\\
+Primary actor & Operator / project team\\
+Supporting actors / services & Video source and configured perception tools\\
+Goal & Produce reviewable person observations and diagnostics for the selected recording.\\
+Trigger & The operator submits a video and processing configuration.\\
+Preconditions & The recording is readable; required weights and processing settings are available.\\
+Main flow 1 & Operator selects the recording, output location and sampling/model settings.\\
+Main flow 2 & System validates the input, weights and configuration and identifies the selected execution path.\\
+Main flow 3 & System processes the configured samples, maintains track identifiers and retains timestamps, role evidence and confidence.\\
+Main flow 4 & System writes annotated video and structured detections, people and interaction diagnostics, retaining verdicts and missing evidence.\\
+Main flow 5 & System reports completion, processed coverage and output locations; operator reviews the exports.\\
+Alternative 2a & Missing/corrupt input or unavailable model: stop with an actionable error before claiming success.\\
+Alternative 3a & No detections: export a valid empty result with processed coverage; do not call an unreadable frame empty.\\
+Alternative 3b & Processing/export failure: report failure and identify partial or incomplete outputs; recovery handling beyond existing CLI errors is proposed.\\
+Success postconditions & Outputs and their processing configuration are available for review.\\
+Failure / minimal guarantees & Source footage is unchanged; a failed or partial run is not represented as complete.\\
+Implementation / evidence status & CLI implemented and dated TC-24 evidence retained. Role-labelled standalone processing differs from the typed identity path, where role may remain unknown.\\
+\bottomrule
+\end{longtable}
+
+% PRIMARY_UC UC-02 FR-02
+\subsection*{UC-02: Obtain entrance footfall}
+\label{uc:02}
+System sequence diagram: Figure~\ref{fig:ssd-02}.
+
+\begin{longtable}{P{0.23\textwidth}P{0.67\textwidth}}
+\caption{UC-02: Obtain entrance footfall}\\
+\toprule
+Field / step & Specification\\
+\midrule
+\endfirsthead
+\toprule
+Field / step & Specification\\
+\midrule
+\endhead
+Primary FR & FR-02\\
+Primary actor & Manager\\
+Supporting actors / services & Customer Behavior Agent; entrance observation source\\
+Goal & Obtain defensible entrance counts and occupancy context for an interval.\\
+Trigger & Manager requests entrance statistics.\\
+Preconditions & Authorized access, an entrance source, directional crossing rule and supported track observations exist.\\
+Main flow 1 & Manager selects the interval and entrance source.\\
+Main flow 2 & System validates crossing configuration and retrieves supported observations with continuity information.\\
+Main flow 3 & System determines customer entry and exit crossings without counting repeated samples as new customers.\\
+Main flow 4 & System calculates interval net change; absolute occupancy is calculated only when initial occupancy is known.\\
+Main flow 5 & System displays in/out, supported occupancy and observation gaps; manager inspects coverage.\\
+Alternative 2a & Missing boundary or camera gap: return unavailable or partial counts with the affected period.\\
+Alternative 3a & Unknown role or broken track continuity: retain uncertain crossings separately under the configured counting policy.\\
+Alternative 4a & Unknown initial occupancy: show net change only, not an invented absolute in-store count.\\
+Success postconditions & Counts, interval and coverage context are displayed.\\
+Failure / minimal guarantees & Unsupported periods and initial conditions are explicit.\\
+Implementation / evidence status & Target capability; current dashboard snapshots and detector KPIs do not establish crossing-count correctness. TC-26 is planned.\\
+\bottomrule
+\end{longtable}
+
+% PRIMARY_UC UC-04 FR-04
+\subsection*{UC-04: Analyze customer service interactions}
+\label{uc:04}
+System sequence diagram: Figure~\ref{fig:ssd-04}.
+
+\begin{longtable}{P{0.23\textwidth}P{0.67\textwidth}}
+\caption{UC-04: Analyze customer service interactions}\\
+\toprule
+Field / step & Specification\\
+\midrule
+\endfirsthead
+\toprule
+Field / step & Specification\\
+\midrule
+\endhead
+Primary FR & FR-04\\
+Primary actor & Manager\\
+Supporting actors / services & Interaction Agent; configured camera observations\\
+Goal & Review possible service interactions and policy-based unattended evidence.\\
+Trigger & Manager requests service analysis for an interval.\\
+Preconditions & Authorized access, supported role/track observations and applicable store service policy exist.\\
+Main flow 1 & Manager selects an interval and applicable zone.\\
+Main flow 2 & System evaluates sustained employee/customer proximity and relative motion using the configured observation rules.\\
+Main flow 3 & System applies pass-by filtering and available pose evidence, retaining interaction, rejected and unverified verdicts.\\
+Main flow 4 & System derives interaction durations and, only when supported by entry/zone history, approach times and potentially unattended events under the store policy.\\
+Main flow 5 & System presents the records with evidence quality and coverage; manager reviews their interpretation.\\
+Alternative 2a & Unknown role, occlusion or incompatible observations: retain uncertainty rather than a definite service outcome.\\
+Alternative 3a & Judge disabled, unavailable or failing: current code keeps the proximity candidate as unverified; it is not verified assistance.\\
+Alternative 4a & Missing arrival/history or policy: omit unsupported approach/unattended metrics and explain why.\\
+Success postconditions & Supported service-analysis records are displayed with their evidence and policy context.\\
+Failure / minimal guarantees & A proximity/pose event is not asserted to prove help was provided.\\
+Implementation / evidence status & Candidate/duration/pass-by/pose logic implemented; approach and unattended integration remain pending. TC-09 stays Pending; TC-21/22 and dated outputs are supporting evidence.\\
+\bottomrule
+\end{longtable}
+
+% PRIMARY_UC UC-07 FR-07
+\subsection*{UC-07: Analyze spatial customer activity}
+\label{uc:07}
+System sequence diagram: Figure~\ref{fig:ssd-07}.
+
+\begin{longtable}{P{0.23\textwidth}P{0.67\textwidth}}
+\caption{UC-07: Analyze spatial customer activity}\\
+\toprule
+Field / step & Specification\\
+\midrule
+\endfirsthead
+\toprule
+Field / step & Specification\\
+\midrule
+\endhead
+Primary FR & FR-07\\
+Primary actor & Manager\\
+Supporting actors / services & Customer Behavior Agent; zone geometry and track observations\\
+Goal & Understand supported movement, dwell and sustained zone demand.\\
+Trigger & Manager opens spatial analysis.\\
+Preconditions & Authorized access and applicable zone definitions and observations exist.\\
+Main flow 1 & Manager selects an interval and applicable zone.\\
+Main flow 2 & System retrieves supported customer tracks and determines zone membership and observation coverage.\\
+Main flow 3 & System aggregates paths, dwell and occupancy measures without double-counting unsupported identity continuations.\\
+Main flow 4 & System applies configured persistence rules to identify hot zones and gray zones.\\
+Main flow 5 & System displays maps, interval and coverage alongside the zone findings.\\
+Alternative 2a & Unconfigured/invalid zone: reject the selection or request valid geometry.\\
+Alternative 3a & Low observation coverage: label insufficient evidence rather than low customer activity.\\
+Alternative 3b & Unsupported cross-camera association: limit trajectories to supported camera/session tracks; do not infer whole-store paths or customers per square metre.\\
+Success postconditions & Spatial results identify their source, zone, period and coverage.\\
+Failure / minimal guarantees & No metric density or whole-store path is invented.\\
+Implementation / evidence status & Target aggregation; current spatial UI uses demonstration data. TC-10 remains Pending.\\
+\bottomrule
+\end{longtable}
+
+% PRIMARY_UC UC-10 FR-10
+\subsection*{UC-10: Access a role-specific account}
+\label{uc:10}
+System sequence diagram: Figure~\ref{fig:ssd-10}.
+
+\begin{longtable}{P{0.23\textwidth}P{0.67\textwidth}}
+\caption{UC-10: Access a role-specific account}\\
+\toprule
+Field / step & Specification\\
+\midrule
+\endfirsthead
+\toprule
+Field / step & Specification\\
+\midrule
+\endhead
+Primary FR & FR-10\\
+Primary actor & Manager or Employee\\
+Supporting actors / services & Account service; invitation issuer where needed\\
+Goal & Enter and leave the workspace authorized for the authenticated account.\\
+Trigger & User activates an account, logs in or logs out.\\
+Preconditions & Account service is available; activation requires a valid invitation under the current policy.\\
+Main flow 1 & User activates/registers through the configured account policy if needed; current registration uses an invitation token.\\
+Main flow 2 & User submits credentials; system validates account status, password and assigned role.\\
+Main flow 3 & System creates an authenticated session and opens the permitted workspace.\\
+Main flow 4 & User requests logout; system invalidates the session cookie and updates the interface.\\
+Alternative 1a & Invalid/expired invitation or duplicate account: reject activation and explain the error.\\
+Alternative 2a & Wrong password, inactive account or role mismatch: deny access; selecting Manager cannot elevate an Employee account.\\
+Alternative 3a & Expired/invalid session: require authentication before protected data is returned.\\
+Success postconditions & The correct workspace is accessible, or logout ends authenticated access.\\
+Failure / minimal guarantees & Failed authentication does not create an authorized session.\\
+Implementation / evidence status & Invitation, login and logout mechanisms exist; TC-01 and TC-02 cover recorded subsets, not every activation/error path.\\
+\bottomrule
+\end{longtable}
+
+% PRIMARY_UC UC-11 FR-11
+\subsection*{UC-11: Monitor camera observations}
+\label{uc:11}
+System sequence diagram: Figure~\ref{fig:ssd-11}.
+
+\begin{longtable}{P{0.23\textwidth}P{0.67\textwidth}}
+\caption{UC-11: Monitor camera observations}\\
+\toprule
+Field / step & Specification\\
+\midrule
+\endfirsthead
+\toprule
+Field / step & Specification\\
+\midrule
+\endhead
+Primary FR & FR-11\\
+Primary actor & Manager\\
+Supporting actors / services & Configured sources; available analytical output\\
+Goal & Inspect a camera view and understand how current its observations are.\\
+Trigger & Manager opens camera monitoring.\\
+Preconditions & Manager is authenticated and camera configuration is available.\\
+Main flow 1 & Manager opens the dashboard and selects a configured source.\\
+Main flow 2 & System obtains available recording/stream observations and their source/processing timestamps.\\
+Main flow 3 & System displays the view, supported overlays, availability and observation freshness.\\
+Main flow 4 & Manager changes source or inspects observation context.\\
+Alternative 2a & Offline/missing source: show unavailable state and last known observation time where available.\\
+Alternative 3a & Stale output or absent overlays: label it explicitly rather than imply fresh analytics.\\
+Alternative 1a & Unauthorized request: deny protected access.\\
+Success postconditions & The selected source and available overlays are shown with freshness context.\\
+Failure / minimal guarantees & No unmeasured real-time guarantee is implied.\\
+Implementation / evidence status & Dashboard recording/snapshot display exists; complete configured-source/freshness integration is proposed. TC-12 is representative UI evidence; TC-37 is planned.\\
+\bottomrule
+\end{longtable}
+
+% PRIMARY_UC UC-12 FR-12
+\subsection*{UC-12: Review manager analytics}
+\label{uc:12}
+System sequence diagram: Figure~\ref{fig:ssd-12}.
+
+\begin{longtable}{P{0.23\textwidth}P{0.67\textwidth}}
+\caption{UC-12: Review manager analytics}\\
+\toprule
+Field / step & Specification\\
+\midrule
+\endfirsthead
+\toprule
+Field / step & Specification\\
+\midrule
+\endhead
+Primary FR & FR-12\\
+Primary actor & Manager\\
+Supporting actors / services & Authorized analytics records and presentation components\\
+Goal & Review customer, staff, interaction and spatial findings together.\\
+Trigger & Manager opens an analytics view or changes its filters.\\
+Preconditions & Authenticated Manager session and supported metrics or explicit availability states exist.\\
+Main flow 1 & Manager selects an interval and applicable zone.\\
+Main flow 2 & System validates filters and retrieves authorized customer, staff, interaction and spatial metrics.\\
+Main flow 3 & System presents the applicable views with time, source and observation-coverage context.\\
+Main flow 4 & Manager inspects a metric or changes the selection; system refreshes the presentation.\\
+Alternative 2a & Invalid interval/zone: request a corrected filter without displaying unrelated results.\\
+Alternative 2b & No records or partial metrics: show empty/partial states and identify unsupported quantities.\\
+Alternative 2c & Access denied: withhold protected records.\\
+Success postconditions & Authorized consolidated views correspond to the selected filters.\\
+Failure / minimal guarantees & Presentation does not invent measurements or recalculate another capability under a duplicate requirement.\\
+Implementation / evidence status & Manager pages exist with prototype/snapshot metrics; integrated filtering and coverage remain proposed. TC-12 is partial UI evidence; TC-38 is planned.\\
+\bottomrule
+\end{longtable}
+
+% PRIMARY_UC UC-13 FR-13
+\subsection*{UC-13: Review personal workspace}
+\label{uc:13}
+System sequence diagram: Figure~\ref{fig:ssd-13}.
+
+\begin{longtable}{P{0.23\textwidth}P{0.67\textwidth}}
+\caption{UC-13: Review personal workspace}\\
+\toprule
+Field / step & Specification\\
+\midrule
+\endfirsthead
+\toprule
+Field / step & Specification\\
+\midrule
+\endhead
+Primary FR & FR-13\\
+Primary actor & Employee\\
+Supporting actors / services & Own roster/account and task records\\
+Goal & Review personal shift, zone, activity and current work.\\
+Trigger & Employee opens their workspace.\\
+Preconditions & Authenticated Employee account exists.\\
+Main flow 1 & Employee opens the workspace.\\
+Main flow 2 & System retrieves that account's own shift, assigned zone and current tasks.\\
+Main flow 3 & Employee opens personal activity history; system shows supported observations and shift updates.\\
+Main flow 4 & System identifies missing history and distinguishes demo values from recorded activity.\\
+Alternative 2a & No roster/tasks/history: show an empty or unavailable state for the missing information.\\
+Alternative 2b & Attempt to read another employee's protected records: deny access.\\
+Alternative 1a & Expired session: require login.\\
+Success postconditions & Only the employee's permitted workspace records are shown.\\
+Failure / minimal guarantees & No composite score or new ranking system is required; task updates are specified primarily by UC-36.\\
+Implementation / evidence status & Own-task retrieval and workspace UI exist; activity history/shift integration is partial or demo. TC-12 is partial; TC-39 is planned.\\
+\bottomrule
+\end{longtable}
+
+% PRIMARY_UC UC-17 FR-17
+\subsection*{UC-17: Generate an insight report}
+\label{uc:17}
+System sequence diagram: Figure~\ref{fig:ssd-17}.
+
+\begin{longtable}{P{0.23\textwidth}P{0.67\textwidth}}
+\caption{UC-17: Generate an insight report}\\
+\toprule
+Field / step & Specification\\
+\midrule
+\endfirsthead
+\toprule
+Field / step & Specification\\
+\midrule
+\endhead
+Primary FR & FR-17\\
+Primary actor & Manager\\
+Supporting actors / services & Insight Narration Agent; authorized metrics/dispatch records; PDF exporter\\
+Goal & Create an exportable account of supported operational findings.\\
+Trigger & Manager requests an insight report.\\
+Preconditions & Authenticated Manager account and available records for the chosen scope exist.\\
+Main flow 1 & Manager selects the interval and report sections.\\
+Main flow 2 & System retrieves permitted metrics and relevant dispatch decisions with coverage context.\\
+Main flow 3 & System generates a narrative grounded in those records and separates facts from limitations.\\
+Main flow 4 & Manager previews the selected content; system provides PDF export.\\
+Main flow 5 & Manager requests export; system returns the generated file or an actionable failure.\\
+Alternative 2a & Incomplete data: disclose omitted sections or allow an explicitly partial report.\\
+Alternative 3a & LLM unavailable: offer a labelled metrics-only report or state that narration is unavailable.\\
+Alternative 5a & Export failure: preserve the selection and report the error, without claiming a successful PDF.\\
+Success postconditions & A readable PDF contains selected supported content and grounded narrative when available.\\
+Failure / minimal guarantees & Missing evidence is not filled with invented metrics or prose claims.\\
+Implementation / evidence status & Target capability; current report/PDF route is removed. TC-13 remains Unavailable; voice-script generation is not report-export evidence.\\
+\bottomrule
+\end{longtable}
+
+% PRIMARY_UC UC-18 FR-18
+\subsection*{UC-18: Manage operational alerts}
+\label{uc:18}
+System sequence diagram: Figure~\ref{fig:ssd-18}.
+
+\begin{longtable}{P{0.23\textwidth}P{0.67\textwidth}}
+\caption{UC-18: Manage operational alerts}\\
+\toprule
+Field / step & Specification\\
+\midrule
+\endfirsthead
+\toprule
+Field / step & Specification\\
+\midrule
+\endhead
+Primary FR & FR-18\\
+Primary actor & Manager\\
+Supporting actors / services & Alert records and related assignment context\\
+Goal & Review and resolve operational alerts with an audit trail.\\
+Trigger & Manager opens the alert feed.\\
+Preconditions & Authenticated Manager account and alert service are available.\\
+Main flow 1 & Manager opens alerts and selects active/resolved/category filters.\\
+Main flow 2 & System retrieves the authorized feed and shows available evidence and related assignments.\\
+Main flow 3 & Manager inspects an alert and records resolution.\\
+Main flow 4 & System saves the resolution actor/time and refreshes the feed.\\
+Alternative 2a & No alerts or invalid filter: display an empty state or request valid filters.\\
+Alternative 3a & Already-resolved/stale record: show the current state and avoid a misleading new resolution; stronger stale-write protection is proposed.\\
+Alternative 3b & Denied access or failed save: preserve the existing record and return an error.\\
+Success postconditions & The feed reflects saved resolution with actor/time context.\\
+Failure / minimal guarantees & Alert resolution is independent of direct employee dispatch; it is not a dispatch authorization gate.\\
+Implementation / evidence status & Alert retrieval/resolution implemented; full linked-assignment/stale-record scenarios await TC-40.\\
+\bottomrule
+\end{longtable}
+
+% PRIMARY_UC UC-19 FR-19
+\subsection*{UC-19: Inspect system status}
+\label{uc:19}
+System sequence diagram: Figure~\ref{fig:ssd-19}.
+
+\begin{longtable}{P{0.23\textwidth}P{0.67\textwidth}}
+\caption{UC-19: Inspect system status}\\
+\toprule
+Field / step & Specification\\
+\midrule
+\endfirsthead
+\toprule
+Field / step & Specification\\
+\midrule
+\endhead
+Primary FR & FR-19\\
+Primary actor & Manager\\
+Supporting actors / services & Health and telemetry providers\\
+Goal & Understand which configured components are healthy or unobserved.\\
+Trigger & Manager requests system status.\\
+Preconditions & Manager authorization and configured component registry exist.\\
+Main flow 1 & Manager opens system status.\\
+Main flow 2 & System retrieves health, available throughput and activity records for configured pipeline tools and the seven target agent/coordinator components.\\
+Main flow 3 & System displays timestamps and distinguishes measured, unavailable, inactive and demonstration states.\\
+Main flow 4 & Manager inspects a component's available details.\\
+Alternative 2a & Telemetry missing or stale: show unknown/stale instead of inferred health.\\
+Alternative 2b & Component failed/inactive: identify its state and effect on dependent results.\\
+Alternative 1a & Unauthorized access: withhold protected diagnostics.\\
+Success postconditions & Status identifies the evidence available for each displayed component.\\
+Failure / minimal guarantees & Hard-coded worker strings are not claimed as measured seven-agent telemetry.\\
+Implementation / evidence status & Backend status endpoint exists with hard-coded worker states; complete seven-component UI/telemetry is proposed. TC-41 is planned.\\
+\bottomrule
+\end{longtable}
+
+% PRIMARY_UC UC-20 FR-20
+\subsection*{UC-20: Manage personal settings}
+\label{uc:20}
+System sequence diagram: Figure~\ref{fig:ssd-20}.
+
+\begin{longtable}{P{0.23\textwidth}P{0.67\textwidth}}
+\caption{UC-20: Manage personal settings}\\
+\toprule
+Field / step & Specification\\
+\midrule
+\endfirsthead
+\toprule
+Field / step & Specification\\
+\midrule
+\endhead
+Primary FR & FR-20\\
+Primary actor & Manager or Employee\\
+Supporting actors / services & Account/profile service\\
+Goal & Save permitted personal details, password and notification preferences.\\
+Trigger & User opens personal settings.\\
+Preconditions & Authenticated account and applicable profile/password policy exist.\\
+Main flow 1 & User opens profile and edits permitted fields or notification preferences.\\
+Main flow 2 & System validates fields, permissions and any duplicate-email constraint.\\
+Main flow 3 & For a password change, user supplies credentials required by the security policy; system validates them.\\
+Main flow 4 & System persists authorized changes and confirms the saved values.\\
+Alternative 2a & Invalid fields, duplicate email or attempted role change: reject the change; users cannot elevate their own role.\\
+Alternative 3a & Wrong current password where required: deny the password change.\\
+Alternative 4a & Expired session or failed save: report failure and retain previous saved data.\\
+Success postconditions & Permitted changes are persisted and can be read back.\\
+Failure / minimal guarantees & A UI-only confirmation is not proof of a stored update.\\
+Implementation / evidence status & Profile controls are present, but working profile/password/preference persistence is not established. TC-42 is planned.\\
+\bottomrule
+\end{longtable}
+
+% PRIMARY_UC UC-29 FR-29
+\subsection*{UC-29: Configure store operations}
+\label{uc:29}
+System sequence diagram: Figure~\ref{fig:ssd-29}.
+
+\begin{longtable}{P{0.23\textwidth}P{0.67\textwidth}}
+\caption{UC-29: Configure store operations}\\
+\toprule
+Field / step & Specification\\
+\midrule
+\endfirsthead
+\toprule
+Field / step & Specification\\
+\midrule
+\endhead
+Primary FR & FR-29\\
+Primary actor & Manager\\
+Supporting actors / services & Camera, zone, roster and policy stores\\
+Goal & Configure valid store operations for subsequent processing.\\
+Trigger & Manager changes store configuration.\\
+Preconditions & Authenticated Manager account and applicable records exist.\\
+Main flow 1 & Manager opens current settings and selects camera, zone, roster or service/dispatch policy settings.\\
+Main flow 2 & Manager submits changes; system validates values, references, source compatibility and applicable geometry/roster conflicts.\\
+Main flow 3 & System persists a valid configuration and shows the saved result.\\
+Main flow 4 & System applies the configuration to subsequent supported processing and identifies consumers not yet integrated.\\
+Alternative 2a & Invalid geometry/value, nonexistent employee or incompatible source: reject invalid changes.\\
+Alternative 2b & Conflicting roster or unauthorized change: reject or request correction under the applicable policy.\\
+Alternative 3a & Save failure: preserve the previous valid configuration and report failure.\\
+Success postconditions & Validated settings are saved and applicable consumers use them.\\
+Failure / minimal guarantees & Persistence is not represented as proof that every analytics consumer is connected.\\
+Implementation / evidence status & Settings APIs/UI persist configuration; comprehensive validation and consumption are incomplete. TC-27 is planned.\\
+\bottomrule
+\end{longtable}
+
+% PRIMARY_UC UC-34 FR-34
+\subsection*{UC-34: Evaluate analytical outputs}
+\label{uc:34}
+System sequence diagram: Figure~\ref{fig:ssd-34}.
+
+\begin{longtable}{P{0.23\textwidth}P{0.67\textwidth}}
+\caption{UC-34: Evaluate analytical outputs}\\
+\toprule
+Field / step & Specification\\
+\midrule
+\endfirsthead
+\toprule
+Field / step & Specification\\
+\midrule
+\endhead
+Primary FR & FR-34\\
+Primary actor & Operator / project team\\
+Supporting actors / services & Benchmark tools; supplied predictions and annotations\\
+Goal & Measure supported analytical accuracy and speed with reproducible context.\\
+Trigger & Operator submits an evaluation configuration.\\
+Preconditions & Compatible predictions, annotations, model/configuration metadata and evaluation inputs are available.\\
+Main flow 1 & Operator selects predictions, annotations and benchmark configuration.\\
+Main flow 2 & System validates identifiers, units, label coverage and compatible evaluation settings.\\
+Main flow 3 & System computes only supported detector/interaction metrics and processing-speed measures.\\
+Main flow 4 & System exports results with configuration, evaluated coverage and environment/timing context.\\
+Main flow 5 & Operator reviews the export and unsupported-metric explanations.\\
+Alternative 2a & Missing/mismatched labels, incompatible units or empty evaluation: identify metrics that cannot be computed.\\
+Alternative 3a & Processing failure: retain an explicit failed/partial evaluation outcome.\\
+Alternative 3b & No footfall/dwell/task annotations: do not infer those capabilities' accuracy from detector or interaction KPIs.\\
+Success postconditions & Evaluation outputs identify exactly what was measured and on which evidence.\\
+Failure / minimal guarantees & An unlabelled clip supplies speed/output evidence, not accuracy ground truth.\\
+Implementation / evidence status & Benchmark implemented with recorded detector and one-clip interaction results; TC-23 covers metric functions. Broader labels remain needed.\\
+\bottomrule
+\end{longtable}
+
+% PRIMARY_UC UC-35 FR-35
+\subsection*{UC-35: Assess staff availability and coverage}
+\label{uc:35}
+System sequence diagram: Figure~\ref{fig:ssd-35}.
+
+\begin{longtable}{P{0.23\textwidth}P{0.67\textwidth}}
+\caption{UC-35: Assess staff availability and coverage}\\
+\toprule
+Field / step & Specification\\
+\midrule
+\endfirsthead
+\toprule
+Field / step & Specification\\
+\midrule
+\endhead
+Primary FR & FR-35\\
+Primary actor & Manager\\
+Supporting actors / services & Employee Activity Agent; roster/accounts, assignments and Interaction Agent context\\
+Goal & Assess observed staff availability and supported coverage gaps.\\
+Trigger & Manager requests coverage or an operational refresh occurs.\\
+Preconditions & Authorized access, store policy and supported account/roster/observation context are available.\\
+Main flow 1 & Manager requests an interval/zone assessment or receives a refresh.\\
+Main flow 2 & System combines roster/account and current assignment records with supported observed staff locations and interaction context.\\
+Main flow 3 & System derives availability/activity and identifies unknown states; a stationary assisting employee is not automatically idle.\\
+Main flow 4 & System evaluates persistent zone-coverage gaps only where observation coverage supports that finding.\\
+Main flow 5 & System presents availability and gaps with evidence, uncertainty and applicable policy.\\
+Alternative 2a & No reliable account-track link: show observed track activity separately from account availability.\\
+Alternative 3a & Missing break/task context: preserve unknown availability instead of equating stillness with idleness.\\
+Alternative 4a & Occluded/unobserved area: show inadequate coverage, not a definite unstaffed zone.\\
+Success postconditions & Managers see explainable activity/coverage rather than a mandatory composite score.\\
+Failure / minimal guarantees & Interaction consumes shared perception evidence; Employee Activity consumes interaction context, avoiding circular computation.\\
+Implementation / evidence status & Roster/task records exist; vision-account linkage and contextual coverage analysis are integration work. TC-28 is planned.\\
+\bottomrule
+\end{longtable}
+
+% PRIMARY_UC UC-36 FR-36
+\subsection*{UC-36: Receive and update an aisle assignment}
+\label{uc:36}
+System sequence diagram: Figure~\ref{fig:ssd-36}.
+
+\begin{longtable}{P{0.23\textwidth}P{0.67\textwidth}}
+\caption{UC-36: Receive and update an aisle assignment}\\
+\toprule
+Field / step & Specification\\
+\midrule
+\endfirsthead
+\toprule
+Field / step & Specification\\
+\midrule
+\endhead
+Primary FR & FR-36\\
+Primary actor & Employee receiving the instruction\\
+Supporting actors / services & Employee Task Assignment Agent; roster/accounts; operational evidence; Orchestrator\\
+Goal & Receive a justified aisle instruction directly and report subsequent status.\\
+Trigger & System detects a supported staffing need and selects an eligible employee.\\
+Preconditions & A valid employee account/roster, target zone, applicable dispatch policy and delivery channel exist; vision-derived account location needs a reliable track-account link.\\
+Main flow 1 & System determines a supported aisle staffing need and checks evidence freshness and applicable dispatch policy.\\
+Main flow 2 & System checks eligible account/roster availability, current tasks and source-zone coverage before selecting an employee.\\
+Main flow 3 & System records the selected account, target aisle, instruction, reason and dispatch outcome.\\
+Main flow 4 & System directly creates and delivers the instruction to that employee's workspace; current backend creation records delivered.\\
+Main flow 5 & Employee views the instruction and may acknowledge it or report in\_progress and completed, as supported.\\
+Main flow 6 & System records status actor/time and shows unresolved, declined, expired or cancelled outcomes where applicable.\\
+Alternative 1a & Stale evidence or paused policy: preserve a clear non-dispatch outcome and surface unresolved need.\\
+Alternative 2a & No eligible employee, existing task or source-zone coverage conflict: do not dispatch unsafely; retain the reason.\\
+Alternative 4a & Delivery fails: show an explicit unresolved delivery outcome; reliable delivery confirmation/retry is proposed.\\
+Alternative 5a & Employee unavailable/unable to complete: record supported declined or other applicable status and surface the unresolved need; reassignment policy is proposed.\\
+Success postconditions & An identified employee receives the aisle instruction and account-bound status history is recorded.\\
+Failure / minimal guarantees & No manager approval step is present. A stored delivered state alone does not prove receipt, arrival or completion; duplicate/concurrent and oscillating assignments require policy protection.\\
+Implementation / evidence status & Direct selection/task creation and own-task transitions exist. Source-zone protection, vision-trigger integration, reliable delivery and strict transition sequencing are incomplete; TC-29--TC-33 are planned.\\
+\bottomrule
+\end{longtable}
+
+% PRIMARY_UC UC-37 FR-37
+\subsection*{UC-37: Ask an analytics question}
+\label{uc:37}
+System sequence diagram: Figure~\ref{fig:ssd-37}.
+
+\begin{longtable}{P{0.23\textwidth}P{0.67\textwidth}}
+\caption{UC-37: Ask an analytics question}\\
+\toprule
+Field / step & Specification\\
+\midrule
+\endfirsthead
+\toprule
+Field / step & Specification\\
+\midrule
+\endhead
+Primary FR & FR-37\\
+Primary actor & Manager\\
+Supporting actors / services & Query Agent; authorized analytics retrieval tools; LLM service where configured\\
+Goal & Obtain a grounded answer to a store-analytics question.\\
+Trigger & Manager submits an analytics question.\\
+Preconditions & Authenticated Manager session and authorized retrieval scope exist.\\
+Main flow 1 & Manager submits a question and any relevant interval/zone context.\\
+Main flow 2 & System validates access and the requested scope; clarifies ambiguous filters when needed.\\
+Main flow 3 & System retrieves relevant authorized analytics through tools.\\
+Main flow 4 & System answers with supporting figures, source/time context and evidence limitations.\\
+Main flow 5 & Manager reviews the answer or provides clarification for a subsequent query.\\
+Alternative 2a & Ambiguous question: ask for clarification rather than choosing an unsupported interval.\\
+Alternative 3a & Missing/no records or unsupported request: explain the missing evidence; do not invent a numeric answer.\\
+Alternative 3b & Unauthorized retrieval: deny access and exclude protected records.\\
+Alternative 4a & LLM failure: return an explicit limitation or supported deterministic response without fabricated content.\\
+Success postconditions & The answer is grounded in permitted records and identifies its interval.\\
+Failure / minimal guarantees & The query interface does not silently dispatch tasks or change settings.\\
+Implementation / evidence status & Target capability; existing announcement-script service is not an analytics-query agent. TC-34--TC-36 are planned.\\
+\bottomrule
+\end{longtable}

@@ -1,0 +1,12 @@
+sequenceDiagram
+    actor A as Manager
+    participant S as RetailPulse system
+    A->>S: requestStoreSettings()
+    S-->>A: currentCameraZoneRosterAndPolicySettings()
+    A->>S: saveStoreConfiguration(cameraZoneRosterOrPolicyChanges)
+    alt valid references, geometry, values and permissions
+    S-->>A: savedConfiguration(updatedSettings, effectiveScope)
+    else invalid source, employee, geometry, roster conflict or failed save
+    S-->>A: configurationRejected(reason, previousValidSettings)
+    end
+    Note over A,S: Subsequent supported processing uses saved configuration; consumers not yet integrated remain explicit.

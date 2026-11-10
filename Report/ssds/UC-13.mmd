@@ -1,0 +1,12 @@
+sequenceDiagram
+    actor A as Employee
+    participant S as RetailPulse system
+    A->>S: openPersonalWorkspace()
+    alt authenticated account and permitted own-record scope
+    S-->>A: ownWorkspace(shift, assignedZone, currentTasks, updates)
+    A->>S: requestOwnActivityHistory(interval)
+    S-->>A: ownActivityHistory(records, coverageOrEmptyState)
+    else expired session or another employee requested
+    S-->>A: accessDeniedOrLoginRequired()
+    end
+    Note over A,S: Task status changes belong to UC-36; no composite employee score is required.

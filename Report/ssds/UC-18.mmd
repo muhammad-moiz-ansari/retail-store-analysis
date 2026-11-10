@@ -1,0 +1,14 @@
+sequenceDiagram
+    actor A as Manager
+    participant S as RetailPulse system
+    A->>S: requestAlerts(status, categoryFilters)
+    S-->>A: alertFeed(matchingAlerts)
+    A->>S: inspectAlert(alertId)
+    S-->>A: alertContext(evidence, relatedAssignments)
+    A->>S: resolveAlert(alertId)
+    alt authorized current record and successful save
+    S-->>A: resolvedAlert(resolvedBy, resolvedAt)
+    else stale record, denied access or save failure
+    S-->>A: resolutionOutcome(currentState, error)
+    end
+    Note over A,S: Alert resolution does not authorize or gate employee dispatch.

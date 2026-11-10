@@ -1,0 +1,10 @@
+sequenceDiagram
+    actor A as Manager
+    participant S as RetailPulse system
+    A->>S: requestSpatialActivity(interval, zone)
+    alt valid zones and adequate observation coverage
+    S-->>A: spatialActivity(paths, dwell, occupancyMap, hotGrayZones, coverage)
+    else invalid zone or inadequate coverage
+    S-->>A: unavailableSpatialFindings(reason, supportedScope)
+    end
+    Note over A,S: Unsupported cross-camera identity cannot produce a whole-store path; absent coverage is not low activity.
