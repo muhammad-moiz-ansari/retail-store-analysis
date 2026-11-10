@@ -276,6 +276,9 @@ class CoverageSummary(Contract):
     unknown_observation: SecondsMetric
     open_seconds: SecondsMetric
     staffed_open_ratio: RatioMetric
+    evaluated_windows: tuple[TimeWindow, ...] = Field(default=(), max_length=100)
+    operating_windows: tuple[TimeWindow, ...] = Field(default=(), max_length=100)
+    operating_context_id: Identifier | None = None
 
 
 class CoverageResult(ResultContext):

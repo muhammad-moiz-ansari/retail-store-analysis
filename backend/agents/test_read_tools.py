@@ -43,7 +43,8 @@ def put(path, table, rows):
 
 def reader(path, contexts=None):
     if contexts is None:
-        contexts = (ObservationContext(context_id='synthetic-layout', store_id='store-1', zone_id='z1', camera_ids=('c1',)),)
+        contexts = (ObservationContext(context_id='synthetic-layout', store_id='store-1', zone_id='z1', camera_ids=('c1',),
+                                       available_sources=('footfall', 'zone_dwell', 'interactions', 'unattended_episodes')),)
     return EventAnalytics(path, synthetic=True, contexts=contexts)
 
 

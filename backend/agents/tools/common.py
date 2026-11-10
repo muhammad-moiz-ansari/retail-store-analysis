@@ -1,5 +1,5 @@
 """Interval/evidence helpers shared by the five fixed analytics tools."""
-from datetime import timedelta
+from typing import Literal
 
 from pydantic import Field
 
@@ -18,6 +18,7 @@ class ObservationContext(Contract):
     store_id: Identifier
     zone_id: Identifier
     camera_ids: tuple[Identifier, ...] = Field(min_length=1, max_length=100)
+    available_sources: tuple[Literal['footfall', 'zone_dwell', 'interactions', 'unattended_episodes'], ...] = ()
     shift: Identifier | None = None
     operating_windows: tuple[TimeWindow, ...] = Field(default=(), max_length=100)
 
@@ -71,7 +72,7 @@ def percentile(values, p):
     return values[lo] + (values[min(lo + 1, len(values)-1)] - values[lo]) * (at - lo)
 
 
-def health(session, scope, request, contexts, *, zone=None, shift=None):
+def health(session, scope, request, contexts, *, source, zone=None, shift=None):
     """Return all-camera healthy intervals, supporting health rows, and limitations.
 
     Unhealthy observations override overlapping healthy records for that camera.
@@ -84,6 +85,8 @@ def health(session, scope, request, contexts, *, zone=None, shift=None):
         configured = [c for c in configured if c.zone_id == request.filters.zone_id]
     if not configured:
         return [], [], ("Expected camera coverage is not configured; absence is not observed zero",)
+    if any(source not in context.available_sources for context in configured):
+        return [], [], ("The requested event feed is not declared available in trusted observation context",)
     expected = set(cam for c in configured for cam in c.camera_ids)
     if scope.allowed_camera_ids is not None and not expected <= set(scope.allowed_camera_ids):
         return [], [], ("Scope omits a camera required for complete zone observation",)

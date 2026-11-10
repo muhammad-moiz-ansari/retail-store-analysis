@@ -32,7 +32,7 @@ class EventAnalytics:
                 rows = session.rows('footfall', scope, request.filters, request.window)
                 if any(r['direction'] not in ('in', 'out') for r in rows):
                     raise SourceUnavailable("Unknown footfall direction")
-                healthy, hrows, limits = health(session, scope, request, self.contexts)
+                healthy, hrows, limits = health(session, scope, request, self.contexts, source='footfall')
                 step = {'minute': 60, 'hour': 3600, 'day': 86400}[request.granularity]
                 epoch = datetime(1970, 1, 1, tzinfo=timezone.utc)
                 start = epoch + timedelta(seconds=((request.window.start - epoch).total_seconds() // step) * step)
@@ -62,7 +62,7 @@ class EventAnalytics:
                 if any(r['role'] not in ('customer', 'employee', 'unknown') for r in rows):
                     raise SourceUnavailable("Unknown zone_dwell role")
                 rows = [r for r in rows if clipped([r], request.window)]
-                _, hrows, limits = health(session, scope, request, self.contexts, zone=request.filters.zone_id)
+                _, hrows, limits = health(session, scope, request, self.contexts, source='zone_dwell', zone=request.filters.zone_id)
                 summaries = []
                 for role in ('customer', 'employee', 'unknown'):
                     own = [r for r in rows if r['role'] == role]
@@ -90,7 +90,7 @@ class EventAnalytics:
                 rows = session.rows('interactions', scope, request.filters, request.window)
                 confirmed = [r for r in rows if r['verdict'] == 'interaction']
                 unverified = [r for r in rows if r['verdict'] == 'unverified']
-                _, hrows, limits = health(session, scope, request, self.contexts)
+                _, hrows, limits = health(session, scope, request, self.contexts, source='interactions')
                 observed = not limits
                 if len(confirmed)+len(unverified) != len(rows):
                     limits += ("Unknown verdicts excluded from confirmed/unverified metrics",)
