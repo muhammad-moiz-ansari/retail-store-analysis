@@ -2,6 +2,21 @@
 
 The package manifest and lockfile live at the **repository root**, while the Next.js app lives in `frontend/`. This is one root npm package, not an independently installable frontend package. Do not set Vercel's Root Directory to `frontend` with this layout.
 
+## Dashboard fixture preview — M-UI-P2
+
+The manager dashboard currently uses explicitly selected synthetic preview data. Deploying this version does not connect cameras, analytics readers or real agents. System status still uses the existing backend proxy independently; it may be unavailable while the fixture analytics work. No Vercel settings or secrets changed in this phase.
+
+To check manually:
+
+1. From the repository root, run `npm run dev:frontend` (or `npm run build` then `npm start` for production). Use your normal configured backend and valid Manager account to sign in, or an existing valid authenticated session. Preview analytics do not require event feeds, but this phase does not bypass login or add an account.
+2. Open `/dashboard`. Confirm the fixture-preview banner, demo-store/demo-region and 3 Nov 2026 09:00–10:00 UTC observation window. These are fixed scenario identifiers, not your real store.
+3. In Preview scenario, select Ready, Observed empty, Partial data, Unavailable and Stale data. Check that empty counts show zero, undefined averages/ratios remain Unavailable, partial coverage explains the missing operating-window configuration, and stale values carry an expiry warning.
+4. Click Refresh analytics. Change scenarios quickly; obsolete results must not overwrite the current selection. Leave Ready or Partial data open for just over one minute: it should become Stale data without another provider call. Selecting the Stale scenario already returns expired values, so refreshing that scenario remains stale by design.
+5. Expand Evidence and limitations to inspect units/source IDs, matched/truncated evidence and source caveats. Confirm the video is labelled Recorded demo clip with playback controls; other live cameras, interaction rows and map layers are unavailable, and Ask is disabled.
+6. Resize to mobile and check the single-column cards/select/refresh controls. Existing employee/anonymous route restrictions should still apply.
+
+Automated checks: `npm run test:dashboard-provider` (27 checks), frontend typecheck and targeted ESLint as recorded in PROGRESS.md, plus `npm run build`. Local headless Chrome checks and desktop/mobile screenshot inspection passed using isolated test sessions; no live cloud/login/feed acceptance is claimed. M-UI-P3 real backend integration remains pending.
+
 ## Project settings
 
 | Setting | Value |

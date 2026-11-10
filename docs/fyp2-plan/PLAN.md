@@ -29,10 +29,10 @@ These are distinct from finished M-P1–M-P4 tool/graph phases. Current contract
 | Key | Scope | Done when / status |
 |---|---|---|
 | M-UI-P1 (Moiz) | Typed provider boundary, runtime scope/value/evidence validation, synthetic ready/empty/partial/unavailable/stale scenarios and offline checks | Implemented; 16 provider tests, full frontend typecheck, targeted lint and legacy data regression passed. No page binding/live-data claim |
-| M-UI-P2 (Moiz; Ruhab refinement) | Bind dashboard through the provider, remove fabricated metrics, show provenance/quality/freshness and handle refresh/cancellation | Next task; fixture mode can proceed independently. Do not fabricate interaction rows, Ask answers or map layers without contracts |
+| M-UI-P2 (Moiz; Ruhab refinement) | Bind dashboard through the provider, remove fabricated metrics, show provenance/quality/freshness and handle refresh/cancellation | Implemented; 27 provider/lifecycle/render checks, typecheck/lint/build and isolated Chrome scenario/refresh/route/mobile checks passed. Interaction rows, Ask answers and map layers remain explicitly unavailable |
 | M-UI-P3 (Moiz with Saqib/Ruhab) | Real authenticated backend provider/read-tool adapter, actual source context and real-data verification | Pending server-side actor/store binding and real CV/business outputs. Preserve seven-agent ownership, SQLite foundations and separate operational capability |
 
-No Report edits, schema/model changes, PostgreSQL migration or dispatch delivery are included. Only M-UI-P1 is authorized in the current task; stop before component binding.
+No Report edits, schema/model changes, PostgreSQL migration or dispatch delivery are included. M-UI-P1/P2 are implemented; the current task stops after M-UI-P2. M-UI-P3 needs separately authorized work and the server/source prerequisites above.
 
 ## Step 0: Model consolidation (done)
 
