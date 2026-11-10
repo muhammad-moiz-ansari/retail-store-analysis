@@ -24,6 +24,8 @@ the interaction pipeline already produces.
 
 ## Current team/tool foundation (2026-11-10)
 
+**Dashboard provider update (11 Nov, Moiz):** M-UI-P1 is implemented in `frontend/src/lib/analytics-provider/`: typed validated boundary plus five explicitly synthetic display scenarios. `npm run test:dashboard-provider` runs the 16 offline tests. The dashboard still uses its legacy data module; component binding/removal of fabricated metrics is M-UI-P2, followed by authenticated backend integration in M-UI-P3. See [provider contracts](CONTRACTS.md#dashboard-presentation-provider--m-ui-p1-moiz), [current UI phases](PLAN.md#dashboard-providerbinding-phases--current-moiz-ui-work), PROGRESS and PENDING. These UI numbers are separate from earlier tool/graph phases. No DB migration, map/agent implementation or live-data acceptance is claimed.
+
 The older Steps 0–4 and report-gap tables below remain the original plan. The active tool/graph phases and member responsibilities are tracked in [PLAN.md](PLAN.md). Saqib's committed event foundation is reused; Moiz Phase 1 published typed contracts; Phase 2 implements five scoped read-only tools and a fixed-name registry; Phase 3 adds callable LangGraph routing/grounding and scoped development traces; Phase 4 adds an isolated internal operational adapter verified only with fake handlers. Real business agents, trusted HTTP/internal producer binding, real dispatch/idempotency/voice delivery, durable/provider acceptance and UI binding remain pending.
 
 - [PROGRESS.md](PROGRESS.md): owner-tagged implementation versus verified/synthetic/real-data status, sources and exact checks.

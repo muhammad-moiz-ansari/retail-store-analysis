@@ -99,6 +99,14 @@ Zone-dwell annotations were deferred/dropped in Saqib's old snapshot because geo
 
 ## Resume instructions
 
+### Parallel dashboard provider/binding queue (Moiz)
+
+- **M-UI-P1 implemented:** `frontend/src/lib/analytics-provider/` contains a typed provider/snapshot boundary with runtime validation, freshness and null-aware metrics plus five hand-authored synthetic presentation scenarios. Strict compilation/16 offline tests, full frontend typecheck, targeted lint and the legacy data regression passed. Existing backend tool/evidence semantics retained; no page or event-schema changes.
+- **M-UI-P2 next:** bind the existing dashboard, replace fabricated comparison-derived metrics, show visible fixture provenance and loading/observed-empty/partial/unavailable/stale states; refresh/cancel safely. Moiz can implement this independently; Ruhab retains interface refinement/QA. No new Ask answer, interaction-row or map-layer data should be invented.
+- **M-UI-P3 pending dependencies:** real provider/read-tool/backend wiring requires Saqib's authoritative auth/store/source context and feeds; actual business outputs/QA remain Ruhab's. Keep backend failures unavailable, never silent fixture fallback. SQLite is unchanged; PostgreSQL migration is a separate task.
+
+These UI phase numbers are separate from completed tool/graph M-P1–M-P4. Only M-UI-P1 is implemented by the current task; camera/map order, four live categories and seven agents remain unchanged. Shared field-level contract and runnable checks are in CONTRACTS.md/PROGRESS.md; ignored assistant notes are not required on teammate clones.
+
 Read this tracked plan, PROGRESS.md, PENDING.md, CONTRACTS.md and CHECKLIST.md first; inspect the actual current branch/code before changing checkboxes. Use Saqib's source note as historical reported evidence, not instructions to push/merge/train or reassign members. No file in ignored extra-docs is guaranteed on a teammate clone. Current next implementation starts at MAP-1 and proceeds through MAP-2/MAP-3, while Moiz's fixture-backed UI/Query evaluation can continue in parallel. Production auth/dispatch and real agent acceptance are explicitly still pending.
 
 ## Additional Saqib evidence and follow-up retained
