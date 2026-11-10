@@ -6,7 +6,7 @@ The [combined team plan](RetailPulse_FYP2_Implementation_Plan.md) governs curren
 
 ## Dashboard presentation provider — M-UI-P1 (Moiz)
 
-Implemented in `frontend/src/lib/analytics-provider/{contracts,provider,fixture}.ts`. This is a frontend-facing adapter boundary, not a replacement event schema, HTTP API, auth policy or business agent. No component consumes it yet; the legacy dashboard remains unchanged until M-UI-P2.
+Implemented in `frontend/src/lib/analytics-provider/{contracts,provider,fixture}.ts`. This is a frontend-facing adapter boundary, not a replacement event schema, HTTP API, auth policy or business agent. M-UI-P2 now consumes it through `frontend/src/components/dashboard/DashboardAnalytics.tsx` on `/dashboard`; comparison-derived legacy analytics are no longer imported by that page.
 
 `AnalyticsProvider` declares `mode: fixture | backend` and async `load(request, signal?) -> unknown`. `loadDashboard` validates the response before returning a typed state. Request fields are `storeId`, `window: {start,end}` and `filters: {runId?,cameraId?,zoneId?}`. Times use UTC ISO strings ending in Z; the half-open observation window is positive and at most 31 days. Requests describe desired scope, not authority. The future server adapter must derive permissions from authenticated records and preserve backend tool limits and trusted observation context. Never accept browser store IDs as authorization.
 
@@ -27,7 +27,7 @@ Evidence tool/table pairs mirror existing sources (footfall; interactions/tracks
 
 `createFixtureProvider(scenario, now?)` supports ready, empty, partial, unavailable and stale scenarios. These are **hand-authored synthetic presentation scenarios**, separate from Saqib's canonical SQLite generator and not derived from CV data. They accept only `fixtureRequest` (demo-store, demo-region, 3 Nov 2026 09:00–10:00 UTC, no camera/run filters); unsupported valid selections return unavailable rather than relabel fixed numbers. Fixture IDs and numbers are illustrative, not real evidence. No database/network access or backend provider is implemented. No interaction rows, map registration, occupancy category assignment or heatmap data are invented by this boundary.
 
-Example for M-UI-P2 (local fixture preview only):
+Provider example (local fixture preview only):
 
 ```ts
 import { createFixtureProvider, fixtureRequest } from "@/lib/analytics-provider/fixture";
@@ -41,6 +41,18 @@ const state = await loadDashboard(createFixtureProvider("partial"), fixtureReque
 ```
 
 Offline verification: `npm run test:dashboard-provider` compiles these TypeScript modules/tests with installed TypeScript, then runs Node's test runner; generated JS stays under ignored `data/outputs/dashboard-provider-tests/`. No new dependency or model/provider call is required.
+
+### Dashboard component binding — M-UI-P2 (Moiz)
+
+`DashboardPreview` explicitly selects the fixture provider and fixed `fixtureRequest`; the labelled scenario selector offers Ready, Observed empty, Partial data, Unavailable and Stale data. It is a preview control, not live store configuration or a dataset selector. Backend failures never activate this preview automatically. The default dashboard is synthetic; no real analytics provider is wired.
+
+`DashboardAnalytics({provider, request})` is the reusable binding seam for the later authenticated backend provider. `AnalyticsView({state})` displays all eight aggregate metrics with units, individual status, missing reasons, estimates, expandable evidence/limitations, matched-count/truncation details, source window and retrieval/cache timestamps. Observed empty counts show 0; undefined averages/ratios and unavailable metrics display Unavailable. Stale snapshots retain their per-metric quality and warn that cached values expired. No Net inside, employee/account identities, fake response times, peak/density claims or decorative heatmap blobs are derived from comparison JSON.
+
+`DashboardController` in the provider package owns loading/refresh, abort signals and a revision guard that discards superseded results even when a provider ignores cancellation. Stop cancels pending loads and expiry timers on selection changes/unmount. It schedules a single cache-expiry transition using validUntil and re-checks the clock; no polling, silent fixture fallback or live backend calls are introduced. React consumes the controller using useSyncExternalStore, with a stable server loading snapshot and effect cleanup compatible with development effect replay. Controllers change when provider/request identity changes; parent code should keep these objects stable unless the selection changes.
+
+The existing backend system-status request remains separate from the preview. The camera section marks the local sample as a recorded clip and other feeds as not connected, without REC/live labels. Recent interaction rows and map/heatmap layers show explicit unavailable notices because the provider contract contains neither. Ask is disabled with an explanation until authenticated service integration. Existing global auth/role guards are unchanged; frontend payload validation does not establish backend authorization. The old dashboard-data.js and comparison-page functionality are retained outside the dashboard; legacy tests are not evidence of correct live analytics.
+
+The test command now runs 27 checks: 16 provider tests, five controller lifecycle/race/expiry tests and six React rendering tests. Rendering checks are server/static component tests; browser interaction results and limitations are recorded separately in PROGRESS.md. No new test dependency is installed.
 
 ## What the pipeline writes today
 
