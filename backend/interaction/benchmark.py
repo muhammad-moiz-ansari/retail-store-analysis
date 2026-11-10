@@ -42,6 +42,34 @@ def match_events(predicted: list[tuple[float, float]], truth: list[tuple[float, 
             "end_error_s": statistics.mean(e[1] for e in errors) if errors else None}
 
 
+def union_spans(spans: list[tuple[float, float]]) -> list[tuple[float, float]]:
+    merged: list[tuple[float, float]] = []
+    for start, end in sorted(spans):
+        if merged and start <= merged[-1][1]:
+            merged[-1] = (merged[-1][0], max(merged[-1][1], end))
+        else:
+            merged.append((start, end))
+    return merged
+
+
+def overlap_seconds(predicted: list[tuple[float, float]], truth: list[tuple[float, float]]) -> dict:
+    """Seconds predicted, labelled and both, each side unioned first. Credits one long prediction that covers
+    several short labelled spans, which one-to-one matching counts as a miss plus a false positive."""
+    predicted, truth = union_spans(predicted), union_spans(truth)
+    return {"overlap_s": sum(max(0.0, min(p[1], t[1]) - max(p[0], t[0])) for p in predicted for t in truth),
+            "predicted_s": sum(e - s for s, e in predicted), "labelled_s": sum(e - s for s, e in truth)}
+
+
+def second_scores(seconds: dict) -> dict:
+    o = seconds["overlap_s"]
+    s = scores({"tp": o, "fp": seconds["predicted_s"] - o, "fn": seconds["labelled_s"] - o})
+    return {**seconds, "precision": s["precision"], "recall": s["recall"], "f1": s["f1"]}
+
+
+def event_kpis(predicted: list[tuple[float, float]], truth: list[tuple[float, float]], min_iou: float) -> dict:
+    return {**match_events(predicted, truth, min_iou), "per_second": second_scores(overlap_seconds(predicted, truth))}
+
+
 def scores(counts: dict) -> dict:
     precision, recall = ratio(counts["tp"], counts["tp"] + counts["fp"]), ratio(counts["tp"], counts["tp"] + counts["fn"])
     f1 = 2 * precision * recall / (precision + recall) if precision and recall else (0.0 if precision is not None and recall is not None else None)
@@ -140,8 +168,8 @@ def video_kpis(spec: dict, judge: str, device: str, min_iou: float) -> dict:
     return {
         "path": spec["path"], "duration_s": run["frames"] / fps,
         # Proximity alone = every candidate the judge saw; with judge = the ones it kept.
-        "proximity_only": None if truth is None else match_events([interval(e) for e in events], truth, min_iou),
-        "with_judge": None if truth is None else match_events([interval(e) for e in merge_spans([e for e in run["interactions"].values() if e["verdict"] in CONFIRMED], config.max_missing_seconds)], truth, min_iou),
+        "proximity_only": None if truth is None else event_kpis([interval(e) for e in events], truth, min_iou),
+        "with_judge": None if truth is None else event_kpis([interval(e) for e in merge_spans([e for e in run["interactions"].values() if e["verdict"] in CONFIRMED], config.max_missing_seconds)], truth, min_iou),
         # "roles": {"<track_id>": "employee" | "customer"} from a reviewed run with the same settings.
         "roles": role_counts({t: max(f, key=f.get) for t, f in role_frames.items()}, spec["roles"]) if "roles" in spec else None,
         # "people": distinct people a reviewer counted in the clip; extra track IDs are fragments.
@@ -184,7 +212,10 @@ def main() -> None:
         report["detector"] = detector_kpis(spec["detector"], args.device)
     videos = [video_kpis(video, args.judge, args.device, min_iou) for video in spec["videos"]]
     total = lambda key: {k: sum(v[key][k] for v in videos if v[key]) for k in ("tp", "fp", "fn")}
-    report["interactions"] = {key: {**scores(total(key)), **timing_error([v[key] for v in videos if v[key]])}
+    seconds = lambda key: {k: sum(v[key]["per_second"][k] for v in videos if v[key])
+                           for k in ("overlap_s", "predicted_s", "labelled_s")}
+    report["interactions"] = {key: {**scores(total(key)), **timing_error([v[key] for v in videos if v[key]]),
+                                    "per_second": second_scores(seconds(key))}
                               for key in ("proximity_only", "with_judge")}
     tracked = [v["tracking"] for v in videos]
     minutes, counted = sum(t["minutes"] for t in tracked), [t for t in tracked if t["people"] is not None]
@@ -215,6 +246,9 @@ def main() -> None:
     for name, s in report["interactions"].items():
         print(f"interactions {name:15} P {show(s['precision'])}  R {show(s['recall'])}  F1 {show(s['f1'])}  (tp {s['tp']} fp {s['fp']} fn {s['fn']})"
               f"  start err {show(s['start_error_s'])} s  end err {show(s['end_error_s'])} s")
+        ps = s["per_second"]
+        print(f"  per second {'':13} P {show(ps['precision'])}  R {show(ps['recall'])}  F1 {show(ps['f1'])}"
+              f"  ({ps['overlap_s']:.1f} s overlap of {ps['predicted_s']:.1f} s predicted, {ps['labelled_s']:.1f} s labelled)")
     t = report["tracking"]
     print(f"tracking: ID switches {show(t['id_switches_per_min'])}/min (videos with a people count), role flips {show(t['role_flips_per_min'])}/min")
     if "roles" in report:

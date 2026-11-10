@@ -44,3 +44,24 @@ def test_timing_error_and_tracking_kpis() -> None:
     kpis = tracking_kpis({1: ["customer", "employee", "employee"], 2: ["customer"], 3: ["employee", "customer", "employee"]}, 2.0, 2)
     assert (kpis["role_flips_per_min"], kpis["id_switches_per_min"]) == (1.5, 0.5)
     assert tracking_kpis({}, 1.0, None)["id_switches_per_min"] is None
+
+
+def test_per_second_overlap() -> None:
+    from pytest import approx
+
+    from .benchmark import event_kpis, overlap_seconds, second_scores
+
+    exact = second_scores(overlap_seconds([(10.0, 20.0)], [(10.0, 20.0)]))
+    assert (exact["precision"], exact["recall"], exact["f1"]) == (1.0, 1.0, 1.0)
+    # One long prediction over two short labels: strict matching misses both, per second credits the overlap.
+    long = event_kpis([(0.0, 30.0)], [(2.0, 8.0), (20.0, 26.0)], 0.5)
+    assert (long["tp"], long["fp"], long["fn"]) == (0, 1, 2)
+    assert long["per_second"]["overlap_s"] == 12.0 and long["per_second"]["precision"] == approx(0.4)
+    assert long["per_second"]["recall"] == 1.0
+    # Overlapping predictions are unioned, not double counted.
+    assert overlap_seconds([(0.0, 10.0), (5.0, 15.0), (14.0, 16.0)], [(0.0, 20.0)]) == {
+        "overlap_s": 16.0, "predicted_s": 16.0, "labelled_s": 20.0}
+    none = second_scores(overlap_seconds([], [(0.0, 5.0)]))
+    assert (none["precision"], none["recall"], none["f1"]) == (None, 0.0, None)
+    unlabelled = second_scores(overlap_seconds([(0.0, 5.0)], []))
+    assert (unlabelled["precision"], unlabelled["recall"], unlabelled["f1"]) == (0.0, None, None)
