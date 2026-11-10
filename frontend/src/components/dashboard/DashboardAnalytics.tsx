@@ -7,6 +7,7 @@ import { RetroCard } from "../ui/RetroCard";
 import { type AnalyticsProvider, type AnalyticsRequest, type DashboardMetric, type DashboardState, type MetricKey, metricKeys } from "../../lib/analytics-provider/contracts";
 import { DashboardController } from "../../lib/analytics-provider/controller";
 import { createFixtureProvider, fixtureRequest, type FixtureScenario } from "../../lib/analytics-provider/fixture";
+import { createBackendProvider, loadBackendSelection } from "../../lib/analytics-provider/backend";
 
 const labels: Record<MetricKey, string> = {
   entries: "Recorded entries", exits: "Recorded exits", confirmedInteractions: "Confirmed interactions",
@@ -43,6 +44,7 @@ export function AnalyticsView({ state }: { state: DashboardState }) {
       </div>
       <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-xs font-mono text-text-muted break-words">
         <div><dt className="font-semibold">Store / region</dt><dd>{snapshot.request.storeId} / {snapshot.request.filters.zoneId ?? "All permitted regions"}</dd></div>
+        <div><dt className="font-semibold">Run / camera selection</dt><dd>{snapshot.request.filters.runId ?? "All permitted runs"} / {snapshot.request.filters.cameraId ?? "All permitted cameras"}</dd></div>
         <div><dt className="font-semibold">Observation window (UTC, end excluded)</dt><dd>{snapshot.request.window.start} → {snapshot.request.window.end}</dd></div>
         <div><dt className="font-semibold">Retrieved at (UTC)</dt><dd>{snapshot.generatedAt}</dd></div>
         <div><dt className="font-semibold">Cache valid until (UTC)</dt><dd>{snapshot.validUntil}</dd></div>
@@ -123,4 +125,43 @@ export function DashboardPreview() {
       <DashboardAnalytics provider={provider} request={fixtureRequest} />
     </div>
   );
+}
+
+function BackendDashboard() {
+  const [selection, setSelection] = useState<AnalyticsRequest | null>(null);
+  const [failed, setFailed] = useState(false);
+  const [attempt, setAttempt] = useState(0);
+  const provider = useMemo(() => createBackendProvider(), []);
+  useEffect(() => {
+    const controller = new AbortController();
+    loadBackendSelection(controller.signal).then(request => {
+      if (!controller.signal.aborted) setSelection(request);
+    }).catch(() => {
+      if (!controller.signal.aborted) setFailed(true);
+    });
+    return () => controller.abort();
+  }, [attempt]);
+  if (!selection) return <RetroWindow title="Backend analytics">
+    <p role="status" className="text-sm text-text-muted">{failed
+      ? "Backend analytics unavailable. Check your manager membership, server source configuration and backend connection. No preview data has been substituted."
+      : "Loading authorized backend selection…"}</p>
+    {failed && <RetroButton variant="secondary" className="mt-4" onClick={() => { setFailed(false); setAttempt(value => value + 1); }}>Retry backend connection</RetroButton>}
+  </RetroWindow>;
+  return <DashboardAnalytics provider={provider} request={selection} />;
+}
+
+export function DashboardDataSource() {
+  const [mode, setMode] = useState<"backend" | "fixture">("backend");
+  return <div className="space-y-5">
+    <RetroCard>
+      <label htmlFor="dashboard-source" className="font-heading font-semibold text-text block mb-2">Analytics data source</label>
+      <select id="dashboard-source" value={mode} onChange={event => setMode(event.target.value as "backend" | "fixture")}
+        className="w-full sm:w-auto rounded border border-border bg-surface px-3 py-2 text-text">
+        <option value="backend">Configured backend</option>
+        <option value="fixture">Synthetic fixture preview</option>
+      </select>
+      <p className="text-sm text-text-muted mt-2">Backend mode uses your server-authorized selection. Preview mode is an explicit synthetic demonstration.</p>
+    </RetroCard>
+    {mode === "backend" ? <BackendDashboard /> : <DashboardPreview />}
+  </div>;
 }

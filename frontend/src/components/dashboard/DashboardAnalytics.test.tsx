@@ -2,11 +2,19 @@ import React from "react";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { renderToStaticMarkup } from "react-dom/server";
-import { AnalyticsView, DashboardAnalytics, DashboardPreview } from "./DashboardAnalytics";
+import { AnalyticsView, DashboardAnalytics, DashboardPreview, DashboardDataSource } from "./DashboardAnalytics";
 import { createFixtureProvider, fixtureRequest } from "../../lib/analytics-provider/fixture";
 import { loadDashboard } from "../../lib/analytics-provider/provider";
 
 const now = () => Date.parse("2026-11-11T12:00:00Z");
+
+test("dashboard starts in configured backend mode and offers fixtures only as an explicit choice", () => {
+  const html = renderToStaticMarkup(<DashboardDataSource />);
+  assert.match(html, /Loading authorized backend selection/);
+  assert.match(html, /label for="dashboard-source"/);
+  assert.match(html, /Configured backend/);
+  assert.doesNotMatch(html, /fixture-entries|>12<|Preview scenario/);
+});
 
 test("initial server render shows loading and a labelled scenario selector, not invented numbers", () => {
   const html = renderToStaticMarkup(<DashboardPreview />);

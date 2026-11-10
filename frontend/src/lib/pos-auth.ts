@@ -29,7 +29,9 @@ export function createSession(session: Omit<SessionPayload, "exp">, ttlSeconds =
 
 export function verifySession(token?: string | null): SessionPayload | null {
   if (!token) return null;
-  const [payload, signature] = token.split(".");
+  const parts = token.split(".");
+  if (parts.length !== 2) return null;
+  const [payload, signature] = parts;
   if (!payload || !signature) return null;
   const expected = signPayload(payload);
   const expectedBuffer = Buffer.from(expected);
@@ -37,7 +39,9 @@ export function verifySession(token?: string | null): SessionPayload | null {
   if (expectedBuffer.length !== actualBuffer.length || !timingSafeEqual(expectedBuffer, actualBuffer)) return null;
   try {
     const parsed = JSON.parse(Buffer.from(payload, "base64url").toString("utf-8")) as SessionPayload;
-    if (!["Manager", "Employee"].includes(parsed.role) || parsed.exp < Math.floor(Date.now() / 1000)) return null;
+    if (!["Manager", "Employee"].includes(parsed.role) || !Number.isSafeInteger(parsed.exp)
+      || parsed.exp <= Math.floor(Date.now() / 1000) || typeof parsed.email !== "string" || !parsed.email.trim()
+      || (parsed.userId !== undefined && (typeof parsed.userId !== "string" || !parsed.userId.trim()))) return null;
     return parsed;
   } catch {
     return null;
