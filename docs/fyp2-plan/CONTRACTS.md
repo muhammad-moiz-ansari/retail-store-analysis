@@ -270,3 +270,81 @@ The offline router is deliberately narrow and is not a complete Query Agent. `Js
 Customer Behavior registration permits footfall, zone dwell, interactions and unattended tools. Employee Activity permits coverage, interactions and unattended tools. Inject `SpecialistRegistration(handler, allowed_tools, development_stub=False)` under either fixed target to register Ruhab's implementation. Her callable signature is `handler(context: SpecialistContext, tools: ReadToolFacade, prior: SpecialistDraft | None, issues: tuple[GroundingIssue, ...]) -> SpecialistDraft`. `tools.invoke(name, arguments)` returns `(call_id, typed_result)`; it cannot broaden the user's validated window/explicit filters or its trusted scope. `claim_for(call_id, result, path)` helps construct a correctly linked claim. The default adapters demonstrate these calls only: they do not implement segmentation, hot/gray-zone policy, availability, rankings or narration.
 
 Graph construction follows the [official LangGraph Graph API](https://docs.langchain.com/oss/python/langgraph/graph-api). Current verification uses injected offline doubles and the existing synthetic event data; live provider and business-agent acceptance remain pending.
+
+### Callable service, development traces and route contracts
+
+`AnalyticsService(tools, *, router=None, specialists=None, traces=None, limits=None)` in `backend/agents/service.py` exposes `ask(request: AskRequest, *, scope: TrustedAccessScope) -> GraphRun` and `get_run(run_id, *, scope) -> GraphRun`. Scope is server-injected separately, never parsed from the question/body. Each run carries request/run IDs, trusted scope/window/filters, selected node, captured typed tool results, verified claims and their citations, node/tool timings, validated per-call arguments, errors, repair count, response and `trace_retained`.
+
+The default `MemoryTraceStore` is **development-only**: FIFO retention up to 20 runs, 30-minute TTL, maximum 2 MiB per serialized run, with process-restart loss. Its configurable bounds are at most 100 runs, one-day TTL and 4 MiB per record. IDs are append-only and retrieval requires exact full trusted-scope equality, including actor, store, role and allowlists. Missing, expired and unauthorized runs all return the same not-found exception. Serialized snapshots prevent callers from mutating saved traces. The service also verifies scope/run ID returned by an injected store. Implement `RunTraceStore.put(run)` / `get(run_id, scope)` for future durable persistence with equivalent authorization/retention behavior; no new app/event schema or migration is added here.
+
+Retention failure does not fabricate a saved run: `trace_retained=false`, error `trace_not_retained` and a limitation accompany any still-grounded answer. A successful trace is not a durable audit log. No public listing/search endpoint is exposed. Provider token usage/cost is unavailable, not recorded as zero. Callbacks/providers remain trusted server code: step/tool/result bounds do not forcibly cancel a blocking callback. External provider deadlines and durable operational tracing remain integration work.
+
+| Proposed HTTP contract (not exposed yet) | Validated input / result | Required server integration |
+|---|---|---|
+| `POST /agents/ask` | Body `AskRequest`, response `GraphRun`; malformed inputs become validation errors | Resolve current authenticated actor and authorized store/filters from authoritative server records before `service.ask`. Never accept scope/node/dispatch in the body or treat arbitrary role headers as store authorization. |
+| `GET /agents/runs/{id}` | Server-generated run ID, response the retained `GraphRun`; not-found for unknown/expired/unauthorized | Resolve the same current trusted actor/store/permission scope and call `get_run`. Do not expose another actor's or a broader historical trace. |
+
+These routes are deliberately absent from `backend/app.py` pending the real account/store binding. The existing internal-secret dependency and session-to-header proxy are integration building blocks, not a completed multi-store identity policy.
+
+### Runnable offline fixture service example
+
+Generate a disposable synthetic store, leaving live/event databases untouched:
+
+```powershell
+New-Item -ItemType Directory -Force data/outputs/moiz-phase3 | Out-Null
+.venv/Scripts/python.exe -m backend.events.fixtures --db data/outputs/moiz-phase3/fixture.sqlite3
+```
+
+```python
+from backend.agents.contracts import EventFilters, TrustedAccessScope
+from backend.agents.graph_contracts import AskRequest
+from backend.agents.service import AnalyticsService
+from backend.agents.tools.common import ObservationContext
+from backend.agents.tools.contextual import SQLiteAnalyticsTools
+
+# Explicit local synthetic context; production scope/configuration requires real binding.
+scope = TrustedAccessScope(actor_id="synthetic-manager", store_id="store-1", role="manager",
+                           allowed_camera_ids=("c1",), allowed_zone_ids=("z1",))
+observation = ObservationContext(context_id="synthetic-entrance", store_id="store-1",
+    zone_id="z1", camera_ids=("c1",), available_sources=("footfall", "zone_dwell"))
+service = AnalyticsService(SQLiteAnalyticsTools("data/outputs/moiz-phase3/fixture.sqlite3",
+                           synthetic=True, contexts=(observation,)))
+request = AskRequest(question="Show customer footfall", filters=EventFilters(zone_id="z1"),
+    window={"start":"2026-11-03T09:00:00Z", "end":"2026-11-03T10:00:00Z"})
+run = service.ask(request, scope=scope)
+assert run.development_stub and run.trace_retained and run.claims
+assert [n.node for n in run.nodes] == ["route", "customer_behavior", "ground", "finish"]
+assert service.get_run(run.run_id, scope=scope) == run
+print(run.response)
+```
+
+This runs locally without a provider. The employee path uses a coverage question and a trusted zone observation declaration; missing operating windows leave staffed/open ratios unavailable. The development adapters select existing tools for footfall, dwell, interaction or unattended questions; a dwell question without a zone returns an explicit zone-required notice rather than guessing. Their small result limits remain visible as partial/truncated source data. They do not implement Ruhab's business policies or a complete manager Query Agent.
+
+### Ruhab's registration example (development illustration)
+
+The same handler signature applies to Customer Behavior and Employee Activity. Example using an allowed interaction metric:
+
+```python
+from backend.agents.graph_contracts import SpecialistDraft
+from backend.agents.specialists import SpecialistRegistration, claim_for
+
+# Illustrative hook only: Ruhab replaces this with her actual business-agent implementation.
+def customer_hook(context, tools, prior=None, issues=()):
+    call_id, result = tools.invoke("get_interactions", {
+        "window": context.request.window.model_dump(mode="json"),
+        "filters": context.request.filters.model_dump(exclude_none=True)
+    })
+    claim = claim_for(call_id, result, ("confirmed_count",))
+    return SpecialistDraft(claims=() if claim is None else (claim,))
+
+bindings = {"customer_behavior": SpecialistRegistration(customer_hook,
+    frozenset(("get_interactions",)), development_stub=True)}
+# Pass specialists=bindings to AnalyticsService to exercise this hook.
+# Keep development_stub=True for illustrations; registration alone is not acceptance evidence.
+```
+
+For repair, `prior` is the rejected structured draft and `issues` contains indexed codes (`missing_metric`, `wrong_context`, `wrong_value`, `wrong_evidence`). The handler may return a corrected `SpecialistDraft` once. It may also return the fixed `zone_required` notice; arbitrary answer/label/prose fields are rejected. Numeric claims are direct metric references, not unsupported arithmetic invented by the model. Values accepted within grounding tolerance are normalized to the exact captured metric before publication, and estimated metrics are labelled estimated by the renderer. Real qualitative business reasoning/narration remains separate work.
+
+For an optional existing-HF router, construct `JsonRouter(complete=backend.voice_agent.call_hugging_face)` in authorized server wiring; this uses existing provider configuration without introducing another hardcoded model. No live-provider example is executed as part of this deliverable. Failure/invalid routing output is sanitized to unavailable, not leaked as raw provider error text. Direct operational requests are refused conservatively; dispatch is absent from the tool capability set regardless of prompt wording.
+
+Each tool call captures its own read-only snapshot. A multi-call graph run does not establish one global database transaction; use a stable filtered CV run when reproducible comparisons are required. Grounding proves association with captured tool metrics and evidence, not detector accuracy or real-world causal truth. Saqib's unattended-verdict limitation remains present in source limitations; Ruhab's production-agent validation and Saqib's feed/auth/configuration integration remain pending.

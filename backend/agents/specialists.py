@@ -1,5 +1,6 @@
 """Development adapters and Ruhab's registration boundary, not her business logic."""
 from dataclasses import dataclass
+import re
 from typing import Callable
 
 from .contracts import Metric
@@ -44,7 +45,15 @@ class SpecialistRegistration:
 def customer_behavior_adapter(context: SpecialistContext, tools, prior=None, issues=()) -> SpecialistDraft:
     """Fixture/read-tool demonstration only; no segmentation or hot/gray-zone policy."""
     arguments = {'window': context.request.window.model_dump(mode='json'), 'filters': context.request.filters.model_dump(exclude_none=True)}
-    if context.request.filters.zone_id:
+    if re.search(r'\bunattended\b', context.request.question, re.I):
+        call_id, result = tools.invoke('get_unattended', arguments)
+        paths = [('episode_count',)]
+    elif re.search(r'\binteractions?\b', context.request.question, re.I):
+        call_id, result = tools.invoke('get_interactions', arguments)
+        paths = [('confirmed_count',), ('unverified_count',), ('mean_confirmed_duration',), ('mean_approach',)]
+    elif re.search(r'\bdwell\b', context.request.question, re.I):
+        if not context.request.filters.zone_id:
+            return SpecialistDraft(notices=('zone_required',))
         call_id, result = tools.invoke('get_zone_dwell', arguments)
         paths = [('by_role', 0, 'sample_count'), ('by_role', 0, 'total'), ('by_role', 0, 'p50')]
     else:
@@ -56,8 +65,15 @@ def customer_behavior_adapter(context: SpecialistContext, tools, prior=None, iss
 def employee_activity_adapter(context: SpecialistContext, tools, prior=None, issues=()) -> SpecialistDraft:
     """Fixture/read-tool demonstration only; no availability or employee ranking."""
     arguments = {'window':context.request.window.model_dump(mode='json'), 'filters':context.request.filters.model_dump(exclude_none=True), 'limit':3}
-    call_id, result = tools.invoke('get_coverage', arguments)
-    paths = [('zones', i, name) for i in range(len(result.zones)) for name in ('observed_staffed', 'unknown_observation')]
+    if re.search(r'\binteractions?\b', context.request.question, re.I):
+        call_id, result = tools.invoke('get_interactions', arguments)
+        paths = [('confirmed_count',), ('mean_confirmed_duration',)]
+    elif re.search(r'\bunattended\b', context.request.question, re.I):
+        call_id, result = tools.invoke('get_unattended', arguments)
+        paths = [('episode_count',)]
+    else:
+        call_id, result = tools.invoke('get_coverage', arguments)
+        paths = [('zones', i, name) for i in range(len(result.zones)) for name in ('observed_staffed', 'unknown_observation')]
     return SpecialistDraft(claims=tuple(claim for path in paths if (claim := claim_for(call_id, result, path)) is not None))
 
 

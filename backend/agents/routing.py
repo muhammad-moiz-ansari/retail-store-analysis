@@ -15,7 +15,7 @@ class OfflineRouter:
             return RouteDecision(target='unsupported')
         if re.search(r'\b(coverage|staffed|employee|employees|staff)\b', text):
             return RouteDecision(target='employee_activity')
-        if re.search(r'\b(footfall|entries|exits|dwell|customers?|traffic|unattended)\b', text):
+        if re.search(r'\b(footfall|entries|exits|dwell|customers?|traffic|unattended|interactions?)\b', text):
             return RouteDecision(target='customer_behavior')
         return RouteDecision(target='unsupported')
 

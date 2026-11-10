@@ -1,7 +1,7 @@
 """Structured analytics requests and claims; no model-generated answer prose."""
 from typing import Annotated, Literal
 
-from pydantic import Field
+from pydantic import Field, JsonValue
 
 from .contracts import (Contract, CoverageResult, EventFilters, Evidence, FootfallResult, Identifier,
                         InteractionsResult, TimeWindow, TrustedAccessScope, UnattendedResult, ZoneDwellResult)
@@ -36,6 +36,7 @@ class Claim(Contract):
 
 class SpecialistDraft(Contract):
     claims: tuple[Claim, ...] = Field(default=(), max_length=30)
+    notices: tuple[Literal['zone_required'], ...] = Field(default=(), max_length=3)
 
 
 class GroundingIssue(Contract):
@@ -54,6 +55,7 @@ class ToolTrace(Contract):
     elapsed_ms: float = Field(ge=0)
     status: str
     node: str
+    arguments: dict[str, JsonValue] = Field(default_factory=dict, max_length=10)
 
 
 class GraphLimits(Contract):
@@ -87,3 +89,4 @@ class GraphRun(Contract):
     steps: int = Field(ge=0, le=12)
     latency_ms: float = Field(ge=0)
     response: str
+    trace_retained: bool = False
