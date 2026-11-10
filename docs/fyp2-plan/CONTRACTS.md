@@ -371,3 +371,87 @@ The injected signature is `handler(*, event: OperationalEvent, scope: TrustedOpe
 Receipts echo outcome/context plus handler_invoked, synthetic, measured elapsed_ms, a controlled reason_code and limitations. They are handler reports, not proof of employee acknowledgement or voice delivery. Exceptions and invalid/mismatched callback outcomes return sanitized errors without task claims. Handler errors can occur after side effects: outcomes remain uncertain and the adapter never automatically retries. Real deduplication, transaction boundaries, source-zone/roster/active-task safety and delivery belong to Saqib. No manager approval or manager-enabled auto mode is introduced for direct aisle events.
 
 Signal quality/limitations are forwarded, including partial/unknown observation and the existing unattended-verdict derivation limitation. This adapter verifies envelope consistency, not database-row authenticity or the policy that produced a demand event. Ruhab's approved policy must decide when to emit an event; Saqib's handler must verify eligibility/safety before any real assignment. No new hot-aisle threshold, staffing policy or production task is invented by Moiz's adapter.
+
+### Saqib's exact plug-in location and remaining contract work
+
+The integration point is the constructor argument to `backend.agents.operational.OperationalDispatchAdapter`: inject a callable implementing `DispatchHandler`, then invoke `.handle(event, scope=trusted_operational_scope)` from an **internal event consumer**. Do not add it to `REQUEST_TYPES`, `ALLOWED_TOOLS`, `SpecialistRegistration`, `RouteDecision`, `AskRequest` or the manager analytics service. `OperationalEvent.model_json_schema()` and `DispatchOutcome.model_json_schema()` expose the full typed input/result shapes; models are revalidated at the boundary, including programmatically updated model instances.
+
+Saqib needs to supply:
+
+1. Authoritative internal producer authentication, store/zone/source binding and event-row provenance checks. A Pydantic `TrustedOperationalScope` alone does not authenticate a producer. A manager's analytics scope/header cannot become this capability.
+2. An internal `DispatchHandler` that reuses his employee/account, roster/availability, active-task and source-zone safety logic, with real account IDs (not CV track IDs). No manager approval or manager-enabled auto switch is a prerequisite for direct aisle events; separate next-day schedule planning stays outside this contract.
+3. Durable, atomic idempotency scoped by `(storeId, idempotencyKey)`, preserving the stable upstream eventId and comparing event/zone/payload identity to detect key reuse conflicts. Return duplicate for a recognized equivalent event, not a second task. The adapter intentionally has no cache, ledger, cooldown or automatic retry. Concurrent/restart-safe task creation and failure reconciliation belong to this handler.
+4. Task/alert/decision persistence, delivery/voice and acknowledgement evidence, plus outcome mapping to the typed echo fields. Existing `select_dispatch_employee` / `create_task_for_employee` are references to reuse or harden in Saqib's scope, **not** called by this adapter. Existing `/orchestrator/events` generates UUIDs and lacks the required store/key contract; it must not be used as a drop-in callback. Its `paused` / `alert_only` cases must map deliberately to unavailable/non-assignment when appropriate; the adapter adds no approval or auto-mode gate.
+5. Real-feed and no-eligible/repeat-event acceptance evidence with the exact model/configuration/event versions. Handler-reported dispatched is not evidence that an employee heard or acknowledged a message. Persist the envelope and receipt in his operational audit path rather than inserting operational capabilities into manager-question traces.
+
+Ruhab owns demand/coverage business policy and decides when its outputs become one of the supported event types. The producer then packages references from scoped tool/business results into `SignalEvidence`, retaining status, synthetic marker and limitations; both contexts must match the chosen store/zone/window. Moiz's adapter validates this envelope and passes it directly to Saqib's handler. It does not infer hot/gray thresholds, choose staff, change rosters or silently promote unknown coverage/derived unattended waits into confirmed facts. Sampled/truncated evidence is not a complete source population; the handler must resolve the data it needs before any real eligibility decision.
+
+### Fake-only fixture replay
+
+The regression replay generates Saqib's unchanged fixture in pytest's ignored temporary directory, uses the actual read-only unattended/coverage readers, deliberately stages a synthetic event, and invokes a fake callback twice (dispatched then duplicate). It checks source limitations and an unchanged event-database hash. It is **not** a test of a real demand policy or real assignment/voice delivery.
+
+```powershell
+.venv/Scripts/python.exe -m pytest backend/agents/test_operational_integration.py::test_seeded_operational_replay -q --basetemp data/outputs/moiz-phase4/replay-fresh
+```
+
+Use a fresh ignored base directory for another run. For the executable example below, generate a disposable file first:
+
+```powershell
+New-Item -ItemType Directory -Force data/outputs/moiz-phase4 | Out-Null
+.venv/Scripts/python.exe -m backend.events.fixtures --db data/outputs/moiz-phase4/fixture.sqlite3
+```
+
+```python
+from backend.agents.contracts import (CoverageRequest, EventFilters, TimeWindow,
+                                     TrustedAccessScope, UnattendedRequest)
+from backend.agents.operational import (DispatchOutcome, OperationalDispatchAdapter,
+    OperationalEvent, OperationalEvidence, SignalEvidence, TrustedOperationalScope)
+from backend.agents.tools.common import ObservationContext
+from backend.agents.tools.contextual import SQLiteAnalyticsTools
+
+# Synthetic read-only source selection, not real producer authentication or business policy.
+window = TimeWindow(start="2026-11-03T09:00:00Z", end="2026-11-03T21:00:00Z")
+reader_scope = TrustedAccessScope(actor_id="synthetic-reader", store_id="store-1", role="manager",
+    allowed_run_ids=("fixture-2026-11-03",), allowed_camera_ids=("c2",), allowed_zone_ids=("z3",))
+layout = ObservationContext(context_id="synthetic-z3", store_id="store-1", zone_id="z3",
+    camera_ids=("c2",), available_sources=("unattended_episodes", "zone_dwell"))
+reader = SQLiteAnalyticsTools("data/outputs/moiz-phase4/fixture.sqlite3", synthetic=True, contexts=(layout,))
+filters = EventFilters(run_id="fixture-2026-11-03", camera_id="c2", zone_id="z3")
+demand = reader.get_unattended(scope=reader_scope,
+    request=UnattendedRequest(window=window, filters=filters, limit=1))
+coverage = reader.get_coverage(scope=reader_scope,
+    request=CoverageRequest(window=window, filters=filters))
+context = dict(store_id="store-1", zone_id="z3", window=window, synthetic=True)
+
+# This event/type is manually staged for the replay; no policy trigger is being implemented here.
+event = OperationalEvent(event_id="synthetic:replay:z3", idempotency_key="synthetic:store-1:z3:fixture",
+    store_id="store-1", zone_id="z3", event_type="unattended_customer", source="customer_behavior",
+    source_timestamp=window.end, window=window, evidence=OperationalEvidence(
+        demand=SignalEvidence(**context, status=demand.status, evidence=demand.episode_count.evidence,
+                              limitations=demand.limitations),
+        coverage=SignalEvidence(**context, status=coverage.status,
+            evidence=coverage.zones[0].unknown_observation.evidence, limitations=coverage.limitations)))
+
+# A fake in-memory ledger for demonstration ONLY; no task, employee or voice message is created.
+seen = set()
+def fake_dispatch(*, event, scope):
+    key = (event.store_id, event.idempotency_key)
+    decision = "duplicate" if key in seen else "dispatched"
+    seen.add(key)
+    return DispatchOutcome(event_id=event.event_id, idempotency_key=event.idempotency_key,
+        store_id=event.store_id, zone_id=event.zone_id, decision=decision,
+        task_id="fake-task", selected_employee_id="fake-employee")
+
+producer_scope = TrustedOperationalScope(service_id="synthetic-producer", store_id="store-1",
+                                        allowed_zone_ids=("z3",))
+adapter = OperationalDispatchAdapter(handler=fake_dispatch)
+first = adapter.handle(event, scope=producer_scope)
+second = adapter.handle(event, scope=producer_scope)
+assert first.decision == "dispatched" and second.decision == "duplicate"
+assert first.synthetic and second.synthetic
+assert OperationalDispatchAdapter().handle(event, scope=producer_scope).decision == "unavailable"
+print(first.model_dump_json(by_alias=True, indent=2))
+print(second.model_dump_json(by_alias=True, indent=2))
+```
+
+Only the fake callback above is invoked in this example. Production callback injection, source-zone safety, restart/concurrent deduplication and delivery are not verified by a simulated outcome. No new operational HTTP route or manager-question tool is introduced.

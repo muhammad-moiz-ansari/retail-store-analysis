@@ -17,13 +17,15 @@ the interaction pipeline already produces.
 
 ## Current team/tool foundation (2026-11-10)
 
-The older Steps 0–4 and report-gap tables below remain the original plan. The active tool/graph phases and member responsibilities are tracked in [PLAN.md](PLAN.md). Saqib's committed event foundation is reused; Moiz Phase 1 published typed contracts; Phase 2 implements five scoped read-only tools and a fixed-name registry; Phase 3 adds callable LangGraph routing/grounding and scoped development traces. Real business agents, trusted HTTP identity/store integration, durable/provider acceptance and UI binding remain pending.
+The older Steps 0–4 and report-gap tables below remain the original plan. The active tool/graph phases and member responsibilities are tracked in [PLAN.md](PLAN.md). Saqib's committed event foundation is reused; Moiz Phase 1 published typed contracts; Phase 2 implements five scoped read-only tools and a fixed-name registry; Phase 3 adds callable LangGraph routing/grounding and scoped development traces; Phase 4 adds an isolated internal operational adapter verified only with fake handlers. Real business agents, trusted HTTP/internal producer binding, real dispatch/idempotency/voice delivery, durable/provider acceptance and UI binding remain pending.
 
 - [PROGRESS.md](PROGRESS.md): owner-tagged implementation versus verified/synthetic/real-data status, sources and exact checks.
 - [PENDING.md](PENDING.md): remaining Moiz/Saqib/Ruhab work, dependencies and semantic limitations.
 - [CONTRACTS.md](CONTRACTS.md#agent-read-tool-contracts--moiz-phase-1-2026-11-10): five typed callable interfaces and runnable reader/registry examples, UTC/evidence conventions, trusted observation context, graph/service registration examples and data-availability notes for Ruhab.
 
 Ignore local assistant handoffs under `docs/extra-docs/`; shared contracts/status remain tracked here. No report edits, CV training, production dispatch or later Moiz phases are part of the current tool implementation task.
+
+The [internal operational contract](CONTRACTS.md#internal-operational-dispatch-contract-moiz-phase-4) includes Saqib's import/signature, exact field mapping and current endpoint gaps, Ruhab's signal/policy boundary, and a fake-only fixture replay command. Do not register the adapter in the manager query graph or call the legacy live endpoint from the example.
 
 ## Report gaps this closes
 

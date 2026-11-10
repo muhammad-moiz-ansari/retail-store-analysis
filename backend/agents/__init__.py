@@ -1,1 +1,1 @@
-"""Typed analytics boundaries and read-only tools; graph execution is a later phase."""
+"""Typed read-only analytics and isolated internal operational hooks."""
