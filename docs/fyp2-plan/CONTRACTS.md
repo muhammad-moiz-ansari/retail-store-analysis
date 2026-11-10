@@ -105,3 +105,84 @@ Zone and camera ids are the ones seeded in `store_core.py` (`z1`–`z6`, `c1`–
   is 1 when most of its frames are flagged; NULL for runs recorded before the check existed.
 - **Contract test**: `backend/events/test_events.py` checks the fixture and every local CV run under `backend/output/`
   with `ingest.validate`.
+
+## Agent read-tool contracts — Moiz Phase 1 (2026-11-10)
+
+**Implemented:** typed inputs/results in `backend/agents/contracts.py` and the five-method `AnalyticsTools` Protocol in `backend/agents/tools/__init__.py`. **Not implemented in Phase 1:** SQL readers, tool registry, graph execution, HTTP routes or authentication adapters. The older summary/API sections above remain design records; their presence is not implementation evidence. Saqib's `backend/events/schema.sql` is the canonical store contract and is unchanged.
+
+### Callable boundary for Ruhab and the next implementation phase
+
+All methods are keyword-only on an injected `AnalyticsTools` implementation:
+
+| Method | Request | Result | Event sources / availability |
+|---|---|---|---|
+| `get_footfall(*, scope, request)` | `FootfallRequest(window, filters={}, limit=100, granularity="hour")` | `FootfallResult`: buckets with entries/exits; nullable occupancy | `footfall`, supporting `pipeline_health`; stored net crossings, not all entrance crossings. Initial occupancy/entrance coverage currently absent. |
+| `get_zone_dwell(*, scope, request)` | `ZoneDwellRequest(window, filters={"zone_id":"z3"}, limit=100)` | `ZoneDwellResult`: by-role sample count, total, p50, p90 | `zone_dwell`; customer/employee/unknown kept separate; usable zone geometry remains camera-specific. |
+| `get_interactions(*, scope, request)` | `InteractionsRequest(window, filters={}, limit=100)` | `InteractionsResult`: confirmed/unverified counts, confirmed mean duration, mean approach and approach sample count | `interactions` plus `tracks`; confirmed means `verdict=interaction`. Approach reference is explicitly `camera_first_seen`, not entrance/zone entry. |
+| `get_unattended(*, scope, request)` | `UnattendedRequest(window, filters={}, limit=100, min_seconds=180)` | `UnattendedResult`: episode count and clipped episodes with helped/provenance | `unattended_episodes`; current writer's first-help derivation does **not** filter interaction verdict. These are stored derived waits, not verified absence of assistance. Saqib owns correction/validation. |
+| `get_coverage(*, scope, request)` | `CoverageRequest(window, filters={}, limit=100, shift=None)` | `CoverageResult`: per-zone observed staffed/unknown seconds, nullable open seconds and staffed/open ratio | Employee `zone_dwell` plus `pipeline_health`; a trusted operating/shift context is not yet supplied. No open-hours or roster-availability ratio can be inferred from the fixture's 12-hour span. |
+
+`scope: TrustedAccessScope` is supplied separately by the trusted server, never included in the model/tool argument payload. It carries actor ID, store ID, role, and optional run/camera/zone allowlists. `None` means no additional restriction **within that store**; a supplied allowlist must be nonempty. Request filters can only narrow access. When omitted, they do not remove scope restrictions. `scope.validate_filters(request.filters)` rejects explicit disallowed filters, but does not implement authentication or database isolation. Phase 2 readers must apply store and allowlists to every query; Phase 3 must bind them to real authenticated identity before any public endpoint. Existing role/internal-secret headers alone are not a proven multi-store policy.
+
+Example input construction (runnable today; the method invocation requires Phase 2):
+
+```python
+from backend.agents.contracts import FootfallRequest, TrustedAccessScope
+from backend.agents.tools import AnalyticsTools
+
+scope = TrustedAccessScope(actor_id="manager-1", store_id="store-1", role="manager",
+                           allowed_camera_ids=("c1",))  # trusted server creates this
+request = FootfallRequest(window={"start": "2026-11-03T14:00:00+05:00",
+                                  "end": "2026-11-03T16:00:00+05:00"},
+                          filters={"camera_id": "c1"}, granularity="hour")
+scope.validate_filters(request.filters)
+# tools: AnalyticsTools = <injected Phase 2 reader, not present yet>
+# result = tools.get_footfall(scope=scope, request=request)
+```
+
+### Time, aggregation and bounds
+
+- Aware ISO timestamps/datetimes normalize to UTC. Naive dates/times and numeric epochs are rejected. Require `start < end`, at most 31 days. DST ambiguity must be resolved by an explicit input offset.
+- Instant events belong to `[start,end)`: include an instant at start and exclude one at end. Intervals overlap when `ts_start < end` and `ts_end > start`; clip to `[max(ts_start,start), min(ts_end,end)]`. Ignore zero-length clipped intervals. These are the agreed reader conventions, not claims that Phase 1 executes queries.
+- Buckets align to UTC minute/hour/day boundaries and clip at the requested edges. At most 1000 buckets; choose a coarser granularity rather than silently returning an enormous series. Row `limit` is a strict integer 1–1000 (default 100). Phase 2 must use deterministic time/event-ID ordering and set result `truncated` when rows are omitted.
+- Footfall counts stored instant events. Dwell samples are positive clipped visits, not deduplicated people: report sample count and role; p50/p90 use sorted linear interpolation at `(n-1)*p`, singleton returns itself, no samples means null. Durations use clipped intervals rather than an entire stored duration extending outside the window. Interaction counts include each overlapping event once; aggregate durations use confirmed rows only. Unverified rows remain separate. Approach uses a valid scoped customer-track match and its first confirmed interaction; require nonnegative supported elapsed time and disclose the sample count. A supplied time window bounds interaction selection, while first-seen reference may precede it.
+- Track joins require `(store_id, run_id, camera_id, track_id)`, never `track_id` alone. A CV employee track is not an employee account or proof of roster availability.
+- `get_unattended` selects stored episodes by overlap and `stored waited_s >= min_seconds`; it does not rederive waits. Returned episode `window` and `waited` describe the clipped wait within the request, which may be shorter than the selection threshold. Retain stored-event evidence and the unfiltered-verdict provenance; the UI must not infer a newly confirmed event from the clipped duration.
+- Coverage is the clipped **union** of employee presence per zone, not employee-seconds. Merge overlapping staff intervals. Blocked/missing/unhealthy observation is unknown, not zero staff. Apply trusted operating windows before computing any open-hours denominator; shift is only a lookup key, not caller-supplied authorization or a denominator.
+
+### Result status, units and evidence
+
+All five results carry tool name, echoed trusted scope/window/filters, `status`, mandatory `synthetic`, limitations and result-row `truncated`. `ok` means the requested supported metrics are observed; `empty` means no matching event rows, **not proven zero activity**; `unavailable` means unsupported/missing sources or context; `partial` means incomplete observation/data. Partial/unavailable require limitations. Unavailable results cannot contain numeric metrics. A missing table is unavailable, never silently empty.
+
+Each numeric field is a typed metric `{value, unit, evidence, unavailable_reason, estimated}`. Counts are integral/nonnegative; seconds nonnegative; ratios in [0,1]. Count/seconds/ratio fields reject the wrong unit. Missing values are `null` with a reason, not zero. A numeric zero also requires supporting observation evidence. Grounding of a number against actual rows is a later-phase responsibility; these models enforce shape, ranges and association only.
+
+Evidence extends the shared shape `{source: table, ids: [...], query: name}` with `matched_count` and `truncated`. Source tables and the five query names are fixed Literals. IDs must be unique, nonempty, at most 200 per citation. `matched_count` records the full supporting row count; evidence `truncated=true` iff not all IDs are returned. Metrics cite their own supporting rows, including health rows for a defensible observed zero; a global bag of unrelated IDs is insufficient. A result rejects evidence citing another tool name. Aggregates are computed before result/evidence caps in Phase 2; sampled evidence must not change the answer. Result-row and evidence truncation are separate.
+
+Schema-only synthetic example result, validated in the contract tests; **not output from an implemented reader**:
+
+```json
+{
+  "scope": {"actor_id": "manager-1", "store_id": "store-1", "role": "manager"},
+  "window": {"start": "2026-11-03T09:00:00Z", "end": "2026-11-03T10:00:00Z"},
+  "status": "partial",
+  "synthetic": true,
+  "limitations": ["Illustrative stored crossing; complete observation and initial occupancy are unknown"],
+  "buckets": [{
+    "window": {"start": "2026-11-03T09:00:00Z", "end": "2026-11-03T10:00:00Z"},
+    "entries": {"value": 1, "unit": "count", "evidence": [{"source": "footfall", "ids": ["synthetic:in:1"], "query": "get_footfall", "matched_count": 1, "truncated": false}]},
+    "exits": {"value": null, "unit": "count", "unavailable_reason": "No supported observation evidence"}
+  }],
+  "occupancy": {"value": null, "unit": "count", "unavailable_reason": "Initial occupancy unknown"}
+}
+```
+
+Fixture replay from the repository root, explicitly targeting an ignored disposable location:
+
+```powershell
+New-Item -ItemType Directory -Force data/outputs/moiz-phase1 | Out-Null
+.venv/Scripts/python.exe -m backend.events.fixtures --db data/outputs/moiz-phase1/fixture.sqlite3
+```
+
+This reuses Saqib's seeded `fixture-2026-11-03` / `store-1`, 09:00–21:00 UTC (rush 17:00–19:00, under-covered z3, blocked c2 14:00–14:40). Every consumer result must set `synthetic=true` for this store file; the schema itself has no synthetic column. A second-store collision case exists only in the new tests and does not replace his generator. Heatmaps remain image-grid counts; queue waits remain heuristics (length × mean interaction duration). No metric floor calibration, new CV models, account linkage, operating-hours policy or dispatch capability is introduced here.
+
+Follow-on interfaces (`get_queue`, `get_alerts`, `get_pipeline_health`, legacy `get_pos_sales`) are not part of this five-tool Phase 1 publication; their signatures/readers remain pending scope/data decisions. POS is outside the agreed project scope; the legacy name is not a commitment to build POS analytics. Arbitrary `run_readonly_sql` is deferred. No production migrations or writing connection are introduced; Phase 2 must use SQLite `mode=ro`, parameterized queries, fixed source names, and must not call `backend.events.ingest.connect`, which executes DDL.

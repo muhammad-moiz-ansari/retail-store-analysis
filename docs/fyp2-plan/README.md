@@ -15,6 +15,16 @@ the interaction pipeline already produces.
 | [CHECKLIST.md](CHECKLIST.md) | Branch per item, status, order of work |
 | [FUTURE_WORK.md](FUTURE_WORK.md) | Every remaining and out-of-scope item from the report, phased with step guides |
 
+## Current team/tool foundation (2026-11-10)
+
+The older Steps 0–4 and report-gap tables below remain the original plan. The active tool/graph phases and member responsibilities are tracked in [PLAN.md](PLAN.md). Saqib's committed event foundation is reused; Moiz Phase 1 publishes contracts only, without SQL readers, agents or UI binding.
+
+- [PROGRESS.md](PROGRESS.md): owner-tagged implementation versus verified/synthetic/real-data status, sources and exact checks.
+- [PENDING.md](PENDING.md): remaining Moiz/Saqib/Ruhab work, dependencies and semantic limitations.
+- [CONTRACTS.md](CONTRACTS.md#agent-read-tool-contracts--moiz-phase-1-2026-11-10): five typed callable interfaces, examples, UTC/evidence conventions and data-availability notes for Ruhab.
+
+Ignore local assistant handoffs under `docs/extra-docs/`; shared contracts/status remain tracked here. No report changes, CV training, production dispatch or later Moiz phases are part of Phase 1.
+
 ## Report gaps this closes
 
 | Report limitation / remaining item | Step |
