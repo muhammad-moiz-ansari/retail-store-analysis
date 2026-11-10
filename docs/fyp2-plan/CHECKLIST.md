@@ -65,7 +65,7 @@ Ownership and actual evidence: [PLAN.md](PLAN.md), [PROGRESS.md](PROGRESS.md), [
 
 - [x] **M-P1-CONTRACTS / M-P1-FIXTURE / M-P1-DOCS (Moiz)** Typed contracts and five callable interfaces, UTC/filter/result/evidence validation, unchanged Saqib fixture/schema, test-only second store and shared publication. Offline verified; no SQL readers or real-agent claim.
 - [x] **M-P2-TOOLS / M-P2-CONTEXTUAL / M-P2-REGISTRY (Moiz)** Five concrete read-only tools, trusted-scope registry, manual-answer query tests, health-aware union coverage and seeded replay. Synthetic/offline verified; production identity/store/configuration binding remains pending.
-- [ ] **M-P3-GRAPH (Moiz)** Injectable LangGraph, grounded claims, scoped traces and Ruhab specialist hooks; trusted identity/store binding before public routes.
+- [x] **M-P3-GRAPH / M-P3-GROUNDING / M-P3-TRACES / M-P3-HANDOFF (Moiz)** Callable injectable LangGraph, exact metric/evidence grounding with one repair, scoped bounded development traces and Ruhab registration hooks, verified offline. Actual business agents, durable/live-provider validation and trusted identity/store binding before public routes remain pending.
 - [ ] **M-P4-HOOK (Moiz adapter; Saqib operations)** Isolated fake dispatch adapter and integration handoff; no production delivery.
 - [ ] **R-BUSINESS-AGENTS / R-UX-NARRATION-QA (Ruhab)** Real business logic, fine-tuning, interface refinement, Narration/Digest/Clip Review and acceptance; Protocols do not complete these tasks.
 - [ ] **S-B0-VERDICT / S-B4-REALFEED / S-DEPLOY-INTEGRATION (Saqib)** Unattended verdict review, real feeds/configuration, operational assignment/voice and deployment.

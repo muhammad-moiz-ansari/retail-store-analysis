@@ -9,7 +9,8 @@ from langgraph.graph import END, START, StateGraph
 from langsmith.run_helpers import tracing_context
 
 from .graph_contracts import (AskRequest, GraphLimits, GraphRun, GroundingIssue, NodeTrace,
-                              RouteDecision, SpecialistContext, SpecialistDraft, ToolTrace)
+                              Claim, RouteDecision, SpecialistContext, SpecialistDraft, ToolResult, ToolTrace)
+from .contracts import TrustedAccessScope
 from .routing import OfflineRouter, prohibited_question
 from .specialists import ALLOWED_TOOLS, development_specialists, metric_at
 from .tools.registry import REQUEST_TYPES, ScopedToolRegistry
@@ -18,15 +19,15 @@ from .tools.registry import REQUEST_TYPES, ScopedToolRegistry
 class GraphState(TypedDict, total=False):
     run_id: str
     request: AskRequest
-    scope: object
+    scope: TrustedAccessScope
     selected_node: str
     draft: SpecialistDraft
-    verified: tuple
-    issues: tuple
-    errors: tuple
+    verified: tuple[Claim, ...]
+    issues: tuple[GroundingIssue, ...]
+    errors: tuple[str, ...]
     repairs: int
     steps: int
-    tool_results: dict
+    tool_results: dict[str, ToolResult]
 
 
 class BudgetExceeded(Exception):
@@ -46,12 +47,13 @@ class ReadToolFacade:
             self.errors.append('tool_limit')
             raise BudgetExceeded('tool_limit')
         call_id = f'tool-{len(self.calls)+1}'
-        started, status = perf_counter(), 'error'
+        started, status, recorded = perf_counter(), 'error', {}
         allowed = isinstance(name, str) and name in self.allowed and name in REQUEST_TYPES
         try:
             if not allowed:
                 raise PermissionError('Tool is not registered for this specialist')
             request = REQUEST_TYPES[name].model_validate(arguments)
+            recorded = request.model_dump(mode='json')
             if request.window != self._request.window:
                 raise PermissionError('Tool window must match the validated analytics request')
             for field in ('run_id', 'camera_id', 'zone_id'):
@@ -73,7 +75,7 @@ class ReadToolFacade:
             raise
         finally:
             self.calls.append(ToolTrace(call_id=call_id, tool=name if allowed else 'denied', node=self.node,
-                                        elapsed_ms=(perf_counter()-started)*1000, status=status))
+                                        elapsed_ms=(perf_counter()-started)*1000, status=status, arguments=recorded))
 
     def snapshot(self):
         return {key: result.model_copy(deep=True) for key, result in self._results.items()}
@@ -98,7 +100,9 @@ def ground(draft, results, scope):
         if code:
             issues.append(GroundingIssue(claim_index=index, code=code))
         else:
-            valid.append(claim)
+            # Tolerance accepts harmless model rounding, but published values
+            # always use the captured metric, never the approximated draft value.
+            valid.append(claim.model_copy(update={'value':metric.value}))
     return tuple(valid), tuple(issues)
 
 
@@ -115,7 +119,8 @@ def render_claim(claim, result):
         if hasattr(parent, 'window'):
             details.append(parent.window.start.isoformat() + ' to ' + parent.window.end.isoformat())
     suffix = f" ({'; '.join(details)})" if details else ''
-    return f'{result.tool}: {label} = {claim.value:g} {claim.unit}{suffix}.'
+    estimated = 'estimated ' if metric_at(result, claim.path).estimated else ''
+    return f'{result.tool}: {estimated}{label} = {claim.value:.15g} {claim.unit}{suffix}.'
 
 
 def run_analytics(request: AskRequest, registry: ScopedToolRegistry, *, router=None, specialists=None, limits=None) -> GraphRun:
@@ -215,6 +220,8 @@ def run_analytics(request: AskRequest, registry: ScopedToolRegistry, *, router=N
         lines.insert(0, "Development adapter only; Ruhab's business-agent implementation is not registered.")
     if not verified:
         lines.append({'refused':'This request is outside supported read-only analytics.', 'unavailable':'Analytics are unavailable for this request.'}.get(status, 'Insufficient supported metric evidence for this request.'))
+    if 'zone_required' in latest['draft'].notices:
+        lines.append('A zone filter is required for dwell metrics.')
     citations = tuple(dict((ref.model_dump_json(), ref) for claim in verified for ref in claim.evidence).values())
     limitations = tuple(dict.fromkeys(note for result in results.values() for note in result.limitations))[:50]
     return GraphRun(run_id=run_id, request_id=request.request_id or run_id, request=request, scope=registry.scope,

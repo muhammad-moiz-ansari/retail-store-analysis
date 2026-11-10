@@ -137,7 +137,7 @@ def test_unsupported_claims_are_removed_after_one_repair(database, change):
     result = run_analytics(request(), registry(database), router=fixed_route, specialists=registration(handler))
     assert result.status == 'insufficient_evidence' and result.repair_attempts == 1
     assert not result.claims and not result.citations and 'unsupported_claims_removed' in result.errors
-    assert all('entries =' not in result.response for _ in [0])
+    assert 'entries =' not in result.response
 
 
 def test_specialists_cannot_publish_freeform_numeric_answers(database):
