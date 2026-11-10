@@ -52,11 +52,17 @@ Branch `feature/fyp2-b0-event-store` (B0 to B5 code). Contract details in [CONTR
 - [x] **B0** `backend/events/`: schema v1 (+ `heatmaps`), idempotent ingestion, derived unattended episodes,
       seeded fixture day (`python -m backend.events.fixtures`), contract test over fixture and local runs.
       CI coordination is Ruhab's C1; Saqib supplies backend checks and Moiz frontend checks.
-- [x] **B1 interaction-label inventory present**: 11 tuning clips / 13 interactions and 14 set-B clips / 17 interactions. Second review and role-artifact integration are separate remaining checks. Local set-B pass-by lists total 9 versus Saqib's reported 10; reconcile provenance.
-- [~] **B2** Local merged benchmark reports exist: tuned F1 0.867; set-B F1 0.462 (seen once while tuning). Clean idle CPU/GPU measurement, blind checks and gap/ID-switch follow-up remain; Saqib reports error analysis in his notes.
-- [~] **B3** Saqib reports completed refit/role labels at d6783b2 plus uncommitted artifacts; commit/module absent in this checkout. Publication/integration and user/team adoption decision remain. Ruhab retains fine-tuning validation ownership; do not relabel this as unstarted or locally adopted.
+- [x] **B1** Labelling: 11 tuning clips (`benchmark.json`, 13 interactions) and 14 held-out clips (`benchmark_set_b.json`,
+      17 interactions, 9 pass-bys, reviewed in CVAT) with `"people"`, `"roles"` and `"people_file"` (`role_labels.py`, `persons.json`).
+      Open: labeller re-checks IMG_8838 p2 / IMG_8830; second annotator for the 11 clips. Zone-dwell clips dropped (no polygons).
+- [x] **B2** Benchmark on both sets: set B F1 0.462 with judge (headline), 11 clips 0.867 (tuned). Error analysis done.
+      To do: speed on an idle machine (0.87x realtime on CPU is the only clean figure).
+- [x] **B3** `python -m backend.interaction.refit`: leave-one-clip-out role accuracy hand-set 0.960 / 0.915 (11 clips / set B),
+      fitted 1.000 / 1.000; fitted on the 11 clips scores set B 59/59. Fitted weights as a store config:
+      `benchmarks/store_roles_fitted.json` (uncalibrated cameras only; reference factor absent from all clips).
 - [x] **B4** CLI `--camera` writes runs to the store; `floor_zones` dwell/transitions/heatmaps, `entrance_line` footfall,
-      `queue_zone` queue length/wait, frozen-or-dark frame check. Each camera still needs its polygons drawn in a `--config` file.
+      `queue_zone` queue length/wait, frozen-or-dark frame check. Zone polygons not drawn by decision: interactions use
+      person-to-person distance, so zone signals stay off until a camera has a `--config` with polygons.
 - [~] **B5** `python -m backend.handoff_eval run.json labels.json`. Waits on labelled crossings.
 
 ## Moiz tools/graph phases (separate from legacy A/B checklist numbering)
