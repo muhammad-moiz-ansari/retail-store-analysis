@@ -52,7 +52,7 @@ Offline verification: `npm run test:dashboard-provider` compiles these TypeScrip
 
 The existing backend system-status request remains separate from the preview. The camera section marks the local sample as a recorded clip and other feeds as not connected, without REC/live labels. Recent interaction rows and map/heatmap layers show explicit unavailable notices because the provider contract contains neither. Ask is disabled with an explanation until authenticated service integration. Existing global auth/role guards are unchanged; frontend payload validation does not establish backend authorization. The old dashboard-data.js and comparison-page functionality are retained outside the dashboard; legacy tests are not evidence of correct live analytics.
 
-The test command now runs 27 checks: 16 provider tests, five controller lifecycle/race/expiry tests and six React rendering tests. Rendering checks are server/static component tests; browser interaction results and limitations are recorded separately in PROGRESS.md. No new test dependency is installed.
+At the Phase 2 checkpoint the command ran 27 checks: 16 provider tests, five controller lifecycle/race/expiry tests and six React rendering tests. Phase 3 extends the same command to 34 checks below. Rendering checks are server/static component tests; browser interaction results and limitations are recorded separately in PROGRESS.md. No new test dependency is installed.
 
 ### Configured backend provider — M-UI-P3 (Moiz)
 
