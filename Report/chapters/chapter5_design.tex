@@ -1,45 +1,18 @@
 \chapter{System Design}
 \label{ch:design}
 \section{System Architecture}
-The mid-iteration design separates person detection, role classification, tracking, interaction judging and trajectory analysis. The Next.js frontend presents manager and employee views. The diagram shows component responsibilities; it does not imply that all vision outputs are already connected to the dashboard.
+The target architecture comprises seven business agents/coordinator components. The mid-iteration perception CLI and current application endpoints implement only parts of that design; names in the diagram do not prove seven independently deployed services. Shared perception tools provide observations to the business agents. Interaction uses shared role/track/pose evidence and does not depend on Employee Activity's final output; Employee Activity consumes interaction context when interpreting stationary staff.
 
 \begin{figure}[H]
 \centering
-\begin{tikzpicture}[>=Stealth, font=\small, node distance=0.55cm,
- box/.style={draw,rectangle,minimum width=7.2cm,minimum height=0.8cm,align=center}]
-\node[box] (cam) {Camera feeds (entrance, floor 1, floor 2)};
-\node[box,below=of cam] (det) {Detection Agent: person detection (YOLO)};
-\node[box,below=of det] (cls) {Classification Agent: staff vs.\ customer (non-biometric)};
-\node[box,below=of cls] (trk) {Tracking + proximity candidates (BoT-SORT, pass-by filter)};
-\node[box,below=of trk] (judge) {Pose judge: confirm or reject candidates (YOLO pose)};
-\node[box,below=of judge] (eng) {Engagement Agent: approach time, interaction, idle};
-\node[box,below=of eng] (tra) {Trajectory Agent: paths, dwell time, heatmaps};
-\node[box,below=of tra] (dash) {Dashboard output (Next.js)};
-\foreach \a/\b in {cam/det,det/cls,cls/trk,trk/judge,judge/eng,eng/tra,tra/dash} \draw[->] (\a) -- (\b);
-\end{tikzpicture}
-\caption{RetailPulse target multi-agent pipeline; tracking, proximity candidates and the pose judge run in the interaction CLI and their downstream integration is pending}
+\includegraphics[width=0.96\textwidth,height=0.77\textheight,keepaspectratio]{ThesisFigs/architecture_diagram.png}
+\caption{RetailPulse target system architecture: seven agent/coordinator responsibilities with shared perception tools}
 \label{fig:arch}
 \end{figure}
 
-The application tier is separate from the vision pipeline. The Next.js frontend serves the pages and proxies backend calls. A local FastAPI service supports application records and exposes \texttt{/camera/*} for camera-processing jobs.
+The application tier is separate from the vision pipeline. The Next.js frontend serves the pages and proxies backend calls. Runtime and service boundaries are shown in the deployment diagram (Figure~\ref{fig:deployment}). The architecture illustrates target responsibilities rather than asserting that every agent or connection is already integrated.
 
-\begin{figure}[H]
-\centering
-\begin{tikzpicture}[>=Stealth, font=\small,
- box/.style={draw,rectangle,minimum width=2.0cm,minimum height=1cm,align=center,font=\scriptsize}]
-\node[box] (br) {Browser\\ (Manager / Employee)};
-\node[box,right=1.6cm of br] (nx) {Next.js\\ (port 3000)\\ pages + proxy};
-\node[box,right=1.6cm of nx] (fa) {FastAPI\\ (port 8011)\\ /camera/*};
-\node[box,below=1.1cm of fa] (db) {SQLite\\ (application records)};
-\node[box,right=1.2cm of fa] (cv) {YOLO models\\ person analysis};
-\draw[<->] (br) -- node[above,align=center,font=\scriptsize]{session\\cookie} (nx);
-\draw[<->] (nx) -- node[above,align=center,font=\scriptsize]{secret\\header} (fa);
-\draw[<->] (fa) -- (db);
-\draw[->] (fa) -- (cv);
-\end{tikzpicture}
-\caption{Application tier and service boundaries}
-\label{fig:tiers}
-\end{figure}
+
 
 \subsection{YOLO Model Responsibilities}
 The project uses two distinct YOLO model roles: a YOLO pose model supplies body-keypoint evidence for interaction analysis, while a standard YOLO object-detection model with customer/employee classes supplies person boxes and role labels. The latter is a detector trained on role classes, not a separate image-classification-only network. Interaction events are derived from pose/proximity and temporal rules rather than treating a pose prediction itself as an interaction label.
@@ -56,9 +29,15 @@ Component & Description\\
 \midrule
 Frontend & Next.js (App Router) and React pages, Tailwind CSS styling, Recharts charts, and jsPDF export. UI primitives live in \texttt{src/components/ui}.\\
 Proxy layer & Next.js server-side routes that forward calls to FastAPI and attach the internal secret.\\
-Vision agents & Detection, Classification, Engagement, and Trajectory agents; downstream web integration remains in progress.\\
+Shared perception tools & Person/role detection, tracking, identity association, zone geometry and pose/proximity; these are tools rather than additional business agents.\\
 Interaction pipeline & Role-labelled detections, BoT-SORT tracking, body-height proximity with a pass-by filter, and a YOLO pose judge; runs as a local CLI and writes video and JSON outputs.\\
-Narration agent & Produces natural-language summaries for reports.\\
+Insight Narration Agent & Target grounded metric/decision explanations; current LLM-assisted voice-script service does not establish report generation.\\
+Customer Behavior Agent & Target customer footfall, movement, dwell and sustained hot/gray-zone demand with coverage context.\\
+Employee Activity Agent & Target staff activity/availability and coverage; consumes interactions without equating stillness with idleness.\\
+Interaction Agent & Current candidate, duration, pass-by and pose logic; supported approach/unattended integration remains incomplete.\\
+Employee Task Assignment Agent & Current account/roster eligibility selection and direct task creation; source-zone protection and delivery assurance remain proposed.\\
+Query Agent & Target authorized analytics-tool retrieval and grounded answers; not supplied by the current announcement generator.\\
+Orchestrator & Target coordination using ordinary application code; current event/decision endpoint exists, but automatic CV feeding and full shared-state workflows are not established.\\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -101,29 +80,45 @@ The mid-iteration scope is focused on person/role analysis, interaction detectio
 \end{enumerate}
 None of this creates a common cross-camera coordinate system; cross-camera association remains next-phase work.
 
+\clearpage
+\begin{landscape}
 \section{Domain Model}
+\label{sec:domain-model}
+Figure~\ref{fig:domain-model} shows the target business entities, agent responsibilities and their relationships. Observed tracks and roster/account users are distinct concepts; associations in this conceptual model do not establish an implemented track-to-account identity link. Assignments go directly to an employee account, with decision and task-event evidence.
 \begin{figure}[H]
 \centering
-\begin{tikzpicture}[font=\small, node distance=1.2cm and 1.6cm,
- cls/.style={draw,rectangle,minimum width=2.6cm,minimum height=0.9cm,align=center}]
-\node[cls] (store) {Store};
-\node[cls,right=of store] (cam) {Camera};
-\node[cls,right=of cam] (zone) {Zone};
-\node[cls,below=of cam] (ent) {Tracked Entity\\ (staff / customer)};
-\node[cls,right=of ent] (int) {Interaction Event};
-\node[cls,below=of store] (user) {User\\ (Manager / Employee)};
-\node[cls,below=1.0cm of user] (emp) {Employee};
-\node[cls,below=of ent] (alert) {Alert};
-\node[cls,below=of int] (rep) {Report};
-\draw (store) -- node[above,font=\scriptsize]{has} (cam); \draw (cam) -- node[above,font=\scriptsize]{covers} (zone); \draw (cam) -- node[right,font=\scriptsize]{observes} (ent);
-\draw (ent) -- node[above,font=\scriptsize]{takes part in} (int); \draw (emp) -- node[above,font=\scriptsize]{is a} (ent); \draw (store) -- node[right,font=\scriptsize]{has} (user);
-\draw (ent) -- node[right,font=\scriptsize]{may raise} (alert); \draw (int) -- node[right,font=\scriptsize]{summarised in} (rep);
-\end{tikzpicture}
-\caption{Conceptual domain model}
+\includegraphics[width=\linewidth,height=0.86\textheight,keepaspectratio]{ThesisFigs/domain_model.png}
+\caption{RetailPulse conceptual domain model and target business relationships}
+\label{fig:domain-model}
+\end{figure}
+\end{landscape}
+
+\begin{landscape}
+\section{Class Diagram}
+\label{sec:class-diagram}
+Figure~\ref{fig:class-diagram} distinguishes the proposed agent/state classes from existing perception and operational records. It is a design view: names and associations describe intended responsibilities, while implementation/evaluation status remains in the requirements traceability table. The high-resolution source is retained for detailed zoomed inspection.
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth,height=0.86\textheight,keepaspectratio]{ThesisFigs/class_diagram.png}
+\caption{RetailPulse class design with implemented records and proposed agent/coordinator components}
+\label{fig:class-diagram}
+\end{figure}
+\end{landscape}
+
+\clearpage
+\section{Deployment Diagram}
+\label{sec:deployment}
+Figure~\ref{fig:deployment} places the browser, Next.js application, Python/FastAPI runtime, local data/model files and external speech/script services within their deployment boundaries. It includes repository prototype endpoints for context; their presence is not evidence that cross-camera association or automatic vision-to-workflow integration is complete. Session and internal-header controls must be verified per route, as discussed in the security requirements.
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.96\textwidth,height=0.77\textheight,keepaspectratio]{ThesisFigs/deployment_diagram.png}
+\caption{RetailPulse deployment view: client, application host, local persistence and external services}
+\label{fig:deployment}
+\label{fig:tiers}
 \end{figure}
 
 \section{Data Design}
-The following selected in-scope schema was verified against the branch on 20 October 2026 at commit \texttt{52f651e}. Commit \texttt{6560403} (pose judge and benchmark) was added afterwards and this table has not been re-checked against it.
+The following selected fields were retained from the 20 October schema record and checked against current storage declarations during this requirements revision. Field presence does not prove integrated business-agent behaviour.
 \begin{longtable}{P{0.27\textwidth}P{0.61\textwidth}}
 \caption{Implemented persistence and exported record structure}\\
 \toprule
@@ -141,6 +136,7 @@ Source / table & Actual fields or structure\\
 \texttt{rosters} & \path{id, user_id, zone_id, shift, available, created_at, updated_at}\\
 \texttt{settings}; \texttt{meta} & \path{key, value_json, updated_at}; \path{key, value} respectively.\\
 \texttt{alerts} & \path{id, category, severity, title, context, href, status, source, evidence_json, created_at, resolved_at, resolved_by}\\
+\texttt{orchestration\_events} & \path{id, event_type, source, zone_id, severity, title, evidence_json, source_timestamp, created_at}\\
 \texttt{dispatch\_decisions} & \path{id, event_id, alert_id, task_id, selected_employee_id, decision, reason, policy_json, created_at}\\
 \texttt{tasks} & \path{id, employee_id, target_zone_id, source_zone_id, instruction, state, trigger_alert_id, evidence_json, created_at, updated_at, due_at}\\
 \texttt{task\_events} & \path{id, task_id, state, actor_id, note, created_at}\\
@@ -151,6 +147,15 @@ Interaction event & \path{employee_track_id, customer_track_id, started_at, last
 \bottomrule
 \end{longtable}
 The standalone interaction distance is dimensionless body-height-normalised image separation. It must not be interpreted as the metres in the historical floor-homography records below. Figure~\ref{fig:implemented-schema} shows selected implemented relationships.
+
+\subsection{Direct Assignment and Identity Boundaries}
+The target UC-36 delivers an aisle instruction directly to an identified employee account; there is no manager approval or approve/dismiss gate. Source inspection of \path{backend/app.py} finds \texttt{select\_dispatch\_employee}, \texttt{create\_task\_for\_employee} and \path{/orchestrator/events}: the handler records an event, alert, policy decision and, when eligible, a task. The current event endpoint is Manager-authorized, but this is API access control, not a separate approval stage after selection. Automatic ingestion from the perception pipeline remains an integration dependency.
+
+Protected API checks must be assessed per route: experimental frame-analysis/comparison subprocess routes do not use the same session-verification mechanism as the generic authenticated backend proxy. Their presence does not establish blanket access-control compliance. These source findings are integration/security work, not new dispatched-task approval requirements.
+
+Selection currently filters active Employee accounts, roster availability and existing active tasks, preferring the target-zone roster. It does not establish source-zone coverage protection, shift-time eligibility, concurrency-safe duplicate suppression, oscillation control or reliable transport delivery; those are proposed acceptance scenarios, not implemented guarantees. Creation records \texttt{delivered}; the API accepts \texttt{acknowledged}, \texttt{in\_progress}, \texttt{completed}, \texttt{declined}, \texttt{expired} and \texttt{cancelled}. It validates the requested state and task ownership but does not enforce a complete transition graph. A delivered row alone does not prove employee receipt, arrival or completion; the task-event stream is currently a ready-event stub.
+
+Operational assignments refer to \path{users.id} through \path{tasks.employee_id}. An anonymous camera track/global identity does not automatically identify that account. Vision-based account location or personal activity requires a verified track-account link; no working link is claimed. Employee Activity consumes interaction context so stationary assistance does not become idle activity, while Interaction evaluates shared perception evidence independently.
 
 \subsection{Floor Calibration and Runtime Records (Descoped Floor Prototype)}
 Versioned calibration JSON stores camera/calibration IDs, the video reference and timestamp, original frame dimensions, the coordinate-space definition, metre units, image/floor landmarks, an image-to-floor homography, operational/exclusion polygons, distortion metadata, motion/smoothing settings and fitting diagnostics. Measurement-status metadata identifies estimated calibration inputs.
@@ -213,3 +218,6 @@ Figure~\ref{fig:interaction-process} summarises the interaction decision flow. C
 \end{figure}
 
 The reference frame supports a provisional snapshot. Other frames require sufficient distributed static floor evidence within configured tolerances. A lack of matches is unverified alignment, not a stationary-camera decision. The current implementation monitors and rejects movement; it does not compensate for it. Metric smoothing cannot repair camera mapping errors. Trained roles, body-height proximity, duration and the pose judge are now combined in the interaction CLI; dashboard integration remains a future step, and proximity alone is not proof of assistance.
+
+\clearpage
+\input{chapters/system_sequence_diagrams}

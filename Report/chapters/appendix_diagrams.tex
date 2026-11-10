@@ -1,5 +1,5 @@
 \chapter{Additional Design Diagrams}
-The main architecture, tier and domain diagrams are in Chapter~\ref{ch:design} (including Figures~\ref{fig:arch} and \ref{fig:tiers}). Figure~\ref{fig:implemented-schema} is derived from the current SQLite foreign-key relationships in \path{backend/store_core.py}; it shows a selected subset, not the complete conceptual domain model.
+The architecture, domain, class and deployment diagrams are in Chapter~\ref{ch:design} (Figures~\ref{fig:arch}, \ref{fig:domain-model}, \ref{fig:class-diagram} and \ref{fig:deployment}). The 17 system sequence diagrams are in Section~\ref{sec:ssds}; this appendix retains only supplementary schema and diagnostic material. Figure~\ref{fig:implemented-schema} is derived from the current SQLite foreign-key relationships in \path{backend/store_core.py}; it shows a selected subset, not the complete conceptual domain model.
 \begin{figure}[H]
 \centering
 \begin{tikzpicture}[>=Stealth,font=\small,node distance=0.9cm and 1.0cm,
@@ -22,7 +22,7 @@ The main architecture, tier and domain diagrams are in Chapter~\ref{ch:design} (
 \label{fig:implemented-schema}
 \end{figure}
 
-\section{Floor Calibration Schema and Failure States}
+\section{Historical Floor Calibration Schema and Failure States}
 The floor process is shown in Figure~\ref{fig:floor-pipeline}; actual preview, calibration and map examples are in Figures~\ref{fig:floor-preview}--\ref{fig:floor-map}. The authoritative correspondence order for the provisional rectangle is A--B--D--C. Floor coordinates are $(0,0)$, $(w,0)$, $(w,d)$ and $(0,d)$ in metres for that order.
 
 \begin{tabular}{P{0.28\textwidth}P{0.59\textwidth}}

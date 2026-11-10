@@ -1,0 +1,13 @@
+sequenceDiagram
+    actor A as Manager
+    participant S as RetailPulse system
+    A->>S: requestManagerAnalytics(interval, zone)
+    alt authorized valid filters
+    S-->>A: analyticsViews(customer, staff, interaction, spatial, coverage)
+    else invalid filter, no records or unauthorized scope
+    S-->>A: validationOrAvailabilityResponse(reason, partialMetrics)
+    end
+    opt manager changes the selection
+    A->>S: requestManagerAnalytics(updatedInterval, updatedZone)
+    S-->>A: updatedViews(coverageContext)
+    end

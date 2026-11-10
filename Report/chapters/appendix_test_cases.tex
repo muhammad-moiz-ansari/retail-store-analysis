@@ -54,5 +54,46 @@ It contains 17 tests. The local coverage evaluation command is
 \hspace*{1em}--output data/outputs/distance/demo/evaluation.json
 \end{quote}
 
+\section{Current Capability Mapping of Recorded Checks}
+TC-01 primarily supports FR-10. TC-02 is security evidence for NFR-07/08. TC-07 and TC-08 support FR-01 detection/role processing, not FR-02 crossing counts. TC-09 supports FR-04; TC-10 supports FR-07; both retain Pending status. Representative TC-12 views support only the inspected portions of FR-11/12/13 and role-access behaviour, not every alert, profile or status function. TC-13 remains Unavailable for FR-17. TC-21/22 support FR-04, TC-23 supports FR-34 and TC-24 primarily supports FR-01 with FR-04 diagnostic evidence. TC-25 is the recorded stricter byte-identical case, not proof of numerical repeatability for all inputs. Historical TC-14--TC-20 remain attached to the retired floor register in Appendix~\ref{app:req-history}.
+
+\section{Planned Capability and Quality Scenarios}
+Every row below is Planned / Not executed. Source inspection does not change this status.
+\begin{longtable}{P{0.08\textwidth}P{0.13\textwidth}P{0.35\textwidth}P{0.34\textwidth}}
+\caption{Additional acceptance scenarios; none executed for this documentation revision}\\
+\toprule
+ID & Scope & Proposed procedure & Expected result / status\\
+\midrule
+\endfirsthead
+\toprule
+ID & Scope & Proposed procedure & Expected result / status\\
+\midrule
+\endhead
+TC-26 & FR-02 & Label entry/exit crossings; test repeat observations, camera gaps, unknown role and unknown initial occupancy. & Expected supported in/out and coverage; no invented absolute occupancy. Planned / Not executed.\\
+TC-27 & FR-29 & Save valid camera/zone/roster/policy settings; reject invalid geometry, nonexistent employee, incompatible source, conflicting roster and unauthorized change; inspect downstream consumers. & Previous valid settings survive failures; consumer integration is explicitly identified. Planned / Not executed.\\
+TC-28 & FR-35 & Compare stationary assisting staff, an available employee, missing break/task context, unlinked tracks and an occluded zone. & Activity uses interaction context; unknown identity/coverage does not imply idle or unstaffed. Planned / Not executed.\\
+TC-29 & FR-36 & Submit a supported aisle-need event with an eligible account and no active task; inspect event, decision, task and employee workspace. & Task is created/delivered directly with target aisle and reason, with no manager approval interaction. Planned / Not executed.\\
+TC-30 & FR-36 & Make every employee unavailable/inactive/busy and submit the need. & No eligible employee is dispatched; retain no-eligible outcome and unresolved need. Planned / Not executed.\\
+TC-31 & FR-36 & Exercise an existing task, source-zone coverage conflict, concurrent duplicate events and rapidly alternating needs. & Policy prevents unsafe duplicate/oscillating transfers and records the reason; missing protection remains a defect, not a Passed check. Planned / Not executed.\\
+TC-32 & FR-36 & Interrupt the employee delivery channel or make it unavailable after task creation. & Failure is observable and unresolved need remains visible; stored delivered alone is not receipt evidence. Planned / Not executed.\\
+TC-33 & FR-36 & Employee reads own task and reports acknowledged, in\_progress, completed or applicable declined outcome; attempt another account's task and invalid/reordered transitions. & Account-bound status history and denial of unauthorized updates; strict ordering/arrival guarantees are evaluated separately. Planned / Not executed.\\
+TC-34 & FR-37 & Ask a supported interval/zone question against known permitted records. & Answer identifies correct figures and interval/source context without changing tasks/settings. Planned / Not executed.\\
+TC-35 & FR-37 & Ask an ambiguous question, one with no records and an unsupported request; simulate LLM failure. & Clarification or explicit limitation rather than a fabricated numeric answer. Planned / Not executed.\\
+TC-36 & FR-37 & Attempt anonymous/Employee query access and retrieval of records outside the Manager's authorized scope. & Denied/limited retrieval and no leaked evidence or hidden operational changes. Planned / Not executed.\\
+TC-37 & FR-11 & Select valid, offline and stale camera sources; remove analytical overlays. & Availability, freshness and unsupported overlays are accurately identified. Planned / Not executed.\\
+TC-38 & FR-12 & Select valid/invalid interval and zone filters with full, partial and empty metrics. & Views correspond to authorized filters and label missing/demo data. Planned / Not executed.\\
+TC-39 & FR-13 & Use an Employee account with and without shift/history/tasks; attempt another employee's data. & Only own permitted records appear; empty states and denied access are explicit. Planned / Not executed.\\
+TC-40 & FR-18 & Filter alerts, inspect assignment context, resolve and read back actor/time; repeat a stale resolution and test denied access. & Auditable resolution independent of dispatch authorization; stale outcomes handled honestly. Planned / Not executed.\\
+TC-41 & FR-19 & Inspect all seven target components with measured, absent, stale, inactive and failed telemetry. & Missing/hard-coded worker values are not represented as measured health/throughput. Planned / Not executed.\\
+TC-42 & FR-20 & Edit permitted personal fields/preferences and password; reload; test duplicate email, wrong current password and attempted role change. & Read-back proves persistence where implemented; invalid changes are rejected. Planned / Not executed.\\
+TC-43 & NFR-01 & Repeat selected numerical calculations with fixed inputs/model/configuration and a documented tolerance. & Numerical repeatability assessed independently of TC-25's one-clip byte-identical result. Planned / Not executed.\\
+TC-44 & NFR-03 & From the defined role landing page, count navigation actions to each main analytics view. & At most two actions for the stated navigation targets; missing destinations identified. Planned / Not executed.\\
+TC-45 & NFR-04 & Review representative charts, textual values and fonts at the supported viewport sizes. & Readable labels, consistent fonts, no clipped critical values. Planned / Not executed.\\
+TC-46 & NFR-05/06 & Record reference CPU/environment and sampling settings; measure video speed and page timings separately. & Configuration-specific latency/throughput reported; no unsupported universal real-time or agreed numeric response-time claim. Planned / Not executed.\\
+TC-47 & NFR-07--NFR-09 & Audit anonymous/Employee/expired-session access, protected route secrets and placeholder configuration/history/logs without including secret values in evidence. & Required denials and redacted secret/configuration findings; outstanding routes remain explicit. Planned / Not executed.\\
+TC-48 & NFR-10 & Inspect persisted appearance/identity records, face-template absence, account links, retention and authorized access paths. & Minimisation/privacy gaps documented; temporary identifiers are not assumed automatically anonymous. Planned / Not executed.\\
+\bottomrule
+\end{longtable}
+
 \section{Current-Branch Reproduction}
 The 20 October check ran these existing files with pytest: \path{backend/interaction/test_engagement.py}, \path{test_cust_emp_classifier.py}, \path{test_role_classifier.py}, \path{test_identity.py}, \path{test_tracker.py} (all under the same interaction directory). Set \texttt{PYTHONPATH} to the backend directory and \texttt{TEMP}/\texttt{TMP} to a writable local test directory. Corrected-scope rerun: 24 passed in 2.66 seconds. After the pose judge and benchmark were added, \texttt{python -m pytest backend/interaction -q} passed 44 tests in 1.72 seconds. The benchmark is run with \texttt{python -m backend.interaction.benchmark backend/interaction/benchmarks/benchmark.json}. Historical floor-suite commands above refer to the implementation before its removal, not current-branch availability.

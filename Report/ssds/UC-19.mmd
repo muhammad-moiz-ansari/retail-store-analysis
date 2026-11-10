@@ -1,0 +1,12 @@
+sequenceDiagram
+    actor A as Manager
+    participant S as RetailPulse system
+    A->>S: requestSystemStatus()
+    S-->>A: componentStatus(health, availableThroughput, activity, timestamps)
+    A->>S: inspectComponent(componentId)
+    alt measured telemetry is available
+    S-->>A: componentDetails(measures, recordedAt)
+    else telemetry missing, stale, inactive or failed
+    S-->>A: explicitStatus(state, unavailableMeasures, reason)
+    end
+    Note over A,S: The seven agreed target components are distinguished from shared tools; hard-coded/demo values are labelled.
