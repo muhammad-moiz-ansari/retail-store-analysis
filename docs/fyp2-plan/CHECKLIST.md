@@ -78,9 +78,10 @@ Separate Moiz UI sequence (not tool/graph phase numbering):
 
 - [x] M-UI-P1: typed validated provider, five synthetic display scenarios and offline tests; 16 provider tests plus frontend typecheck/targeted lint/legacy regression passed. No page binding.
 - [x] M-UI-P2: fixture-bound dashboard, fabricated analytics replaced, provenance/quality/freshness visible, refresh/cancellation/expiry checked; 27 tests plus lint/typecheck/build and isolated Chrome scenario/route/mobile checks passed. No real analytics integration.
-- [ ] M-UI-P3: authenticated real backend provider, trusted observation context and real-data/agent integration validation with Saqib/Ruhab.
+- [x] M-UI-P3 connection: backend provider, active-account/server-config membership, scoped read-tool snapshot routes and explicit source selection; 155 backend tests/1 existing skip, 34 frontend tests, lint/typecheck/build and actual-login synthetic browser checks passed.
+- [ ] M-UI-P3 acceptance (Saqib config/deployment, Ruhab outputs/QA, Moiz support): verified real memberships/CV/source context, known real metric answers and deployed integration. No real values installed by the connection implementation.
 
-M-UI-P1/P2 do not complete legacy A2/B6 real-data binding, real business agents, map registration or the following camera/map acceptance items.
+M-UI-P1/P2/P3 connection does not complete legacy A2/B6 real-data acceptance, real business agents, map registration or the following camera/map acceptance items. The graph's HTTP authority/durable traces and actual dispatch remain separate.
 
 - [ ] MAP-1 (Saqib): real camera/CV/event/health verification.
 - [ ] MAP-2 (Saqib spatial/backend, Moiz binding, Ruhab QA): supplied-map registration and visibility metadata.
