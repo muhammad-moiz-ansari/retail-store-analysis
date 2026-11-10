@@ -16,6 +16,8 @@ from typing import Annotated, Any
 from fastapi import Depends, FastAPI, Header, HTTPException, Query
 from fastapi.responses import StreamingResponse
 
+from .agents.dashboard_api import router as dashboard_router
+
 from .camera_service import REPO_ROOT, resolve_video
 from .camera_service import app as camera_app
 from .store_core import (
@@ -33,6 +35,9 @@ from .voice_agent import generate_voice_script, integration_status, synthesize_v
 
 app = FastAPI(title="RetailPulse Backend", version="0.1.0")
 app.mount("/camera", camera_app)
+
+# Read-only analytics remain unavailable until explicit server membership/source configuration.
+app.include_router(dashboard_router)
 
 INTERNAL_SECRET = os.getenv("RETAILPULSE_INTERNAL_SECRET", os.getenv("POS_INTERNAL_SECRET", "local-dev-pos-secret"))
 

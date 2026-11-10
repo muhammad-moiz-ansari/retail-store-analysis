@@ -48,8 +48,8 @@ function sameRequest(a: AnalyticsRequest, b: AnalyticsRequest): boolean {
 }
 
 const sources: Record<string, string[]> = {
-  get_footfall: ["footfall"], get_interactions: ["interactions", "tracks"],
-  get_zone_dwell: ["zone_dwell"], get_unattended: ["unattended_episodes"],
+  get_footfall: ["footfall", "pipeline_health"], get_interactions: ["interactions", "tracks", "pipeline_health"],
+  get_zone_dwell: ["zone_dwell", "pipeline_health"], get_unattended: ["unattended_episodes", "pipeline_health"],
   get_coverage: ["zone_dwell", "pipeline_health"],
 };
 
