@@ -1,6 +1,6 @@
 # FYP-2 progress
 
-Updated 2026-11-10. Current task: **Moiz Phase 1 only**. Ownership is maintained in [PLAN.md](PLAN.md); callable contracts and semantics are in [CONTRACTS.md](CONTRACTS.md). Checklists describe code/status, not automatic evidence of evaluation.
+Updated 2026-11-10. Current task: **Moiz Phase 2 only**; Phase 1 results below are retained as history. Ownership is maintained in [PLAN.md](PLAN.md); callable contracts and semantics are in [CONTRACTS.md](CONTRACTS.md). Checklists describe code/status, not automatic evidence of evaluation.
 
 | Task key | Owner | Scope / source | Implementation status | Verification / evidence | Remaining limitations and dependencies |
 |---|---|---|---|---|---|
@@ -38,3 +38,9 @@ No edits to `Report/`, generated report evidence, pushes, PRs, merges or deploym
 - `git diff --check -- . ':!Report/'` passed. Local `docs/extra-docs/` and generated fixture/output locations are ignored; no existing extra-docs files were tracked. `docs/fyp2-plan/` remains tracked.
 - The pre-existing deletion of `frontend/public/videos/cam1.mp4` was restored from committed contents with explicit user authorization before staging. The video is unchanged relative to HEAD and is absent from the feature commit. Existing `Report/` edits remain untouched and excluded.
 - Phase 1 stops at the typed event-contract foundation. No Phase 2 reader, graph, dispatch adapter, frontend change or live provider was implemented. Phase-ending commit identifier is reported after Git creates it rather than embedded speculatively here.
+
+## Scoped event readers (Moiz, Phase 2 in progress)
+
+- **M-P2-READERS**: `backend/agents/tools/store.py`, `common.py`, `analytics.py` implement read-only snapshots, fixed/parameterized scoped sources, UTC-exact boundary selection, and footfall/dwell/interaction readers over the unchanged event schema. `ObservationContext` is server-injected expected-camera configuration; event absence alone cannot establish zero. Interaction joins use store/run/camera/track and separate confirmed/unverified records.
+- Verification: `.venv/Scripts/python.exe -m pytest backend/agents/test_read_tools.py -q --basetemp data/outputs/moiz-phase2/pytest-readers-2` — **8 passed in 1.57 s**. Hand-calculated cases cover UTC/microsecond edges, clipped quantiles, scope/second-store collisions, approach provenance, null vs zero, evidence/row caps and unchanged database hashes/timestamps. Contextual unattended/coverage readers and final integration remain in this phase's pending work.
+- Direct user override: exact `git add .` is authorized. Existing report edits were preserved separately in commit `0e9380e` with explicit user approval; no report contents were edited. Final commit subjects describe features rather than "complete phase".
