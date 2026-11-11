@@ -1,5 +1,4 @@
 """Trace authorization/retention, repaired claims, and offline service replay."""
-import hashlib
 
 import pytest
 
@@ -9,10 +8,10 @@ from .contracts import EventFilters, TrustedAccessScope
 from .graph_contracts import GraphLimits, SpecialistDraft
 from .service import AnalyticsService
 from .test_graph import fetch_entry, fixed_route, no_network, registration, request
-from .test_read_tools import WINDOW, database, event, put, scope
+from .test_read_tools import fingerprint, WINDOW, database, event, put, scope
 from .test_tool_integration import make_tools
 from .tools.common import ObservationContext
-from .tools.contextual import SQLiteAnalyticsTools
+from .tools.contextual import PostgresAnalyticsTools
 from .traces import MemoryTraceStore
 
 
@@ -133,20 +132,20 @@ def test_result_size_limit_and_tracing_environment_stay_offline(database, monkey
     assert not result.tool_results and not result.claims
 
 
-def test_seeded_graph_replay_and_custom_registration_reuse_tools(tmp_path):
-    path = tmp_path/'synthetic-graph.sqlite3'
+def test_seeded_graph_replay_and_custom_registration_reuse_tools(postgres_dsn):
+    path = postgres_dsn
     with connect(path) as conn:
         generate(conn)
     conn.close()
     contexts = tuple(ObservationContext(context_id='synthetic-layout',store_id='store-1',zone_id=z,camera_ids=(c,),
         available_sources=('footfall','zone_dwell','interactions','unattended_episodes')) for z,c in CAMERA_OF.items())
-    tools = SQLiteAnalyticsTools(path, synthetic=True, contexts=contexts)
+    tools = PostgresAnalyticsTools(path, synthetic=True, contexts=contexts)
     service = AnalyticsService(tools)
-    before = hashlib.sha256(path.read_bytes()).hexdigest()
+    before = fingerprint(path)
     queries = [request('Show footfall'), request('Show staffed coverage', filters=EventFilters(zone_id='z3'))]
     for query in queries:
         result = service.ask(query, scope=scope())
         assert result.claims and result.development_stub and result.trace_retained
         assert all(tool_result.synthetic for tool_result in result.tool_results.values())
         assert service.get_run(result.run_id, scope=scope()) == result
-    assert hashlib.sha256(path.read_bytes()).hexdigest() == before
+    assert fingerprint(path) == before

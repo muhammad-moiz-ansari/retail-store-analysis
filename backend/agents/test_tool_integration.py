@@ -1,7 +1,5 @@
 """Registry/security and seeded replay, in addition to hand-calculated unit tests."""
 from datetime import timedelta
-import hashlib
-import sqlite3
 
 import pytest
 from pydantic import ValidationError
@@ -10,14 +8,14 @@ from backend.events.fixtures import CAMERA_OF, generate
 from backend.events.ingest import connect, validate
 from .contracts import (CoverageRequest, FootfallRequest, InteractionsRequest, TimeWindow,
                         TrustedAccessScope, UnattendedRequest, ZoneDwellRequest)
-from .test_read_tools import START, WINDOW, database, event, put, scope
+from .test_read_tools import fingerprint, START, WINDOW, database, event, put, scope
 from .tools.common import ObservationContext
-from .tools.contextual import SQLiteAnalyticsTools
+from .tools.contextual import PostgresAnalyticsTools
 from .tools.registry import ScopedToolRegistry
 
 
 def make_tools(path, *, available=('footfall', 'zone_dwell', 'interactions', 'unattended_episodes')):
-    return SQLiteAnalyticsTools(path, synthetic=True, contexts=(ObservationContext(
+    return PostgresAnalyticsTools(path, synthetic=True, contexts=(ObservationContext(
         context_id='synthetic-layout', store_id='store-1', zone_id='z1', camera_ids=('c1',),
         available_sources=available),))
 
@@ -47,7 +45,7 @@ def test_all_five_readers_have_no_cross_store_results_or_writes(database):
         put(database, 'interactions', [event(key+'i', 10, 30, employee_track_id=1, customer_track_id=2,
                                              duration_s=20, verdict='interaction', store_id=store)])
         put(database, 'unattended_episodes', [event(key+'u', 0, 300, customer_track_id=2, helped=0, waited_s=300, store_id=store)])
-    before = hashlib.sha256(database.read_bytes()).hexdigest(), database.stat().st_mtime_ns
+    before = fingerprint(database)
     registry = ScopedToolRegistry(make_tools(database), scope())
     for name in registry.input_schemas():
         args = {'window': WINDOW.model_dump(mode='json')}
@@ -57,7 +55,7 @@ def test_all_five_readers_have_no_cross_store_results_or_writes(database):
         encoded = result.model_dump_json()
         assert 'other' not in encoded and result.scope == scope()
         assert type(result).model_validate_json(encoded) == result
-    assert (hashlib.sha256(database.read_bytes()).hexdigest(), database.stat().st_mtime_ns) == before
+    assert (fingerprint(database)) == before
 
 
 def test_healthy_camera_without_declared_feed_cannot_establish_zero(database):
@@ -102,14 +100,14 @@ def test_operating_intervals_merge_and_closed_window_does_not_divide_by_zero(dat
     closed = TimeWindow(start=START+timedelta(days=1), end=START+timedelta(days=1, seconds=600))
     context = ObservationContext(context_id='synthetic-closed', store_id='store-1', zone_id='z1', camera_ids=('c1',),
                                  available_sources=('zone_dwell',), operating_windows=(closed,))
-    result = SQLiteAnalyticsTools(database, synthetic=True, contexts=(context,)).get_coverage(
+    result = PostgresAnalyticsTools(database, synthetic=True, contexts=(context,)).get_coverage(
         scope=scope(), request=CoverageRequest(window=WINDOW))
     assert result.zones[0].open_seconds.value == 0
     assert result.zones[0].staffed_open_ratio.value is None
 
 
-def test_seeded_day_reuses_saqib_generator_and_preserves_database(tmp_path):
-    path = tmp_path/'synthetic-day.sqlite3'
+def test_seeded_day_reuses_saqib_generator_and_preserves_database(postgres_dsn):
+    path = postgres_dsn
     with connect(path) as conn:
         counts = generate(conn)
         assert validate(conn) == []
@@ -117,9 +115,9 @@ def test_seeded_day_reuses_saqib_generator_and_preserves_database(tmp_path):
     contexts = tuple(ObservationContext(context_id='synthetic-day-layout', store_id='store-1', zone_id=zone,
         camera_ids=(camera,), available_sources=('footfall','zone_dwell','interactions','unattended_episodes'))
         for zone, camera in CAMERA_OF.items())
-    registry = ScopedToolRegistry(SQLiteAnalyticsTools(path, synthetic=True, contexts=contexts), scope())
+    registry = ScopedToolRegistry(PostgresAnalyticsTools(path, synthetic=True, contexts=contexts), scope())
     window = {'start':'2026-11-03T09:00:00Z','end':'2026-11-03T21:00:00Z'}
-    before = hashlib.sha256(path.read_bytes()).hexdigest()
+    before = fingerprint(path)
     results = {name: registry.invoke(name, {'window':window} | ({'filters':{'zone_id':'z3'}} if name == 'get_zone_dwell' else {}))
                for name in registry.input_schemas()}
     assert all(r.synthetic and r.status != 'unavailable' for r in results.values())
@@ -131,4 +129,4 @@ def test_seeded_day_reuses_saqib_generator_and_preserves_database(tmp_path):
     coverage = {z.zone_id:z for z in results['get_coverage'].zones}
     assert coverage['z3'].unknown_observation.value == 2400
     assert coverage['z3'].staffed_open_ratio.value is None
-    assert hashlib.sha256(path.read_bytes()).hexdigest() == before
+    assert fingerprint(path) == before

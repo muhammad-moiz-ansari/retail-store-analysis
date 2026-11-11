@@ -162,6 +162,8 @@ npm install
 
 ### Running locally
 
+Set `DATABASE_URL` in the Python environment and initialize the PostgreSQL database first. The setup guide covers fresh accounts, demo data and importing an existing SQLite installation. [PostgreSQL setup](docs/fyp2-plan/POSTGRESQL_SETUP.md)
+
 ```bash
 npm run dev
 ```

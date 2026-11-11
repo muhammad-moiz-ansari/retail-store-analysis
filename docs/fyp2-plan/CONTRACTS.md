@@ -4,6 +4,8 @@
 
 The [combined team plan](RetailPulse_FYP2_Implementation_Plan.md) governs current work and ownership. Implement camera/CV first, then register the supplied map, then render live role occupancy and confirmed-interaction layers. Exactly four dynamic occupancy categories are allowed: **Customer, Employee, Customer–employee both, No one**. They are not fixed permitted-role polygons. Invalid/missing/unknown observation is separate quality metadata, never a fifth category or a false No one. Historical z1–z6, staff zones, queue/counter geometries and hot/gray terminology below are legacy technical references, not additional category requirements. No existing runtime/schema/fixture has been migrated by this documentation update.
 
+Run fixture commands below with DATABASE_URL pointing at a disposable PostgreSQL database initialized with `python -m backend.database`. See [PostgreSQL setup](POSTGRESQL_SETUP.md).
+
 ## Dashboard presentation provider — M-UI-P1 (Moiz)
 
 Implemented in `frontend/src/lib/analytics-provider/{contracts,provider,fixture}.ts`. This is a frontend-facing adapter boundary, not a replacement event schema, HTTP API, auth policy or business agent. M-UI-P2 now consumes it through `frontend/src/components/dashboard/DashboardAnalytics.tsx` on `/dashboard`; comparison-derived legacy analytics are no longer imported by that page.
@@ -25,7 +27,7 @@ Each metric has nullable numeric `value`, `unit`, `status: ok | empty | partial 
 
 Evidence tool/table pairs mirror existing sources (footfall; interactions/tracks; zone_dwell; unattended_episodes; zone_dwell/pipeline_health). Sampled evidence must retain matched count and truncation; evidence IDs alone are not a complete population. Shape checks cannot establish row authenticity, healthy observation or authorization. Those remain server responsibilities. Unsupported/malformed/cross-scope responses or provider exceptions return sanitized all-null unavailable results, never fixture fallback or backend exception text. Cancellation rejects for the UI to discard, rather than becoming an outage notice.
 
-`createFixtureProvider(scenario, now?)` supports ready, empty, partial, unavailable and stale scenarios. These are **hand-authored synthetic presentation scenarios**, separate from Saqib's canonical SQLite generator and not derived from CV data. They accept only `fixtureRequest` (demo-store, demo-region, 3 Nov 2026 09:00–10:00 UTC, no camera/run filters); unsupported valid selections return unavailable rather than relabel fixed numbers. Fixture IDs and numbers are illustrative, not real evidence. This fixture provider performs no database/network access. M-UI-P3 adds a separate backend provider below. No interaction rows, map registration, occupancy category assignment or heatmap data are invented by this boundary.
+`createFixtureProvider(scenario, now?)` supports ready, empty, partial, unavailable and stale scenarios. These are **hand-authored synthetic presentation scenarios**, separate from Saqib's canonical event generator and not derived from CV data. They accept only `fixtureRequest` (demo-store, demo-region, 3 Nov 2026 09:00–10:00 UTC, no camera/run filters); unsupported valid selections return unavailable rather than relabel fixed numbers. Fixture IDs and numbers are illustrative, not real evidence. This fixture provider performs no database/network access. M-UI-P3 adds a separate backend provider below. No interaction rows, map registration, occupancy category assignment or heatmap data are invented by this boundary.
 
 Provider example (local fixture preview only):
 
@@ -106,7 +108,7 @@ Definitions:
 - **unattended**: a customer present longer than `unattended_after_s` with no confirmed interaction in that window.
 - **employee idle**: employee time with no confirmed interaction and centre movement below `idle_move_px` over `idle_window_s`.
 - **zone dwell**: seconds the track centres spend inside each zone rectangle (same frame-coordinate
-  rectangles as `InteractionConfig.staff_zones`; store zones in SQLite have no geometry).
+  rectangles as `InteractionConfig.staff_zones`; store zones in PostgreSQL have no geometry).
 - **heatmap**: 2D histogram of all `center` points (`numpy.histogram2d`).
 
 New config fields on `InteractionConfig` (defaults in brackets): `entrance_line` [None, footfall skipped],
@@ -141,19 +143,19 @@ One row in the existing `alerts` table per unattended event:
 
 `backend/events/schema.sql`: eight tables (`tracks`, `role_decisions`, `interactions`, `zone_dwell`, `footfall`,
 `queue_samples`, `unattended_episodes`, `pipeline_health`). Every row has `event_id` (stable, `<run>:<kind>:<camera>:<key>`),
-`run_id`, `store_id`, `camera_id`, `zone_id`, `ts_start`, `ts_end` (UTC ISO 8601; instants have `ts_end = ts_start`).
+`run_id`, `store_id`, `camera_id`, `zone_id`, `ts_start`, `ts_end`. PostgreSQL stores the event times as TIMESTAMPTZ. API time windows use UTC ISO 8601 and instants have `ts_end = ts_start`.
 Zone and camera ids are the ones seeded in `store_core.py` (`z1`–`z6`, `c1`–`c3`). Indexed on `(store_id, zone_id, ts_start)`.
 
 - **Ingest a CV run** (idempotent on `run_id`):
   `python -m backend.events.ingest backend/output/run1/interaction --run-id run1 --camera c2 --zone z2 --start 2026-11-03T09:00:00+00:00`
-  (default DB `backend/events.sqlite3`, or `EVENTS_DB_PATH`).
+  (uses `DATABASE_URL`).
 - **Straight from the CLI**: add `--camera c2` (zone from the camera settings, or `--zone`), optionally `--start <UTC ISO>`
   (default: when processing starts, which is right for live runs) and `--run-id`. `POST /interaction/runs` and
   `POST /interaction/live` take an optional `"camera": "c2"` and pass it on.
 - **unattended_episodes** is derived, not detected: a customer whose wait from first sighting to their first confirmed
   interaction (or exit) is ≥ N s, N = settings `thresholds.unattendedWaitMinutes` × 60. `helped` says which ended it.
-- **Fixture day** for tools/agents/UI: `python -m backend.events.fixtures` → `backend/events/fixture.sqlite3`
-  (seeded, identical every run; not committed since `*.sqlite3` is ignored). 09:00–21:00 UTC, planted patterns:
+- **Fixture day** for tools/agents/UI: run `python -m backend.events.fixtures` with a disposable PostgreSQL database.
+  Seeded events cover 09:00–21:00 UTC with these planted patterns:
   17:00–19:00 rush, understaffed `z3`, camera `c2` blocked 14:00–14:40 (`pipeline_health.frozen_or_dark = 1`).
 - **Zones and dwell (B4.2)**: the camera's `--config` JSON may hold `floor_zones` (normalised polygons keyed by store
   `zone_id`), `zone_hold_seconds` (1.0) and `heatmap_grid` ([32, 18]). A track's foot point picks its zone (outside every
@@ -202,7 +204,7 @@ request = FootfallRequest(window={"start": "2026-11-03T14:00:00+05:00",
                                   "end": "2026-11-03T16:00:00+05:00"},
                           filters={"camera_id": "c1"}, granularity="hour")
 scope.validate_filters(request.filters)
-# tools: AnalyticsTools = <server-injected SQLiteAnalyticsTools reader, shown below>
+# tools: AnalyticsTools = <server-injected PostgresAnalyticsTools reader, shown below>
 # result = tools.get_footfall(scope=scope, request=request)
 ```
 
@@ -246,7 +248,7 @@ Fixture replay from the repository root, explicitly targeting an ignored disposa
 
 ```powershell
 New-Item -ItemType Directory -Force data/outputs/moiz-phase1 | Out-Null
-.venv/Scripts/python.exe -m backend.events.fixtures --db data/outputs/moiz-phase1/fixture.sqlite3
+.venv/Scripts/python.exe -m backend.events.fixtures
 ```
 
 This reuses Saqib's seeded `fixture-2026-11-03` / `store-1`, 09:00–21:00 UTC (rush 17:00–19:00, under-covered z3, blocked c2 14:00–14:40). Every consumer result must set `synthetic=true` for this store file; the schema itself has no synthetic column. A second-store collision case exists only in the new tests and does not replace his generator. Heatmaps remain image-grid counts; queue waits remain heuristics (length × mean interaction duration). No metric floor calibration, new CV models, account linkage, operating-hours policy or dispatch capability is introduced here.
@@ -255,15 +257,15 @@ Follow-on interfaces (`get_queue`, `get_alerts`, `get_pipeline_health`, legacy `
 
 ## Executable event readers (Moiz Phase 2)
 
-`backend.agents.tools.analytics.EventAnalytics(path, synthetic=..., contexts=...)` now implements `get_footfall`, `get_zone_dwell` and `get_interactions` against the existing SQLite event schema. Inputs/results reuse the Phase 1 types above. The SQLiteAnalyticsTools subclass adds unattended/coverage readers, and ScopedToolRegistry integrates all five below. Phase 1's SQL-free description is historical.
+`backend.agents.tools.analytics.EventAnalytics(dsn, synthetic=..., contexts=...)` now implements `get_footfall`, `get_zone_dwell` and `get_interactions` against the PostgreSQL event schema. Inputs/results reuse the Phase 1 types above. The PostgresAnalyticsTools subclass adds unattended/coverage readers, and ScopedToolRegistry integrates all five below. Phase 1's SQL-free description is historical.
 
 `backend.agents.tools.common.ObservationContext` is a trusted server-injected declaration of expected cameras per store/zone, with a context ID and optional shift/operating-window metadata. No request argument may redefine that declaration. Without expected-camera configuration and healthy observation over the full relevant interval, missing event counts return null instead of a proven zero. Health is camera-wide; its stored home-zone ID need not equal a mapped aisle zone, so only this validated camera mapping permits camera-wide health evidence. Camera/run allowlists and the store boundary still apply.
 
-The reader opens SQLite with URI `mode=ro`, `query_only=ON`, and a per-call snapshot; it never invokes the schema-initializing writer. Each source has a 100000-row safety budget; exceeding it returns unavailable rather than an inaccurate capped aggregate. Event selection uses an inclusive broad SQL time prefilter and exact timezone-aware Python boundaries, preserving sub-millisecond events. Result/evidence caps apply after aggregation. Aggregate-only interaction results are unaffected by the request row limit.
+The reader opens a PostgreSQL read-only repeatable-read transaction per tool call. Each source has a 100000-row safety budget; exceeding it returns unavailable rather than an inaccurate capped aggregate. Event selection uses PostgreSQL TIMESTAMPTZ comparisons and exact timezone-aware Python boundaries, preserving sub-millisecond events. Result/evidence caps apply after aggregation. Aggregate-only interaction results are unaffected by the request row limit.
 
 ### Contextual readers and trusted operating context
 
-`backend.agents.tools.contextual.SQLiteAnalyticsTools` extends `EventAnalytics` with `get_unattended` and `get_coverage`, completing the five callable implementations. It does not dispatch tasks or implement Ruhab's business agents.
+`backend.agents.tools.contextual.PostgresAnalyticsTools` extends `EventAnalytics` with `get_unattended` and `get_coverage`, completing the five callable implementations. It does not dispatch tasks or implement Ruhab's business agents.
 
 `ObservationContext.available_sources` must explicitly list enabled feeds among `footfall`, `zone_dwell`, `interactions`, `unattended_episodes`; its default is empty. Health alone does not prove a missing writer was enabled. The expected cameras and source declaration must cover the selected query scope, otherwise counts without rows remain null. This is trusted server/configuration input, not a manager/LLM-supplied declaration.
 
@@ -283,20 +285,20 @@ Runnable local example for **synthetic data only**, from the repository root (cr
 
 ```powershell
 New-Item -ItemType Directory -Force data/outputs/moiz-phase2 | Out-Null
-.venv/Scripts/python.exe -m backend.events.fixtures --db data/outputs/moiz-phase2/fixture.sqlite3
+.venv/Scripts/python.exe -m backend.events.fixtures
 ```
 
 ```python
 from backend.agents.contracts import TrustedAccessScope
 from backend.agents.tools.common import ObservationContext
-from backend.agents.tools.contextual import SQLiteAnalyticsTools
+from backend.agents.tools.contextual import PostgresAnalyticsTools
 from backend.agents.tools.registry import ScopedToolRegistry
 
 # A trusted server adapter must supply these in the actual application.
 # This local synthetic example is not a production login/store policy.
 context = ObservationContext(context_id="synthetic-entrance-config", store_id="store-1",
     zone_id="z1", camera_ids=("c1",), available_sources=("footfall",))
-tools = SQLiteAnalyticsTools("data/outputs/moiz-phase2/fixture.sqlite3", synthetic=True,
+tools = PostgresAnalyticsTools(synthetic=True,
                             contexts=(context,))
 registry = ScopedToolRegistry(tools, TrustedAccessScope(actor_id="local-synthetic-manager",
     store_id="store-1", role="manager", allowed_camera_ids=("c1",), allowed_zone_ids=("z1",)))
@@ -358,7 +360,7 @@ Generate a disposable synthetic store, leaving live/event databases untouched:
 
 ```powershell
 New-Item -ItemType Directory -Force data/outputs/moiz-phase3 | Out-Null
-.venv/Scripts/python.exe -m backend.events.fixtures --db data/outputs/moiz-phase3/fixture.sqlite3
+.venv/Scripts/python.exe -m backend.events.fixtures
 ```
 
 ```python
@@ -366,15 +368,14 @@ from backend.agents.contracts import EventFilters, TrustedAccessScope
 from backend.agents.graph_contracts import AskRequest
 from backend.agents.service import AnalyticsService
 from backend.agents.tools.common import ObservationContext
-from backend.agents.tools.contextual import SQLiteAnalyticsTools
+from backend.agents.tools.contextual import PostgresAnalyticsTools
 
 # Explicit local synthetic context; production scope/configuration requires real binding.
 scope = TrustedAccessScope(actor_id="synthetic-manager", store_id="store-1", role="manager",
                            allowed_camera_ids=("c1",), allowed_zone_ids=("z1",))
 observation = ObservationContext(context_id="synthetic-entrance", store_id="store-1",
     zone_id="z1", camera_ids=("c1",), available_sources=("footfall", "zone_dwell"))
-service = AnalyticsService(SQLiteAnalyticsTools("data/outputs/moiz-phase3/fixture.sqlite3",
-                           synthetic=True, contexts=(observation,)))
+service = AnalyticsService(PostgresAnalyticsTools(synthetic=True, contexts=(observation,)))
 request = AskRequest(question="Show customer footfall", filters=EventFilters(zone_id="z1"),
     window={"start":"2026-11-03T09:00:00Z", "end":"2026-11-03T10:00:00Z"})
 run = service.ask(request, scope=scope)
@@ -464,7 +465,7 @@ Use a fresh ignored base directory for another run. For the executable example b
 
 ```powershell
 New-Item -ItemType Directory -Force data/outputs/moiz-phase4 | Out-Null
-.venv/Scripts/python.exe -m backend.events.fixtures --db data/outputs/moiz-phase4/fixture.sqlite3
+.venv/Scripts/python.exe -m backend.events.fixtures
 ```
 
 ```python
@@ -473,7 +474,7 @@ from backend.agents.contracts import (CoverageRequest, EventFilters, TimeWindow,
 from backend.agents.operational import (DispatchOutcome, OperationalDispatchAdapter,
     OperationalEvent, OperationalEvidence, SignalEvidence, TrustedOperationalScope)
 from backend.agents.tools.common import ObservationContext
-from backend.agents.tools.contextual import SQLiteAnalyticsTools
+from backend.agents.tools.contextual import PostgresAnalyticsTools
 
 # Synthetic read-only source selection, not real producer authentication or business policy.
 window = TimeWindow(start="2026-11-03T09:00:00Z", end="2026-11-03T21:00:00Z")
@@ -481,7 +482,7 @@ reader_scope = TrustedAccessScope(actor_id="synthetic-reader", store_id="store-1
     allowed_run_ids=("fixture-2026-11-03",), allowed_camera_ids=("c2",), allowed_zone_ids=("z3",))
 layout = ObservationContext(context_id="synthetic-z3", store_id="store-1", zone_id="z3",
     camera_ids=("c2",), available_sources=("unattended_episodes", "zone_dwell"))
-reader = SQLiteAnalyticsTools("data/outputs/moiz-phase4/fixture.sqlite3", synthetic=True, contexts=(layout,))
+reader = PostgresAnalyticsTools(synthetic=True, contexts=(layout,))
 filters = EventFilters(run_id="fixture-2026-11-03", camera_id="c2", zone_id="z3")
 demand = reader.get_unattended(scope=reader_scope,
     request=UnattendedRequest(window=window, filters=filters, limit=1))

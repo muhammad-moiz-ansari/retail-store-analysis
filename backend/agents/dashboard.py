@@ -1,6 +1,5 @@
 """Read-only dashboard adapter over the existing five tools; no ingestion/business policy."""
 from datetime import datetime, timedelta, timezone
-from pathlib import Path
 from typing import Literal
 
 from pydantic import Field, model_validator
@@ -8,7 +7,7 @@ from pydantic import Field, model_validator
 from .contracts import (Contract, CountMetric, EventFilters, Evidence, Identifier, Metric,
                         TimeWindow, TrustedAccessScope)
 from .tools.common import ObservationContext
-from .tools.contextual import SQLiteAnalyticsTools
+from .tools.contextual import PostgresAnalyticsTools
 from .tools.registry import ScopedToolRegistry
 
 
@@ -58,7 +57,6 @@ class DashboardMembership(Contract):
 
 class DashboardConfig(Contract):
     version: Literal[1]
-    event_db: Path
     synthetic: bool = Field(strict=True)  # Operator attests provenance of every allowed run.
     memberships: tuple[DashboardMembership, ...] = Field(min_length=1, max_length=1000)
     contexts: tuple[ObservationContext, ...] = Field(default=(), max_length=1000)
@@ -122,7 +120,7 @@ def footfall_total(result, field):
 
 def dashboard_snapshot(config, membership, request, *, now=None):
     membership.authorize(request)
-    registry = ScopedToolRegistry(SQLiteAnalyticsTools(config.event_db, synthetic=config.synthetic, contexts=config.contexts), membership.scope())
+    registry = ScopedToolRegistry(PostgresAnalyticsTools(synthetic=config.synthetic, contexts=config.contexts), membership.scope())
     args = dict(window=request.window.model_dump(mode='json'), filters=request.filters.event_filters().model_dump(exclude_none=True), limit=1000)
     footfall = registry.invoke('get_footfall', args | {'granularity': 'day'})
     interactions = registry.invoke('get_interactions', args)

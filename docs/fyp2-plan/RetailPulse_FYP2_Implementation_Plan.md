@@ -1,5 +1,7 @@
 # RetailPulse FYP-2 — combined implementation plan
 
+**Database decision (11 November 2026):** PostgreSQL is the shared runtime database for application, event and identity data. Follow [setup and legacy import](POSTGRESQL_SETUP.md) for the destination cutover. Earlier phase notes describe their checkpoint.
+
 Updated 11 November 2026. This is the current team plan, reconciling Saqib's 10 November status snapshot, the agreed member allocation, the current checkout and the user's four live-category decision. Its tracked copy lives in docs/fyp2-plan/; local extra-docs copies are ignored and must not be the only teammate reference.
 
 ## Priority and source reconciliation

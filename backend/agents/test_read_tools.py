@@ -1,7 +1,8 @@
 """Hand-calculated SQL-reader checks; Saqib's schema is reused only for setup."""
 from datetime import datetime, timedelta, timezone
-import hashlib
-import sqlite3
+from psycopg.errors import ReadOnlySqlTransaction
+from backend.database import read_only
+from psycopg import sql
 
 import pytest
 
@@ -27,18 +28,16 @@ def event(key, start=0, end=None, **kwargs):
 
 
 @pytest.fixture
-def database(tmp_path):
-    path = tmp_path/'events.sqlite3'
+def database(postgres_dsn):
+    path = postgres_dsn
     with connect(path) as conn:
         insert(conn, 'pipeline_health', [event('h1', 0, 600, fps=10, id_churn=0, frozen_or_dark=0)])
-    conn.close()
     return path
 
 
 def put(path, table, rows):
     with connect(path) as conn:
         insert(conn, table, rows)
-    conn.close()
 
 
 def reader(path, contexts=None):
@@ -84,13 +83,13 @@ def test_scope_allows_only_store_run_camera_zone_even_without_filters(database):
 def test_missing_observation_is_null_and_missing_table_is_unavailable(database):
     result = reader(database, contexts=()).get_footfall(scope=scope(), request=FootfallRequest(window=WINDOW))
     assert result.status == 'partial' and result.buckets[0].entries.value is None
-    with sqlite3.connect(database) as conn:
+    with connect(database) as conn:
         conn.execute('DROP TABLE footfall')
     result = reader(database).get_footfall(scope=scope(), request=FootfallRequest(window=WINDOW))
     assert result.status == 'unavailable' and not result.buckets
-    missing = database.parent/'does-not-exist.sqlite3'
+    from psycopg.conninfo import make_conninfo
+    missing = make_conninfo(database, options='-csearch_path=retailpulse_missing')
     assert reader(missing).get_footfall(scope=scope(), request=FootfallRequest(window=WINDOW)).status == 'unavailable'
-    assert not missing.exists()
 
 
 def test_clipped_dwell_linear_quantiles_and_role_separation(database):
@@ -128,19 +127,19 @@ def test_interactions_use_confirmed_and_scoped_first_track_reference(database):
 
 def test_missing_tracks_preserves_counts_but_not_approach(database):
     put(database, 'interactions', [event('i1', 60, 120, employee_track_id=2, customer_track_id=1, duration_s=60, verdict='interaction')])
-    with sqlite3.connect(database) as conn:
+    with connect(database) as conn:
         conn.execute('DROP TABLE tracks')
     result = reader(database).get_interactions(scope=scope(), request=InteractionsRequest(window=WINDOW))
     assert result.status == 'partial' and result.confirmed_count.value == 1 and result.mean_approach.value is None
 
 
 def test_read_only_snapshot_does_not_change_database(database):
-    before = hashlib.sha256(database.read_bytes()).hexdigest(), database.stat().st_mtime_ns
+    before = fingerprint(database)
     with read_session(database) as session:
-        with pytest.raises(sqlite3.OperationalError):
+        with pytest.raises(ReadOnlySqlTransaction):
             session.conn.execute('DELETE FROM footfall')
     reader(database).get_footfall(scope=scope(), request=FootfallRequest(window=WINDOW))
-    assert (hashlib.sha256(database.read_bytes()).hexdigest(), database.stat().st_mtime_ns) == before
+    assert (fingerprint(database)) == before
 
 
 def test_bucket_and_evidence_caps_do_not_change_aggregates(database):
@@ -150,3 +149,10 @@ def test_bucket_and_evidence_caps_do_not_change_aggregates(database):
     assert result.buckets[0].entries.value == 205
     citation = result.buckets[0].entries.evidence[0]
     assert citation.matched_count == 205 and len(citation.ids) == 200 and citation.truncated
+
+def fingerprint(dsn, tables=()):
+    from backend.events.ingest import TABLES
+    with read_only(dsn) as conn:
+        return tuple(conn.execute(sql.SQL(
+            "SELECT md5(coalesce(string_agg(to_jsonb(t)::text, ',' ORDER BY to_jsonb(t)::text), '')) AS digest FROM {} t"
+        ).format(sql.Identifier(table))).fetchone()["digest"] for table in (tables or TABLES))
