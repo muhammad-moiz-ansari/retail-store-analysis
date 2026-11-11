@@ -1,6 +1,5 @@
-import tempfile
 import unittest
-from pathlib import Path
+import pytest
 
 from .identity import IdentityRegistry
 from .schemas import CameraConfig, CustomerEntryRule
@@ -8,13 +7,10 @@ from .storage import Store
 
 
 class IdentityRegistryTests(unittest.TestCase):
-    def setUp(self):
-        self.temp = tempfile.TemporaryDirectory()
-        self.db_path = Path(self.temp.name) / "identity.sqlite3"
-        self.registry = IdentityRegistry(Store(self.db_path))
-
-    def tearDown(self):
-        self.temp.cleanup()
+    @pytest.fixture(autouse=True)
+    def registry_fixture(self, postgres_dsn):
+        self.dsn = postgres_dsn
+        self.registry = IdentityRegistry(Store(postgres_dsn))
 
     def test_unknown_employee_registration_and_confirmed_reid_preserve_role(self):
         first = self.registry.resolve_track("store", "session", "cam1", "7")
@@ -29,7 +25,7 @@ class IdentityRegistryTests(unittest.TestCase):
         self.assertEqual(linked["global_person_id"], employee["global_person_id"])
         self.assertEqual(linked["role"], "employee")
 
-        reopened = IdentityRegistry(Store(self.db_path))
+        reopened = IdentityRegistry(Store(self.dsn))
         persisted = reopened.resolve_track("store", "session", "cam2", "22")
         self.assertEqual(persisted["global_person_id"], employee["global_person_id"])
         self.assertEqual(persisted["role"], "employee")

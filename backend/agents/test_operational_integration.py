@@ -1,5 +1,4 @@
 """Fake operational replay and manager-query isolation; never call a real writer."""
-import hashlib
 
 import pytest
 from pydantic import ValidationError
@@ -13,10 +12,10 @@ from .operational import (OperationalDispatchAdapter, OperationalEvent, Operatio
 from .service import AnalyticsService
 from .specialists import ALLOWED_TOOLS, SpecialistRegistration
 from .test_operational import event, operational_scope, outcome, no_network
-from .test_read_tools import WINDOW, database, scope
+from .test_read_tools import fingerprint, WINDOW, database, scope
 from .test_tool_integration import make_tools
 from .tools.common import ObservationContext
-from .tools.contextual import SQLiteAnalyticsTools
+from .tools.contextual import PostgresAnalyticsTools
 from .tools.registry import ScopedToolRegistry
 
 
@@ -80,20 +79,20 @@ def test_quality_limitations_reach_handler_without_a_new_local_policy():
     assert receipt.handler_invoked and receipt.synthetic
 
 
-def test_seeded_operational_replay(tmp_path):
+def test_seeded_operational_replay(postgres_dsn):
     """Real fixture/readers + deliberately staged event + fake callback, not a policy test."""
-    path = tmp_path/'synthetic-operational.sqlite3'
+    path = postgres_dsn
     with connect(path) as conn:
         generate(conn)
         assert validate(conn) == []
     conn.close()
-    before = hashlib.sha256(path.read_bytes()).hexdigest()
+    before = fingerprint(path)
     window = TimeWindow(start='2026-11-03T09:00:00Z',end='2026-11-03T21:00:00Z')
     access = TrustedAccessScope(actor_id='synthetic-manager',store_id='store-1',role='manager',
                                 allowed_run_ids=(RUN_ID,),allowed_camera_ids=('c2',),allowed_zone_ids=('z3',))
     observation = ObservationContext(context_id='synthetic-z3',store_id='store-1',zone_id='z3',camera_ids=('c2',),
                                      available_sources=('unattended_episodes','zone_dwell'))
-    tools = SQLiteAnalyticsTools(path,synthetic=True,contexts=(observation,))
+    tools = PostgresAnalyticsTools(path,synthetic=True,contexts=(observation,))
     filters = EventFilters(run_id=RUN_ID,camera_id='c2',zone_id='z3')
     demand = tools.get_unattended(scope=access,request=UnattendedRequest(window=window,filters=filters,limit=1))
     coverage = tools.get_coverage(scope=access,request=CoverageRequest(window=window,filters=filters))
@@ -117,4 +116,4 @@ def test_seeded_operational_replay(tmp_path):
     assert all(r.synthetic and r.handler_invoked for r in receipts)
     assert any('does not filter' in note for note in staged.evidence.demand.limitations)
     assert coverage.zones[0].unknown_observation.value == 2400
-    assert hashlib.sha256(path.read_bytes()).hexdigest() == before
+    assert fingerprint(path) == before

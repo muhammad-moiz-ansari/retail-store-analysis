@@ -1,19 +1,19 @@
 from datetime import timedelta
-import sqlite3
+from backend.database import connect
 
 import pytest
 
 from .contracts import CoverageRequest, TimeWindow, UnattendedRequest
 from .test_read_tools import START, WINDOW, database, event, put, scope
 from .tools.common import ObservationContext
-from .tools.contextual import SQLiteAnalyticsTools
+from .tools.contextual import PostgresAnalyticsTools
 
 
 def tools(path, *, cameras=('c1',), windows=(), shift=None, zone='z1'):
     context = ObservationContext(context_id='synthetic-operating-policy', store_id='store-1', zone_id=zone,
                                  camera_ids=cameras, operating_windows=windows, shift=shift,
                                  available_sources=('footfall', 'zone_dwell', 'interactions', 'unattended_episodes'))
-    return SQLiteAnalyticsTools(path, synthetic=True, contexts=(context,))
+    return PostgresAnalyticsTools(path, synthetic=True, contexts=(context,))
 
 
 def test_unattended_threshold_uses_stored_wait_and_clips_output(database):
@@ -88,7 +88,7 @@ def test_camera_wide_health_can_support_authorized_non_home_zone(database):
 
 @pytest.mark.parametrize('table', ['pipeline_health', 'zone_dwell', 'unattended_episodes'])
 def test_contextual_missing_sources_preserve_unavailability(database, table):
-    with sqlite3.connect(database) as conn:
+    with connect(database) as conn:
         conn.execute(f'DROP TABLE {table}')  # fixed test setup, not a public SQL tool
     if table == 'unattended_episodes':
         result = tools(database).get_unattended(scope=scope(), request=UnattendedRequest(window=WINDOW))

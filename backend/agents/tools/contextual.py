@@ -7,7 +7,7 @@ from .common import clipped, count, evidence, health, intersect, merge, metric, 
 from .store import SourceUnavailable, read_session
 
 
-class SQLiteAnalyticsTools(EventAnalytics):
+class PostgresAnalyticsTools(EventAnalytics):
     """All five analytics interfaces; DB path and observation context are server-injected."""
 
     def get_unattended(self, *, scope: TrustedAccessScope, request: UnattendedRequest) -> UnattendedResult:
@@ -15,7 +15,7 @@ class SQLiteAnalyticsTools(EventAnalytics):
         name = 'get_unattended'
         provenance = ("Stored unattended derivation does not filter interaction verdict; helped is not confirmed assistance",)
         try:
-            with read_session(self.path) as session:
+            with read_session(self.dsn) as session:
                 rows = session.rows('unattended_episodes', scope, request.filters, request.window)
                 rows = [r for r in rows if r['waited_s'] >= request.min_seconds and clipped([r], request.window)]
                 if any(r['helped'] not in (0, 1) for r in rows):
@@ -40,7 +40,7 @@ class SQLiteAnalyticsTools(EventAnalytics):
         name = 'get_coverage'
         base = ("Coverage is healthy observed employee-presence union, not roster availability or employee-seconds",)
         try:
-            with read_session(self.path) as session:
+            with read_session(self.dsn) as session:
                 rows = session.rows('zone_dwell', scope, request.filters, request.window)
                 contexts = [c for c in self.contexts if c.store_id == scope.store_id and c.shift == request.shift
                             and (scope.allowed_zone_ids is None or c.zone_id in scope.allowed_zone_ids)

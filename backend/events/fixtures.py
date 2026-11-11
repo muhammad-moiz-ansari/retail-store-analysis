@@ -6,7 +6,7 @@ Planted patterns for the agents to find:
 - z3 (Aisle 2 - Beverages) is understaffed: its employee only drops by, so its customers wait unattended;
 - c2 (aisle camera) is blocked 14:00-14:40: frozen_or_dark = 1 and no detections, so the aisles look empty.
 
-python -m backend.events.fixtures [--db backend/events/fixture.sqlite3]
+python -m backend.events.fixtures
 """
 
 from __future__ import annotations
@@ -15,7 +15,6 @@ import argparse
 import json
 import random
 from datetime import datetime, timedelta, timezone
-from pathlib import Path
 
 from .ingest import connect, delete_run, derive_unattended, insert, validate
 
@@ -28,7 +27,6 @@ CAMERA_OF = {"z1": "c1", "z5": "c1", "z2": "c2", "z3": "c2", "z4": "c2", "z6": "
 STAFF = {"z1": 1, "z2": 1, "z4": 1, "z6": 2}  # z3 has none on its own; z5 (promo) needs none
 RUSH = (17 * 60 - 9 * 60, 19 * 60 - 9 * 60)  # minutes after opening
 BLOCKED = ("c2", 5 * 60, 5 * 60 + 40)  # camera, from, to (minutes after opening)
-DEFAULT_DB = Path(__file__).with_name("fixture.sqlite3")
 
 
 def generate(conn, seed: int = 7, unattended_after_s: float = 180.0) -> dict:
@@ -121,7 +119,7 @@ def generate(conn, seed: int = 7, unattended_after_s: float = 180.0) -> dict:
                                      "zone_id": HOME_ZONE[camera], "ts_start": at(hour * 60),
                                      "ts_end": at(hour * 60 + 60), "cols": 32, "rows": 18, "cells": json.dumps(cells)})
 
-    with conn:
+    with conn.transaction():
         delete_run(conn, RUN_ID)
         for table, table_rows in rows.items():
             insert(conn, table, table_rows)
@@ -131,13 +129,12 @@ def generate(conn, seed: int = 7, unattended_after_s: float = 180.0) -> dict:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Write the synthetic schema v1 fixture day.")
-    parser.add_argument("--db", type=Path, default=DEFAULT_DB)
     parser.add_argument("--seed", type=int, default=7)
     args = parser.parse_args()
-    with connect(args.db) as conn:
+    with connect() as conn:
         counts = generate(conn, args.seed)
         problems = validate(conn)
-    print(f"{args.db}: {counts}")
+    print(f"Fixture counts: {counts}")
     if problems:
         raise SystemExit("\n".join(problems))
 

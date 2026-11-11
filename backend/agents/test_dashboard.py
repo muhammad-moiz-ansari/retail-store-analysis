@@ -1,7 +1,7 @@
 """Offline HTTP identity/configuration and real-reader integration, no production data."""
-import hashlib
 import json
-import sqlite3
+from backend.database import connect
+from backend.events.ingest import TABLES
 
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
@@ -9,29 +9,31 @@ import pytest
 
 from .dashboard import footfall_total
 from .dashboard_api import router
-from .test_read_tools import WINDOW, database, event, put
+from .test_read_tools import WINDOW, database, event, fingerprint, put
 from .contracts import CountMetric, Evidence, FootfallBucket, FootfallResult
 
 
 @pytest.fixture
 def setup(database, tmp_path, monkeypatch):
-    users = tmp_path/'users.sqlite3'
-    conn = sqlite3.connect(users)
-    conn.execute('CREATE TABLE users(id TEXT, role TEXT, email TEXT, active INTEGER)')
-    conn.executemany('INSERT INTO users VALUES(?,?,?,?)', [
-        ('manager-1', 'Manager', 'manager@test.invalid', 1), ('employee-1', 'Employee', 'employee@test.invalid', 1),
-        ('inactive', 'Manager', 'inactive@test.invalid', 0), ('no-membership', 'Manager', 'unbound@test.invalid', 1)])
-    conn.commit()
-    conn.close()
+    users = database
+    with connect(users) as conn:
+        conn.cursor().executemany(
+            """INSERT INTO users(id, name, role, email, active, password_hash, created_at, updated_at)
+               VALUES (%s, '', %s, %s, %s, '', '', '')""",
+            [('manager-1', 'Manager', 'manager@test.invalid', 1),
+             ('employee-1', 'Employee', 'employee@test.invalid', 1),
+             ('inactive', 'Manager', 'inactive@test.invalid', 0),
+             ('no-membership', 'Manager', 'unbound@test.invalid', 1)],
+        )
     request = dict(storeId='store-1', window=WINDOW.model_dump(mode='json'), filters=dict(zoneId='z1'))
-    config = dict(version=1, event_db=database.name, synthetic=True, memberships=[dict(
+    config = dict(version=1, synthetic=True, memberships=[dict(
         user_id='manager-1', store_id='store-1', run_ids=['r1'], camera_ids=['c1'], zone_ids=['z1'], default_request=request)],
         contexts=[dict(context_id='test-observation', store_id='store-1', zone_id='z1', camera_ids=['c1'],
                        available_sources=['footfall', 'zone_dwell', 'interactions', 'unattended_episodes'],
                        operating_windows=[WINDOW.model_dump(mode='json')])])
     config_path = tmp_path/'analytics.json'
     config_path.write_text(json.dumps(config), encoding='utf-8')
-    monkeypatch.setenv('RETAILPULSE_DB_PATH', str(users))
+    monkeypatch.setenv('DATABASE_URL', database)
     monkeypatch.setenv('RETAILPULSE_ANALYTICS_CONFIG', str(config_path))
     monkeypatch.setenv('RETAILPULSE_INTERNAL_SECRET', 'isolated-test-secret')
     app = FastAPI()
@@ -56,17 +58,15 @@ def test_identity_cannot_be_overridden_by_browser_role_or_unknown_account(setup)
 
 def test_missing_config_identity_db_or_explicit_secret_is_unavailable_without_writes(setup, monkeypatch, tmp_path):
     client, headers, request, database, users, config_path, _ = setup
-    before = users.read_bytes(), database.read_bytes()
+    before = fingerprint(database, (*TABLES, 'users'))
     monkeypatch.delenv('RETAILPULSE_ANALYTICS_CONFIG')
     assert client.post('/analytics/dashboard', headers=headers, json=request).status_code == 503
     monkeypatch.setenv('RETAILPULSE_ANALYTICS_CONFIG', str(config_path))
-    missing = tmp_path/'absent.sqlite3'
-    monkeypatch.setenv('RETAILPULSE_DB_PATH', str(missing))
+    monkeypatch.delenv('DATABASE_URL')
     assert client.get('/analytics/dashboard/context', headers=headers).status_code == 503
-    assert not missing.exists()
     monkeypatch.delenv('RETAILPULSE_INTERNAL_SECRET')
     assert client.get('/analytics/dashboard/context', headers=headers).status_code == 503
-    assert (users.read_bytes(), database.read_bytes()) == before
+    assert fingerprint(database, (*TABLES, 'users')) == before
 
 
 def test_authorized_context_exposes_selection_without_paths_or_other_memberships(setup):
@@ -100,7 +100,7 @@ def test_real_readers_map_hand_calculated_values_and_preserve_provenance_read_on
     put(database, 'zone_dwell', [event('d1', 0, 300, role='employee', track_id=1, dwell_s=300),
                                event('d2', 0, 200, role='customer', track_id=2, dwell_s=200)])
     put(database, 'unattended_episodes', [event('u1', 0, 400, customer_track_id=2, waited_s=400, helped=0)])
-    before = tuple(hashlib.sha256(p.read_bytes()).hexdigest() for p in (database, users))
+    before = fingerprint(database, (*TABLES, 'users'))
     response = client.post('/analytics/dashboard', headers=headers, json=request)
     assert response.status_code == 200 and response.headers['cache-control'] == 'no-store'
     data = response.json()
@@ -112,21 +112,21 @@ def test_real_readers_map_hand_calculated_values_and_preserve_provenance_read_on
     assert data['metrics']['exits']['evidence'][0]['source'] == 'pipeline_health'
     assert data['metrics']['unattendedEpisodes']['status'] == 'partial'
     assert 'does not filter' in json.dumps(data['metrics']['unattendedEpisodes']['limitations']).lower()
-    assert tuple(hashlib.sha256(p.read_bytes()).hexdigest() for p in (database, users)) == before
+    assert fingerprint(database, (*TABLES, 'users')) == before
 
 
 def test_missing_health_and_database_do_not_become_empty(setup):
     client, headers, request, database, _, config_path, config = setup
-    with sqlite3.connect(database) as conn:
+    with connect(database) as conn:
         conn.execute('DELETE FROM pipeline_health')
     response = client.post('/analytics/dashboard', headers=headers, json=request).json()
     assert response['metrics']['entries']['value'] is None
     assert response['metrics']['staffedOpenRatio']['value'] is None
-    config['event_db'] = 'absent-events.sqlite3'
-    config_path.write_text(json.dumps(config), encoding='utf-8')
+    with connect(database) as conn:
+        for table in TABLES:
+            conn.execute(f'DROP TABLE {table}')
     response = client.post('/analytics/dashboard', headers=headers, json=request).json()
     assert all(metric['value'] is None for metric in response['metrics'].values())
-    assert not (config_path.parent/'absent-events.sqlite3').exists()
 
 
 def test_invalid_or_ambiguous_config_fails_closed(setup):

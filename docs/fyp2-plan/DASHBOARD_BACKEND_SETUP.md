@@ -1,6 +1,6 @@
 # Configured dashboard backend
 
-M-UI-P3 connects the dashboard provider to existing SQLite analytics tools. It does not generate CV data, implement Ruhab's business agents, register a map or expose the query graph/dispatch capability. The browser now starts in Configured backend mode. Synthetic fixture preview remains an explicit selection; a backend failure never selects it automatically.
+M-UI-P3 connects the dashboard provider to existing PostgreSQL analytics tools. It does not generate CV data, implement Ruhab's business agents, register a map or expose the query graph/dispatch capability. The browser now starts in Configured backend mode. Synthetic fixture preview remains an explicit selection; a backend failure never selects it automatically.
 
 ## Server identity and configuration
 
@@ -13,7 +13,7 @@ Set these variables in the appropriate server environments, then restart both se
 | POS_SESSION_SECRET (or NEXTAUTH_SECRET) | Next.js only | Explicit signed-cookie secret; the built-in local fallback is not accepted for analytics |
 | RETAILPULSE_INTERNAL_SECRET | Both servers | Same explicit service credential; the built-in local fallback is not accepted for analytics |
 | RETAILPULSE_SERVICE_URL | Next.js | Reachable Python backend URL; localhost only works when the backend runs on the same host |
-| RETAILPULSE_DB_PATH | Python | Existing application users/settings SQLite DB, used for active-account checks |
+| DATABASE_URL | Python | Shared PostgreSQL database for application, event and identity records |
 | RETAILPULSE_ANALYTICS_CONFIG | Python | Path to the operator-owned JSON configuration below |
 
 Use the actual session variable name above; POS_AUTH_SECRET is not read by the current session implementation. Next.js reads its normal environment configuration; the standalone Python backend needs exported variables too. No NEXT_PUBLIC secret or database path is needed. Existing application login/bootstrap behavior is unchanged. Dashboard reads never initialize either database. Keep machine-specific runtime configuration out of Git (local demo files can live under ignored data/outputs/).
@@ -23,7 +23,6 @@ Example **template**, requiring real identifiers/window/context from Saqib and t
 ```json
 {
   "version": 1,
-  "event_db": "events.sqlite3",
   "synthetic": true,
   "memberships": [{
     "user_id": "replace-existing-manager-id",
@@ -48,7 +47,7 @@ Example **template**, requiring real identifiers/window/context from Saqib and t
 }
 ```
 
-event_db is absolute or relative to the JSON file's directory. Explicit nonempty run/camera/region allowlists are required; the default request must be inside them. A region ID is a stable location/scope identifier, not one of the four changing occupancy categories. No fixed-category/map schema is introduced. Duplicate manager memberships or duplicate store/region/shift contexts are rejected. Unknown configuration keys are rejected; file size is capped at 256 KiB.
+Configure the PostgreSQL connection as described in [PostgreSQL setup](POSTGRESQL_SETUP.md). Explicit nonempty run/camera/region allowlists are required; the default request must be inside them. A region ID is a stable location/scope identifier, not one of the four changing occupancy categories. No fixed-category/map schema is introduced. Duplicate manager memberships or duplicate store/region/shift contexts are rejected. Unknown configuration keys are rejected; file size is capped at 256 KiB.
 
 `synthetic` must explicitly attest the provenance of **every allowed run**. Keep true for the canonical generated fixtures. Only set false for verified real event data; the database schema has no intrinsic synthetic marker, so the adapter cannot discover that claim. Do not mix synthetic and real runs under one provenance setting. Backend synthetic results retain mode=backend and synthetic=true, visibly distinct from hand-authored frontend preview scenarios.
 
@@ -70,4 +69,4 @@ Moiz's provider/API integration is implemented and tested with disposable accoun
 
 Start the existing backend with the variables above and `python -m uvicorn backend.app:app --host 127.0.0.1 --port 8011`, then the frontend with `npm run dev:frontend` from the repository root. Sign in with an existing Manager account and open `/dashboard`. Configured backend should display that manager's configured store/region/run/window and evidence. With no configuration, verify the unavailable message; choose Synthetic fixture preview only when intentionally demonstrating fixture states. Verify denied employee/unbound/cross-store requests and confirm real outputs against known event rows before claiming live acceptance.
 
-Reproducible automated commands and measured outcomes are in PROGRESS.md. The canonical generator remains `python -m backend.events.fixtures --db <ignored-output-path>`; do not replace it or present its generated events as a real video run.
+Reproducible automated commands and measured outcomes are in PROGRESS.md. With DATABASE_URL pointed at a disposable test database, use `python -m backend.events.fixtures`; do not replace it or present its generated events as a real video run.

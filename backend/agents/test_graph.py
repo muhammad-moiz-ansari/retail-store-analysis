@@ -171,7 +171,8 @@ def test_allowed_tools_and_request_window_filters_cannot_be_broadened(database):
         run_analytics(request(), registry(database), specialists={'customer_behavior':SpecialistRegistration(denied, frozenset(('dispatch',)))})
 
 
-def test_missing_sources_return_insufficient_or_unavailable_not_invented_metrics(tmp_path):
-    missing = tmp_path/'missing.sqlite3'
+def test_missing_sources_return_insufficient_or_unavailable_not_invented_metrics(postgres_dsn):
+    from psycopg.conninfo import make_conninfo
+    missing = make_conninfo(postgres_dsn, options='-csearch_path=retailpulse_missing')
     result = run_analytics(request(), registry(missing))
-    assert result.status == 'unavailable' and not result.claims and not missing.exists()
+    assert result.status == 'unavailable' and not result.claims

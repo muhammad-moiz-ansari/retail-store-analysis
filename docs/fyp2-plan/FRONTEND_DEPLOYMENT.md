@@ -2,6 +2,8 @@
 
 The package manifest and lockfile live at the **repository root**, while the Next.js app lives in `frontend/`. This is one root npm package, not an independently installable frontend package. Do not set Vercel's Root Directory to `frontend` with this layout.
 
+The Python backend uses [PostgreSQL](POSTGRESQL_SETUP.md). Set DATABASE_URL in the backend environment.
+
 ## Dashboard fixture preview — M-UI-P2
 
 The manager dashboard now defaults to Configured backend (M-UI-P3); synthetic preview remains an explicit choice. Backend analytics requires the server secrets/membership/source setup in [DASHBOARD_BACKEND_SETUP.md](DASHBOARD_BACKEND_SETUP.md). Missing configuration displays unavailable and never falls back to fixtures. System status is a separate backend request. No Vercel settings, real server configuration or secrets were changed by these phases; deploying frontend code alone does not connect cameras or real agents.

@@ -2,7 +2,7 @@
 import json
 import inspect
 import re
-import sqlite3
+from backend.database import read_only
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -144,8 +144,8 @@ def test_unavailable_result_shapes(result_type, extras):
     assert result_type.model_validate_json(result.model_dump_json()) == result
 
 
-def test_existing_fixture_and_test_only_second_store(tmp_path):
-    path = tmp_path / "synthetic.sqlite3"
+def test_existing_fixture_and_test_only_second_store(postgres_dsn):
+    path = postgres_dsn
     with connect(path) as conn:
         original_counts = generate(conn)
         assert validate(conn) == []
@@ -155,12 +155,12 @@ def test_existing_fixture_and_test_only_second_store(tmp_path):
         # generator and schema stay unchanged. This tests contract separation only.
         other = original | {"event_id": "synthetic:second-store", "store_id": "store-2"}
         columns = list(other)
-        conn.execute(f"INSERT INTO footfall ({','.join(columns)}) VALUES ({','.join('?' for _ in columns)})", tuple(other.values()))
+        conn.execute(f"INSERT INTO footfall ({','.join(columns)}) VALUES ({','.join('%s' for _ in columns)})", tuple(other.values()))
         conn.commit()
         assert validate(conn) == []
-    with sqlite3.connect(f"{path.as_uri()}?mode=ro", uri=True) as conn:
-        assert conn.execute("SELECT COUNT(*) FROM footfall WHERE store_id=?", ("store-1",)).fetchone()[0] == original_counts["footfall"]
-        assert conn.execute("SELECT COUNT(*) FROM footfall WHERE store_id=?", ("store-2",)).fetchone()[0] == 1
+    with read_only(path) as conn:
+        assert conn.execute("SELECT COUNT(*) FROM footfall WHERE store_id=%s", ("store-1",)).fetchone()["count"] == original_counts["footfall"]
+        assert conn.execute("SELECT COUNT(*) FROM footfall WHERE store_id=%s", ("store-2",)).fetchone()["count"] == 1
     assert scope().store_id != TrustedAccessScope(actor_id="manager-2", store_id="store-2", role="manager").store_id
     assert RUN_ID.startswith("fixture-")
 

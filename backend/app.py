@@ -6,7 +6,7 @@ import asyncio
 import json
 import os
 import re
-import sqlite3
+from psycopg import IntegrityError
 import subprocess
 import sys
 import uuid
@@ -85,7 +85,7 @@ def select_dispatch_employee(conn, target_zone_id: str | None):
         LEFT JOIN tasks ON tasks.employee_id = users.id AND tasks.state IN ('pending', 'delivered', 'acknowledged', 'in_progress')
         LEFT JOIN rosters ON rosters.user_id = users.id
         WHERE users.role = 'Employee' AND users.active = 1 AND tasks.id IS NULL AND coalesce(rosters.available, 1) = 1
-        ORDER BY CASE WHEN rosters.zone_id = ? THEN 0 ELSE 1 END, users.name
+        ORDER BY CASE WHEN rosters.zone_id = %s THEN 0 ELSE 1 END, users.name
         LIMIT 1
         """,
         (target_zone_id,),
@@ -107,12 +107,12 @@ def create_task_for_employee(
     conn.execute(
         """
         INSERT INTO tasks(id, employee_id, target_zone_id, source_zone_id, instruction, state, trigger_alert_id, evidence_json, created_at, updated_at, due_at)
-        VALUES (?, ?, ?, ?, ?, 'delivered', ?, ?, ?, ?, ?)
+        VALUES (%s, %s, %s, %s, %s, 'delivered', %s, %s, %s, %s, %s)
         """,
         (task_id, employee_id, target_zone_id, source_zone_id, instruction, alert_id, json.dumps(evidence), timestamp, timestamp, due_at),
     )
     conn.execute(
-        "INSERT INTO task_events(id, task_id, state, note, created_at) VALUES (?, ?, 'delivered', 'Automatic dispatch', ?)",
+        "INSERT INTO task_events(id, task_id, state, note, created_at) VALUES (%s, %s, 'delivered', 'Automatic dispatch', %s)",
         (uuid.uuid4().hex, task_id, timestamp),
     )
     return task_id
@@ -203,7 +203,7 @@ def event_args(body: dict) -> list[str]:
     if not camera:
         return []
     with connect() as conn:
-        known = conn.execute("SELECT 1 FROM cameras WHERE id = ? AND zone_id IS NOT NULL", (str(camera),)).fetchone()
+        known = conn.execute("SELECT 1 FROM cameras WHERE id = %s AND zone_id IS NOT NULL", (str(camera),)).fetchone()
     if not known:
         raise HTTPException(status_code=400, detail="camera must be a configured camera with a zone")
     return ["--camera", str(camera)]
@@ -343,7 +343,7 @@ def signup(body: dict) -> dict:
     with connect() as conn:
         try:
             return {"authenticated": True, "user": accept_invitation(conn, token, name, password)}
-        except (sqlite3.IntegrityError, ValueError) as exc:  # type: ignore[name-defined]
+        except (IntegrityError, ValueError) as exc:  # type: ignore[name-defined]
             raise HTTPException(status_code=400, detail=str(exc)) from None
 
 
@@ -361,7 +361,7 @@ def add_zone(body: dict) -> dict:
         conn.execute(
             """
             INSERT INTO zones(id, name, type, capacity, min_staff, created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
             """,
             (
                 zone_id,
@@ -385,9 +385,9 @@ def update_zone(zone_id: str, body: dict) -> dict:
             fields[column] = body[incoming]
     if not fields:
         raise HTTPException(status_code=400, detail="No zone fields supplied")
-    assignments = ", ".join(f"{field} = ?" for field in fields)
+    assignments = ", ".join(f"{field} = %s" for field in fields)
     with connect() as conn:
-        conn.execute(f"UPDATE zones SET {assignments}, updated_at = ? WHERE id = ?", (*fields.values(), now_iso(), zone_id))
+        conn.execute(f"UPDATE zones SET {assignments}, updated_at = %s WHERE id = %s", (*fields.values(), now_iso(), zone_id))
         conn.commit()
         return settings_snapshot(conn)
 
@@ -400,7 +400,7 @@ def add_camera(body: dict) -> dict:
         conn.execute(
             """
             INSERT INTO cameras(id, name, zone_id, role, source_type, source_url, online, created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?)
+            VALUES (%s, %s, %s, %s, %s, %s, 0, %s, %s)
             """,
             (
                 camera_id,
@@ -420,7 +420,7 @@ def add_camera(body: dict) -> dict:
 @app.delete("/settings/cameras/{camera_id}", dependencies=[Depends(require_manager)])
 def delete_camera(camera_id: str) -> dict:
     with connect() as conn:
-        conn.execute("DELETE FROM cameras WHERE id = ?", (camera_id,))
+        conn.execute("DELETE FROM cameras WHERE id = %s", (camera_id,))
         conn.commit()
         return settings_snapshot(conn)
 
@@ -436,9 +436,9 @@ def update_roster(roster_id: str, body: dict) -> dict:
         fields["available"] = 1 if body["available"] else 0
     if not fields:
         raise HTTPException(status_code=400, detail="No roster fields supplied")
-    assignments = ", ".join(f"{field} = ?" for field in fields)
+    assignments = ", ".join(f"{field} = %s" for field in fields)
     with connect() as conn:
-        conn.execute(f"UPDATE rosters SET {assignments}, updated_at = ? WHERE id = ?", (*fields.values(), now_iso(), roster_id))
+        conn.execute(f"UPDATE rosters SET {assignments}, updated_at = %s WHERE id = %s", (*fields.values(), now_iso(), roster_id))
         conn.commit()
         return settings_snapshot(conn)
 
@@ -454,7 +454,7 @@ def add_roster(body: dict) -> dict:
         conn.execute(
             """
             INSERT INTO rosters(id, user_id, zone_id, shift, available, created_at, updated_at)
-            VALUES (?, ?, ?, ?, 1, ?, ?)
+            VALUES (%s, %s, %s, %s, 1, %s, %s)
             """,
             (roster_id, employee["id"], body.get("zoneId") or None, str(body.get("shift") or ""), timestamp, timestamp),
         )
@@ -497,19 +497,19 @@ def update_account(user_id: str, body: dict) -> dict:
     with connect() as conn:
         if "active" not in body:
             raise HTTPException(status_code=400, detail="Only active status can be updated here")
-        conn.execute("UPDATE users SET active = ?, updated_at = ? WHERE id = ?", (1 if body["active"] else 0, now_iso(), user_id))
+        conn.execute("UPDATE users SET active = %s, updated_at = %s WHERE id = %s", (1 if body["active"] else 0, now_iso(), user_id))
         conn.commit()
         return settings_snapshot(conn)
 
 
 @app.get("/alerts", dependencies=[Depends(require_manager)])
 def list_alerts(status: str = Query(default="all")) -> dict:
-    where = "" if status == "all" else "WHERE status = ?"
+    where = "" if status == "all" else "WHERE status = %s"
     params = () if status == "all" else (status,)
     with connect() as conn:
         rows = conn.execute(
             f"""
-            SELECT alerts.*, users.name AS resolvedBy
+            SELECT alerts.*, users.name AS "resolvedBy"
             FROM alerts
             LEFT JOIN users ON users.id = alerts.resolved_by
             {where}
@@ -530,7 +530,7 @@ def list_alerts(status: str = Query(default="all")) -> dict:
 def resolve_alert(alert_id: str, current: Annotated[dict[str, str | None], Depends(actor)]) -> dict:
     with connect() as conn:
         conn.execute(
-            "UPDATE alerts SET status = 'resolved', resolved_at = ?, resolved_by = ? WHERE id = ?",
+            "UPDATE alerts SET status = 'resolved', resolved_at = %s, resolved_by = %s WHERE id = %s",
             (now_iso(), current.get("user_id"), alert_id),
         )
         conn.commit()
@@ -544,7 +544,7 @@ def my_tasks(current: Annotated[dict[str, str | None], Depends(actor)]) -> dict:
         if current.get("role") == "Manager":
             rows = conn.execute("SELECT * FROM tasks ORDER BY created_at DESC LIMIT 100").fetchall()
         else:
-            rows = conn.execute("SELECT * FROM tasks WHERE employee_id = ? ORDER BY created_at DESC LIMIT 50", (user_id,)).fetchall()
+            rows = conn.execute("SELECT * FROM tasks WHERE employee_id = %s ORDER BY created_at DESC LIMIT 50", (user_id,)).fetchall()
         tasks = []
         for row in rows:
             item = row_to_dict(row)
@@ -564,7 +564,7 @@ def dispatch_task(body: dict) -> dict:
             conn.execute(
                 """
                 INSERT INTO alerts(id, category, severity, title, context, href, status, evidence_json, created_at)
-                VALUES (?, 'Unstaffed Zones', 'high', 'No eligible employee for dispatch', ?, '/alerts', 'active', ?, ?)
+                VALUES (%s, 'Unstaffed Zones', 'high', 'No eligible employee for dispatch', %s, '/alerts', 'active', %s, %s)
                 """,
                 (alert_id, "All on-shift employees are busy, unavailable or inactive.", json.dumps(body.get("evidence") or {}), timestamp),
             )
@@ -601,7 +601,7 @@ def ingest_orchestration_event(body: dict) -> dict:
         conn.execute(
             """
             INSERT INTO orchestration_events(id, event_type, source, zone_id, severity, title, evidence_json, source_timestamp, created_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
             """,
             (event_id, event_type, source, zone_id, severity, title, json.dumps(evidence), body.get("sourceTimestamp") or None, timestamp),
         )
@@ -614,7 +614,7 @@ def ingest_orchestration_event(body: dict) -> dict:
         conn.execute(
             """
             INSERT INTO alerts(id, category, severity, title, context, href, status, source, evidence_json, created_at)
-            VALUES (?, ?, ?, ?, ?, ?, 'active', ?, ?, ?)
+            VALUES (%s, %s, %s, %s, %s, %s, 'active', %s, %s, %s)
             """,
             (
                 alert_id,
@@ -651,7 +651,7 @@ def ingest_orchestration_event(body: dict) -> dict:
         conn.execute(
             """
             INSERT INTO dispatch_decisions(id, event_id, alert_id, task_id, selected_employee_id, decision, reason, policy_json, created_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
             """,
             (
                 uuid.uuid4().hex,
@@ -669,7 +669,7 @@ def ingest_orchestration_event(body: dict) -> dict:
         if body.get("voiceAgent"):
             zone_name = None
             if zone_id:
-                zone = conn.execute("SELECT name FROM zones WHERE id = ?", (zone_id,)).fetchone()
+                zone = conn.execute("SELECT name FROM zones WHERE id = %s", (zone_id,)).fetchone()
                 zone_name = zone["name"] if zone else None
             voice_agent = generate_voice_script(
                 {
@@ -731,15 +731,15 @@ def transition_task(task_id: str, body: dict, current: Annotated[dict[str, str |
     if state not in allowed:
         raise HTTPException(status_code=400, detail="Unsupported task state")
     with connect() as conn:
-        task = conn.execute("SELECT * FROM tasks WHERE id = ?", (task_id,)).fetchone()
+        task = conn.execute("SELECT * FROM tasks WHERE id = %s", (task_id,)).fetchone()
         if not task:
             raise HTTPException(status_code=404, detail="Task not found")
         if current.get("role") == "Employee" and task["employee_id"] != current.get("user_id"):
             raise HTTPException(status_code=403, detail="Employees can only update their own tasks")
         timestamp = now_iso()
-        conn.execute("UPDATE tasks SET state = ?, updated_at = ? WHERE id = ?", (state, timestamp, task_id))
+        conn.execute("UPDATE tasks SET state = %s, updated_at = %s WHERE id = %s", (state, timestamp, task_id))
         conn.execute(
-            "INSERT INTO task_events(id, task_id, state, actor_id, note, created_at) VALUES (?, ?, ?, ?, ?, ?)",
+            "INSERT INTO task_events(id, task_id, state, actor_id, note, created_at) VALUES (%s, %s, %s, %s, %s, %s)",
             (uuid.uuid4().hex, task_id, state, current.get("user_id"), body.get("note") or None, timestamp),
         )
         conn.commit()

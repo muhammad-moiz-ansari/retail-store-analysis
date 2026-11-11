@@ -4,6 +4,7 @@ Updated 2026-11-11. See [PROGRESS.md](PROGRESS.md) for verified work and [PLAN.m
 
 | Task key | Owner | Remaining scope | Dependency / next evidence |
 |---|---|---|---|
+| PostgreSQL cutover | Team destination decision, Saqib deployment, Moiz dashboard verification | Configure the chosen PostgreSQL destination, import the agreed legacy records or bootstrap a fresh manager, then verify real feeds and dashboard login | PostgreSQL runtime and import utility are verified locally. See [PostgreSQL setup](POSTGRESQL_SETUP.md). |
 | M-UI-P3 | Saqib real configuration/feeds/deployment; Moiz adapter support; Ruhab outputs/QA | Adopt verified real Manager/store/run/camera/region bindings, source provenance, expected feeds and operating/health context; run real-data/deployed acceptance and extend supported detail/map/Ask contracts separately | Provider, config-gated read-only routes, active-account/membership checks and default backend UI are implemented; 155 backend tests/1 existing skip and 34 frontend tests plus synthetic actual-login browser replay passed. No real configuration or live CV adoption installed. See DASHBOARD_BACKEND_SETUP.md; never silently switch backend failures to fixtures |
 | MAP-1 | Saqib | Verify real camera/CV events and health first | Reuse current models/event writer; reproducible source, config, clock and role/interaction evidence |
 | MAP-2 | Saqib spatial/backend; Moiz binding; Ruhab QA | Register supplied map and visible-area/camera alignment | Version coordinate mapping and overlap policy; no implied physical distance calibration |

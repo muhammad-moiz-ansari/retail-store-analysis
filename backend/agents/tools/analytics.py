@@ -1,6 +1,5 @@
 """Read-only footfall, dwell and interaction metrics over Saqib's existing schema."""
 from datetime import datetime, timedelta, timezone
-from pathlib import Path
 
 from ..contracts import (CountMetric, DwellSummary, EventFilters, FootfallBucket, FootfallRequest, FootfallResult,
                          InteractionsRequest, InteractionsResult, SecondsMetric, TimeWindow,
@@ -10,8 +9,8 @@ from .store import SourceUnavailable, read_session
 
 
 class EventAnalytics:
-    def __init__(self, path: Path | str, *, synthetic: bool, contexts=()):
-        self.path = Path(path)
+    def __init__(self, dsn: str | None = None, *, synthetic: bool, contexts=()):
+        self.dsn = dsn
         self.synthetic = synthetic
         self.contexts = tuple(ObservationContext.model_validate(c) for c in contexts)
 
@@ -28,7 +27,7 @@ class EventAnalytics:
         occupancy = CountMetric(value=None, unavailable_reason="Initial occupancy and complete entrance coverage are not supplied")
         base = ("Footfall is stored net per-track crossing, not every entrance crossing; runs are not person-deduplicated",)
         try:
-            with read_session(self.path) as session:
+            with read_session(self.dsn) as session:
                 rows = session.rows('footfall', scope, request.filters, request.window)
                 if any(r['direction'] not in ('in', 'out') for r in rows):
                     raise SourceUnavailable("Unknown footfall direction")
@@ -58,7 +57,7 @@ class EventAnalytics:
         self._context(scope, request, status='empty')
         name = 'get_zone_dwell'
         try:
-            with read_session(self.path) as session:
+            with read_session(self.dsn) as session:
                 rows = session.rows('zone_dwell', scope, request.filters, request.window)
                 if any(r['role'] not in ('customer', 'employee', 'unknown') for r in rows):
                     raise SourceUnavailable("Unknown zone_dwell role")
@@ -88,7 +87,7 @@ class EventAnalytics:
         missing_count = CountMetric(value=None, unavailable_reason="Event source unavailable")
         missing_seconds = SecondsMetric(value=None, unavailable_reason="Event source unavailable")
         try:
-            with read_session(self.path) as session:
+            with read_session(self.dsn) as session:
                 rows = session.rows('interactions', scope, request.filters, request.window)
                 confirmed = [r for r in rows if r['verdict'] == 'interaction']
                 unverified = [r for r in rows if r['verdict'] == 'unverified']
