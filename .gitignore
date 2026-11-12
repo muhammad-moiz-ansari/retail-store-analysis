@@ -68,7 +68,6 @@ yolo26n-cls.pt
 /data/outputs/
 
 
-.claude/
 # Claude Code local state (worktrees, settings)
 .claude/
 
@@ -81,6 +80,4 @@ dummydataset/creds.txt
 
 # Local assistant handoffs and working notes
 /docs/extra-docs/
-
-# Local report copy kept outside version control
-/F26_168_i230523_i230559_i230769.pdf
+.neon
