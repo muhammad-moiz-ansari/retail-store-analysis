@@ -1,0 +1,9 @@
+# Lightweight dependencies for the fast CI job (agents, events, database).
+# The CV suite under backend/interaction needs the full backend/requirements.txt.
+pydantic>=2.7,<3
+langgraph>=1.2.20,<2
+psycopg[binary]>=3.2,<4
+fastapi
+httpx
+numpy
+pytest
