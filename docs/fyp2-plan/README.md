@@ -23,6 +23,10 @@ the interaction pipeline already produces.
 | [CHECKLIST.md](CHECKLIST.md) | Branch per item, status, order of work |
 | [FRONTEND_DEPLOYMENT.md](FRONTEND_DEPLOYMENT.md) | Vercel root/branch/build settings and local dependency consistency |
 | [FUTURE_WORK.md](FUTURE_WORK.md) | Every remaining and out-of-scope item from the report, phased with step guides |
+| [ACCEPTANCE.md](ACCEPTANCE.md) | Ruhab's team acceptance scenarios and threshold review sheet |
+| [QA_DASHBOARD.md](QA_DASHBOARD.md) | Ruhab's dashboard QA findings for Moiz |
+| [SECURITY_REVIEW.md](SECURITY_REVIEW.md) | Ruhab's C6 security review, with an owner per finding |
+| [DEMO_SCRIPT.md](DEMO_SCRIPT.md) | Ruhab's demo script with evidence and a fallback per step |
 
 ## Current team/tool foundation (2026-11-10)
 
