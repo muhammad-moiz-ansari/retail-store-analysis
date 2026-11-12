@@ -78,4 +78,6 @@ jobs:
       - run: pip install torch --index-url https://download.pytorch.org/whl/cpu
       - run: pip install -r backend/requirements.txt pytest
       - name: pytest (CV)
-        run: python -m pytest backend/interaction -q -ra -p no:cacheprovider --basetemp "$RUNNER_TEMP/pytest"
+        run: >-
+          python -m pytest backend/interaction backend/agents/business/test_clip_render.py
+          -q -ra -p no:cacheprovider --basetemp "$RUNNER_TEMP/pytest"
