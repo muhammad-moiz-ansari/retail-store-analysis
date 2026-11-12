@@ -526,3 +526,60 @@ Only the fake callback above is invoked in this example. Production callback inj
 ## Planned map/category representation boundary
 
 Stable map-location IDs and existing zone_id scope keys must remain distinct from the live category attribute. Proposed category labels are customer / employee / customer_employee / no_one only; this is not yet a runtime schema/API. Each map layer must declare its observation window, value/unit, role filter, confirmed-interaction semantics, coordinate/map/config version and separate validity metadata. Do not recast unknown CV role or missing camera coverage as a fifth category or no_one, and do not change authorization scopes as occupancy changes. Exact camera-to-map transform, aggregation cadence and ambiguity handling remain MAP-2/MAP-3 decisions with owners in the combined plan.
+
+## Ruhab business agents and policies (2026-11-12)
+
+Package `backend/agents/business/`. Plain logic over the five read tools and the graph hooks above: no model, provider, database connection or dispatch call. All verification so far uses the labelled in-memory `FixtureAnalyticsTools` (every result `synthetic=True` plus a `FIXTURE:` limitation). No real camera, map or PostgreSQL data has been used.
+
+### Registering the agents (Moiz, graph/service wiring)
+
+```python
+from backend.agents.business.employee_activity import business_specialists
+service = AnalyticsService(tools, specialists=business_specialists())  # development_stub=False for both
+```
+
+- **Customer Behavior** (`customer_behavior_agent`): picks footfall / dwell / interaction / unattended tools from the question; with no keyword it gives an overview of footfall, interactions and unattended episodes. Footfall reports the peak and quietest *full-length* bucket. Granularity is minute for windows up to 1 h, hour up to 2 days, then day. Dwell needs a zone; otherwise it returns the `zone_required` notice. It discloses a non-zero unknown-role sample count. Unverified interactions are always published next to confirmed ones. The longest unhelped wait is reported only when the episode list is not truncated.
+- **Employee Activity** (`employee_activity_agent`): coverage per zone, ordered by lowest staffed/open ratio first. Zones without operating windows come last, with staffed seconds only. Non-zero unknown observation is always published. It also covers engagement (confirmed and unverified interactions) and missed customers. No employee is named or ranked.
+- Repair drops exactly the claims that grounding rejected and never invents replacements. Unavailable results publish nothing; null metrics are never turned into zero.
+
+### Operational signal policy (Ruhab → Moiz adapter → Saqib handler)
+
+`signal_policy.evaluate_zone(registry, zone_id, window, now, policy=SignalPolicy())` returns two `SignalDecision`s (`unattended_customer`, `unstaffed_zone`). Each is either `reason='emitted'` with a validated `OperationalEvent`, or a suppression reason code: `no_demand`, `demand_unavailable`, `coverage_unavailable`, `zone_not_observed`, `unknown_observation_too_high`, `staffed_enough`, `no_operating_window`, `mixed_provenance` or `window_mismatch`. Pass emitted events to `OperationalDispatchAdapter.handle(event, scope=...)`.
+
+| Setting (`SignalPolicy`) | Default | Meaning |
+|---|---|---|
+| `min_wait_s` | 180 | Unhelped wait that counts as demand (matches the tool default) |
+| `high_wait_s` / `high_episode_count` | 360 / 3 | Either one makes an unattended event `high` severity |
+| `min_staffed_ratio` | 0.25 | Below this staffed/open share, with customers dwelling, the zone is short of staff. Below half of it, severity is `high` |
+| `max_unknown_share` | 0.2 | Above this blind share of open (or window) time, both events are suppressed |
+| `version` | `ruhab-signal-policy-v1` | Part of the stable `eventId`/`idempotencyKey` hash with store, zone, type and window |
+
+These defaults are proposals for team review, not values tuned on real store data. Only `helped=False` episodes are used. The stored derivation counts any verdict as help, so it can under-report unhelped waits but never over-report them. `crowding` is not emitted until a supported occupancy signal exists. **Saqib:** the same store, zone, window and policy version always produce the same idempotency key. Your handler's durable deduplication is what keeps repeats from creating second tasks.
+
+### Four live categories (MAP-3 semantics; Saqib input, Moiz rendering)
+
+`occupancy.py` provides `classify`, `OccupancyTracker`, `presence_layers` and `interaction_layers`.
+
+**Input from MAP-2 registration (Saqib):** one `CellObservation` per map cell per window: `cell_id` (a stable location key, not a role or an auth scope), `window`, `mapped`, `observed_s` (healthy observed seconds), `customer_s`, `employee_s`, `unknown_role_s` (seconds any person of that role was present) and `map_version`. Interaction layers take `(cell_id, verdict)` records projected onto the same map.
+
+**Output for the UI (Moiz):** `CellState` has `cell_id`, `window`, `category` (`customer` | `employee` | `customer_employee` | `no_one` | null), `quality` (`ok` | `unmapped` | `insufficient_coverage` | `unknown_role`), `observed_category`, `pending`, `map_version` and `policy_version`. `HeatmapLayer` has `layer` (`customer_presence` | `employee_presence` | `confirmed_interactions` | `unverified_interactions`), `unit` (`seconds` | `count`), `window`, `map_version` and `cells[]` of `{cell_id, value | null, masked_reason}`.
+
+Rules: unmapped or less than 80% observed cells are masked. A role is present at 5 s or more. Unknown-role presence masks the cell unless both roles are already present. Both roles present is `customer_employee`, which is co-presence and never an interaction. Observed and empty is `no_one`. Hysteresis needs 2 consecutive valid windows before a change is published. A masked window or a time gap resets a pending change.
+
+**Expected UI behaviour (Moiz to decide the visuals):**
+- Draw exactly four category colours.
+- Draw `category: null` as a hatched or "not observed" mask, labelled with its `quality`, and never as No one.
+- Optionally show `pending` as a "changing" hint.
+- Keep layers on separate toggles, each showing its unit and window.
+- Never sum layers into a density, and show the confirmed and unverified layers separately.
+
+### Insight Narration digest (Moiz UI, Ruhab wording)
+
+`narration.build_digest(runs, title=..., decisions=()) -> Digest`. `Digest` has `title`, `window`, `provenance` (`synthetic` | `real` | `mixed` | `unknown`), `status` (`ok` | `partial` | `no_evidence`), `sections[{heading, lines[]}]`, `caveats[]` and `citation_count`. `Digest.text()` gives plain text. All runs must share one window. Every printed figure is a verified claim value, worded from fixed templates. Sections are Traffic, Dwell, Assistance, Waiting customers, Staff coverage, and Raised for staff follow-up (from emitted signal decisions).
+
+**Expected UI behaviour:**
+- Show a visible fixture banner whenever `provenance != 'real'`.
+- Show caveats, never hide them.
+- Show an empty state for `no_evidence`.
+- Render lines as given, with no extra numbers added client-side.
+- No HTTP route exists yet. Exposing the digest follows the same auth binding as `POST /agents/ask`.
