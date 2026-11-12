@@ -67,7 +67,7 @@ Ownership and actual evidence: [PLAN.md](PLAN.md), [PROGRESS.md](PROGRESS.md), [
 - [x] **M-P2-TOOLS / M-P2-CONTEXTUAL / M-P2-REGISTRY (Moiz)** Five concrete read-only tools, trusted-scope registry, manual-answer query tests, health-aware union coverage and seeded replay. Synthetic/offline verified; production identity/store/configuration binding remains pending.
 - [x] **M-P3-GRAPH / M-P3-GROUNDING / M-P3-TRACES / M-P3-HANDOFF (Moiz)** Callable injectable LangGraph, exact metric/evidence grounding with one repair, scoped bounded development traces and Ruhab registration hooks, verified offline. Actual business agents, durable/live-provider validation and trusted identity/store binding before public routes remain pending.
 - [x] **M-P4-ADAPTER / M-P4-ISOLATION / M-P4-HANDOFF (Moiz)** Isolated internal typed event/handler adapter, fake assigned/no-eligible/duplicate/unavailable/error checks, query isolation and seeded teammate replay. No production task delivery or real eligibility/idempotency acceptance claim; Saqib's implementation and Ruhab's policy remain pending.
-- [ ] **R-BUSINESS-AGENTS / R-UX-NARRATION-QA (Ruhab)** Real business logic, fine-tuning, interface refinement, Narration/Digest/Clip Review and acceptance; Protocols do not complete these tasks.
+- [~] **R-BUSINESS-AGENTS / R-UX-NARRATION-QA (Ruhab)** Customer Behavior / Employee Activity agents, signal policy and Narration digest are implemented and fixture-tested on `fyp2-ruhab`. Real-data validation, fine-tuning, interface refinement, Clip Review and acceptance remain.
 - [ ] **S-B0-VERDICT / S-B4-REALFEED / S-DEPLOY-INTEGRATION (Saqib)** Unattended verdict review, real feeds/configuration, operational assignment/voice and deployment.
 
 The historical B1/B2/B3/B5 status above is not a fresh label/benchmark audit. Existing labelled/benchmark commits are present; remaining labels, refit validation, throughput/error analysis and handoff evaluation retain independent pending status. No large evaluation rerun was performed in Moiz Phase 1.
@@ -85,7 +85,7 @@ M-UI-P1/P2/P3 connection does not complete legacy A2/B6 real-data acceptance, re
 
 - [ ] MAP-1 (Saqib): real camera/CV/event/health verification.
 - [ ] MAP-2 (Saqib spatial/backend, Moiz binding, Ruhab QA): supplied-map registration and visibility metadata.
-- [ ] MAP-3 (Ruhab semantics, Saqib feeds, Moiz readers/rendering): exactly four dynamic categories and separate customer/employee/confirmed-interaction layers.
+- [~] MAP-3 (Ruhab semantics, Saqib feeds, Moiz readers/rendering): exactly four dynamic categories and separate customer/employee/confirmed-interaction layers. Ruhab's classifier/hysteresis/layers are implemented and fixture-tested; real projected feeds and rendering remain.
 - [ ] TEAM-ACCEPTANCE: observe category transitions and genuine empty space without turning blocked/unknown observations into No one; complete actual dispatch/employee/manager workflow.
 
 These are planned, not implemented by this documentation reconciliation. Existing six-zone fixtures are historical test data, not the new category schema.
