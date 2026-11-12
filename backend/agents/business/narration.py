@@ -5,11 +5,12 @@ from a `GraphRun`, and wording comes from fixed server-side templates, not a mod
 Provenance (synthetic vs real), run status and limitations are carried into the digest so
 a fixture-backed digest can never read like a real-store report.
 """
+import re
 from typing import Literal
 
 from pydantic import Field
 
-from ..contracts import Contract, TimeWindow
+from ..contracts import Contract, Evidence, TimeWindow
 from .signal_policy import SignalDecision
 
 LABELS = {
@@ -140,3 +141,95 @@ def build_digest(runs, *, title='Store digest', decisions: tuple[SignalDecision,
     citations = {ref.model_dump_json() for run in runs for ref in run.citations}
     return Digest(title=title, window=windows.pop(), provenance=provenance, status=status, sections=tuple(sections),
                   caveats=tuple(dict.fromkeys(caveats)), citation_count=len(citations))
+
+
+# ---- Cited page summaries (C4: 3–5 sentence summary per page) -------------------------------
+
+PAGE_TOOLS = {
+    'dashboard': ('get_footfall', 'get_interactions', 'get_unattended', 'get_coverage', 'get_zone_dwell'),
+    'customer-info': ('get_footfall', 'get_zone_dwell', 'get_interactions', 'get_unattended'),
+    'employee-info': ('get_coverage', 'get_interactions', 'get_unattended'),
+    'alerts': ('get_unattended',),
+}
+
+
+class CitedSentence(Contract):
+    text: str
+    citations: tuple[Evidence, ...] = ()  # empty only for the provenance/caveat sentence
+
+
+class PageSummary(Contract):
+    page: Literal['dashboard', 'customer-info', 'employee-info', 'alerts']
+    window: TimeWindow
+    provenance: Literal['synthetic', 'real', 'mixed', 'unknown']
+    sentences: tuple[CitedSentence, ...] = Field(max_length=5)
+
+
+def page_summary(runs, page) -> PageSummary:
+    """At most five sentences; every figure is one grounded claim and carries that claim's citations."""
+    digest = build_digest(runs)
+    tools = PAGE_TOOLS[page]
+    items = []
+    for run in runs:
+        for claim in run.claims:
+            result = run.tool_results[claim.call_id]
+            if result.tool in tools:
+                items.append((tools.index(result.tool), claim, run.tool_results))
+    items.sort(key=lambda item: item[0])
+    sentences = []
+    if digest.provenance != 'real':
+        sentences.append(CitedSentence(text='These figures come from fixture or unverified data, not a confirmed store feed.'))
+    footfall = [(c, r) for _, c, r in items if r[c.call_id].tool == 'get_footfall']
+    footfall_lines = dict(zip((id(c) for c, _ in footfall), _footfall_lines(footfall))) if footfall else {}
+    for _, claim, results in items:
+        if len(sentences) == 5:
+            break
+        tool = results[claim.call_id].tool
+        text = footfall_lines.get(id(claim)) or (f'{LABELS[(tool, claim.path[-1])].capitalize()}: '
+                                                 f'{_number(claim.value, claim.unit)}{_context(claim, results[claim.call_id])}')
+        sentences.append(CitedSentence(text=text.rstrip('.') + '.', citations=claim.evidence))
+    if len(sentences) == (digest.provenance != 'real'):
+        sentences.append(CitedSentence(text='No supported figures are available for this page and window.'))
+    return PageSummary(page=page, window=digest.window, provenance=digest.provenance, sentences=tuple(sentences))
+
+
+# ---- Grounding check for any model-written narrative (FUTURE_WORK B3 step 2) ---------------
+
+NUMBER = re.compile(r'\d+(?:\.\d+)?')
+
+
+class NarrativeCheck(Contract):
+    supported: bool
+    unsupported_numbers: tuple[str, ...] = ()
+
+
+# Dates and clock times are labels, not metrics; they are removed before checking figures.
+DATE_OR_TIME = re.compile(r'\b\d{4}-\d{2}-\d{2}\b|\b\d{1,2}:\d{2}(?:\s?[ap]\.?m\b\.?)?|\b\d{1,2}\s?[ap]\.?m\b', re.I)
+
+
+def _allowed_numbers(runs):
+    allowed = set()
+    for run in runs:
+        for claim in run.claims:
+            forms = [claim.value]
+            if claim.unit == 'ratio':
+                forms.append(claim.value * 100)
+            if claim.unit == 'seconds':
+                forms += [claim.value / 60, claim.value / 3600]
+            for form in forms:
+                allowed |= {round(form, 0), round(form, 1), round(form, 2)}
+    return allowed
+
+
+def verify_narrative(text, runs) -> NarrativeCheck:
+    """Every number in `text` must equal (after rounding) a grounded claim value.
+
+    Dates (2026-11-03) and clock times (11:00, 9am) are treated as labels and skipped.
+
+    Use this before showing an LLM narrative; on failure, show the template digest instead.
+    """
+    allowed = _allowed_numbers(runs)
+    cleaned = re.sub(r'(?<=\d),(?=\d{3}\b)', '', DATE_OR_TIME.sub(' ', text))
+    bad = tuple(dict.fromkeys(n for n in NUMBER.findall(cleaned)
+                              if not any(abs(float(n) - a) < 1e-9 for a in allowed)))
+    return NarrativeCheck(supported=not bad, unsupported_numbers=bad)

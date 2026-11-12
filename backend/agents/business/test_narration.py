@@ -71,3 +71,29 @@ def test_runs_must_share_a_window():
                       service.ask(AskRequest(question='footfall', window=other), scope=scope())])
     with pytest.raises(ValueError):
         build_digest([])
+
+
+def test_page_summaries_are_short_and_every_figure_is_cited():
+    from .narration import page_summary
+    batch = runs('Summarise customers today', 'Show staffed coverage')
+    for page in ('dashboard', 'customer-info', 'employee-info', 'alerts'):
+        summary = page_summary(batch, page)
+        assert 2 <= len(summary.sentences) <= 5 and summary.provenance == 'synthetic'
+        assert summary.sentences[0].citations == ()  # provenance sentence first for fixture data
+        for sentence in summary.sentences[1:]:
+            assert sentence.citations and sentence.text.endswith('.')
+    customer = page_summary(batch, 'customer-info')
+    assert customer.sentences[1].text.startswith('Busiest period: 14 entries')
+    alerts = page_summary(batch, 'alerts')
+    assert [s.text for s in alerts.sentences[1:]] == ['Stored unattended episodes: 1.', 'Longest unhelped wait: 4.0 min (zone z2).']
+    empty = page_summary(runs('Show staffed coverage'), 'customer-info')
+    assert empty.sentences[-1].text.startswith('No supported figures')
+
+
+def test_narrative_check_rejects_invented_numbers():
+    from .narration import verify_narrative
+    batch = runs('Summarise customers today', 'Show staffed coverage')
+    good = 'Traffic peaked at 14 entries around 11:00 on 2026-11-03; 13 interactions were confirmed and zone z2 was staffed 14% of open time.'
+    assert verify_narrative(good, batch).supported
+    bad = verify_narrative('Traffic peaked at 17 entries and 1,250 customers visited.', batch)
+    assert not bad.supported and bad.unsupported_numbers == ('17', '1250')
