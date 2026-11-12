@@ -29,10 +29,13 @@ def candidates():
 def test_clips_are_padded_and_clamped_to_the_recording():
     items = {i.event_id: i for i in review_items(candidates(), [SOURCE])}
     assert set(items) == {'i0', 'i1', 'i2', 'i3', 'i4'}  # pass_by is not a reviewable verdict
-    assert (items['i0'].clip.offset_start_s, items['i0'].clip.offset_end_s) == (0, 23)
-    assert (items['i1'].clip.offset_start_s, items['i1'].clip.offset_end_s) == (97, 133)
+    bounds = {k: (v.clip.offset_start_s, v.clip.offset_end_s) for k, v in items.items() if v.clip}
+    assert bounds['i0'] == (0, 20)          # long event: onset kept, capped at 20 s, shifted inside the file
+    assert bounds['i1'] == (97, 117)        # long event: 3 s lead-in, capped at 20 s
+    assert bounds['i2'] == (295.5, 305.5)   # 1 s instant: widened evenly to 10 s
+    assert bounds['i3'] == (1185, 1200)     # near the end: shifted back, not shrunk
+    assert all(10 <= hi - lo <= 20 for lo, hi in bounds.values())
     assert items['i2'].window.end - items['i2'].window.start == timedelta(seconds=1)
-    assert items['i3'].clip.offset_end_s == 1200
     assert items['i4'].clip is None and items['i4'].unavailable_reason == 'outside_recording'
     assert all(i.synthetic for i in items.values())
 

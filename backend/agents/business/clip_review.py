@@ -114,8 +114,24 @@ def from_interaction_rows(rows, *, synthetic: bool):
     return tuple(out)
 
 
-def review_items(candidates, sources, *, pad_s=3.0, blind=False):
-    """Map each candidate to a padded clip inside its recording, or an explicit unavailable reason."""
+def clip_bounds(start, end, duration, *, pad_s=3.0, min_clip_s=10.0, max_clip_s=20.0):
+    """Team plan C5: a 10–20 s clip per alert. Pad the event, widen short ones evenly, keep the onset
+    of long ones, then shift (not shrink) the clip to stay inside the recording where possible."""
+    lo, hi = start - pad_s, end + pad_s
+    if hi - lo < min_clip_s:
+        grow = (min_clip_s - (hi - lo)) / 2
+        lo, hi = lo - grow, hi + grow
+    hi = min(hi, lo + max_clip_s)
+    length = hi - lo
+    if lo < 0:
+        lo, hi = 0.0, min(duration, length)
+    if hi > duration:
+        lo, hi = max(0.0, duration - length), duration
+    return lo, hi
+
+
+def review_items(candidates, sources, *, pad_s=3.0, min_clip_s=10.0, max_clip_s=20.0, blind=False):
+    """Map each candidate to a 10–20 s clip inside its recording, or an explicit unavailable reason."""
     index = {(s.store_id, s.run_id, s.camera_id): s for s in sources}
     items = []
     for c in candidates:
@@ -129,8 +145,8 @@ def review_items(candidates, sources, *, pad_s=3.0, blind=False):
             if end <= 0 or start >= source.duration_s:
                 reason = 'outside_recording'
             else:
-                clip = ClipSegment(video_ref=source.video_ref, offset_start_s=max(0.0, start - pad_s),
-                                   offset_end_s=min(source.duration_s, end + pad_s))
+                lo, hi = clip_bounds(start, end, source.duration_s, pad_s=pad_s, min_clip_s=min_clip_s, max_clip_s=max_clip_s)
+                clip = ClipSegment(video_ref=source.video_ref, offset_start_s=lo, offset_end_s=hi)
         items.append(ReviewItem(event_id=c.event_id, kind=c.kind, zone_id=c.zone_id, window=c.window, clip=clip,
                                 unavailable_reason=reason, cv_verdict=None if blind else c.cv_verdict, synthetic=c.synthetic))
     return tuple(items)
