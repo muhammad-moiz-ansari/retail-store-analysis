@@ -252,21 +252,12 @@ def analyze_frame(body: dict) -> dict[str, Any]:
     frame = body.get("image_base64")
     if not isinstance(frame, str) or not frame or len(frame) > 20_000_000:
         raise HTTPException(status_code=400, detail="image_base64 is required (max ~15 MB image)")
-    aisle = str(body.get("aisle") or "aisle")[:64]
+    from .analyze_frame import analyze  # lazy: ultralytics is heavy; the model then stays loaded in this process
+
     try:
-        done = subprocess.run(
-            [sys.executable, "-u", str(REPO_ROOT / "backend" / "analyze_frame.py"), aisle],
-            input=frame, capture_output=True, text=True, cwd=REPO_ROOT, timeout=180,
-        )
-    except subprocess.TimeoutExpired as exc:
-        raise HTTPException(status_code=504, detail="Frame analysis timed out") from exc
-    try:
-        result = json.loads(done.stdout.strip().splitlines()[-1])
-    except (IndexError, json.JSONDecodeError):
-        result = {"error": done.stderr.strip().splitlines()[-1] if done.stderr.strip() else "Frame analysis failed"}
-    if done.returncode != 0 or "error" in result:
-        raise HTTPException(status_code=400 if done.returncode == 1 else 500, detail=result.get("error", "Frame analysis failed"))
-    return result
+        return analyze(frame, str(body.get("aisle") or "aisle")[:64])
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
 @app.get("/jobs/{job_id}", dependencies=[Depends(require_manager)])
