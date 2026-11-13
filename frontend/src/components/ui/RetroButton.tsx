@@ -10,11 +10,11 @@ interface RetroButtonProps
 
 const variantStyles: Record<ButtonVariant, string> = {
   primary:
-    "bg-accent text-surface border-border hover:bg-accent-hover",
+    "bg-accent text-on-accent border-border hover:bg-accent-hover",
   secondary:
     "bg-surface text-text border-border hover:bg-surface-alt",
   danger:
-    "bg-danger text-surface border-border hover:brightness-110",
+    "bg-danger text-on-danger border-border hover:brightness-110",
 };
 
 export function RetroButton({

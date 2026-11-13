@@ -61,7 +61,7 @@
 
 .primary {
   background: var(--color-accent);
-  color: var(--color-surface);
+  color: var(--color-on-accent);
 }
 
 .primary:hover { background: var(--color-accent-hover); }
@@ -112,8 +112,8 @@
   align-items: center;
   gap: 0.8rem;
   padding-top: 0.9rem;
-  background: var(--color-text);
-  color: var(--color-surface);
+  background: var(--color-sidebar);
+  color: var(--color-on-sidebar);
 }
 
 .railMark {
@@ -129,7 +129,7 @@
   background: var(--color-accent-soft);
 }
 
-.previewRail span:nth-child(2) { background: var(--color-surface); }
+.previewRail span:nth-child(2) { background: var(--color-on-sidebar); }
 
 .previewBody {
   display: grid;

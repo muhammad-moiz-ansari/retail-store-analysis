@@ -1,5 +1,7 @@
 "use client";
 
+import { ThemeToggle } from "./ThemeToggle";
+
 import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
@@ -10,7 +12,7 @@ import { useAuth } from "@/components/auth/AuthProvider";
 
 const publicAction = "inline-flex min-h-11 items-center justify-center rounded-lg border px-3 text-sm font-semibold";
 const signInAction = `${publicAction} border-accent text-accent hover:bg-surface`;
-const signUpAction = `${publicAction} border-transparent bg-accent text-surface hover:bg-accent-hover`;
+const signUpAction = `${publicAction} border-transparent bg-accent text-on-accent hover:bg-accent-hover`;
 
 interface NavbarProps {
   /** Show role badge and Log Out button (for authenticated pages like /dashboard) */
@@ -199,6 +201,8 @@ export function Navbar({ authenticated = false, role = "Manager" }: NavbarProps)
           </div>
         )}
 
+        <div className="ml-3 flex shrink-0 items-center gap-2">
+        <ThemeToggle />
         {/* ── Right: Hamburger (mobile only) ── */}
         <button
           type="button"
@@ -232,6 +236,7 @@ export function Navbar({ authenticated = false, role = "Manager" }: NavbarProps)
             ].join(" ")}
           />
         </button>
+        </div>
       </div>
 
       {/* ── Mobile Dropdown Menu ── */}
@@ -296,7 +301,7 @@ function AlertsBell() {
       className="relative flex h-9 w-9 items-center justify-center rounded-md border border-border bg-surface text-text transition-colors hover:bg-surface-alt"
     >
       <BellIcon />
-      <span className="absolute -right-2 -top-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-danger px-1 font-mono text-[9px] font-bold leading-none text-white">
+      <span className="absolute -right-2 -top-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-danger px-1 font-mono text-[9px] font-bold leading-none text-on-danger">
         5
       </span>
     </Link>

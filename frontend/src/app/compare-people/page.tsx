@@ -108,7 +108,7 @@ export default function ComparePeoplePage() {
             <button
               type="submit"
               disabled={loading}
-              className="min-h-11 rounded-lg bg-accent px-5 py-2.5 font-heading text-sm font-semibold text-surface hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-60"
+              className="min-h-11 rounded-lg bg-accent px-5 py-2.5 font-heading text-sm font-semibold text-on-accent hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-60"
             >
               {loading ? "Processing..." : "Compare videos"}
             </button>

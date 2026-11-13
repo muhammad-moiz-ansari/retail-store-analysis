@@ -839,7 +839,7 @@ function AlertThresholds({
               className={[
                 "flex-1 px-4 py-2 font-heading text-sm font-semibold tracking-wide transition-colors cursor-pointer select-none",
                 notifyMode === "any"
-                  ? "bg-accent text-surface"
+                  ? "bg-accent text-on-accent"
                   : "bg-surface text-text hover:bg-surface-alt",
               ].join(" ")}
             >
@@ -852,7 +852,7 @@ function AlertThresholds({
               className={[
                 "flex-1 px-4 py-2 font-heading text-sm font-semibold tracking-wide transition-colors cursor-pointer select-none",
                 notifyMode === "senior"
-                  ? "bg-accent text-surface"
+                  ? "bg-accent text-on-accent"
                   : "bg-surface text-text hover:bg-surface-alt",
               ].join(" ")}
             >

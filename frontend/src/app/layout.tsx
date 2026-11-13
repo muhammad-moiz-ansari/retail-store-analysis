@@ -3,6 +3,7 @@ import { Space_Grotesk, Inter, JetBrains_Mono } from "next/font/google";
 import { NavbarShell } from "@/components/ui/NavbarShell";
 import { AuthProvider } from "@/components/auth/AuthProvider";
 import { RouteAccessGuard } from "@/components/auth/RouteAccessGuard";
+import { themeBootstrap } from "@/components/ui/theme";
 import "./globals.css";
 
 const spaceGrotesk = Space_Grotesk({
@@ -40,6 +41,7 @@ export default function RootLayout({
       className={`${spaceGrotesk.variable} ${inter.variable} ${jetbrainsMono.variable} h-full antialiased`}
     >
       <head>
+        <script dangerouslySetInnerHTML={{ __html: themeBootstrap }} />
         <script
           dangerouslySetInnerHTML={{
             __html: `(function(){try{document.querySelectorAll('[bis_skin_checked]').forEach(function(el){el.removeAttribute('bis_skin_checked')})}catch(e){}})()`,

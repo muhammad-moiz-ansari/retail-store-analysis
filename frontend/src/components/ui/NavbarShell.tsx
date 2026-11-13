@@ -1,5 +1,7 @@
 "use client";
 
+import { ThemeToggle } from "./ThemeToggle";
+
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/components/auth/AuthProvider";
@@ -21,7 +23,7 @@ function Navigation({ links, pathname, label }: { links: string[][]; pathname: s
     {links.map(([href, title]) => {
       const active = matchesRoute(pathname, [href]) || (href === "/employee-home" && pathname === "/employee");
       return <Link key={href} href={href} aria-current={active ? "page" : undefined}
-        className={`flex min-h-11 items-center rounded-lg px-3 text-sm font-medium ${active ? "bg-surface-alt text-text" : "text-white hover:bg-white/15"}`}>
+        className={`flex min-h-11 items-center rounded-lg px-3 text-sm font-medium ${active ? "bg-surface-alt text-text" : "text-on-sidebar hover:bg-white/15"}`}>
         {title}
       </Link>;
     })}
@@ -46,27 +48,30 @@ export function NavbarShell({ children }: { children: React.ReactNode }) {
   }
 
   const navigation = <Navigation links={links} pathname={pathname} label={manager ? "Manager navigation" : "Employee navigation"} />;
-  const logout = <button type="button" className="min-h-11 rounded-lg px-3 text-left text-sm text-white hover:bg-white/15"
+  const logout = <button type="button" className="min-h-11 rounded-lg px-3 text-left text-sm text-on-sidebar hover:bg-white/15"
     onClick={async () => { await signOut(); router.push("/"); }}>Log out</button>;
-  const brand = <Link href={home} className="font-heading text-xl font-bold tracking-tight text-white">RetailPulse</Link>;
+  const brand = <Link href={home} className="font-heading text-xl font-bold tracking-tight text-on-sidebar">RetailPulse</Link>;
 
   return <div className={manager ? "min-h-screen lg:grid lg:grid-cols-[15rem_minmax(0,1fr)]" : "min-h-screen"}>
     {skip}
-    {manager && <aside className="workspace-sidebar sticky top-0 hidden h-dvh flex-col overflow-y-auto bg-text p-4 lg:flex">
-      <div className="px-3 pb-5 pt-2">{brand}</div>
+    {manager && <aside className="workspace-sidebar sticky top-0 hidden h-dvh flex-col overflow-y-auto bg-sidebar p-4 lg:flex">
+      <div className="flex items-center justify-between gap-2 px-3 pb-5">{brand}<ThemeToggle /></div>
       {navigation}
       <div className="mt-auto border-t border-white/20 pt-3">{logout}</div>
     </aside>}
     <div className="min-w-0">
-      <header className={`workspace-sidebar sticky top-0 z-40 bg-text px-4 py-3 text-white ${manager ? "lg:hidden" : ""}`}>
+      <header className={`workspace-sidebar sticky top-0 z-40 bg-sidebar px-4 py-3 text-on-sidebar ${manager ? "lg:hidden" : ""}`}>
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-3">
           {brand}
+          <div className="flex items-center gap-2">
+          <ThemeToggle />
           <details key={pathname} className="relative">
             <summary className="flex min-h-11 cursor-pointer items-center rounded-lg border border-white/35 px-3 text-sm">Menu</summary>
-            <div className="absolute right-0 top-full mt-2 grid max-h-[70dvh] w-[min(16rem,80vw)] gap-2 overflow-y-auto rounded-xl border border-white/25 bg-text p-2 shadow-lg">
+            <div className="absolute right-0 top-full mt-2 grid max-h-[70dvh] w-[min(16rem,80vw)] gap-2 overflow-y-auto rounded-xl border border-white/25 bg-sidebar p-2 shadow-lg">
               {navigation}{logout}
             </div>
           </details>
+          </div>
         </div>
         {!manager && <nav aria-label="Employee shortcuts" className="mx-auto mt-2 flex max-w-5xl flex-wrap gap-2">
           {employeeLinks.map(([href, title]) => <Link key={href} href={href}

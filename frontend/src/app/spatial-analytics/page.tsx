@@ -77,9 +77,9 @@ const POPULARITY_RANKING = [
 
 function heatColor(heat: number) {
   if (heat <= 45) {
-    return `color-mix(in srgb, var(--color-accent-soft) ${heat / 45 * 100}%, var(--color-surface-alt))`;
+    return `color-mix(in srgb, var(--color-heat-mid) ${heat / 45 * 100}%, var(--color-heat-low))`;
   }
-  return `color-mix(in srgb, var(--color-text) ${(heat - 45) / 55 * 100}%, var(--color-accent-soft))`;
+  return `color-mix(in srgb, var(--color-heat-high) ${(heat - 45) / 55 * 100}%, var(--color-heat-mid))`;
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -169,7 +169,7 @@ function HeatmapSection() {
           <div
             className="w-full max-w-[320px] h-3 rounded-full"
             style={{
-              background: "linear-gradient(to right, var(--color-surface-alt), var(--color-accent-soft) 45%, var(--color-text))",
+              background: "linear-gradient(to right, var(--color-heat-low), var(--color-heat-mid) 45%, var(--color-heat-high))",
             }}
           />
           <div className="flex justify-between w-full max-w-[320px] text-[10px] font-mono text-text-muted">
@@ -195,7 +195,7 @@ function HeatmapCell({
   return (
     <div
       className={`flex min-w-0 flex-col justify-between gap-2 rounded-lg border border-border-soft p-2 sm:p-3 ${className}`}
-      style={{ backgroundColor: bg, color: zone.heat >= 50 ? "var(--color-surface)" : "var(--color-text)" }}
+      style={{ backgroundColor: bg, color: zone.heat >= 50 ? "var(--color-on-heat-high)" : "var(--color-on-heat-low)" }}
     >
       <h3 className="text-sm font-semibold leading-tight">{zone.name}</h3>
       <p><strong className="font-heading text-2xl tabular-nums">{zone.count}</strong> <span className="text-xs">people</span></p>

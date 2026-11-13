@@ -3,6 +3,17 @@
 /* ── RetailPulse design system ── */
 
 :root {
+  color-scheme: light;
+  --color-sidebar: #101B46;
+  --color-on-sidebar: #FFFFFF;
+  --color-on-accent: #FFFFFF;
+  --color-on-danger: #FFFFFF;
+  --color-sidebar-focus: #FFFFFF;
+  --color-heat-low: #EEEDFA;
+  --color-heat-mid: #7779CD;
+  --color-heat-high: #101B46;
+  --color-on-heat-low: #101B46;
+  --color-on-heat-high: #FFFFFF;
   --color-coral: #C54F3D;
   --color-attention: #8A4B08;
   --panel-radius: 1rem;
@@ -21,7 +32,34 @@
   --color-text-muted: #51586B;
 }
 
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --color-bg: #0D132B;
+  --color-sidebar: #111A36;
+  --color-surface: #182242;
+  --color-surface-alt: #29355F;
+  --color-border: #354269;
+  --color-border-soft: #354269;
+  --color-accent: #A5ABFF;
+  --color-accent-hover: #C3BDFF;
+  --color-on-accent: #0D132B;
+  --color-on-danger: #0D132B;
+  --color-text: #FAF8F2;
+  --color-on-sidebar: #FAF8F2;
+  --color-text-muted: #AAB2CC;
+  --color-accent-soft: #C3BDFF;
+  --color-coral: #FF927D;
+  --color-sidebar-focus: #A5ABFF;
+  --color-attention: #FFD187;
+  --color-success: #87DBAD;
+  --color-danger: #FFA5AA;
+}
+
 @theme inline {
+  --color-sidebar: var(--color-sidebar);
+  --color-on-sidebar: var(--color-on-sidebar);
+  --color-on-accent: var(--color-on-accent);
+  --color-on-danger: var(--color-on-danger);
   /* Map CSS variables into Tailwind utilities */
   --color-bg: var(--color-bg);
   --color-surface: var(--color-surface);
@@ -73,8 +111,42 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .workspace-sidebar :focus-visible {
-  outline-color: var(--color-surface);
+  outline-color: var(--color-sidebar-focus);
 }
+
+.theme-toggle {
+  display: inline-grid;
+  flex: none;
+  width: 2.75rem;
+  height: 2.75rem;
+  place-items: center;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.theme-toggle:hover { background: color-mix(in srgb, currentColor 10%, transparent); }
+.theme-toggle svg { width: 1.125rem; height: 1.125rem; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; }
+.theme-toggle-dark,
+[data-theme="dark"] .theme-toggle-light { display: none; }
+[data-theme="dark"] .theme-toggle-dark { display: inline-grid; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .theme-toggle > span { animation: theme-icon-in 180ms ease-out; }
+  @keyframes theme-icon-in {
+    from { opacity: 0; transform: rotate(-35deg); }
+    to { opacity: 1; transform: rotate(0); }
+  }
+}
+
+.recharts-default-tooltip {
+  background-color: var(--color-surface) !important;
+  border-color: var(--color-border-soft) !important;
+  color: var(--color-text);
+}
+
+.recharts-tooltip-item { color: var(--color-text) !important; }
+[data-theme="dark"] .recharts-legend-item-text { color: var(--color-text-muted) !important; }
 
 .workspace-content {
   min-width: 0;
