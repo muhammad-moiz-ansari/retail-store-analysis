@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
+import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 
 export type UserRole = "Manager" | "Employee";
 
@@ -19,17 +19,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [ready, setReady] = useState(false);
   const [authenticated, setAuthenticated] = useState(false);
   const [role, setRole] = useState<UserRole | null>(null);
+  const sessionCheck = useRef<AbortController | null>(null);
 
   useEffect(() => {
-    const cachedRole = window.localStorage.getItem(SESSION_KEY);
-    if (cachedRole === "Manager" || cachedRole === "Employee") {
-      setRole(cachedRole);
-      setAuthenticated(true);
-    }
-
-    fetch("/api/auth/session", { cache: "no-store" })
+    const controller = new AbortController();
+    sessionCheck.current = controller;
+    fetch("/api/auth/session", { cache: "no-store", signal: controller.signal })
       .then((response) => (response.ok ? response.json() : null))
       .then((session) => {
+        if (controller.signal.aborted) return;
         if (session?.authenticated && (session?.role === "Manager" || session?.role === "Employee")) {
           window.localStorage.setItem(SESSION_KEY, session.role);
           setRole(session.role);
@@ -38,7 +36,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           window.localStorage.removeItem(SESSION_KEY);
         }
       })
-      .finally(() => setReady(true));
+      .catch(() => {
+        if (!controller.signal.aborted) window.localStorage.removeItem(SESSION_KEY);
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setReady(true);
+      });
+    return () => controller.abort();
   }, []);
 
   const value = useMemo<AuthContextValue>(
@@ -68,12 +72,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             throw new Error(data.error || "Employee sign-in failed");
           }
         }
+        sessionCheck.current?.abort();
+        setReady(true);
         window.localStorage.setItem(SESSION_KEY, nextRole);
         setRole(nextRole);
         setAuthenticated(true);
       },
       async signOut() {
+        sessionCheck.current?.abort();
         await fetch("/api/auth/logout", { method: "POST" }).catch(() => undefined);
+        setReady(true);
         window.localStorage.removeItem(SESSION_KEY);
         setRole(null);
         setAuthenticated(false);

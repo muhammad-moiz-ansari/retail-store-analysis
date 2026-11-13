@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
-import { RetroButton, RetroCard, RetroWindow } from "@/components/ui";
+import { RetroButton } from "@/components/ui";
+import { ManagerPage, ManagerHeader, ManagerPanel, ManagerCard, ManagerTable } from "@/components/ui/ManagerLayout";
 import {
   CartesianGrid,
   Legend,
@@ -129,22 +130,11 @@ export default function MyPerformancePage() {
   const dailyLogs = getDailyLogs(dateRange);
 
   return (
-    <div className="min-h-screen bg-bg">
-      <main className="mx-auto w-full max-w-[1280px] space-y-12 px-4 py-10 md:px-6 md:py-16 lg:px-8">
-        <RetroWindow title="My Performance">
-          <p className="font-mono text-xs font-semibold uppercase tracking-[0.16em] text-accent">
-            Performance History
-          </p>
-          <h1 className="mt-2 font-heading text-3xl font-bold tracking-tight text-text md:text-[32px]">
-            Your Performance Over Time
-          </h1>
-          <p className="mt-2 text-sm text-text-muted">
-            Track your scores, interactions, and activity across any period.
-          </p>
-        </RetroWindow>
+      <ManagerPage>
+        <ManagerHeader title="My performance"><p>Sample data. Review the illustrative performance history and daily log.</p></ManagerHeader>
 
         <section aria-labelledby="date-range-heading">
-          <RetroWindow title="Date Range">
+          <ManagerPanel title="Date Range">
             <h2 id="date-range-heading" className="sr-only">Date range selector</h2>
             <div className="flex flex-wrap gap-2" role="group" aria-label="Select performance date range">
               {RANGE_OPTIONS.map((option) => (
@@ -180,7 +170,7 @@ export default function MyPerformancePage() {
                 </label>
               </div>
             )}
-          </RetroWindow>
+          </ManagerPanel>
         </section>
 
         <section aria-label="Performance summary">
@@ -192,11 +182,11 @@ export default function MyPerformancePage() {
         </section>
 
         <section aria-labelledby="score-trend-heading">
-          <RetroWindow title="Score Trend">
+          <ManagerPanel title="Score Trend">
             <h2 id="score-trend-heading" className="sr-only">Score trend</h2>
-            <RetroCard>
+            <ManagerCard>
               <ChartFrame>
-                <LineChart data={series} margin={{ top: 12, right: 16, left: -20, bottom: 0 }}>
+                <LineChart accessibilityLayer data={series} margin={{ top: 12, right: 16, left: -20, bottom: 0 }}>
                   <CartesianGrid vertical={false} stroke="var(--color-border-soft)" strokeOpacity={0.25} />
                   <XAxis {...axisProps} dataKey="label" interval={dateRange === "last30" ? 4 : 0} />
                   <YAxis {...axisProps} domain={[0, 100]} ticks={[0, 25, 50, 75, 100]} />
@@ -207,38 +197,38 @@ export default function MyPerformancePage() {
                     strokeDasharray="5 5"
                     label={{ value: "Good", position: "right", fill: "var(--color-text-muted)", fontSize: 12 }}
                   />
-                  <Line type="monotone" dataKey="score" stroke="var(--color-accent)" strokeWidth={3} dot={{ fill: "var(--color-accent)", r: 4 }} activeDot={{ r: 5 }} />
+                  <Line isAnimationActive={false} type="monotone" dataKey="score" stroke="var(--color-accent)" strokeWidth={3} dot={{ fill: "var(--color-accent)", r: 4 }} activeDot={{ r: 5 }} />
                 </LineChart>
               </ChartFrame>
-            </RetroCard>
-          </RetroWindow>
+            </ManagerCard>
+          </ManagerPanel>
         </section>
 
         <section aria-labelledby="rubric-heading">
-          <RetroWindow title="Score Breakdown by Category">
+          <ManagerPanel title="Score Breakdown by Category">
             <h2 id="rubric-heading" className="sr-only">Score breakdown by category</h2>
-            <RetroCard>
+            <ManagerCard>
               <ChartFrame>
-                <LineChart data={series} margin={{ top: 12, right: 16, left: -20, bottom: 0 }}>
+                <LineChart accessibilityLayer data={series} margin={{ top: 12, right: 16, left: -20, bottom: 0 }}>
                   <CartesianGrid vertical={false} stroke="var(--color-border-soft)" strokeOpacity={0.25} />
                   <XAxis {...axisProps} dataKey="label" interval={dateRange === "last30" ? 4 : 0} />
                   <YAxis {...axisProps} domain={[0, 45]} ticks={[0, 15, 30, 45]} />
                   <Tooltip {...tooltipProps} />
                   <Legend wrapperStyle={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: "12px", paddingTop: "12px" }} />
-                  <Line type="monotone" name="Approach Speed" dataKey="approach" stroke="var(--color-accent)" strokeWidth={2.5} dot={{ r: 3 }} />
-                  <Line type="monotone" name="Idle Time" dataKey="idle" stroke="var(--color-accent-soft)" strokeWidth={2.5} dot={{ r: 3 }} />
-                  <Line type="monotone" name="Interaction Score" dataKey="interaction" stroke="var(--color-success)" strokeWidth={2.5} dot={{ r: 3 }} />
+                  <Line isAnimationActive={false} type="monotone" name="Approach Speed" dataKey="approach" stroke="var(--color-accent)" strokeWidth={2.5} dot={{ r: 3 }} />
+                  <Line isAnimationActive={false} type="monotone" name="Idle Time" dataKey="idle" stroke="var(--color-accent-soft)" strokeWidth={2.5} dot={{ r: 3 }} />
+                  <Line isAnimationActive={false} type="monotone" name="Interaction Score" dataKey="interaction" stroke="var(--color-success)" strokeWidth={2.5} dot={{ r: 3 }} />
                 </LineChart>
               </ChartFrame>
-            </RetroCard>
-          </RetroWindow>
+            </ManagerCard>
+          </ManagerPanel>
         </section>
 
         <section aria-labelledby="daily-log-heading">
-          <RetroWindow title="Daily Log">
+          <ManagerPanel title="Daily Log">
             <h2 id="daily-log-heading" className="sr-only">Daily performance log</h2>
-            <RetroCard>
-              <div className="overflow-x-auto">
+            <ManagerCard>
+              <ManagerTable label="Daily performance log">
                 <table className="w-full min-w-[760px] text-sm">
                   <thead>
                     <tr className="border-b border-border-soft bg-surface-alt text-left">
@@ -276,7 +266,7 @@ export default function MyPerformancePage() {
                           </tr>
                           <tr aria-hidden={!isExpanded}>
                             <td colSpan={6} className="p-0">
-                              <div className={`overflow-hidden transition-all duration-300 ${isExpanded ? "max-h-64 border-b border-border-soft/50" : "max-h-0"}`}>
+                              <div className={`overflow-hidden motion-safe:transition-all motion-safe:duration-300 ${isExpanded ? "max-h-64 border-b border-border-soft/50" : "max-h-0"}`}>
                                 <div className="grid gap-4 bg-surface-alt/40 px-4 py-4 sm:grid-cols-2">
                                   <div>
                                     <p className="font-mono text-[10px] font-semibold uppercase tracking-wider text-text-muted">Shift details</p>
@@ -306,20 +296,19 @@ export default function MyPerformancePage() {
                     })}
                   </tbody>
                 </table>
-              </div>
-            </RetroCard>
-          </RetroWindow>
+              </ManagerTable>
+            </ManagerCard>
+          </ManagerPanel>
         </section>
 
         <section aria-label="Performance data context">
-          <RetroCard className="border-l-4 border-l-accent-soft">
+          <ManagerCard className="border-l-4 border-l-accent-soft">
             <p className="text-sm leading-relaxed text-text-muted">
               Your performance data is visible only to you and your manager. If a number looks off, or a shift wasn&apos;t logged correctly, talk to your floor lead — this system supports conversations, it doesn&apos;t replace them.
             </p>
-          </RetroCard>
+          </ManagerCard>
         </section>
-      </main>
-    </div>
+    </ManagerPage>
   );
 }
 
@@ -357,11 +346,11 @@ function SummaryCard({
   trend?: string;
 }) {
   return (
-    <RetroCard>
+    <ManagerCard>
       <p className="font-mono text-[11px] font-semibold uppercase tracking-wider text-text-muted">{label}</p>
       <p className="mt-3 font-mono text-2xl font-bold text-accent">{value}</p>
       <p className="mt-1 text-sm text-text-muted">{detail}</p>
       {trend && <p className="mt-3 font-mono text-xs font-semibold text-success">{trend}</p>}
-    </RetroCard>
+    </ManagerCard>
   );
 }

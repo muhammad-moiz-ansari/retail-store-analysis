@@ -2,7 +2,8 @@
 
 import React, { type FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Badge, RetroButton, RetroCard, RetroInput, RetroWindow } from "@/components/ui";
+import { Badge, RetroButton, RetroInput } from "@/components/ui";
+import { ManagerPage, ManagerHeader, ManagerPanel, ManagerCard } from "@/components/ui/ManagerLayout";
 import { useAuth } from "@/components/auth/AuthProvider";
 
 const PROFILE_DATA = {
@@ -73,15 +74,11 @@ export default function ProfilePage() {
   }
 
   return (
-    <main className="mx-auto flex w-full max-w-[900px] flex-col gap-10 px-4 py-10 md:px-6 md:py-16">
-      <RetroWindow title="Edit Profile">
-        <p className="font-mono text-xs font-semibold uppercase tracking-[0.16em] text-accent">Account Settings</p>
-        <h1 className="mt-2 font-heading text-3xl font-bold tracking-tight text-text">Your Profile</h1>
-        <p className="mt-2 text-sm text-text-muted">Update your account details and preferences.</p>
-      </RetroWindow>
+    <ManagerPage>
+      <ManagerHeader title="Your profile"><p>Sample profile. Changes and notification preferences on this page apply to this session only. Password changes here are simulated.</p></ManagerHeader>
 
       <section aria-labelledby="profile-overview-heading">
-        <RetroCard>
+        <ManagerCard>
           <div className="flex flex-col items-center gap-6 sm:flex-row sm:items-start">
             <div className="flex shrink-0 flex-col items-center gap-2">
               <div className="flex h-20 w-20 items-center justify-center rounded-full bg-accent-soft font-heading text-3xl font-bold text-text" aria-label={`Avatar for ${profile.name}`}>
@@ -99,12 +96,12 @@ export default function ProfilePage() {
               <p className="mt-1 font-mono text-xs text-text-muted">System ID: {profile.employeeId}</p>
             </div>
           </div>
-        </RetroCard>
+        </ManagerCard>
       </section>
 
-      <RetroWindow title="Account Details">
+      <ManagerPanel title="Account Details">
         <form onSubmit={handleDetailsSubmit} className="space-y-6">
-          <RetroCard>
+          <ManagerCard>
             <div className="grid gap-5 md:grid-cols-2">
               <RetroInput label="Full Name" type="text" value={fullName || profile.name} onChange={(event) => setFullName(event.target.value)} autoComplete="name" />
               <RetroInput label="Email Address" type="email" value={email || (role === "Manager" ? "alex.morgan@retailpulse.com" : "staff03@retailpulse.com")} onChange={(event) => setEmail(event.target.value)} autoComplete="email" />
@@ -120,15 +117,15 @@ export default function ProfilePage() {
                 </label>
               )}
             </div>
-          </RetroCard>
+          </ManagerCard>
           <RetroButton type="submit" variant="primary" disabled={savingDetails}>{savingDetails ? "Saving..." : "Save Changes"}</RetroButton>
-          {detailsSaved && <SuccessBanner>Profile updated successfully.</SuccessBanner>}
+          {detailsSaved && <SuccessBanner>Sample profile updated for this page.</SuccessBanner>}
         </form>
-      </RetroWindow>
+      </ManagerPanel>
 
-      <RetroWindow title="Change Password">
+      <ManagerPanel title="Change Password">
         <form onSubmit={handlePasswordSubmit} className="space-y-6">
-          <RetroCard>
+          <ManagerCard>
             <div className="space-y-5">
               <RetroInput label="Current Password" type="password" value={currentPassword} onChange={(event) => setCurrentPassword(event.target.value)} autoComplete="current-password" />
               <div>
@@ -137,31 +134,31 @@ export default function ProfilePage() {
               </div>
               <RetroInput label="Confirm New Password" type="password" value={confirmPassword} onChange={(event) => { setConfirmPassword(event.target.value); setPasswordError(""); }} autoComplete="new-password" error={!!passwordError} helperText={passwordError} />
             </div>
-          </RetroCard>
+          </ManagerCard>
           <RetroButton type="submit" variant="secondary" disabled={savingPassword}>{savingPassword ? "Updating..." : "Update Password"}</RetroButton>
-          {passwordSaved && <SuccessBanner>Password updated successfully.</SuccessBanner>}
+          {passwordSaved && <SuccessBanner>Password change simulated. Your sign-in password is unchanged.</SuccessBanner>}
         </form>
-      </RetroWindow>
+      </ManagerPanel>
 
-      <RetroWindow title="Notifications">
-        <RetroCard>
+      <ManagerPanel title="Notifications">
+        <ManagerCard>
           <div className="divide-y divide-border-soft/50">
             <PreferenceToggle label="Shift Updates" description="Get notified when your manager posts a shift update." checked={shiftUpdates} onChange={() => setShiftUpdates((value) => !value)} />
             <PreferenceToggle label="Performance Summary" description="Weekly email summary of your performance score." checked={performanceSummary} onChange={() => setPerformanceSummary((value) => !value)} />
             {role === "Manager" && <PreferenceToggle label="System Alerts" description="Get notified about active alerts requiring attention." checked={systemAlerts} onChange={() => setSystemAlerts((value) => !value)} />}
           </div>
-        </RetroCard>
-      </RetroWindow>
+        </ManagerCard>
+      </ManagerPanel>
 
-      <RetroWindow title="Danger Zone" titleBarClassName="bg-danger/10">
-        <RetroCard className="border-danger">
+      <ManagerPanel title="Danger Zone">
+        <ManagerCard className="border-danger">
           <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-sm text-text">Signing out will end your current session.</p>
             <RetroButton type="button" variant="secondary" className="!border-danger !text-danger hover:!bg-danger/10" onClick={handleLogout}>Log Out</RetroButton>
           </div>
-        </RetroCard>
-      </RetroWindow>
-    </main>
+        </ManagerCard>
+      </ManagerPanel>
+    </ManagerPage>
   );
 }
 

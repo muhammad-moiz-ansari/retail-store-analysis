@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Badge, RetroButton, RetroCard, RetroWindow } from "@/components/ui";
+import { Badge, RetroButton } from "@/components/ui";
+import { ManagerPage, ManagerHeader, ManagerPanel, ManagerCard } from "@/components/ui/ManagerLayout";
 import {
   CartesianGrid,
   Line,
@@ -44,133 +45,165 @@ type Task = {
   instruction: string;
   state: "pending" | "delivered" | "acknowledged" | "in_progress" | "completed" | "declined" | "expired" | "cancelled";
   created_at: string;
+  target_zone_id?: string | null;
+  evidence?: { zoneName?: string; reason?: string; alertTitle?: string } | null;
   due_at?: string;
 };
 
 export default function EmployeeHomePage() {
   const [tasks, setTasks] = useState<Task[]>([]);
 
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
+  const [pendingTask, setPendingTask] = useState<string | null>(null);
+  const [notice, setNotice] = useState<{ text: string; error: boolean }>();
+  const submitting = useRef(false);
+  const revision = useRef({ revision: 0 });
+
+  const load = useCallback(async () => {
+    const request = ++revision.current.revision;
+    try {
+      const response = await fetch("/api/backend/tasks/me", { cache: "no-store" });
+      if (!response.ok) throw new Error("Task inbox unavailable");
+      const data = await response.json();
+      if (request === revision.current.revision) {
+        setTasks(data.tasks);
+        setLoadError(false);
+      }
+    } catch {
+      if (request === revision.current.revision) setLoadError(true);
+    } finally {
+      if (request === revision.current.revision) setLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
-    const load = () =>
-      fetch("/api/backend/tasks/me", { cache: "no-store" })
-        .then((response) => (response.ok ? response.json() : null))
-        .then((data) => setTasks(data?.tasks || []));
-    load();
-    // The backend task stream announces changes; refetch on each event so new dispatches appear without a reload.
+    const requests = revision.current;
+    void load();
     const events = new EventSource("/api/backend/tasks/events");
     events.addEventListener("ready", load);
     events.onmessage = load;
-    return () => events.close();
-  }, []);
+    return () => {
+      ++requests.revision;
+      events.close();
+    };
+  }, [load]);
 
   async function transitionTask(taskId: string, state: Task["state"]) {
-    const response = await fetch(`/api/backend/tasks/${taskId}/transition`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ state }),
-    });
-    const data = await response.json().catch(() => ({}));
-    if (response.ok) setTasks(data.tasks || []);
+    if (submitting.current) return;
+    submitting.current = true;
+    setPendingTask(taskId);
+    setNotice(undefined);
+    try {
+      const response = await fetch(`/api/backend/tasks/${taskId}/transition`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ state }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error("Assignment update failed");
+      ++revision.current.revision;
+      setTasks(data.tasks);
+      setLoadError(false);
+      setNotice({ text: `Assignment ${state.replaceAll("_", " ")}.`, error: false });
+    } catch {
+      setNotice({ text: "The assignment update could not be confirmed. Check its status and try again.", error: true });
+      void load();
+    } finally {
+      submitting.current = false;
+      setPendingTask(null);
+    }
   }
 
   const activeTasks = tasks.filter((task) => ["pending", "delivered", "acknowledged", "in_progress"].includes(task.state));
 
   return (
-    <div className="min-h-screen bg-bg">
-      <main className="mx-auto w-full max-w-[1280px] px-4 py-10 md:px-6 md:py-14 lg:px-8">
-        <RetroWindow title="Employee Workspace">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-            <div>
-              <p className="font-mono text-xs font-semibold uppercase tracking-[0.16em] text-accent">
-                Employee workspace
-              </p>
-              <h1 className="mt-2 font-heading text-[32px] font-bold leading-tight tracking-tight text-text">
-                Your Shift at a Glance
-              </h1>
-              <p className="mt-2 text-sm text-text-muted">
-                The information you need to serve customers and track your performance today.
-              </p>
-            </div>
-            <Badge variant="neutral" className="shrink-0">
-              Employee Access
-            </Badge>
-          </div>
-        </RetroWindow>
+    <ManagerPage>
+        <ManagerHeader title="My workspace">
+          <p>Review your floor assignments and shift activity.</p>
+        </ManagerHeader>
 
-        <section className="mt-7 grid grid-cols-1 gap-5 md:grid-cols-3" aria-label="Shift overview">
-          {SHIFT_OVERVIEW.map((item) => (
-            <RetroCard key={item.label}>
-              <p className="font-mono text-[11px] font-semibold uppercase tracking-wider text-text-muted">
-                {item.label}
-              </p>
-              <p className="mt-2 font-heading text-xl font-bold text-text">{item.value}</p>
-              <p className="mt-1 text-sm text-text-muted">{item.note}</p>
-            </RetroCard>
-          ))}
-        </section>
-
-        <section className="mt-12" aria-labelledby="task-heading">
-          <RetroWindow title="Task Inbox">
-            <h2 id="task-heading" className="sr-only">Task Inbox</h2>
+        <div>
+          <ManagerPanel title="Current assignments">
+            {notice && <p role={notice.error ? "alert" : "status"} className="mb-3 rounded-lg bg-surface-alt p-3 text-sm">{notice.text}</p>}
+            {loadError && <div className="mb-3 flex flex-wrap items-center gap-3">
+              <p role="status" className="text-sm text-danger">Assignments could not be refreshed.</p>
+              <RetroButton type="button" variant="secondary" onClick={() => void load()}>Retry</RetroButton>
+            </div>}
             <div className="space-y-3">
               {activeTasks.length > 0 ? (
-                activeTasks.map((task) => (
-                  <RetroCard key={task.id} className="border-l-4 border-l-accent">
+                activeTasks.map((task, index) => (
+                  <ManagerCard key={task.id} className={index === 0 ? "border-l-4 border-l-accent bg-surface-alt" : ""}>
                     <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                       <div>
-                        <Badge variant="accent">{task.state.replace("_", " ")}</Badge>
-                        <p className="mt-3 font-heading text-base font-semibold text-text">{task.instruction}</p>
+                        <Badge variant="accent">{task.state.replaceAll("_", " ")}</Badge>
+                        <h3 className="mt-2 text-lg font-bold">{task.evidence?.zoneName || task.target_zone_id || "Aisle unspecified"}</h3>
+                        <p className="mt-1 font-semibold">{task.instruction}</p>
+                        <p className="mt-1 text-sm text-text-muted">{task.evidence?.reason || task.evidence?.alertTitle || "No reason was supplied."}</p>
                         <p className="mt-1 font-mono text-xs text-text-muted">
                           Delivered {new Date(task.created_at).toLocaleString()}
                         </p>
                       </div>
-                      <div className="flex flex-wrap gap-2">
+                      <div className="flex flex-wrap gap-2" aria-busy={pendingTask === task.id}>
                         {task.state === "delivered" && (
-                          <RetroButton type="button" variant="primary" className="!px-3 !py-1.5 !text-xs" onClick={() => transitionTask(task.id, "acknowledged")}>
+                          <RetroButton type="button" variant="primary" className="min-h-11 flex-1 sm:flex-none" disabled={pendingTask !== null} onClick={() => transitionTask(task.id, "acknowledged")}>
                             Acknowledge
                           </RetroButton>
                         )}
                         {task.state === "acknowledged" && (
-                          <RetroButton type="button" variant="primary" className="!px-3 !py-1.5 !text-xs" onClick={() => transitionTask(task.id, "in_progress")}>
+                          <RetroButton type="button" variant="primary" className="min-h-11 flex-1 sm:flex-none" disabled={pendingTask !== null} onClick={() => transitionTask(task.id, "in_progress")}>
                             Start
                           </RetroButton>
                         )}
                         {task.state === "in_progress" && (
-                          <RetroButton type="button" variant="primary" className="!px-3 !py-1.5 !text-xs" onClick={() => transitionTask(task.id, "completed")}>
+                          <RetroButton type="button" variant="primary" className="min-h-11 flex-1 sm:flex-none" disabled={pendingTask !== null} onClick={() => transitionTask(task.id, "completed")}>
                             Complete
                           </RetroButton>
                         )}
                         {task.state !== "in_progress" && (
-                          <RetroButton type="button" variant="danger" className="!px-3 !py-1.5 !text-xs" onClick={() => transitionTask(task.id, "declined")}>
+                          <RetroButton type="button" variant="danger" className="min-h-11 flex-1 sm:flex-none" disabled={pendingTask !== null} onClick={() => transitionTask(task.id, "declined")}>
                             Decline
                           </RetroButton>
                         )}
                       </div>
                     </div>
-                  </RetroCard>
+                  </ManagerCard>
                 ))
               ) : (
-                <RetroCard>
-                  <p className="text-sm text-text-muted">No active dispatch tasks.</p>
-                </RetroCard>
+                <ManagerCard>
+                  <p className="text-sm text-text-muted">{loading ? "Loading assignments…" : loadError ? "Assignment status is unavailable." : "No active dispatch tasks."}</p>
+                </ManagerCard>
               )}
             </div>
-          </RetroWindow>
+          </ManagerPanel>
+        </div>
+
+        <p className="rounded-lg bg-surface-alt p-3 text-sm text-text-muted">Shift, coverage and performance below use sample data.</p>
+        <section className="grid grid-cols-1 gap-4 sm:grid-cols-3" aria-label="Sample shift overview">
+          {SHIFT_OVERVIEW.map((item) => (
+            <ManagerCard key={item.label}>
+              <p className="font-mono text-[11px] font-semibold uppercase tracking-wider text-text-muted">
+                {item.label}
+              </p>
+              <p className="mt-2 font-heading text-xl font-bold text-text">{item.value}</p>
+              <p className="mt-1 text-sm text-text-muted">{item.note}</p>
+            </ManagerCard>
+          ))}
         </section>
 
         <section className="mt-12" aria-labelledby="performance-heading">
-          <RetroWindow title="My Performance">
+          <ManagerPanel title="My Performance">
             <h2 id="performance-heading" className="sr-only">My Performance</h2>
             <div className="grid gap-6 md:grid-cols-2">
-              <RetroCard className="flex flex-col items-center justify-center py-6 text-center">
+              <ManagerCard className="flex flex-col items-center justify-center py-6 text-center">
                 <ScoreRing score={87} max={100} />
                 <h3 className="mt-4 font-heading text-base font-bold text-text">Today&apos;s Score</h3>
                 <p className="mt-1 max-w-sm text-sm leading-relaxed text-text-muted">
                   Strong — you&apos;re approaching customers quickly and keeping interactions meaningful.
                 </p>
-              </RetroCard>
+              </ManagerCard>
 
-              <RetroCard label="Score Breakdown" className="py-6">
+              <ManagerCard label="Score Breakdown" className="py-6">
                 <div className="space-y-5">
                   {SCORE_BREAKDOWN.map((item) => (
                     <div key={item.label}>
@@ -192,22 +225,22 @@ export default function EmployeeHomePage() {
                 <Link href="/my-performance" className="mt-6 inline-block">
                   <RetroButton variant="secondary">View Full History →</RetroButton>
                 </Link>
-              </RetroCard>
+              </ManagerCard>
             </div>
 
             <div className="mt-6 border-l-4 border-l-accent-soft bg-surface-alt/50 px-4 py-3 text-sm leading-relaxed text-text-muted">
               This score reflects approach speed, idle time, and interaction duration from today&apos;s shift. It&apos;s a support tool for you and your manager — not an automatic judgment. Questions about your score? Talk to your floor lead.
             </div>
-          </RetroWindow>
+          </ManagerPanel>
         </section>
 
         <section className="mt-12" aria-labelledby="trend-heading">
-          <RetroWindow title="Your Score This Week">
+          <ManagerPanel title="Your Score This Week">
             <h2 id="trend-heading" className="sr-only">Your Score This Week</h2>
-            <RetroCard>
+            <ManagerCard>
               <div className="h-[280px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={WEEKLY_SCORES} margin={{ top: 12, right: 12, left: -20, bottom: 0 }}>
+                  <LineChart accessibilityLayer data={WEEKLY_SCORES} margin={{ top: 12, right: 12, left: -20, bottom: 0 }}>
                     <CartesianGrid vertical={false} stroke="var(--color-border-soft)" strokeOpacity={0.25} />
                     <XAxis
                       dataKey="day"
@@ -246,13 +279,13 @@ export default function EmployeeHomePage() {
                 </ResponsiveContainer>
               </div>
               <p className="mt-4 font-mono text-xs font-semibold text-success">↑ 13 points since Monday — keep it up.</p>
-            </RetroCard>
-          </RetroWindow>
+            </ManagerCard>
+          </ManagerPanel>
         </section>
 
         <section className="mt-12" aria-label="Shift updates and zone assignment">
           <div className="grid gap-6 md:grid-cols-2">
-            <RetroWindow title="Zone Assignment">
+            <ManagerPanel title="Zone Assignment">
               <div className="space-y-2">
                 <p className="font-heading text-lg font-semibold text-text">Electronics Floor</p>
                 <p className="text-sm text-text-muted">Assigned for this shift · 9:00 AM – 6:00 PM</p>
@@ -261,9 +294,9 @@ export default function EmployeeHomePage() {
                   <span>Coverage status: <span className="font-medium text-success">Active</span></span>
                 </div>
               </div>
-            </RetroWindow>
+            </ManagerPanel>
 
-            <RetroWindow title="Shift Updates">
+            <ManagerPanel title="Shift Updates">
               <ul className="space-y-4">
                 <li className="flex gap-3 text-sm leading-relaxed text-text">
                   <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" aria-hidden="true" />
@@ -278,20 +311,19 @@ export default function EmployeeHomePage() {
                   Your break is scheduled for 2:30 PM.
                 </li>
               </ul>
-            </RetroWindow>
+            </ManagerPanel>
           </div>
         </section>
 
         <section className="mt-12" aria-label="Need help">
-          <RetroCard className="border-l-4 border-l-accent">
+          <ManagerCard className="border-l-4 border-l-accent">
             <p className="font-heading text-sm font-semibold text-text">Need help?</p>
             <p className="mt-1 text-sm leading-relaxed text-text-muted">
               Contact the floor lead for customer escalations, stock issues, or changes to your assigned area.
             </p>
-          </RetroCard>
+          </ManagerCard>
         </section>
-      </main>
-    </div>
+    </ManagerPage>
   );
 }
 
