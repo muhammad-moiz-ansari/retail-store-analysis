@@ -41,9 +41,9 @@ export default function ProfilePage() {
   const [systemAlerts, setSystemAlerts] = useState(true);
   const profile = PROFILE_DATA[role === "Manager" ? "Manager" : "Employee"];
 
-  function handleLogout() {
-    signOut();
-    router.push("/");
+  async function handleLogout() {
+    await signOut();
+    router.replace("/");
   }
 
   function handleDetailsSubmit(event: FormEvent<HTMLFormElement>) {
