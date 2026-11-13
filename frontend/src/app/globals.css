@@ -238,6 +238,12 @@ html:has([data-public-shell]) {
   scrollbar-color: var(--color-accent-soft) var(--color-bg);
 }
 
+#manager-sidebar-links {
+  padding-inline-end: 0.625rem;
+  scrollbar-width: thin;
+  scrollbar-color: white transparent;
+}
+
 :where(input[type="range"], progress, meter) {
   accent-color: var(--color-accent);
 }
