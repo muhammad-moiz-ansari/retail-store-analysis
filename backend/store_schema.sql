@@ -111,6 +111,7 @@ CREATE TABLE IF NOT EXISTS tasks (
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL,
   due_at TEXT,
+  ack_seconds DOUBLE PRECISION,  -- delivery to first acknowledgement (C3: log acknowledgement time)
   FOREIGN KEY(employee_id) REFERENCES users(id),
   FOREIGN KEY(target_zone_id) REFERENCES zones(id),
   FOREIGN KEY(source_zone_id) REFERENCES zones(id),

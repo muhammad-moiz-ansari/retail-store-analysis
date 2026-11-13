@@ -630,6 +630,9 @@ def transition_task(task_id: str, body: dict, current: Annotated[dict[str, str |
             raise HTTPException(status_code=403, detail="Employees can only update their own tasks")
         timestamp = now_iso()
         conn.execute("UPDATE tasks SET state = %s, updated_at = %s WHERE id = %s", (state, timestamp, task_id))
+        if state == "acknowledged" and task["ack_seconds"] is None:
+            ack = (datetime.fromisoformat(timestamp) - datetime.fromisoformat(task["created_at"])).total_seconds()
+            conn.execute("UPDATE tasks SET ack_seconds = %s WHERE id = %s", (round(ack, 3), task_id))
         conn.execute(
             "INSERT INTO task_events(id, task_id, state, actor_id, note, created_at) VALUES (%s, %s, %s, %s, %s, %s)",
             (uuid.uuid4().hex, task_id, state, current.get("user_id"), body.get("note") or None, timestamp),
@@ -654,7 +657,11 @@ def system_status() -> dict:
             "SELECT count(*) AS total FROM tasks WHERE state IN ('pending', 'delivered', 'acknowledged', 'in_progress')"
         ).fetchone()["total"]
         cameras = conn.execute("SELECT count(*) AS total, sum(online) AS online FROM cameras").fetchone()
+        ack = conn.execute(
+            "SELECT count(ack_seconds) AS n, avg(ack_seconds) AS mean, percentile_cont(0.5) WITHIN GROUP (ORDER BY ack_seconds) AS median FROM tasks"
+        ).fetchone()
         return {
+            "acknowledgement": {"tasks": ack["n"], "meanSeconds": ack["mean"], "medianSeconds": ack["median"]},
             "ok": True,
             "workers": {"orchestrator": "idle", "cv": "not_configured", "pos": "available"},
             "activeAlerts": active_alerts,

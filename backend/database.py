@@ -34,7 +34,8 @@ SCHEMAS = (ROOT / "store_schema.sql", ROOT / "events" / "schema.sql", ROOT / "in
 
 # Columns added after a table first shipped; CREATE TABLE IF NOT EXISTS leaves existing tables unchanged.
 # Run before the schema files so their indexes on the new columns succeed.
-UPGRADES = ("ALTER TABLE IF EXISTS orchestration_events ADD COLUMN IF NOT EXISTS dedupe_key TEXT",)
+UPGRADES = ("ALTER TABLE IF EXISTS orchestration_events ADD COLUMN IF NOT EXISTS dedupe_key TEXT",
+            "ALTER TABLE IF EXISTS tasks ADD COLUMN IF NOT EXISTS ack_seconds DOUBLE PRECISION")
 
 
 def initialize(conn, schemas=SCHEMAS):
