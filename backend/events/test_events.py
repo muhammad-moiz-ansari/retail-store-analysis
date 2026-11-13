@@ -145,3 +145,19 @@ def test_queue_counts_customers_in_the_polygon_and_estimates_wait(tmp_path, post
     conn = postgres_connection
     ingest_run(conn, prefix, "t", "c3", "z6", START, layout={"queue_zone": queue})
     assert [tuple(r.values()) for r in conn.execute("SELECT queue_length, est_wait_s FROM queue_samples ORDER BY ts_start")] == [(1, 60.0), (2, 120.0), (2, 120.0)]
+
+
+def test_judge_rejected_pair_does_not_end_an_unattended_wait(tmp_path, postgres_connection) -> None:
+    """S-B0-VERDICT: only confirmed verdicts (pipeline's CONFIRMED) count as help."""
+    prefix = tmp_path / "rejected"
+    people = [{"track_id": 1, "first_seen": 0.0, "last_seen": 300.0, "frames_observed": 300, "role": "employee"},
+              {"track_id": 2, "first_seen": 0.0, "last_seen": 300.0, "frames_observed": 300, "role": "customer"},
+              {"track_id": 3, "first_seen": 0.0, "last_seen": 300.0, "frames_observed": 300, "role": "customer"}]
+    interactions = [{"employee_track_id": 1, "customer_track_id": 2, "started_at": 20.0, "last_seen_at": 40.0, "verdict": "no_interaction"},
+                    {"employee_track_id": 1, "customer_track_id": 3, "started_at": 20.0, "last_seen_at": 40.0, "verdict": "unverified"}]
+    for suffix, data in ((".people.json", {"people": people}), (".interactions.json", interactions), (".detections.json", [])):
+        prefix.with_suffix(suffix).write_text(json.dumps(data))
+    conn = postgres_connection
+    assert ingest_run(conn, prefix, "v", "c2", "z2", START, unattended_after_s=180.0)["unattended_episodes"] == 1
+    episode = conn.execute("SELECT customer_track_id, waited_s, helped FROM unattended_episodes").fetchone()
+    assert episode == {"customer_track_id": 2, "waited_s": 300.0, "helped": 0}
