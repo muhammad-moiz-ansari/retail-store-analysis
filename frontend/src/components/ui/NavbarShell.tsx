@@ -9,6 +9,7 @@ import { MANAGER_ROUTES, EMPLOYEE_ROUTES, matchesRoute } from "@/components/auth
 import { Footer } from "./Footer";
 import { Navbar, NavLogo } from "./Navbar";
 import { EmployeeAccountMenu } from "./EmployeeAccountMenu";
+import { ManagerMobileMenu } from "./ManagerMobileMenu";
 
 const managerLinks = [
   ["/dashboard", "Overview"], ["/customer-info", "Customers"],
@@ -83,14 +84,7 @@ export function NavbarShell({ children }: { children: React.ReactNode }) {
       {manager ? <header className="workspace-sidebar translucent-nav sticky top-0 z-40 px-4 py-3 text-on-sidebar lg:hidden">
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-3">
           {brand}
-          <div className="flex items-center gap-2">
-          <details key={pathname} className="relative">
-            <summary className="flex min-h-11 cursor-pointer items-center rounded-lg border border-white/35 px-3 text-sm">Menu</summary>
-            <div className="absolute right-0 top-full mt-2 grid max-h-[70dvh] w-[min(16rem,80vw)] gap-2 overflow-y-auto rounded-xl border border-white/25 bg-sidebar p-2 shadow-lg">
-              {navigation}{logout}
-            </div>
-          </details>
-          </div>
+          <ManagerMobileMenu key={pathname}>{navigation}{logout}</ManagerMobileMenu>
         </div>
       </header> : <header className="workspace-sidebar translucent-nav employee-navbar sticky top-0 z-40 grid min-h-[52px] grid-cols-[1fr_auto] items-center gap-x-3 px-4 text-on-sidebar md:grid-cols-[1fr_auto_1fr] md:px-6">
         <Link href={home} className="flex w-fit items-center gap-2.5 font-heading text-lg font-bold tracking-tight">

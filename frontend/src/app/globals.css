@@ -212,6 +212,32 @@ html:has([data-public-shell]) {
   --nav-tint: 78%;
 }
 
+.manager-mobile-menu svg path { transform-origin: 12px 12px; }
+.manager-mobile-menu[data-open="true"] svg path:first-child { transform: rotate(45deg) translateY(6px); }
+.manager-mobile-menu[data-open="true"] svg path:nth-child(2) { opacity: 0; transform: scaleX(0.35); }
+.manager-mobile-menu[data-open="true"] svg path:last-child { transform: rotate(-45deg) translateY(-6px); }
+
+.manager-mobile-dropdown {
+  visibility: hidden;
+  opacity: 0;
+  transform: translateY(-10px) scale(0.98);
+  transform-origin: top right;
+  pointer-events: none;
+}
+.manager-mobile-menu[data-open="true"] .manager-mobile-dropdown {
+  visibility: visible;
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .manager-mobile-menu svg path { transition: transform 220ms ease, opacity 160ms ease; }
+  .manager-mobile-dropdown {
+    transition: transform 220ms ease, opacity 200ms ease, visibility 0s linear 220ms;
+  }
+  .manager-mobile-menu[data-open="true"] .manager-mobile-dropdown { transition-delay: 0s; }
+}
+
 [data-employee-shell] :is(.workspace-card, .workspace-panel) {
   box-shadow: 0 12px 28px -16px rgb(5 10 28 / 42%), 0 3px 8px -5px rgb(5 10 28 / 18%);
 }
