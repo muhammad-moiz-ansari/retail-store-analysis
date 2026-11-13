@@ -11,8 +11,8 @@ export function AuthPageShell({
   children: ReactNode;
 }) {
   return (
-    <main className="mx-auto w-full max-w-xl px-5 py-10 sm:px-8 sm:py-16">
-      <div className="overflow-hidden rounded-2xl border border-border-soft bg-surface shadow-[0_18px_44px_-20px_rgb(5_10_28_/_38%)]">
+    <main className="auth-backdrop w-full px-5 py-10 sm:px-8 sm:py-16">
+      <div className="mx-auto max-w-[32rem] overflow-hidden rounded-2xl border border-border-soft bg-surface shadow-[0_18px_44px_-20px_rgb(5_10_28_/_38%)]">
         <header className="bg-surface-alt px-6 py-7 sm:px-9">
           <Logo size={30} />
           <h1 className="mt-5 text-3xl font-bold tracking-tight sm:text-4xl">{title}</h1>

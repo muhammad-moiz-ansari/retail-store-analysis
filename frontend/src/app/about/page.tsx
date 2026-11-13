@@ -1,10 +1,13 @@
 import { PublicReveal } from "@/components/ui/PublicReveal";
+import { HomeAurora } from "@/components/ui/HomeAurora";
 import { EffectAnchor } from "@/components/ui/PointerEffect";
 import styles from "../public-pages.module.css";
 
 export default function AboutPage() {
   return (
     <main>
+      <div className={styles.heroBackdrop}>
+        <div className={styles.heroAurora} aria-hidden="true"><HomeAurora /></div>
       <section className={`${styles.section} ${styles.aboutIntro}`} aria-labelledby="about-title">
         <h1 id="about-title" className={styles.heroTitle}>About RetailPulse</h1>
         <p className={styles.lede}>
@@ -14,6 +17,7 @@ export default function AboutPage() {
           See how it works <span aria-hidden="true">↗</span>
         </EffectAnchor>
       </section>
+      </div>
 
       <section className={styles.section} aria-labelledby="roles-title">
         <PublicReveal>

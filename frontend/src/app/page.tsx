@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { HomeAurora } from "@/components/ui/HomeAurora";
 import { PublicReveal } from "@/components/ui/PublicReveal";
 import { EffectLink, HoloPreview } from "@/components/ui/PointerEffect";
 import styles from "./public-pages.module.css";
@@ -55,21 +56,24 @@ function DashboardPreview() {
 export default function LandingPage() {
   return (
     <main>
-      <section className={styles.hero} aria-labelledby="landing-title">
-        <div className={styles.heroCopy}>
-          <h1 id="landing-title" className={styles.heroTitle}>
-            See where your store needs <span>attention.</span>
-          </h1>
-          <p className={styles.lede}>
-            RetailPulse helps retail teams review customer and employee activity from camera observations and coordinate aisle assignments from the same workspace.
-          </p>
-          <div className={styles.actions}>
-            <EffectLink href="/login" className={`${styles.primary} ${styles.specular}`}>Sign in</EffectLink>
-            <a href="#how-it-works" className={styles.secondary}>See how it works <span aria-hidden="true">↓</span></a>
+      <div className={styles.heroBackdrop}>
+        <div className={styles.heroAurora} aria-hidden="true"><HomeAurora interactive /></div>
+        <section className={styles.hero} aria-labelledby="landing-title">
+          <div className={styles.heroCopy}>
+            <h1 id="landing-title" className={styles.heroTitle}>
+              See where your store needs <span>attention.</span>
+            </h1>
+            <p className={styles.lede}>
+              RetailPulse helps retail teams review customer and employee activity from camera observations and coordinate aisle assignments from the same workspace.
+            </p>
+            <div className={styles.actions}>
+              <EffectLink href="/login" className={`${styles.primary} ${styles.specular}`}>Sign in</EffectLink>
+              <a href="#how-it-works" className={styles.secondary}>See how it works <span aria-hidden="true">↓</span></a>
+            </div>
           </div>
-        </div>
-        <DashboardPreview />
-      </section>
+          <DashboardPreview />
+        </section>
+      </div>
 
       <section id="how-it-works" tabIndex={-1} className={styles.section} aria-labelledby="workflow-title">
         <PublicReveal>

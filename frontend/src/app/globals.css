@@ -134,6 +134,12 @@ h1, h2, h3, h4, h5, h6 {
   box-shadow: 0 4px 20px 3px color-mix(in srgb, var(--color-accent) 24%, transparent);
 }
 
+.auth-backdrop {
+  background:
+    radial-gradient(ellipse at 15% 10%, color-mix(in srgb, var(--color-accent) 13%, transparent), transparent 57%),
+    radial-gradient(ellipse at 88% 70%, color-mix(in srgb, var(--color-cyan) 10%, transparent), transparent 55%);
+}
+
 @media (prefers-reduced-motion: no-preference) {
   .auth-field { transition: box-shadow 160ms ease-out; }
   .auth-field:focus { transition-delay: 45ms; }
@@ -193,8 +199,11 @@ html:has([data-public-shell]) {
 }
 
 .translucent-nav {
-  background: color-mix(in srgb, var(--nav-surface, var(--color-surface-alt)) 92%, transparent);
-  backdrop-filter: blur(14px);
+  background: color-mix(in srgb, var(--nav-surface, var(--color-surface-alt)) var(--nav-tint, 54%), transparent);
+  backdrop-filter: blur(18px) saturate(135%);
   box-shadow: 0 6px 20px rgb(5 10 28 / 18%);
 }
-.translucent-nav.workspace-sidebar { --nav-surface: var(--color-sidebar); }
+.translucent-nav.workspace-sidebar {
+  --nav-surface: var(--color-sidebar);
+  --nav-tint: 78%;
+}
