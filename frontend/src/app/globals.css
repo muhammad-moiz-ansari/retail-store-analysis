@@ -81,9 +81,16 @@ h1, h2, h3, h4, h5, h6 {
   scroll-margin-top: 5rem;
 }
 
+html:has([data-public-shell]) {
+  scroll-padding-top: 5rem;
+}
+
+[data-public-shell] .workspace-content {
+  scroll-margin-top: 0;
+}
+
 @media (prefers-reduced-motion: no-preference) {
   html:has([data-public-shell]) {
     scroll-behavior: smooth;
-    scroll-padding-top: 5rem;
   }
 }
