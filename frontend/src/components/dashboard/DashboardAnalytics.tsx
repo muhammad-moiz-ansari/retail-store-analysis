@@ -92,7 +92,7 @@ function MetricGrid({ keys, metrics, headline = false }: {
           const metric = metrics[key];
           return (
             <article key={key} aria-label={labels[key]}>
-              <ManagerCard className={`h-full ${headline && key === "entries" ? "border-accent-soft bg-surface-alt" : ""}`}>
+              <ManagerCard className={`h-full ${key === "confirmedInteractions" && metric.value !== null ? "lime-kpi" : ""}`}>
                 <p className="font-heading text-sm font-semibold text-text">{labels[key]}</p>
                 <p className={`mt-2 font-heading font-bold tabular-nums tracking-tight text-text ${headline && metric.value !== null ? "text-4xl" : "text-2xl"}`}>{metricValue(metric)}</p>
                 <p className="mt-1 text-xs text-text-muted">

@@ -15,6 +15,9 @@
   --color-on-heat-low: #101B46;
   --color-on-heat-high: #FFFFFF;
   --color-coral: #C54F3D;
+  --color-cyan: #007F9E;
+  --color-lime: #C8E850;
+  --color-on-lime: #0D132B;
   --color-attention: #8A4B08;
   --panel-radius: 1rem;
   --workspace-gap: clamp(1rem, 3vw, 2rem);
@@ -23,8 +26,8 @@
   --color-surface-alt: #EEEDFA;
   --color-border: #101B46;
   --color-border-soft: #DADCEC;
-  --color-accent: #4646B5;
-  --color-accent-hover: #373794;
+  --color-accent: #6335D4;
+  --color-accent-hover: #5026B7;
   --color-accent-soft: #7779CD;
   --color-success: #276749;
   --color-danger: #9B2934;
@@ -49,6 +52,8 @@
   --color-text-muted: #AAB2CC;
   --color-accent-soft: #C3BDFF;
   --color-coral: #FF927D;
+  --color-cyan: #39D8F4;
+  --color-lime: #D9F565;
   --color-sidebar-focus: #A5ABFF;
   --color-attention: #FFD187;
   --color-success: #87DBAD;
@@ -60,6 +65,7 @@
   --color-on-sidebar: var(--color-on-sidebar);
   --color-on-accent: var(--color-on-accent);
   --color-on-danger: var(--color-on-danger);
+  --color-attention: var(--color-attention);
   /* Map CSS variables into Tailwind utilities */
   --color-bg: var(--color-bg);
   --color-surface: var(--color-surface);
@@ -78,6 +84,15 @@
   --font-heading: var(--font-space-grotesk);
   --font-body: var(--font-inter);
   --font-mono: var(--font-jetbrains-mono);
+}
+
+/* Keep foregrounds and focus readable on the lime KPI in either theme. */
+.lime-kpi {
+  background: var(--color-lime);
+  border-color: var(--color-lime);
+  --color-text: var(--color-on-lime);
+  --color-text-muted: var(--color-on-lime);
+  --color-accent: var(--color-on-lime);
 }
 
 /* ── Base styles ── */

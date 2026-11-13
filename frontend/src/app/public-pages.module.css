@@ -192,6 +192,7 @@
 }
 
 .bars li:nth-child(3) .barTrack span { background: var(--color-coral); }
+.bars li:first-child .barTrack span { background: var(--color-cyan); }
 
 .section { padding-bottom: clamp(3rem, 7vw, 6rem); }
 

@@ -136,7 +136,9 @@ export default function EmployeeHomePage() {
                   <ManagerCard key={task.id} className={index === 0 ? "border-l-4 border-l-accent bg-surface-alt" : ""}>
                     <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                       <div>
-                        <Badge variant="accent">{task.state.replaceAll("_", " ")}</Badge>
+                        <Badge variant={task.state === "delivered" ? "attention" : task.state === "in_progress" ? "accent" : "neutral"}>
+                          {task.state.replaceAll("_", " ")}
+                        </Badge>
                         <h3 className="mt-2 text-lg font-bold">{task.evidence?.zoneName || task.target_zone_id || "Aisle unspecified"}</h3>
                         <p className="mt-1 font-semibold">{task.instruction}</p>
                         <p className="mt-1 text-sm text-text-muted">{task.evidence?.reason || task.evidence?.alertTitle || "No reason was supplied."}</p>

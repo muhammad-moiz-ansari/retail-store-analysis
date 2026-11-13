@@ -65,6 +65,7 @@ export default function StyleGuidePage() {
 
       {/* ─── Color Palette ─── */}
       <Section title="Color Palette">
+        <p className="text-sm text-text-muted">Swatches follow the active theme. Hex values show the light palette.</p>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
           {[
             { name: "bg", hex: "#FAF8F2" },
@@ -72,14 +73,16 @@ export default function StyleGuidePage() {
             { name: "surface-alt", hex: "#EEEDFA" },
             { name: "border", hex: "#101B46" },
             { name: "border-soft", hex: "#DADCEC" },
-            { name: "accent", hex: "#4646B5" },
-            { name: "accent-hover", hex: "#373794" },
+            { name: "accent", hex: "#6335D4" },
+            { name: "accent-hover", hex: "#5026B7" },
             { name: "accent-soft", hex: "#7779CD" },
             { name: "success", hex: "#276749" },
             { name: "danger", hex: "#9B2934" },
             { name: "text", hex: "#101B46" },
             { name: "text-muted", hex: "#51586B" },
             { name: "coral", hex: "#C54F3D" },
+            { name: "cyan", hex: "#007F9E" },
+            { name: "lime", hex: "#C8E850" },
           ].map(({ name, hex }) => (
             <div
               key={name}
