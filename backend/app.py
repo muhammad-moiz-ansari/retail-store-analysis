@@ -641,6 +641,28 @@ def transition_task(task_id: str, body: dict, current: Annotated[dict[str, str |
         return my_tasks(current)
 
 
+@app.post("/tasks/{task_id}/voice", dependencies=[Depends(require_employee_or_manager)])
+def task_voice(task_id: str, current: Annotated[dict[str, str | None], Depends(actor)]) -> dict:
+    """C3: the spoken instruction for one task. Made on demand so dispatch never waits on HF or ElevenLabs;
+    without their keys the script is the local template and audioBase64 is null (the page then speaks it itself)."""
+    with connect() as conn:
+        task = conn.execute(
+            "SELECT tasks.*, zones.name AS zone_name FROM tasks LEFT JOIN zones ON zones.id = tasks.target_zone_id WHERE tasks.id = %s",
+            (task_id,),
+        ).fetchone()
+        if not task:
+            raise HTTPException(status_code=404, detail="Task not found")
+        if current.get("role") == "Employee" and task["employee_id"] != current.get("user_id"):
+            raise HTTPException(status_code=403, detail="Employees can only hear their own tasks")
+        script = generate_voice_script(
+            {"eventType": "task_assignment", "title": task["instruction"], "severity": "medium", "zoneId": task["target_zone_id"],
+             "zoneName": task["zone_name"], "category": "Task", "context": task["instruction"], "instruction": task["instruction"],
+             "decision": "dispatched", "evidence": parse_json(task["evidence_json"])},
+            store_context(conn),
+        )
+    return {"script": script, "audio": synthesize_voice(script["script"])}
+
+
 @app.get("/tasks/events", dependencies=[Depends(require_employee_or_manager)])
 def task_events() -> StreamingResponse:
     async def stream():
