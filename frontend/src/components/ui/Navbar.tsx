@@ -8,6 +8,10 @@ import { Badge } from "./Badge";
 import { RetroButton } from "./RetroButton";
 import { useAuth } from "@/components/auth/AuthProvider";
 
+const publicAction = "inline-flex min-h-11 items-center justify-center rounded-lg border px-3 text-sm font-semibold";
+const signInAction = `${publicAction} border-accent text-accent hover:bg-surface`;
+const signUpAction = `${publicAction} border-transparent bg-accent text-surface hover:bg-accent-hover`;
+
 interface NavbarProps {
   /** Show role badge and Log Out button (for authenticated pages like /dashboard) */
   authenticated?: boolean;
@@ -190,16 +194,8 @@ export function Navbar({ authenticated = false, role = "Manager" }: NavbarProps)
         ) : (
           // Not authenticated: Sign In + Get Started
           <div className="hidden min-[1090px]:flex items-center gap-3 xl:w-[200px] w-auto justify-end shrink-0">
-            <Link href="/login">
-              <RetroButton variant="secondary" className="!px-3 !py-1.5 !text-xs">
-                Sign In
-              </RetroButton>
-            </Link>
-            <Link href="/signup">
-              <RetroButton variant="primary" className="!px-3 !py-1.5 !text-xs">
-                Get Started
-              </RetroButton>
-            </Link>
+            <Link href="/login" className={signInAction}>Sign in</Link>
+            <Link href="/signup" className={signUpAction}>Sign up</Link>
           </div>
         )}
 
@@ -283,16 +279,8 @@ export function Navbar({ authenticated = false, role = "Manager" }: NavbarProps)
           </div>
         ) : (
           <div className="py-3 px-5 border-t border-border-soft flex flex-col gap-2">
-            <Link href="/login" className="w-full">
-              <RetroButton variant="secondary" className="!w-full !text-xs">
-                Sign In
-              </RetroButton>
-            </Link>
-            <Link href="/signup" className="w-full">
-              <RetroButton variant="primary" className="!w-full !text-xs">
-                Get Started
-              </RetroButton>
-            </Link>
+            <Link href="/login" className={signInAction}>Sign in</Link>
+            <Link href="/signup" className={signUpAction}>Sign up</Link>
           </div>
         )}
       </div>

@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { PublicReveal } from "@/components/ui/PublicReveal";
 import styles from "../public-pages.module.css";
 
@@ -10,7 +9,7 @@ export default function AboutPage() {
         <p className={styles.lede}>
           RetailPulse brings store-floor observations and aisle assignments together so retail teams can review customer service activity and coordinate coverage.
         </p>
-        <Link href="/#how-it-works" className={styles.textLink}>See how it works <span aria-hidden="true">↗</span></Link>
+        <a href="/#how-it-works" className={styles.textLink}>See how it works <span aria-hidden="true">↗</span></a>
       </section>
 
       <section className={styles.section} aria-labelledby="roles-title">

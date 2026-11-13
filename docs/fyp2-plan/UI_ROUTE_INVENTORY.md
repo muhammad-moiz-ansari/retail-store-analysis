@@ -4,8 +4,8 @@ The root AuthProvider and RouteAccessGuard apply to the site. Phase 1 selects th
 
 | Routes | Audience and data source | Existing workflow and later verification |
 |---|---|---|
-| /, /about | Public copy and product examples | Phase 2 verify sign-in links, anchors, and reveals |
-| /login, /signup | Public, auth APIs | Phase 2 verify form errors, submissions, and role redirects |
+| /, /about | Public copy and labeled synthetic homepage preview | Phase 2 verified sign-in link, anchors, reveals, and motion fallbacks |
+| /login, /signup | Public, auth APIs | Phase 2 verified form errors, submissions, and role redirects with a mock upstream and real frontend session cookies |
 | /dashboard | Manager, configured analytics and explicit synthetic preview | Phase 3 verify source, scenarios, refresh, and metric states |
 | /customer-info, /employee-info | Manager, page fixtures | Phase 3 verify existing charts and controls |
 | /spatial-analytics | Manager, page fixtures | Phase 3 verify filters and visual states |
@@ -20,4 +20,4 @@ The root AuthProvider and RouteAccessGuard apply to the site. Phase 1 selects th
 | /profile | Both roles, session and existing profile fields | Phase 4 verify account links and logout |
 | /style-guide | Public, component examples | Phase 4 verify shared controls and states |
 
-Dashboard reference 1 guides the Phase 1 sidebar. References 2–4 inform later data panels where matching data is available.
+Dashboard reference 1 guides the Phase 1 sidebar and Phase 2 preview. References 2–4 inform later data panels where matching data is available.

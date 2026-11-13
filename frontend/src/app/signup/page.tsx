@@ -1,24 +1,18 @@
 "use client";
 
-import React, { useState, FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import {
-  RetroWindow,
-  RetroInput,
-  RetroButton,
-  Logo,
-} from "@/components/ui";
+import { AuthField, AuthPageShell } from "@/components/auth/AuthPageShell";
+import { RetroButton } from "@/components/ui/RetroButton";
 
 export default function SignupPage() {
-  const router = useRouter();
-
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [token, setToken] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [errors, setErrors] = useState<Record<string, string | undefined>>({});
+  const [submitError, setSubmitError] = useState<string>();
   const [submitting, setSubmitting] = useState(false);
 
   function validate() {
@@ -41,9 +35,15 @@ export default function SignupPage() {
     setErrors((p) => ({ ...p, [field]: undefined }));
   }
 
-  async function handleSubmit(e: FormEvent) {
+  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (!validate()) return;
+    if (submitting) return;
+    setSubmitError(undefined);
+    if (!validate()) {
+      const form = e.currentTarget;
+      requestAnimationFrame(() => form.querySelector<HTMLInputElement>('input[aria-invalid="true"]')?.focus());
+      return;
+    }
 
     setSubmitting(true);
     try {
@@ -54,144 +54,100 @@ export default function SignupPage() {
       });
       const data = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(data.error || "Signup failed");
-      router.push(data.role === "Manager" ? "/dashboard" : "/employee-home");
+      // Reload the auth provider so the protected route reads the new session cookie.
+      window.location.assign(data.role === "Manager" ? "/dashboard" : "/employee-home");
     } catch (error) {
-      setErrors((current) => ({
-        ...current,
-        token: error instanceof Error ? error.message : "Signup failed",
-      }));
-    } finally {
+      setSubmitError(error instanceof Error ? error.message : "Signup failed");
       setSubmitting(false);
     }
   }
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center bg-bg px-4 py-12 overflow-hidden">
-      {/* ── Decorative background ── */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute -top-32 -left-32 w-[500px] h-[500px] rounded-full opacity-[0.04]"
-        style={{
-          background:
-            "repeating-radial-gradient(circle, var(--color-border) 0px, var(--color-border) 1px, transparent 1px, transparent 28px)",
-        }}
-      />
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute -bottom-24 -right-24 w-[400px] h-[400px] rounded-full opacity-[0.04]"
-        style={{
-          background:
-            "repeating-radial-gradient(circle, var(--color-accent) 0px, var(--color-accent) 1px, transparent 1px, transparent 32px)",
-        }}
-      />
+    <AuthPageShell title="Create an account" description="Use the invite token from your manager to join your store.">
+      <form onSubmit={handleSubmit} className="space-y-4" noValidate aria-busy={submitting}>
+        <AuthField
+          label="Full name"
+          type="text"
+          placeholder="Jane Smith"
+          value={name}
+          onChange={(e) => {
+            setName(e.target.value);
+            clearError("name");
+          }}
+          error={errors.name}
+          autoComplete="name"
+        />
 
-      {/* ── Signup window ── */}
-      <RetroWindow
-        title="RetailPulse - Create Account"
-        className="w-full max-w-md relative z-10"
-      >
-        <form onSubmit={handleSubmit} className="space-y-5" noValidate>
-          {/* Logo */}
-          <div className="flex justify-center pb-2">
-            <Logo size={36} />
-          </div>
+        <AuthField
+          label="Email"
+          type="email"
+          placeholder="you@company.com"
+          value={email}
+          onChange={(e) => {
+            setEmail(e.target.value);
+            clearError("email");
+          }}
+          error={errors.email}
+          autoComplete="email"
+        />
 
-          {/* Full Name */}
-          <RetroInput
-            label="Full Name"
-            type="text"
-            placeholder="Jane Smith"
-            value={name}
-            onChange={(e) => {
-              setName(e.target.value);
-              clearError("name");
-            }}
-            error={!!errors.name}
-            helperText={errors.name}
-            autoComplete="name"
-          />
+        <AuthField
+          label="Invite token"
+          type="text"
+          placeholder="Paste the token from your manager"
+          value={token}
+          onChange={(e) => {
+            setToken(e.target.value);
+            clearError("token");
+          }}
+          error={errors.token}
+          autoComplete="one-time-code"
+        />
 
-          {/* Email */}
-          <RetroInput
-            label="Email"
-            type="email"
-            placeholder="you@company.com"
-            value={email}
-            onChange={(e) => {
-              setEmail(e.target.value);
-              clearError("email");
-            }}
-            error={!!errors.email}
-            helperText={errors.email}
-            autoComplete="email"
-          />
+        <AuthField
+          label="Password"
+          type="password"
+          value={password}
+          onChange={(e) => {
+            setPassword(e.target.value);
+            clearError("password");
+          }}
+          error={errors.password}
+          autoComplete="new-password"
+        />
 
-          <RetroInput
-            label="Invite Token"
-            type="text"
-            placeholder="Paste the token from your manager"
-            value={token}
-            onChange={(e) => {
-              setToken(e.target.value);
-              clearError("token");
-            }}
-            error={!!errors.token}
-            helperText={errors.token}
-            autoComplete="one-time-code"
-          />
+        <AuthField
+          label="Confirm password"
+          type="password"
+          value={confirm}
+          onChange={(e) => {
+            setConfirm(e.target.value);
+            clearError("confirm");
+          }}
+          error={errors.confirm}
+          autoComplete="new-password"
+        />
 
-          {/* Password */}
-          <RetroInput
-            label="Password"
-            type="password"
-            placeholder="••••••••"
-            value={password}
-            onChange={(e) => {
-              setPassword(e.target.value);
-              clearError("password");
-            }}
-            error={!!errors.password}
-            helperText={errors.password}
-            autoComplete="new-password"
-          />
+        {submitError && <p role="alert" className="text-sm text-danger">{submitError}</p>}
+        <RetroButton
+          type="submit"
+          variant="primary"
+          disabled={submitting}
+          className="min-h-11 w-full"
+        >
+          {submitting ? "Creating account…" : "Create account"}
+        </RetroButton>
 
-          {/* Confirm Password */}
-          <RetroInput
-            label="Confirm Password"
-            type="password"
-            placeholder="••••••••"
-            value={confirm}
-            onChange={(e) => {
-              setConfirm(e.target.value);
-              clearError("confirm");
-            }}
-            error={!!errors.confirm}
-            helperText={errors.confirm}
-            autoComplete="new-password"
-          />
-
-          {/* Submit */}
-          <RetroButton
-            type="submit"
-            variant="primary"
-            disabled={submitting}
-            className="w-full"
+        <p className="text-center text-sm text-text-muted">
+          Already have an account?{" "}
+          <Link
+            href="/login"
+            className="font-semibold text-accent hover:text-accent-hover underline underline-offset-2 transition-colors"
           >
-            {submitting ? "Creating account…" : "Create Account"}
-          </RetroButton>
-
-          {/* Link to login */}
-          <p className="text-center text-sm text-text-muted">
-            Already have an account?{" "}
-            <Link
-              href="/login"
-              className="font-semibold text-accent hover:text-accent-hover underline underline-offset-2 transition-colors"
-            >
-              Sign in
-            </Link>
-          </p>
-        </form>
-      </RetroWindow>
-    </div>
+            Sign in
+          </Link>
+        </p>
+      </form>
+    </AuthPageShell>
   );
 }
