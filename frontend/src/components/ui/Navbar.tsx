@@ -12,9 +12,9 @@ import { Badge } from "./Badge";
 import { RetroButton } from "./RetroButton";
 import { useAuth } from "@/components/auth/AuthProvider";
 
-const publicAction = "inline-flex min-h-11 items-center justify-center rounded-lg border px-3 text-sm font-semibold";
+const publicAction = "inline-flex min-h-10 items-center justify-center rounded-lg border px-3 text-sm font-semibold";
 const signInAction = `${publicAction} ${publicStyles.specular} border-accent text-accent hover:bg-surface`;
-const signUpAction = `${publicAction} border-transparent bg-accent text-on-accent hover:bg-accent-hover`;
+const signUpAction = `${publicAction} ${publicStyles.signupGlow} border-transparent bg-accent text-on-accent hover:bg-accent-hover`;
 
 interface NavbarProps {
   /** Show role badge and Log Out button (for authenticated pages like /dashboard) */
@@ -173,6 +173,7 @@ export function Navbar({ authenticated = false, role = "Manager" }: NavbarProps)
 
             {/* Sliding Indicator Bar */}
             <div
+              hidden={!visibleLinks.some((link) => link.href === pathname)}
               className="absolute bottom-0 h-[2.5px] bg-accent rounded-sm"
               style={{
                 left: `${indicatorStyle.left}px`,

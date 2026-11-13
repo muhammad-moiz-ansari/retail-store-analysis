@@ -12,7 +12,7 @@ export function AuthPageShell({
 }) {
   return (
     <main className="mx-auto w-full max-w-xl px-5 py-10 sm:px-8 sm:py-16">
-      <div className="overflow-hidden rounded-2xl border border-border-soft bg-surface shadow-sm">
+      <div className="overflow-hidden rounded-2xl border border-border-soft bg-surface shadow-[0_18px_44px_-20px_rgb(5_10_28_/_38%)]">
         <header className="bg-surface-alt px-6 py-7 sm:px-9">
           <Logo size={30} />
           <h1 className="mt-5 text-3xl font-bold tracking-tight sm:text-4xl">{title}</h1>
@@ -44,7 +44,7 @@ export function AuthField({
         required
         aria-invalid={error ? true : undefined}
         aria-describedby={error ? errorId : undefined}
-        className={`min-h-11 w-full rounded-lg border bg-surface px-3 text-base text-text placeholder:text-text-muted ${error ? "border-danger" : "border-border-soft"}`}
+        className={`auth-field min-h-11 w-full rounded-lg border bg-surface px-3 text-base text-text placeholder:text-text-muted ${error ? "border-danger" : "border-border-soft"}`}
       />
       {error && <p id={errorId} className="mt-1 text-sm text-danger">{error}</p>}
     </div>

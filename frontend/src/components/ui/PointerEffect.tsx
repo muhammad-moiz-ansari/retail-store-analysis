@@ -25,3 +25,7 @@ export function HoloPreview(props: ComponentProps<"figure">) {
 export function EffectLink(props: ComponentProps<typeof Link>) {
   return <Link {...props} onPointerMove={move} onPointerLeave={reset} />;
 }
+
+export function EffectAnchor(props: ComponentProps<"a">) {
+  return <a {...props} onPointerMove={move} onPointerLeave={reset} />;
+}

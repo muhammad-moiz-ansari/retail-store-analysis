@@ -294,10 +294,13 @@
 }
 @media (hover: hover) and (pointer: fine) {
   .holo:hover::after { opacity: 0.12; }
-  .specular:hover::after { opacity: 0.38; }
+  .specular:hover::after { opacity: 0.65; }
+  .signupGlow:hover { box-shadow: 0 4px 14px color-mix(in srgb, var(--color-accent) 36%, transparent); }
   .featureCard:hover { box-shadow: 0 20px 38px -18px var(--color-sidebar); }
 }
 @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .specular, .signupGlow { transition: transform 160ms ease-out, box-shadow 160ms ease-out, background-color 150ms; }
+  .specular:hover, .signupGlow:hover { transform: translateY(-2px); }
   .holo, .featureCard, .magnetic { transition: transform 180ms ease-out, box-shadow 180ms ease-out, background-color 150ms; }
   .holo:hover {
     transform: perspective(1000px) rotateX(calc(var(--pointer-y, 0) * -5deg)) rotateY(calc(var(--pointer-x, 0) * 5deg));

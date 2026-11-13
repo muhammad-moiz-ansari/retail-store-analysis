@@ -129,6 +129,16 @@ h1, h2, h3, h4, h5, h6 {
   outline-color: var(--color-sidebar-focus);
 }
 
+.auth-field:focus {
+  outline: 2px solid transparent;
+  box-shadow: 0 4px 20px 3px color-mix(in srgb, var(--color-accent) 24%, transparent);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .auth-field { transition: box-shadow 160ms ease-out; }
+  .auth-field:focus { transition-delay: 45ms; }
+}
+
 .theme-toggle {
   display: inline-grid;
   flex: none;
