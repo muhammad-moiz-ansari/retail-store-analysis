@@ -10,6 +10,7 @@ The [combined team plan](RetailPulse_FYP2_Implementation_Plan.md) governs curren
 - Interaction clips: 25 (11 tuning, `benchmarks/benchmark.json`; 14 held out, `benchmarks/benchmark_set_b.json`). Labelled interactions 30 (13 + 17) against a target of 30; pass-bys 13 (4 + 9) against a target of 15. Labels drafted and reviewed in CVAT (`backend/interaction/cvat_import.py`); the 11-clip labels have no second annotator.
 - Roles: reviewed persons for all 25 clips in `benchmarks/persons.json`; a run track takes the role of the person it overlaps most (IoU ≥ 0.3 in ≥ 50 % of its frames, `role_labels.py`). 109 of 113 tracks labelled.
 - Detector split is by recording (`~/data/split/split_manifest.csv`). Set B uses only test/val recordings, so no set-B frame was seen in detector training. Most of the 11 tuning clips are training recordings.
+- Provenance audit (CV-PROVENANCE, 13 Nov): set B has **9** pass-bys in `benchmark_set_b.json` (an earlier note said 10; that was a counting error). The "random 6" reports (`report_random6_hand.json`, `report_random6_fitted.json`) use 4 tuning clips (8886, 8893, 8894, 8895 p2) and 2 set-B clips (8884, 8838 p2) with the labels from those two specs, so they are **not** an independent test set; quote them only as a hand-vs-fitted roles comparison.
 - Zone-dwell labels: not made. No camera has zone polygons and the supplied map is not registered yet (MAP-2), so there is nothing to score dwell against.
 
 ## 2. Stage results
