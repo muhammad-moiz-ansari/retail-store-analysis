@@ -290,6 +290,13 @@ def main() -> None:
             counts = ingest_run(events, args.output, run_id, args.camera, zone, started_at,
                                 unattended_after_s=unattended_threshold(), layout=layout_from(pipeline.config))
         print(f"event store: run {run_id} as {args.camera}/{zone}: {counts}")
+        from ..dispatch import dispatch_unattended
+        from ..store_core import connect as store_connect
+
+        with store_connect() as store, connect() as events:
+            decisions = [r["decision"] for r in dispatch_unattended(store, events, run_id)]
+            store.commit()
+        print(f"dispatch: {len(decisions)} unattended episodes -> {dict((d, decisions.count(d)) for d in set(decisions))}")
 
 
 def camera_zone(camera_id: str) -> str:

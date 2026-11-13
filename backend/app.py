@@ -10,7 +10,7 @@ from psycopg import IntegrityError
 import subprocess
 import sys
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import datetime
 from typing import Annotated, Any
 
 from fastapi import Depends, FastAPI, Header, HTTPException, Query
@@ -20,6 +20,7 @@ from .agents.dashboard_api import router as dashboard_router
 
 from .camera_service import REPO_ROOT, resolve_video
 from .camera_service import app as camera_app
+from .dispatch import create_task_for_employee, handle_event, select_dispatch_employee
 from .pos_service import app as pos_app
 from .store_core import (
     accept_invitation,
@@ -77,47 +78,6 @@ def parse_json(value: str | None) -> Any:
         return json.loads(value)
     except json.JSONDecodeError:
         return {}
-
-
-def select_dispatch_employee(conn, target_zone_id: str | None):
-    return conn.execute(
-        """
-        SELECT users.id
-        FROM users
-        LEFT JOIN tasks ON tasks.employee_id = users.id AND tasks.state IN ('pending', 'delivered', 'acknowledged', 'in_progress')
-        LEFT JOIN rosters ON rosters.user_id = users.id
-        WHERE users.role = 'Employee' AND users.active = 1 AND tasks.id IS NULL AND coalesce(rosters.available, 1) = 1
-        ORDER BY CASE WHEN rosters.zone_id = %s THEN 0 ELSE 1 END, users.name
-        LIMIT 1
-        """,
-        (target_zone_id,),
-    ).fetchone()
-
-
-def create_task_for_employee(
-    conn,
-    employee_id: str,
-    instruction: str,
-    target_zone_id: str | None,
-    source_zone_id: str | None,
-    alert_id: str | None,
-    evidence: dict,
-) -> str:
-    task_id = uuid.uuid4().hex
-    timestamp = now_iso()
-    due_at = (datetime.now(timezone.utc) + timedelta(seconds=30)).isoformat()
-    conn.execute(
-        """
-        INSERT INTO tasks(id, employee_id, target_zone_id, source_zone_id, instruction, state, trigger_alert_id, evidence_json, created_at, updated_at, due_at)
-        VALUES (%s, %s, %s, %s, %s, 'delivered', %s, %s, %s, %s, %s)
-        """,
-        (task_id, employee_id, target_zone_id, source_zone_id, instruction, alert_id, json.dumps(evidence), timestamp, timestamp, due_at),
-    )
-    conn.execute(
-        "INSERT INTO task_events(id, task_id, state, note, created_at) VALUES (%s, %s, 'delivered', 'Automatic dispatch', %s)",
-        (uuid.uuid4().hex, task_id, timestamp),
-    )
-    return task_id
 
 
 def store_context(conn) -> dict[str, Any]:
@@ -588,111 +548,27 @@ def dispatch_task(body: dict) -> dict:
 
 @app.post("/orchestrator/events", dependencies=[Depends(require_manager)])
 def ingest_orchestration_event(body: dict) -> dict:
-    event_id = uuid.uuid4().hex
-    timestamp = now_iso()
-    event_type = str(body.get("eventType") or "manual_event")
-    source = str(body.get("source") or "manager")
-    zone_id = body.get("zoneId") or None
-    severity = str(body.get("severity") or "medium")
-    if severity not in {"high", "medium", "low"}:
-        severity = "medium"
-    title = str(body.get("title") or "RetailPulse orchestration event")
-    evidence = body.get("evidence") or {}
-
     with connect() as conn:
-        conn.execute(
-            """
-            INSERT INTO orchestration_events(id, event_type, source, zone_id, severity, title, evidence_json, source_timestamp, created_at)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-            """,
-            (event_id, event_type, source, zone_id, severity, title, json.dumps(evidence), body.get("sourceTimestamp") or None, timestamp),
-        )
-        thresholds = get_setting(conn, "thresholds") or {}
-        dispatch_paused = bool(thresholds.get("dispatchPaused"))
-        should_dispatch = bool(body.get("dispatch", event_type in {"unattended_customer", "unstaffed_zone", "crowding"}))
-        alert_id = uuid.uuid4().hex
-        context = str(body.get("context") or "The orchestrator received a sustained operational event.")
-        href = str(body.get("href") or "/alerts")
-        conn.execute(
-            """
-            INSERT INTO alerts(id, category, severity, title, context, href, status, source, evidence_json, created_at)
-            VALUES (%s, %s, %s, %s, %s, %s, 'active', %s, %s, %s)
-            """,
-            (
-                alert_id,
-                str(body.get("category") or "System"),
-                severity,
-                title,
-                context,
-                href,
-                source,
-                json.dumps({"eventId": event_id, **evidence}),
-                timestamp,
-            ),
-        )
-
-        decision = "alert_only"
-        reason = "Dispatch was not requested for this event."
-        task_id = None
-        employee_id = None
-        if dispatch_paused:
-            decision = "paused"
-            reason = "Automatic dispatch is paused in settings."
-        elif should_dispatch:
-            employee = select_dispatch_employee(conn, zone_id)
-            if employee:
-                employee_id = employee["id"]
-                instruction = str(body.get("instruction") or "Please assist customers in the requested zone.")
-                task_id = create_task_for_employee(conn, employee_id, instruction, zone_id, body.get("sourceZoneId") or None, alert_id, evidence)
-                decision = "dispatched"
-                reason = "Selected an available employee with no active task."
-            else:
-                decision = "no_eligible_employee"
-                reason = "No active employee was available without an existing task."
-
-        conn.execute(
-            """
-            INSERT INTO dispatch_decisions(id, event_id, alert_id, task_id, selected_employee_id, decision, reason, policy_json, created_at)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-            """,
-            (
-                uuid.uuid4().hex,
-                event_id,
-                alert_id,
-                task_id,
-                employee_id,
-                decision,
-                reason,
-                json.dumps({"thresholds": thresholds, "requestedDispatch": should_dispatch}),
-                timestamp,
-            ),
-        )
-        voice_agent = None
-        if body.get("voiceAgent"):
-            zone_name = None
-            if zone_id:
-                zone = conn.execute("SELECT name FROM zones WHERE id = %s", (zone_id,)).fetchone()
-                zone_name = zone["name"] if zone else None
-            voice_agent = generate_voice_script(
+        result = handle_event(conn, body)
+        if body.get("voiceAgent") and result["decision"] != "duplicate":
+            zone_id = body.get("zoneId") or None
+            zone = conn.execute("SELECT name FROM zones WHERE id = %s", (zone_id,)).fetchone() if zone_id else None
+            result["voiceAgent"] = generate_voice_script(
                 {
-                    "eventType": event_type,
-                    "title": title,
-                    "severity": severity,
+                    "eventType": str(body.get("eventType") or "manual_event"),
+                    "title": str(body.get("title") or "RetailPulse orchestration event"),
+                    "severity": body.get("severity") or "medium",
                     "zoneId": zone_id,
-                    "zoneName": zone_name,
+                    "zoneName": zone["name"] if zone else None,
                     "category": body.get("category") or "System",
-                    "context": context,
+                    "context": str(body.get("context") or "The orchestrator received a sustained operational event."),
                     "instruction": body.get("instruction") or "Please assist customers in the requested zone.",
-                    "decision": decision,
-                    "evidence": evidence,
+                    "decision": result["decision"],
+                    "evidence": body.get("evidence") or {},
                 },
                 store_context(conn),
             )
-
         conn.commit()
-        result = {"eventId": event_id, "alertId": alert_id, "taskId": task_id, "decision": decision, "reason": reason}
-        if voice_agent:
-            result["voiceAgent"] = voice_agent
         return result
 
 

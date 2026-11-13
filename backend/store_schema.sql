@@ -97,6 +97,10 @@ CREATE TABLE IF NOT EXISTS orchestration_events (
   FOREIGN KEY(zone_id) REFERENCES zones(id)
 );
 
+-- Idempotency key of an automatic event (CV episode id or the operational adapter's idempotencyKey); NULL for manual events.
+ALTER TABLE orchestration_events ADD COLUMN IF NOT EXISTS dedupe_key TEXT;
+CREATE UNIQUE INDEX IF NOT EXISTS orchestration_events_dedupe ON orchestration_events(dedupe_key);
+
 CREATE TABLE IF NOT EXISTS tasks (
   id TEXT PRIMARY KEY,
   employee_id TEXT NOT NULL,
