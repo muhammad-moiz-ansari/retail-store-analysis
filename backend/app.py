@@ -1,4 +1,4 @@
-"""Unified local backend entry point for camera and store operations."""
+"""Unified local backend entry point for POS, camera and store operations."""
 
 from __future__ import annotations
 
@@ -20,6 +20,7 @@ from .agents.dashboard_api import router as dashboard_router
 
 from .camera_service import REPO_ROOT, resolve_video
 from .camera_service import app as camera_app
+from .pos_service import app as pos_app
 from .store_core import (
     accept_invitation,
     authenticate,
@@ -35,6 +36,7 @@ from .voice_agent import generate_voice_script, integration_status, synthesize_v
 
 app = FastAPI(title="RetailPulse Backend", version="0.1.0")
 app.mount("/camera", camera_app)
+app.mount("/pos", pos_app)
 
 # Read-only analytics remain unavailable until explicit server membership/source configuration.
 app.include_router(dashboard_router)
