@@ -207,3 +207,21 @@ html:has([data-public-shell]) {
   --nav-surface: var(--color-sidebar);
   --nav-tint: 78%;
 }
+
+[data-employee-shell] :is(.workspace-card, .workspace-panel) {
+  box-shadow: 0 8px 22px -15px rgb(5 10 28 / 48%);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .employee-avatar svg { transition: transform 150ms ease-out; }
+  .employee-avatar:hover svg { transform: scale(1.1); }
+  .employee-avatar:active svg { transform: scale(1); }
+  details[open] > .employee-account-dropdown {
+    transform-origin: top right;
+    animation: employee-dropdown-in 160ms ease-out both;
+  }
+  @keyframes employee-dropdown-in {
+    from { opacity: 0; transform: translateY(-5px) scale(0.96); }
+    to { opacity: 1; transform: none; }
+  }
+}

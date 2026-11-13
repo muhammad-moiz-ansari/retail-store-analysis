@@ -309,6 +309,7 @@
 @media (hover: hover) and (pointer: fine) {
   .holo:hover::after { opacity: 0.12; }
   .specular:hover::after { opacity: 0.65; }
+  .specular:hover, .magnetic:hover { box-shadow: 0 5px 14px color-mix(in srgb, var(--color-accent) 25%, transparent); }
   .signupGlow:hover { box-shadow: 0 4px 14px color-mix(in srgb, var(--color-accent) 36%, transparent); }
   .featureCard:hover { box-shadow: 0 20px 38px -18px var(--color-sidebar); }
 }
@@ -321,6 +322,7 @@
   }
   .featureCard:hover { transform: translateY(-3px); }
   .magnetic:hover { transform: translate(calc(var(--pointer-x, 0) * 8px), calc(var(--pointer-y, 0) * 6px)); }
+  .specular:active, .signupGlow:active, .magnetic:active { transform: translateY(1px); box-shadow: none; }
 }
 @media (prefers-reduced-motion: reduce) {
   .holo::after, .specular::after { transition: none; }

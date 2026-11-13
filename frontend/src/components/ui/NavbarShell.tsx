@@ -7,7 +7,8 @@ import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { MANAGER_ROUTES, EMPLOYEE_ROUTES, matchesRoute } from "@/components/auth/RouteAccessGuard";
 import { Footer } from "./Footer";
-import { Navbar } from "./Navbar";
+import { Navbar, NavLogo } from "./Navbar";
+import { EmployeeAccountMenu } from "./EmployeeAccountMenu";
 
 const managerLinks = [
   ["/dashboard", "Overview"], ["/customer-info", "Customers"],
@@ -37,7 +38,7 @@ export function NavbarShell({ children }: { children: React.ReactNode }) {
   const workspace = matchesRoute(pathname, [...MANAGER_ROUTES, ...EMPLOYEE_ROUTES, "/profile"]);
   const manager = role === "Manager";
   const home = manager ? "/dashboard" : "/employee-home";
-  const links = [...(manager ? managerLinks : employeeLinks), ["/profile", "Profile"], ["/about", "About"]];
+  const links = [...managerLinks, ["/profile", "Profile"], ["/about", "About"]];
   const skip = <a href="#page-content" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-3 focus:z-[100] focus:rounded-lg focus:bg-surface focus:px-4 focus:py-3">Skip to content</a>;
   const content = <div id="page-content" tabIndex={-1} className="workspace-content flex-1">{children}</div>;
 
@@ -52,7 +53,7 @@ export function NavbarShell({ children }: { children: React.ReactNode }) {
     onClick={async () => { await signOut(); router.push("/"); }}>Log out</button>;
   const brand = <Link href={home} className="font-heading text-xl font-bold tracking-tight text-on-sidebar">RetailPulse</Link>;
 
-  return <div className={manager ? "min-h-screen lg:grid lg:grid-cols-[15rem_minmax(0,1fr)]" : "min-h-screen"}>
+  return <div data-employee-shell={!manager ? "" : undefined} className={manager ? "min-h-screen lg:grid lg:grid-cols-[15rem_minmax(0,1fr)]" : "min-h-screen"}>
     {skip}
     {manager && <aside className="workspace-sidebar translucent-nav sticky top-0 hidden h-dvh flex-col overflow-y-auto p-4 lg:flex">
       <div className="flex items-center justify-between gap-2 px-3 pb-5">{brand}<ThemeToggle /></div>
@@ -60,7 +61,7 @@ export function NavbarShell({ children }: { children: React.ReactNode }) {
       <div className="mt-auto border-t border-white/20 pt-3">{logout}</div>
     </aside>}
     <div className="min-w-0">
-      <header className={`workspace-sidebar translucent-nav sticky top-0 z-40 px-4 py-3 text-on-sidebar ${manager ? "lg:hidden" : ""}`}>
+      {manager ? <header className="workspace-sidebar translucent-nav sticky top-0 z-40 px-4 py-3 text-on-sidebar lg:hidden">
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-3">
           {brand}
           <div className="flex items-center gap-2">
@@ -73,12 +74,20 @@ export function NavbarShell({ children }: { children: React.ReactNode }) {
           </details>
           </div>
         </div>
-        {!manager && <nav aria-label="Employee shortcuts" className="mx-auto mt-2 flex max-w-5xl flex-wrap gap-2">
+      </header> : <header className="workspace-sidebar translucent-nav sticky top-0 z-40 grid min-h-[52px] grid-cols-[1fr_auto] items-center gap-x-3 px-4 text-on-sidebar md:grid-cols-[1fr_auto_1fr] md:px-6">
+        <Link href={home} className="flex w-fit items-center gap-2.5 font-heading text-lg font-bold tracking-tight">
+          <NavLogo />RetailPulse
+        </Link>
+        <nav aria-label="Employee shortcuts" className="col-span-2 row-start-2 flex flex-wrap justify-center gap-1 pb-2 md:col-span-1 md:col-start-2 md:row-start-1 md:pb-0">
           {employeeLinks.map(([href, title]) => <Link key={href} href={href}
             aria-current={pathname === href || (href === "/employee-home" && pathname === "/employee") ? "page" : undefined}
             className="flex min-h-11 items-center rounded-lg px-3 text-sm hover:bg-white/15 aria-[current=page]:bg-surface-alt aria-[current=page]:text-text">{title}</Link>)}
-        </nav>}
-      </header>
+        </nav>
+        <div className="col-start-2 row-start-1 flex items-center justify-self-end gap-2 py-1 md:col-start-3">
+          <ThemeToggle />
+          <EmployeeAccountMenu key={pathname} onLogout={async () => { await signOut(); router.push("/"); }} />
+        </div>
+      </header>}
       {content}
     </div>
   </div>;

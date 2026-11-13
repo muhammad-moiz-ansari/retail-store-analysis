@@ -26,7 +26,7 @@ export function ManagerPanel({ title, children, className = "" }: {
   className?: string;
 }) {
   return (
-    <section className={`min-w-0 rounded-2xl border border-border-soft bg-surface p-4 sm:p-6 ${className}`}>
+    <section className={`workspace-panel min-w-0 rounded-2xl border border-border-soft bg-surface p-4 sm:p-6 ${className}`}>
       <h2 className="mb-4 text-lg font-bold tracking-tight">{title}</h2>
       {children}
     </section>
@@ -37,7 +37,7 @@ export function ManagerCard({ label, children, className = "", ...props }: Compo
   label?: string;
 }) {
   return (
-    <div {...props} className={`min-w-0 rounded-xl border border-border-soft bg-surface p-4 ${className}`}>
+    <div {...props} className={`workspace-card min-w-0 rounded-xl border border-border-soft bg-surface p-4 ${className}`}>
       {label && <h3 className="mb-3 text-sm font-semibold text-text">{label}</h3>}
       {children}
     </div>

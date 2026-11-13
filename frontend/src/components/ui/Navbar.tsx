@@ -360,7 +360,7 @@ function BellIcon() {
 }
 
 /** Logo image with graceful fallback to SVG icon */
-function NavLogo() {
+export function NavLogo() {
   const [imgError, setImgError] = React.useState(false);
 
   if (imgError) {

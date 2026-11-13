@@ -30,7 +30,7 @@ export function RetroButton({
         "inline-flex min-h-10 items-center justify-center gap-2 px-4 py-2",
         "rounded-lg border cursor-pointer select-none text-sm font-semibold",
         "motion-safe:transition-[background-color,color,box-shadow,translate] motion-safe:duration-150",
-        "motion-safe:pointer-fine:hover:enabled:-translate-y-0.5 hover:enabled:shadow-sm",
+        "motion-safe:pointer-fine:hover:enabled:-translate-y-0.5 hover:enabled:shadow-md motion-safe:active:enabled:translate-y-px motion-safe:pointer-fine:hover:active:enabled:translate-y-px active:enabled:shadow-none",
         "disabled:opacity-50 disabled:cursor-not-allowed",
         /* Variant */
         variantStyles[variant],
