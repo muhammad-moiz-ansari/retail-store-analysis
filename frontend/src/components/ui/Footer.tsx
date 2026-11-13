@@ -143,7 +143,7 @@ function FooterLogo() {
 
   return (
     <Image
-      src="/logo.png"
+      src="/favicon-light.png"
       alt="RetailPulse logo"
       width={24}
       height={24}

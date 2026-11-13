@@ -26,6 +26,7 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "RetailPulse",
   description: "Store analytics and employee workflows",
+  icons: { icon: { url: "/favicon-dark.png", type: "image/png" } },
 };
 
 export default function RootLayout({

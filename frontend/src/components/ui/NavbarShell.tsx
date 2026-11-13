@@ -53,7 +53,7 @@ export function NavbarShell({ children }: { children: React.ReactNode }) {
   const navigation = <Navigation links={links} pathname={pathname} label={manager ? "Manager navigation" : "Employee navigation"} />;
   const logout = <button type="button" className="min-h-11 w-full rounded-lg px-3 text-left text-sm font-semibold text-[#FFA5AA] hover:bg-[#FFA5AA]/15"
     onClick={async () => { await signOut(); router.push("/"); }}>Log out</button>;
-  const brand = <Link href={home} className="flex shrink-0 items-center gap-2 font-heading text-lg font-bold tracking-tight text-on-sidebar"><NavLogo />RetailPulse</Link>;
+  const brand = <Link href={home} className="flex shrink-0 items-center gap-2 font-heading text-lg font-bold tracking-tight text-on-sidebar"><NavLogo surface="dark" />RetailPulse</Link>;
 
   return <div data-employee-shell={!manager ? "" : undefined} data-manager-shell={manager ? "" : undefined}
     data-sidebar-collapsed={manager && collapsed ? "" : undefined} className={manager ? "manager-shell min-h-screen" : "min-h-screen"}>
@@ -64,8 +64,8 @@ export function NavbarShell({ children }: { children: React.ReactNode }) {
         <button type="button" aria-expanded={!collapsed} aria-controls="manager-sidebar-links"
           aria-label={collapsed ? "Open sidebar" : "Close sidebar"}
           onClick={() => setCollapsed(value => !value)}
-          className="group relative grid size-9 shrink-0 place-items-center rounded-xl text-on-sidebar hover:bg-white/15 focus-visible:bg-white/15">
-          {collapsed && <span aria-hidden="true" className="group-hover:hidden group-focus-visible:hidden"><NavLogo /></span>}
+          className="group relative grid size-9 shrink-0 cursor-pointer place-items-center rounded-xl text-on-sidebar hover:bg-white/15 focus-visible:bg-white/15">
+          {collapsed && <span aria-hidden="true" className="group-hover:hidden group-focus-visible:hidden"><NavLogo surface="dark" /></span>}
           <svg aria-hidden="true" viewBox="0 0 24 24" className={`size-5 fill-none stroke-current ${collapsed ? "hidden group-hover:block group-focus-visible:block" : ""}`} strokeWidth="1.7">
             <rect x="3" y="4" width="18" height="16" rx="2" /><path d="M9 4v16" />
             <path d={collapsed ? "m12 9 4 3-4 3" : "m16 9-4 3 4 3"} className="opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100" />
@@ -88,7 +88,7 @@ export function NavbarShell({ children }: { children: React.ReactNode }) {
         </div>
       </header> : <header className="workspace-sidebar translucent-nav employee-navbar sticky top-0 z-40 grid min-h-[52px] grid-cols-[1fr_auto] items-center gap-x-3 px-4 text-on-sidebar md:grid-cols-[1fr_auto_1fr] md:px-6">
         <Link href={home} className="flex w-fit items-center gap-2.5 font-heading text-lg font-bold tracking-tight">
-          <NavLogo />RetailPulse
+          <NavLogo surface="dark" />RetailPulse
         </Link>
         <nav aria-label="Employee shortcuts" className="col-span-2 row-start-2 flex flex-wrap justify-center gap-1 pb-1 md:col-span-1 md:col-start-2 md:row-start-1 md:pb-0">
           {employeeLinks.map(([href, title]) => <Link key={href} href={href}

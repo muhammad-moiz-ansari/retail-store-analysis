@@ -358,7 +358,7 @@ function BellIcon() {
 }
 
 /** Logo image with graceful fallback to SVG icon */
-export function NavLogo() {
+export function NavLogo({ surface = "light" }: { surface?: "light" | "dark" }) {
   const [imgError, setImgError] = React.useState(false);
 
   if (imgError) {
@@ -367,7 +367,7 @@ export function NavLogo() {
 
   return (
     <Image
-      src="/logo.png"
+      src={`/favicon-${surface}.png`}
       alt="RetailPulse logo"
       width={34}
       height={34}
