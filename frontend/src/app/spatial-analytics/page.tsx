@@ -10,7 +10,8 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
-import { RetroWindow, RetroCard, Badge } from "@/components/ui";
+import { ManagerPage, ManagerHeader, ManagerPanel, ManagerCard, ManagerTable } from "@/components/ui/ManagerLayout";
+import { Badge } from "@/components/ui";
 
 /* ═══════════════════════════════════════════════════════════════
    Mock data
@@ -74,42 +75,11 @@ const POPULARITY_RANKING = [
    Helpers
    ═══════════════════════════════════════════════════════════════ */
 
-function formatLiveTime(): string {
-  const d = new Date();
-  return d.toLocaleTimeString("en-US", {
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true,
-  });
-}
-
-/**
- * Interpolate between colors based on a 0-100 heat value.
- * 0 = surface-alt (#E4D4B0), 50 = accent-soft (#E8B84B), 100 = danger (#B5432E)
- */
-function heatColor(heat: number): string {
-  const cold = { r: 228, g: 212, b: 176 };  // --color-surface-alt
-  const mid  = { r: 232, g: 184, b: 75 };   // --color-accent-soft
-  const hot  = { r: 181, g: 67,  b: 46 };   // --color-danger
-
-  let r: number, g: number, b: number;
-  if (heat <= 50) {
-    const t = heat / 50;
-    r = Math.round(cold.r + (mid.r - cold.r) * t);
-    g = Math.round(cold.g + (mid.g - cold.g) * t);
-    b = Math.round(cold.b + (mid.b - cold.b) * t);
-  } else {
-    const t = (heat - 50) / 50;
-    r = Math.round(mid.r + (hot.r - mid.r) * t);
-    g = Math.round(mid.g + (hot.g - mid.g) * t);
-    b = Math.round(mid.b + (hot.b - mid.b) * t);
+function heatColor(heat: number) {
+  if (heat <= 45) {
+    return `color-mix(in srgb, var(--color-accent-soft) ${heat / 45 * 100}%, var(--color-surface-alt))`;
   }
-  return `rgb(${r}, ${g}, ${b})`;
-}
-
-/** Returns white or dark text depending on background luminance */
-function contrastText(heat: number): string {
-  return heat > 65 ? "#F7EFDD" : "#2E1F14";
+  return `color-mix(in srgb, var(--color-text) ${(heat - 45) / 55 * 100}%, var(--color-accent-soft))`;
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -118,28 +88,28 @@ function contrastText(heat: number): string {
 
 export default function SpatialAnalyticsPage() {
   return (
-    <div className="bg-bg min-h-screen">
-      <PulseStyle />
-      <main className="w-full max-w-[1280px] mx-auto px-4 md:px-6 lg:px-8 py-10 md:py-16 space-y-12 md:space-y-16">
-        {/* ── Page Header ── */}
-        <PageHeader />
+    <ManagerPage>
+      {/* ── Page Header ── */}
+      <ManagerHeader title="Spatial analytics">
+        <p>Sample data · Illustrative zone counts and activity. Live role occupancy requires a registered map and camera observations.</p>
+      </ManagerHeader>
+      <SummaryMetrics />
 
-        {/* ── Section 1: Interactive Heatmap ── */}
-        <HeatmapSection />
+      {/* ── Section 1: Interactive Heatmap ── */}
+      <HeatmapSection />
 
-        {/* ── Section 2: Live Zone Occupancy ── */}
-        <LiveOccupancySection />
+      {/* ── Section 2: Sample zone occupancy ── */}
+      <SampleOccupancySection />
 
-        {/* ── Section 3: Bottleneck & Crowd Density Alerts ── */}
-        <BottleneckAlertsSection />
+      {/* ── Section 3: Bottleneck & Crowd Density Alerts ── */}
+      <BottleneckAlertsSection />
 
-        {/* ── Section 4: Zone Conversion Rate ── */}
-        <ConversionRateSection />
+      {/* ── Section 4: Zone Conversion Rate ── */}
+      <ConversionRateSection />
 
-        {/* ── Section 5: Zone Popularity Ranking ── */}
-        <PopularityRankingSection />
-      </main>
-    </div>
+      {/* ── Section 5: Zone Popularity Ranking ── */}
+      <PopularityRankingSection />
+    </ManagerPage>
   );
 }
 
@@ -147,36 +117,24 @@ export default function SpatialAnalyticsPage() {
    Page Header
    ═══════════════════════════════════════════════════════════════ */
 
-function PageHeader() {
+function SummaryMetrics() {
   return (
-    <RetroWindow title="Spatial Analytics - Live Store Map">
-      <div className="flex items-center gap-2 mb-5">
-        <span className="relative flex h-2.5 w-2.5">
-          <span className="absolute inset-0 rounded-full bg-success animate-[pulse-dot_2s_ease-in-out_infinite]" />
-          <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-success" />
-        </span>
-        <p className="font-mono text-xs text-text-muted tracking-wide">
-          Live · as of {formatLiveTime()}
-        </p>
-      </div>
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <ManagerCard className="text-center">
+        <p className="font-heading text-3xl font-bold tabular-nums tracking-tight text-accent">34</p>
+        <p className="text-xs text-text-muted mt-1">Total In Store</p>
+      </ManagerCard>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <RetroCard className="text-center">
-          <p className="font-mono text-2xl font-bold text-accent">34</p>
-          <p className="text-xs text-text-muted mt-1">Total In Store</p>
-        </RetroCard>
+      <ManagerCard className="text-center">
+        <p className="font-mono text-lg font-bold text-danger">Checkout Counter</p>
+        <p className="text-xs text-text-muted mt-1">Busiest Zone</p>
+      </ManagerCard>
 
-        <RetroCard className="text-center">
-          <p className="font-mono text-lg font-bold text-danger">Checkout Counter</p>
-          <p className="text-xs text-text-muted mt-1">Busiest Zone</p>
-        </RetroCard>
-
-        <RetroCard className="text-center">
-          <p className="font-mono text-2xl font-bold text-danger">2</p>
-          <p className="text-xs text-text-muted mt-1">Active Alerts</p>
-        </RetroCard>
-      </div>
-    </RetroWindow>
+      <ManagerCard className="text-center">
+        <p className="font-heading text-3xl font-bold tabular-nums tracking-tight text-danger">2</p>
+        <p className="text-xs text-text-muted mt-1">Active Alerts</p>
+      </ManagerCard>
+    </div>
   );
 }
 
@@ -186,8 +144,9 @@ function PageHeader() {
 
 function HeatmapSection() {
   return (
-    <RetroWindow title="Store Heatmap">
+    <ManagerPanel title="Sample store heatmap">
       <div className="space-y-5">
+        <p className="text-sm text-text-muted">Color shows the sample activity score from 0 to 100. Each tile lists the example headcount and average stay.</p>
         {/* Heatmap grid - 3 cols on md+, 2 cols on small */}
         <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
           {/* Row 1: Entrance Lobby spans full width */}
@@ -210,17 +169,17 @@ function HeatmapSection() {
           <div
             className="w-full max-w-[320px] h-3 rounded-full"
             style={{
-              background: `linear-gradient(to right, var(--color-surface-alt), var(--color-accent-soft), var(--color-danger))`,
+              background: "linear-gradient(to right, var(--color-surface-alt), var(--color-accent-soft) 45%, var(--color-text))",
             }}
           />
           <div className="flex justify-between w-full max-w-[320px] text-[10px] font-mono text-text-muted">
-            <span>Quiet</span>
-            <span>Busy</span>
-            <span>Crowded</span>
+            <span>0 · Low</span>
+            <span>50</span>
+            <span>100 · High</span>
           </div>
         </div>
       </div>
-    </RetroWindow>
+    </ManagerPanel>
   );
 }
 
@@ -232,53 +191,32 @@ function HeatmapCell({
   className?: string;
 }) {
   const bg = heatColor(zone.heat);
-  const fg = contrastText(zone.heat);
 
   return (
     <div
-      className={`group relative rounded-lg border border-border-soft/50 p-3 flex flex-col justify-between transition-all duration-200 cursor-default hover:-translate-y-0.5 hover:shadow-lg ${className}`}
-      style={{ backgroundColor: bg }}
+      className={`flex min-w-0 flex-col justify-between gap-2 rounded-lg border border-border-soft p-2 sm:p-3 ${className}`}
+      style={{ backgroundColor: bg, color: zone.heat >= 50 ? "var(--color-surface)" : "var(--color-text)" }}
     >
-      {/* Zone name */}
-      <span
-        className="text-[11px] font-heading font-semibold leading-tight"
-        style={{ color: fg }}
-      >
-        {zone.name}
-      </span>
-
-      {/* Occupancy count */}
-      <span
-        className="font-mono text-3xl md:text-4xl font-bold self-center"
-        style={{ color: fg }}
-      >
-        {zone.count}
-      </span>
-
-      {/* Hover tooltip */}
-      <div className="absolute z-20 bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 rounded-lg border border-border-soft bg-surface text-xs shadow-lg opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-150 whitespace-nowrap">
-        <p className="font-heading font-semibold text-text">{zone.name}</p>
-        <p className="font-mono text-text-muted">
-          {zone.count} people · {zone.avgStay} avg stay
-        </p>
-      </div>
+      <h3 className="text-sm font-semibold leading-tight">{zone.name}</h3>
+      <p><strong className="font-heading text-2xl tabular-nums">{zone.count}</strong> <span className="text-xs">people</span></p>
+      <p className="text-xs">{zone.avgStay} avg stay · Score {zone.heat}</p>
     </div>
   );
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   Section 2: Live Zone Occupancy
+   Section 2: Sample zone occupancy
    ═══════════════════════════════════════════════════════════════ */
 
-function LiveOccupancySection() {
+function SampleOccupancySection() {
   return (
-    <RetroWindow title="Live Zone Occupancy">
+    <ManagerPanel title="Sample zone occupancy">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {ZONE_OCCUPANCY.map((z) => (
           <OccupancyCard key={z.zone} zone={z} />
         ))}
       </div>
-    </RetroWindow>
+    </ManagerPanel>
   );
 }
 
@@ -303,9 +241,9 @@ function OccupancyCard({
         : "var(--color-success)";
 
   return (
-    <RetroCard label={zone.zone}>
+    <ManagerCard label={zone.zone}>
       <div className="flex items-baseline justify-between mb-3">
-        <span className="font-mono text-3xl font-bold text-text">
+        <span className="font-heading text-3xl font-bold tabular-nums tracking-tight text-text">
           {zone.count}
         </span>
         <Badge variant={statusVariant}>{zone.status}</Badge>
@@ -323,7 +261,7 @@ function OccupancyCard({
           {zone.capacityPct}% capacity
         </p>
       </div>
-    </RetroCard>
+    </ManagerCard>
   );
 }
 
@@ -335,7 +273,7 @@ function BottleneckAlertsSection() {
   const hasAlerts = ALERTS.length > 0;
 
   return (
-    <RetroWindow title="Bottleneck & Crowd Density Alerts">
+    <ManagerPanel title="Bottleneck & Crowd Density Alerts">
       {hasAlerts ? (
         <div className="space-y-4">
           {ALERTS.map((alert, idx) => (
@@ -351,7 +289,7 @@ function BottleneckAlertsSection() {
           </p>
         </div>
       )}
-    </RetroWindow>
+    </ManagerPanel>
   );
 }
 
@@ -434,34 +372,34 @@ function ConversionTooltip({ active, payload, label }: ConversionTooltipProps) {
 
 function ConversionRateSection() {
   return (
-    <RetroWindow title="Zone Conversion Rate">
+    <ManagerPanel title="Zone conversion rate">
       <div className="space-y-8">
         {/* Horizontal grouped bar chart */}
         <div>
           <p className="text-xs text-text-muted mb-4 font-body">
-            Walked Past vs. Stopped - per zone (today)
+            People who walked past or stopped in each zone in the sample period
           </p>
           <div className="w-full h-[280px] md:h-[320px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
+            <ResponsiveContainer minWidth={0} width="100%" height="100%">
+              <BarChart accessibilityLayer
                 data={CONVERSION_DATA}
                 layout="vertical"
                 margin={{ top: 4, right: 24, left: 8, bottom: 4 }}
               >
-                <XAxis type="number" tick={{ fontSize: 11, fill: "#6B5642" }} />
+                <XAxis type="number" tick={{ fontSize: 11, fill: "var(--color-text-muted)" }} />
                 <YAxis
                   type="category"
                   dataKey="zone"
                   width={140}
-                  tick={{ fontSize: 11, fill: "#2E1F14" }}
+                  tick={{ fontSize: 11, fill: "var(--color-text)" }}
                 />
                 <Tooltip content={<ConversionTooltip />} />
                 <Legend
                   iconSize={10}
-                  wrapperStyle={{ fontSize: 11, fontFamily: "var(--font-mono)" }}
+                  wrapperStyle={{ fontSize: 11, fontFamily: "var(--font-jetbrains-mono)" }}
                 />
-                <Bar dataKey="walkedPast" name="Walked Past" fill="#8B6A4A" radius={[0, 4, 4, 0]} />
-                <Bar dataKey="stopped" name="Stopped" fill="#C1652F" radius={[0, 4, 4, 0]} />
+                <Bar isAnimationActive={false} dataKey="walkedPast" name="Walked past" fill="var(--color-accent-soft)" radius={[0, 4, 4, 0]} />
+                <Bar isAnimationActive={false} dataKey="stopped" name="Stopped" fill="var(--color-coral)" radius={[0, 4, 4, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -472,7 +410,7 @@ function ConversionRateSection() {
           <h3 className="font-heading text-sm font-semibold text-text mb-3">
             Conversion Table
           </h3>
-          <div className="overflow-x-auto">
+          <ManagerTable label="Zone stopping and pass-through counts">
             <table className="w-full text-xs">
               <thead>
                 <tr className="border-b border-border-soft text-left text-text-muted font-mono">
@@ -512,10 +450,10 @@ function ConversionRateSection() {
                 })}
               </tbody>
             </table>
-          </div>
+          </ManagerTable>
         </div>
       </div>
-    </RetroWindow>
+    </ManagerPanel>
   );
 }
 
@@ -527,7 +465,7 @@ function PopularityRankingSection() {
   const maxVisits = Math.max(...POPULARITY_RANKING.map((z) => z.visits));
 
   return (
-    <RetroWindow title="Zone Popularity Ranking">
+    <ManagerPanel title="Zone Popularity Ranking">
       <div className="space-y-3">
         {POPULARITY_RANKING.map((z) => (
           <div
@@ -573,21 +511,6 @@ function PopularityRankingSection() {
           </div>
         ))}
       </div>
-    </RetroWindow>
-  );
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   CSS keyframes - injected via a style tag for the pulse animation
-   ═══════════════════════════════════════════════════════════════ */
-
-function PulseStyle() {
-  return (
-    <style>{`
-      @keyframes pulse-dot {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0.3; }
-      }
-    `}</style>
+    </ManagerPanel>
   );
 }

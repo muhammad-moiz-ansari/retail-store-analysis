@@ -2,7 +2,8 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { RetroButton, RetroCard, RetroWindow } from "@/components/ui";
+import { RetroButton } from "@/components/ui";
+import { ManagerPage, ManagerHeader, ManagerCard } from "@/components/ui/ManagerLayout";
 
 type Category = "Unattended Customers" | "Unstaffed Zones" | "High Idle Time" | "Unusual Traffic" | "System";
 type Status = "all" | "active" | "resolved";
@@ -79,6 +80,7 @@ export default function AlertsPage() {
   const [status, setStatus] = useState<Status>("active");
   const [sortOrder, setSortOrder] = useState<SortOrder>("recent");
   const [loading, setLoading] = useState(true);
+  const [showingSample, setShowingSample] = useState(false);
   const [notice, setNotice] = useState("");
 
   useEffect(() => {
@@ -100,9 +102,11 @@ export default function AlertsPage() {
               order: data.alerts.length - index,
             }))
           );
-        } else {
-          setAlerts(ALERTS.map((alert) => ({ ...alert, id: String(alert.id) })));
-        }
+        } else throw new Error("Alert feed unavailable");
+      })
+      .catch(() => {
+        setAlerts(ALERTS);
+        setShowingSample(true);
       })
       .finally(() => setLoading(false));
   }, []);
@@ -153,27 +157,22 @@ export default function AlertsPage() {
     });
 
   return (
-    <div className="min-h-screen bg-bg">
-      <main className="mx-auto w-full max-w-[1280px] space-y-12 px-4 py-10 md:px-6 md:py-16 lg:px-8">
-        <RetroWindow title="Alerts & Notifications">
-          <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
-            <div>
-              <p className="font-mono text-xs font-semibold uppercase tracking-[0.16em] text-accent">Live Monitoring</p>
-              <h1 className="mt-2 font-heading text-3xl font-bold tracking-tight text-text md:text-[32px]">Alerts & Notifications</h1>
-              <p className="mt-2 max-w-2xl text-sm text-text-muted">Real-time flags from the RetailPulse monitoring agents — review and resolve as needed.</p>
-            </div>
+      <ManagerPage>
+        <ManagerHeader title="Alerts & notifications" actions={!loading && (
             <div className="flex flex-wrap gap-2">
               <StatPill label={`Active: ${alerts.filter((alert) => alert.status === "active").length}`} className="border-danger/40 bg-danger/15 text-danger" />
               <StatPill label={`Resolved: ${alerts.filter((alert) => alert.status === "resolved").length}`} className="border-success/40 bg-success/15 text-success" />
               <StatPill label={`Total: ${alerts.length}`} className="border-border-soft bg-surface-alt text-text-muted" />
             </div>
-          </div>
-          {notice && <p role="status" className="mt-4 font-mono text-xs font-semibold text-text">{notice}</p>}
-        </RetroWindow>
+          )}>
+          <p>Review and resolve alerts reported by the RetailPulse backend.</p>
+        </ManagerHeader>
+        {showingSample && <p role="status" className="rounded-lg bg-surface-alt p-3 text-sm">Backend alerts unavailable. Showing the existing sample alert feed.</p>}
+        {notice && <p role="status" className="rounded-lg bg-surface-alt p-3 text-sm font-semibold">{notice}</p>}
 
         <section aria-labelledby="filters-heading">
           <h2 id="filters-heading" className="sr-only">Alert filters</h2>
-          <RetroCard>
+          <ManagerCard>
             <div className="grid gap-6 xl:grid-cols-[1fr_auto_auto] xl:items-end">
               <fieldset>
                 <legend className="font-heading text-xs font-semibold uppercase tracking-wider text-text-muted">Category</legend>
@@ -224,32 +223,31 @@ export default function AlertsPage() {
                 </select>
               </label>
             </div>
-          </RetroCard>
+          </ManagerCard>
         </section>
 
         <section aria-labelledby="alert-feed-heading">
           <h2 id="alert-feed-heading" className="sr-only">Alert feed</h2>
           <div className="space-y-3">
             {loading ? (
-              <RetroCard className="py-10 text-center">
+              <ManagerCard className="py-10 text-center">
                 <p className="font-heading text-base font-semibold text-text">Loading alerts...</p>
-              </RetroCard>
+              </ManagerCard>
             ) : filteredAlerts.length > 0 ? (
               filteredAlerts.map((alert) => (
                 <AlertFeedCard key={alert.id} alert={alert} onResolve={markResolved} onDispatch={dispatchStaff} />
               ))
             ) : (
-              <RetroCard className="flex flex-col items-center justify-center gap-4 py-12 text-center">
+              <ManagerCard className="flex flex-col items-center justify-center gap-4 py-12 text-center">
                 <p className="font-heading text-base font-semibold text-text">No alerts match your current filters.</p>
                 <RetroButton type="button" variant="secondary" className="!px-3 !py-1.5 !text-xs" onClick={clearFilters}>
                   Clear Filters
                 </RetroButton>
-              </RetroCard>
+              </ManagerCard>
             )}
           </div>
         </section>
-      </main>
-    </div>
+      </ManagerPage>
   );
 }
 
@@ -258,7 +256,7 @@ function AlertFeedCard({ alert, onResolve, onDispatch }: { alert: Alert; onResol
   const severityLabel = alert.severity === "high" ? "HIGH" : alert.severity === "medium" ? "MEDIUM" : "LOW";
 
   return (
-    <RetroCard
+    <ManagerCard
       className={`${isResolved ? "opacity-60" : `border-l-4 ${SEVERITY_BARS[alert.severity]}`} transition-opacity duration-300`}
       aria-label={`${severityLabel} alert: ${alert.title}`}
     >
@@ -290,7 +288,7 @@ function AlertFeedCard({ alert, onResolve, onDispatch }: { alert: Alert; onResol
           </div>
         )}
       </div>
-    </RetroCard>
+    </ManagerCard>
   );
 }
 

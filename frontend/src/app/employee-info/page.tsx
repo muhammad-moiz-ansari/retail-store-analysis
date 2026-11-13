@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { RetroWindow, RetroCard } from "@/components/ui";
+import { ManagerPage, ManagerHeader, ManagerPanel, ManagerCard, ManagerTable, ManagerChartValues } from "@/components/ui/ManagerLayout";
 import {
   LineChart,
   Line,
@@ -112,43 +112,32 @@ const STAFF_WORKLOAD = [
    Helpers
    ═══════════════════════════════════════════════════════════════ */
 
-function formatDate(): string {
-  const d = new Date();
-  return d.toLocaleDateString("en-US", {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-}
-
 /* ═══════════════════════════════════════════════════════════════
    Page
    ═══════════════════════════════════════════════════════════════ */
 
 export default function EmployeeInfoPage() {
   return (
-    <div className="bg-bg min-h-screen">
-      <main className="w-full max-w-[1280px] mx-auto px-4 md:px-6 lg:px-8 py-10 md:py-16 space-y-12 md:space-y-16">
-        {/* ── Page Header ── */}
-        <PageHeader />
+    <ManagerPage>
+      {/* ── Page Header ── */}
+      <ManagerHeader title="Employees"><p>Sample data · Staff activity, service, and coverage for an illustrative shift.</p></ManagerHeader>
+      <SummaryMetrics />
 
-        {/* ── Section 1: Overall Staff Performance ── */}
-        <OverallPerformanceSection />
+      {/* ── Section 1: Overall Staff Performance ── */}
+      <OverallPerformanceSection />
 
-        {/* ── Section 2: Interaction & Responsiveness ── */}
-        <InteractionResponsivenessSection />
+      {/* ── Section 2: Interaction & Responsiveness ── */}
+      <InteractionResponsivenessSection />
 
-        {/* ── Section 3: Idle Time & Floor Coverage ── */}
-        <IdleCoverageSection />
+      {/* ── Section 3: Idle Time & Floor Coverage ── */}
+      <IdleCoverageSection />
 
-        {/* ── Section 4: Advanced Visualizations ── */}
-        <AdvancedChartsSection />
+      {/* ── Section 4: Advanced Visualizations ── */}
+      <AdvancedChartsSection />
 
-        {/* ── Section 5: Additional Insights ── */}
-        <InsightsSection />
-      </main>
-    </div>
+      {/* ── Section 5: Additional Insights ── */}
+      <InsightsSection />
+    </ManagerPage>
   );
 }
 
@@ -156,24 +145,18 @@ export default function EmployeeInfoPage() {
    Page Header
    ═══════════════════════════════════════════════════════════════ */
 
-function PageHeader() {
+function SummaryMetrics() {
   return (
-    <RetroWindow title="Employee Info - Staff Performance Today">
-      <p className="font-mono text-xs text-text-muted mb-5 tracking-wide">
-        {formatDate()}
-      </p>
-
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <StatPill label="Staff on Shift" value="5" color="var(--color-accent)" />
-        <StatPill label="Total Interactions" value="143" color="var(--color-accent-soft)" />
-        <RetroCard className="text-center">
-          <p className="font-mono text-3xl font-bold" style={{ color: "var(--color-success)" }}>
-            84 / 100
-          </p>
-          <p className="text-xs text-text-muted mt-1">Store Score</p>
-        </RetroCard>
-      </div>
-    </RetroWindow>
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <StatPill label="Staff on Shift" value="5" color="var(--color-accent)" />
+      <StatPill label="Total Interactions" value="143" color="var(--color-accent)" />
+      <ManagerCard className="text-center">
+        <p className="font-heading text-3xl font-bold tabular-nums tracking-tight" style={{ color: "var(--color-success)" }}>
+          84 / 100
+        </p>
+        <p className="text-xs text-text-muted mt-1">Store Score</p>
+      </ManagerCard>
+    </div>
   );
 }
 
@@ -187,12 +170,12 @@ function StatPill({
   color: string;
 }) {
   return (
-    <RetroCard className="text-center">
-      <p className="font-mono text-2xl font-bold" style={{ color }}>
+    <ManagerCard className="text-center">
+      <p className="font-heading text-3xl font-bold tabular-nums tracking-tight" style={{ color }}>
         {value}
       </p>
       <p className="text-xs text-text-muted mt-1">{label}</p>
-    </RetroCard>
+    </ManagerCard>
   );
 }
 
@@ -202,10 +185,10 @@ function StatPill({
 
 function OverallPerformanceSection() {
   return (
-    <RetroWindow title="Overall Staff Performance">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <ManagerPanel title="Overall Staff Performance">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
         {/* ── Store Performance Score Ring ── */}
-        <RetroCard label="Store Performance Score" className="flex flex-col items-center justify-center py-6">
+        <ManagerCard label="Store Performance Score" className="flex flex-col items-center justify-center py-6">
           <ScoreRing score={84} max={100} />
           <h3 className="font-heading text-sm font-bold text-text mt-4">
             Today&apos;s Store Score
@@ -213,11 +196,11 @@ function OverallPerformanceSection() {
           <p className="text-xs text-text-muted mt-1 text-center max-w-[260px]">
             Good - staff are engaging customers effectively.
           </p>
-        </RetroCard>
+        </ManagerCard>
 
         {/* ── Staff Leaderboard ── */}
-        <RetroCard label="Staff Leaderboard">
-          <div className="overflow-x-auto -mx-1">
+        <ManagerCard label="Staff Leaderboard">
+          <ManagerTable label="Staff performance scores">
             <table className="w-full text-xs min-w-[420px]">
               <thead>
                 <tr className="bg-surface-alt border-b border-border-soft">
@@ -247,15 +230,15 @@ function OverallPerformanceSection() {
                 ))}
               </tbody>
             </table>
-          </div>
+          </ManagerTable>
           <p className="text-[10px] text-text-muted mt-3 leading-relaxed">
             Scores are computed from: Approach Speed (30 pts max), Idle Time (25 pts max),
             Interaction Duration (45 pts max). Used as manager decision-support - not an
             automated verdict.
           </p>
-        </RetroCard>
+        </ManagerCard>
       </div>
-    </RetroWindow>
+    </ManagerPanel>
   );
 }
 
@@ -312,12 +295,12 @@ function ScoreRing({ score, max }: { score: number; max: number }) {
 
 function InteractionResponsivenessSection() {
   return (
-    <RetroWindow title="Interaction & Responsiveness">
+    <ManagerPanel title="Interaction & Responsiveness">
       <div className="space-y-6">
         {/* ── Top row: 3 stat cards ── */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {/* Total Interactions */}
-          <RetroCard label="Total Interactions">
+          <ManagerCard label="Total Interactions">
             <div className="flex flex-col items-center justify-center py-4">
               <p className="font-mono text-4xl font-bold text-accent">143</p>
               <p className="text-xs text-text-muted mt-2">interactions today</p>
@@ -328,10 +311,10 @@ function InteractionResponsivenessSection() {
                 <TrendUpIcon /> <span className="font-mono">↑ 18</span> more than yesterday
               </p>
             </div>
-          </RetroCard>
+          </ManagerCard>
 
           {/* Avg Interaction Duration */}
-          <RetroCard label="Avg. Interaction Duration">
+          <ManagerCard label="Avg. Interaction Duration">
             <div className="flex flex-col items-center justify-center py-4">
               <p className="font-mono text-4xl font-bold text-accent">3m 27s</p>
               <p className="text-xs text-text-muted mt-2 mb-4">avg. duration per engagement</p>
@@ -354,10 +337,10 @@ function InteractionResponsivenessSection() {
                 })}
               </div>
             </div>
-          </RetroCard>
+          </ManagerCard>
 
           {/* Avg Response Time */}
-          <RetroCard label="Avg. Response Time">
+          <ManagerCard label="Avg. Response Time">
             <div className="flex flex-col items-center justify-center py-4">
               <p className="font-mono text-4xl font-bold text-accent">1m 52s</p>
               <p className="text-xs text-text-muted mt-2">
@@ -367,14 +350,14 @@ function InteractionResponsivenessSection() {
                 Target: <span className="text-success font-mono">under 2 minutes</span>
               </p>
             </div>
-          </RetroCard>
+          </ManagerCard>
         </div>
 
         {/* ── Full-width: Responsiveness line chart ── */}
-        <RetroCard label="Responsiveness Throughout the Day">
+        <ManagerCard label="Responsiveness Throughout the Day">
           <div className="pt-4">
-            <ResponsiveContainer width="100%" height={280}>
-              <LineChart data={RESPONSE_TIME_HOURLY} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+            <ResponsiveContainer minWidth={0} width="100%" height={280}>
+              <LineChart accessibilityLayer data={RESPONSE_TIME_HOURLY} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
                 <CartesianGrid
                   strokeDasharray="4 4"
                   stroke="var(--color-border-soft)"
@@ -382,12 +365,12 @@ function InteractionResponsivenessSection() {
                 />
                 <XAxis
                   dataKey="hour"
-                  tick={{ fontSize: 11, fontFamily: "var(--font-mono)", fill: "var(--color-text-muted)" }}
+                  tick={{ fontSize: 11, fontFamily: "var(--font-jetbrains-mono)", fill: "var(--color-text-muted)" }}
                   tickLine={false}
                   axisLine={{ stroke: "var(--color-border-soft)", strokeOpacity: 0.5 }}
                 />
                 <YAxis
-                  tick={{ fontSize: 11, fontFamily: "var(--font-mono)", fill: "var(--color-text-muted)" }}
+                  tick={{ fontSize: 11, fontFamily: "var(--font-jetbrains-mono)", fill: "var(--color-text-muted)" }}
                   tickLine={false}
                   axisLine={false}
                   unit="s"
@@ -397,7 +380,7 @@ function InteractionResponsivenessSection() {
                     backgroundColor: "var(--color-surface)",
                     border: "1px solid var(--color-border-soft)",
                     borderRadius: "6px",
-                    fontFamily: "var(--font-mono)",
+                    fontFamily: "var(--font-jetbrains-mono)",
                     fontSize: 12,
                     color: "var(--color-text)",
                   }}
@@ -412,10 +395,11 @@ function InteractionResponsivenessSection() {
                     position: "insideTopRight",
                     fill: "var(--color-danger)",
                     fontSize: 10,
-                    fontFamily: "var(--font-mono)",
+                    fontFamily: "var(--font-jetbrains-mono)",
                   }}
                 />
                 <Line
+                  isAnimationActive={false}
                   type="monotone"
                   dataKey="seconds"
                   stroke="var(--color-accent)"
@@ -426,9 +410,11 @@ function InteractionResponsivenessSection() {
               </LineChart>
             </ResponsiveContainer>
           </div>
-        </RetroCard>
+          <ManagerChartValues label="Hourly response times" columns={["Hour", "Response time (seconds)"]}
+            rows={RESPONSE_TIME_HOURLY.map(({ hour, seconds }) => [hour, seconds])} />
+        </ManagerCard>
       </div>
-    </RetroWindow>
+    </ManagerPanel>
   );
 }
 
@@ -459,15 +445,16 @@ function IdleCoverageSection() {
   const maxIdle = Math.max(...STAFF_IDLE.map((s) => s.mins));
 
   return (
-    <RetroWindow title="Idle Time & Floor Coverage">
+    <ManagerPanel title="Idle Time & Floor Coverage">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* ── Active vs Idle Donut ── */}
-        <RetroCard label="Active vs. Idle Split">
+        <ManagerCard label="Active vs. Idle Split">
           <div className="flex flex-col items-center py-2">
             <div className="relative w-full max-w-[200px] aspect-square">
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer minWidth={0} width="100%" height="100%">
                 <PieChart>
                   <Pie
+                    isAnimationActive={false}
                     data={ACTIVE_IDLE_SPLIT}
                     cx="50%"
                     cy="50%"
@@ -486,7 +473,7 @@ function IdleCoverageSection() {
                       backgroundColor: "var(--color-surface)",
                       border: "1px solid var(--color-border-soft)",
                       borderRadius: "6px",
-                      fontFamily: "var(--font-mono)",
+                      fontFamily: "var(--font-jetbrains-mono)",
                       fontSize: 12,
                       color: "var(--color-text)",
                     }}
@@ -495,7 +482,7 @@ function IdleCoverageSection() {
                 </PieChart>
               </ResponsiveContainer>
               <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                <span className="font-mono text-3xl font-bold text-success">67%</span>
+                <span className="font-heading text-3xl font-bold tabular-nums tracking-tight text-success">67%</span>
                 <span className="text-[10px] text-text-muted">Active</span>
               </div>
             </div>
@@ -513,13 +500,13 @@ function IdleCoverageSection() {
               across all 5 staff members, today&apos;s shift
             </p>
           </div>
-        </RetroCard>
+        </ManagerCard>
 
         {/* ── Idle Time per Staff ── */}
-        <RetroCard label="Idle Time per Staff">
+        <ManagerCard label="Idle Time per Staff">
           <div className="space-y-3">
             <div className="text-center mb-4">
-              <p className="font-mono text-3xl font-bold text-accent">1h 44m</p>
+              <p className="font-heading text-3xl font-bold tabular-nums tracking-tight text-accent">1h 44m</p>
               <p className="text-xs text-text-muted mt-1">avg. idle per employee</p>
             </div>
 
@@ -550,10 +537,10 @@ function IdleCoverageSection() {
               })}
             </div>
           </div>
-        </RetroCard>
+        </ManagerCard>
 
         {/* ── Unstaffed Zone Alerts ── */}
-        <RetroCard label="Unstaffed Zone Alerts">
+        <ManagerCard label="Unstaffed Zone Alerts">
           <div className="space-y-3">
             <p className="text-xs text-text-muted">
               <span className="font-mono font-bold text-danger">3</span> coverage gaps today -
@@ -578,9 +565,9 @@ function IdleCoverageSection() {
               ))}
             </div>
           </div>
-        </RetroCard>
+        </ManagerCard>
       </div>
-    </RetroWindow>
+    </ManagerPanel>
   );
 }
 
@@ -592,20 +579,20 @@ const CHART_TOOLTIP_STYLE = {
   backgroundColor: "var(--color-surface)",
   border: "1px solid var(--color-border-soft)",
   borderRadius: "6px",
-  fontFamily: "var(--font-mono)",
+  fontFamily: "var(--font-jetbrains-mono)",
   fontSize: 12,
   color: "var(--color-text)",
 };
 
 function AdvancedChartsSection() {
   return (
-    <RetroWindow title="Advanced Visualizations">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <ManagerPanel title="Advanced Visualizations">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
         {/* ── Dual Line: Interactions vs Idle ── */}
-        <RetroCard label="Interactions vs. Idle Events (Hourly)">
+        <ManagerCard label="Interactions vs. Idle Events (Hourly)">
           <div className="pt-4">
-            <ResponsiveContainer width="100%" height={280}>
-              <LineChart data={HOURLY_DUAL} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+            <ResponsiveContainer minWidth={0} width="100%" height={280}>
+              <LineChart accessibilityLayer data={HOURLY_DUAL} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
                 <CartesianGrid
                   strokeDasharray="4 4"
                   stroke="var(--color-border-soft)"
@@ -613,12 +600,12 @@ function AdvancedChartsSection() {
                 />
                 <XAxis
                   dataKey="hour"
-                  tick={{ fontSize: 10, fontFamily: "var(--font-mono)", fill: "var(--color-text-muted)" }}
+                  tick={{ fontSize: 10, fontFamily: "var(--font-jetbrains-mono)", fill: "var(--color-text-muted)" }}
                   tickLine={false}
                   axisLine={{ stroke: "var(--color-border-soft)", strokeOpacity: 0.5 }}
                 />
                 <YAxis
-                  tick={{ fontSize: 11, fontFamily: "var(--font-mono)", fill: "var(--color-text-muted)" }}
+                  tick={{ fontSize: 11, fontFamily: "var(--font-jetbrains-mono)", fill: "var(--color-text-muted)" }}
                   tickLine={false}
                   axisLine={false}
                 />
@@ -627,9 +614,10 @@ function AdvancedChartsSection() {
                   verticalAlign="top"
                   height={28}
                   iconType="plainline"
-                  wrapperStyle={{ fontSize: 11, fontFamily: "var(--font-mono)" }}
+                  wrapperStyle={{ fontSize: 11, fontFamily: "var(--font-jetbrains-mono)" }}
                 />
                 <Line
+                  isAnimationActive={false}
                   type="monotone"
                   dataKey="interactions"
                   name="Interactions"
@@ -639,14 +627,15 @@ function AdvancedChartsSection() {
                   activeDot={{ r: 5, fill: "var(--color-accent)", stroke: "var(--color-surface)", strokeWidth: 2 }}
                 />
                 <Line
+                  isAnimationActive={false}
                   type="monotone"
                   dataKey="idle"
                   name="Idle Events"
-                  stroke="var(--color-danger)"
+                  stroke="var(--color-coral)"
                   strokeWidth={2}
                   strokeDasharray="5 3"
-                  dot={{ r: 3, fill: "var(--color-danger)", strokeWidth: 0 }}
-                  activeDot={{ r: 5, fill: "var(--color-danger)", stroke: "var(--color-surface)", strokeWidth: 2 }}
+                  dot={{ r: 3, fill: "var(--color-coral)", strokeWidth: 0 }}
+                  activeDot={{ r: 5, fill: "var(--color-coral)", stroke: "var(--color-surface)", strokeWidth: 2 }}
                 />
               </LineChart>
             </ResponsiveContainer>
@@ -655,13 +644,15 @@ function AdvancedChartsSection() {
               the midday lull (12 PM – 2 PM).
             </p>
           </div>
-        </RetroCard>
+          <ManagerChartValues label="Hourly interactions and idle events" columns={["Hour", "Interactions", "Idle events"]}
+            rows={HOURLY_DUAL.map(({ hour, interactions, idle }) => [hour, interactions, idle])} />
+        </ManagerCard>
 
         {/* ── Zone-by-Zone Horizontal Bars ── */}
-        <RetroCard label="Zone Activity Breakdown">
+        <ManagerCard label="Zone Activity Breakdown">
           <div className="pt-4">
-            <ResponsiveContainer width="100%" height={280}>
-              <BarChart
+            <ResponsiveContainer minWidth={0} width="100%" height={280}>
+              <BarChart accessibilityLayer
                 data={ZONE_BREAKDOWN}
                 layout="vertical"
                 margin={{ top: 5, right: 20, left: 10, bottom: 5 }}
@@ -675,7 +666,7 @@ function AdvancedChartsSection() {
                 <XAxis
                   type="number"
                   domain={[0, 100]}
-                  tick={{ fontSize: 11, fontFamily: "var(--font-mono)", fill: "var(--color-text-muted)" }}
+                  tick={{ fontSize: 11, fontFamily: "var(--font-jetbrains-mono)", fill: "var(--color-text-muted)" }}
                   tickLine={false}
                   axisLine={{ stroke: "var(--color-border-soft)", strokeOpacity: 0.5 }}
                   unit="%"
@@ -683,7 +674,7 @@ function AdvancedChartsSection() {
                 <YAxis
                   type="category"
                   dataKey="zone"
-                  tick={{ fontSize: 10, fontFamily: "var(--font-mono)", fill: "var(--color-text-muted)" }}
+                  tick={{ fontSize: 10, fontFamily: "var(--font-jetbrains-mono)", fill: "var(--color-text-muted)" }}
                   tickLine={false}
                   axisLine={false}
                   width={110}
@@ -696,16 +687,18 @@ function AdvancedChartsSection() {
                   verticalAlign="top"
                   height={28}
                   iconType="square"
-                  wrapperStyle={{ fontSize: 11, fontFamily: "var(--font-mono)" }}
+                  wrapperStyle={{ fontSize: 11, fontFamily: "var(--font-jetbrains-mono)" }}
                 />
-                <Bar dataKey="active" name="Active %" fill="var(--color-success)" radius={[0, 3, 3, 0]} barSize={10} />
-                <Bar dataKey="idle" name="Idle %" fill="var(--color-border-soft)" radius={[0, 3, 3, 0]} barSize={10} />
+                <Bar isAnimationActive={false} dataKey="active" name="Active %" fill="var(--color-success)" radius={[0, 3, 3, 0]} barSize={10} />
+                <Bar isAnimationActive={false} dataKey="idle" name="Idle %" fill="var(--color-border-soft)" radius={[0, 3, 3, 0]} barSize={10} />
               </BarChart>
             </ResponsiveContainer>
           </div>
-        </RetroCard>
+          <ManagerChartValues label="Zone activity" columns={["Zone", "Active (%)", "Idle (%)"]}
+            rows={ZONE_BREAKDOWN.map(({ zone, active, idle }) => [zone, active, idle])} />
+        </ManagerCard>
       </div>
-    </RetroWindow>
+    </ManagerPanel>
   );
 }
 
@@ -717,13 +710,13 @@ function InsightsSection() {
   const maxHours = Math.max(...STAFF_WORKLOAD.map((s) => s.hours));
 
   return (
-    <RetroWindow title="Additional Insights">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <ManagerPanel title="Additional Insights">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
         {/* ── Best Performing Hour ── */}
-        <RetroCard label="Best Performing Hour">
+        <ManagerCard label="Best Performing Hour">
           <div className="flex flex-col items-center justify-center py-6 space-y-3">
             <ClockIcon />
-            <p className="font-mono text-2xl font-bold text-success">10:00 AM – 11:00 AM</p>
+            <p className="font-heading text-3xl font-bold tabular-nums tracking-tight text-success">10:00 AM – 11:00 AM</p>
             <div className="text-center space-y-1">
               <p className="text-xs text-text-muted">
                 Highest interaction count (<span className="font-mono text-accent">19</span>) with the lowest idle
@@ -734,10 +727,10 @@ function InsightsSection() {
               </p>
             </div>
           </div>
-        </RetroCard>
+        </ManagerCard>
 
         {/* ── Workload & Burnout Risk ── */}
-        <RetroCard label="Workload Distribution">
+        <ManagerCard label="Workload Distribution">
           <div className="space-y-4 py-2">
             <p className="text-xs text-text-muted">
               Active hours per staff member - prolonged high activity may signal burnout risk.
@@ -791,9 +784,9 @@ function InsightsSection() {
               staff flagged <span className="text-danger font-mono">High</span>.
             </p>
           </div>
-        </RetroCard>
+        </ManagerCard>
       </div>
-    </RetroWindow>
+    </ManagerPanel>
   );
 }
 

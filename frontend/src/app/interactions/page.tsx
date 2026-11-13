@@ -1,7 +1,8 @@
 "use client";
 
 import { ChangeEvent, FormEvent, useEffect, useState } from "react";
-import { RetroButton, RetroInput, RetroWindow } from "@/components/ui";
+import { RetroButton, RetroInput } from "@/components/ui";
+import { ManagerPage, ManagerHeader, ManagerPanel, ManagerTable } from "@/components/ui/ManagerLayout";
 import { runBackendJob } from "@/lib/backend-job";
 
 type Interaction = {
@@ -94,16 +95,23 @@ export default function InteractionsPage() {
   const interactions = result?.interactions ?? [];
   const count = (role: Person["role"]) => people.filter((person) => person.role === role).length;
 
-  return <main className="mx-auto w-full max-w-6xl px-4 py-8 md:px-8">
-    <p className="font-mono text-xs uppercase tracking-[0.18em] text-accent">Engagement Tracking</p>
-    <h1 className="mt-2 font-heading text-3xl font-bold text-text">Interactions</h1>
-    <p className="mt-2 max-w-2xl text-sm text-text-muted">Detect, track and classify people in a recording or a live DroidCam feed, then find employee-customer interactions confirmed by the pose judge.</p>
-    <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(280px,0.7fr)]">
-      <RetroWindow title="Processing Configuration">
+  return <ManagerPage>
+    <ManagerHeader title="Interactions"><p>Detect, track and classify people in a recording or a live DroidCam feed, then find employee-customer interactions confirmed by the pose judge.</p></ManagerHeader>
+    <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+      <ManagerPanel title="Processing Configuration">
         <form onSubmit={run} className="space-y-4">
-          <div className="flex gap-2" role="radiogroup" aria-label="Source">
-            {([["recording", "Recording"], ["live", "Live DroidCam"]] as const).map(([value, label]) => <RetroButton key={value} type="button" role="radio" aria-checked={source === value} variant={source === value ? "primary" : "secondary"} disabled={busy} className="!px-3 !py-1.5 !text-xs" onClick={() => setSource(value)}>{label}</RetroButton>)}
-          </div>
+          <fieldset disabled={busy}>
+            <legend className="mb-2 text-sm font-semibold">Source</legend>
+            <div className="flex flex-wrap gap-2">
+              {([["recording", "Recording"], ["live", "Live DroidCam"]] as const).map(([value, label]) => (
+                <label key={value}>
+                  <input type="radio" name="interaction-source" value={value} checked={source === value}
+                    onChange={() => setSource(value)} className="peer sr-only" />
+                  <span className="flex min-h-11 cursor-pointer items-center rounded-lg border border-border-soft px-3 text-sm font-semibold peer-checked:border-accent peer-checked:bg-surface-alt peer-checked:text-accent peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-accent peer-disabled:cursor-not-allowed peer-disabled:opacity-60">{label}</span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
           {source === "recording" ? <RetroInput label="Video (inside the project)" value={form.video} onChange={(event) => setForm({ ...form, video: event.target.value })} /> : <>
             <div className="grid grid-cols-[minmax(0,1fr)_7rem] gap-3">
               <RetroInput label="Phone IP (shown in the DroidCam app)" placeholder="192.168.1.20" value={form.host} onChange={(event) => setForm({ ...form, host: event.target.value })} />
@@ -138,22 +146,22 @@ export default function InteractionsPage() {
             {source === "live" && busy && liveId && <RetroButton type="button" variant="secondary" disabled={stopping} onClick={stopLive}>{stopping ? "Stopping..." : "Stop"}</RetroButton>}
           </div>
         </form>
-      </RetroWindow>
-      <RetroWindow title="Run Summary">
+      </ManagerPanel>
+      <ManagerPanel title="Run Summary">
         <div className="grid grid-cols-3 gap-2 text-center">
-          {([["employees", count("employee")], ["customers", count("customer")], ["interactions", interactions.length]] as const).map(([label, value]) => <div key={label} className="border border-border-soft bg-surface-alt p-3"><p className="font-mono text-2xl font-bold text-text">{value}</p><p className="font-mono text-[10px] uppercase tracking-wider text-text-muted">{label}</p></div>)}
+          {([["employees", count("employee")], ["customers", count("customer")], ["interactions", interactions.length]] as const).map(([label, value]) => <div key={label} className="min-w-0 rounded-lg bg-surface-alt p-2 [overflow-wrap:anywhere] sm:p-3"><p className="font-heading text-3xl font-bold tabular-nums text-text">{value}</p><p className="text-xs text-text-muted">{label}</p></div>)}
         </div>
         {result && <p className="mt-4 break-all text-xs text-text-muted">Annotated video written to {result.output}</p>}
-        {error && <p className="mt-4 border border-danger bg-surface-alt p-3 text-sm text-danger">{error}</p>}
-      </RetroWindow>
+        {error && <p role="alert" className="mt-4 rounded-lg border border-danger bg-surface-alt p-3 text-sm text-danger">{error}</p>}
+      </ManagerPanel>
     </div>
-    {source === "live" && liveId && <RetroWindow title="Live Preview" className="mt-6">
+    {source === "live" && liveId && <ManagerPanel title="Live Preview">
       {/* eslint-disable-next-line @next/next/no-img-element -- live MJPEG stream from the backend, not a static asset */}
       <img src={`/api/backend/interaction/live/${liveId}/stream`} alt="Live annotated DroidCam feed" onLoad={() => setPreviewReady(true)} className="w-full border border-border-soft" />
       {!previewReady && <p className="text-sm text-text-muted">Connecting to the phone and loading models...</p>}
       <p className="mt-2 text-xs text-text-muted">Results (people and interactions) appear after you press Stop.</p>
-    </RetroWindow>}
-    <RetroWindow title="Single Frame Check" className="mt-6">
+    </ManagerPanel>}
+    <ManagerPanel title="Single Frame Check">
       <label className="flex flex-col gap-2 text-sm font-medium text-text">
         Upload a still image for a quick person count and staffing check
         <input type="file" accept="image/*" onChange={checkFrame} disabled={frameBusy} className="text-sm text-text-muted" />
@@ -161,13 +169,61 @@ export default function InteractionsPage() {
       {frameBusy && <p className="mt-3 text-sm text-text-muted">Analyzing frame...</p>}
       {frameError && <p className="mt-3 border border-danger bg-surface-alt p-3 text-sm text-danger">{frameError}</p>}
       {frame && <p className="mt-3 text-sm text-text"><span className="font-mono">{frame.total_people}</span> people (<span className="font-mono">{frame.employee_count}</span> staff, <span className="font-mono">{frame.customer_count}</span> customers): <span className="font-semibold">{frame.interaction.status}</span>. {frame.interaction.message}</p>}
-    </RetroWindow>
-    <RetroWindow title="Confirmed Interactions" className="mt-6">
-      {interactions.length === 0 ? <p className="text-sm text-text-muted">{result ? "No confirmed interactions in this recording." : "Run an analysis to view interactions."}</p> : <div className="overflow-x-auto"><table className="w-full text-left text-xs"><thead><tr className="border-b border-border-soft font-mono uppercase tracking-wider text-text-muted"><th className="p-2">Employee</th><th className="p-2">Customer</th><th className="p-2">Window</th><th className="p-2">Duration</th><th className="p-2">Distance</th><th className="p-2">Verdict</th></tr></thead><tbody>{interactions.map((item) => <tr key={`${item.employee_track_id}-${item.customer_track_id}-${item.started_at}`} className="border-b border-border-soft/50"><td className="p-2 font-mono text-accent">#{item.employee_track_id}</td><td className="p-2 font-mono">#{item.customer_track_id}</td><td className="p-2 font-mono">{item.started_at.toFixed(1)}s → {item.last_seen_at.toFixed(1)}s</td><td className="p-2 font-mono">{item.duration_seconds.toFixed(1)}s</td><td className="p-2 font-mono">{item.distance_body_heights.toFixed(2)} bh</td><td className="p-2 font-semibold text-text">{item.verdict || "-"}</td></tr>)}</tbody></table></div>}
-    </RetroWindow>
-    <RetroWindow title="Tracked People" className="mt-6">
-      {people.length === 0 ? <p className="text-sm text-text-muted">No people yet.</p> : <div className="overflow-x-auto"><table className="w-full text-left text-xs"><thead><tr className="border-b border-border-soft font-mono uppercase tracking-wider text-text-muted"><th className="p-2">Track</th><th className="p-2">Role</th><th className="p-2">Seen</th><th className="p-2">Frames</th><th className="p-2">Employee score</th></tr></thead><tbody>{people.map((person) => <tr key={person.track_id} className="border-b border-border-soft/50"><td className="p-2 font-mono text-accent">#{person.track_id}</td><td className="p-2 font-semibold text-text">{person.role}</td><td className="p-2 font-mono">{person.first_seen.toFixed(1)}s → {person.last_seen.toFixed(1)}s</td><td className="p-2 font-mono">{person.frames_observed}</td><td className="p-2 font-mono">{person.employee_score.toFixed(2)}</td></tr>)}</tbody></table></div>}
-    </RetroWindow>
-    <RetroWindow title="Processing Log" className="mt-6"><pre className="max-h-56 overflow-auto whitespace-pre-wrap font-mono text-xs text-text-muted">{logs || "No run yet."}</pre></RetroWindow>
-  </main>;
+    </ManagerPanel>
+    <ManagerPanel title="Confirmed Interactions">
+      {interactions.length === 0 ? <p className="text-sm text-text-muted">{result ? "No confirmed interactions in this recording." : "Run an analysis to view interactions."}</p> : <ManagerTable label="Confirmed interactions">
+        <table className="w-full text-left text-xs">
+          <thead>
+            <tr className="border-b border-border-soft font-mono uppercase tracking-wider text-text-muted">
+              <th scope="col" className="p-2">Employee</th>
+              <th scope="col" className="p-2">Customer</th>
+              <th scope="col" className="p-2">Window</th>
+              <th scope="col" className="p-2">Duration</th>
+              <th scope="col" className="p-2">Distance</th>
+              <th scope="col" className="p-2">Verdict</th>
+            </tr>
+          </thead>
+          <tbody>
+            {interactions.map((item) => (
+              <tr key={`${item.employee_track_id}-${item.customer_track_id}-${item.started_at}`} className="border-b border-border-soft/50">
+                <td className="p-2 font-mono text-accent">#{item.employee_track_id}</td>
+                <td className="p-2 font-mono">#{item.customer_track_id}</td>
+                <td className="p-2 font-mono">{item.started_at.toFixed(1)}s → {item.last_seen_at.toFixed(1)}s</td>
+                <td className="p-2 font-mono">{item.duration_seconds.toFixed(1)}s</td>
+                <td className="p-2 font-mono">{item.distance_body_heights.toFixed(2)} bh</td>
+                <td className="p-2 font-semibold text-text">{item.verdict || "-"}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </ManagerTable>}
+    </ManagerPanel>
+    <ManagerPanel title="Tracked People">
+      {people.length === 0 ? <p className="text-sm text-text-muted">No people yet.</p> : <ManagerTable label="Tracked people">
+        <table className="w-full text-left text-xs">
+          <thead>
+            <tr className="border-b border-border-soft font-mono uppercase tracking-wider text-text-muted">
+              <th scope="col" className="p-2">Track</th>
+              <th scope="col" className="p-2">Role</th>
+              <th scope="col" className="p-2">Seen</th>
+              <th scope="col" className="p-2">Frames</th>
+              <th scope="col" className="p-2">Employee score</th>
+            </tr>
+          </thead>
+          <tbody>
+            {people.map((person) => (
+              <tr key={person.track_id} className="border-b border-border-soft/50">
+                <td className="p-2 font-mono text-accent">#{person.track_id}</td>
+                <td className="p-2 font-semibold text-text">{person.role}</td>
+                <td className="p-2 font-mono">{person.first_seen.toFixed(1)}s → {person.last_seen.toFixed(1)}s</td>
+                <td className="p-2 font-mono">{person.frames_observed}</td>
+                <td className="p-2 font-mono">{person.employee_score.toFixed(2)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </ManagerTable>}
+    </ManagerPanel>
+    <ManagerPanel title="Processing Log"><pre className="max-h-56 overflow-auto whitespace-pre-wrap font-mono text-xs text-text-muted">{logs || "No run yet."}</pre></ManagerPanel>
+  </ManagerPage>;
 }

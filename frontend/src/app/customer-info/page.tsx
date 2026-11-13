@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { RetroWindow, RetroCard } from "@/components/ui";
+import { ManagerChartValues, ManagerPage, ManagerHeader, ManagerPanel, ManagerCard } from "@/components/ui/ManagerLayout";
 import {
   AreaChart,
   Area,
@@ -99,40 +99,29 @@ const HOURLY_TRAFFIC = [
    Helpers
    ═══════════════════════════════════════════════════════════════ */
 
-function formatDate(): string {
-  const d = new Date();
-  return d.toLocaleDateString("en-US", {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-}
-
 /* ═══════════════════════════════════════════════════════════════
    Page
    ═══════════════════════════════════════════════════════════════ */
 
 export default function CustomerInfoPage() {
   return (
-    <div className="bg-bg min-h-screen">
-      <main className="w-full max-w-[1280px] mx-auto px-4 md:px-6 lg:px-8 py-10 md:py-16 space-y-12 md:space-y-16">
-        {/* ── Page Header ── */}
-        <PageHeader />
+    <ManagerPage>
+      {/* ── Page Header ── */}
+      <ManagerHeader title="Customers"><p>Sample data · Customer traffic, service, and dwell for an illustrative day.</p></ManagerHeader>
+      <SummaryMetrics />
 
-        {/* ── Section 1: Traffic & Footfall ── */}
-        <TrafficFootfallSection />
+      {/* ── Section 1: Traffic & Footfall ── */}
+      <TrafficFootfallSection />
 
-        {/* ── Section 2: Service Quality & Engagement ── */}
-        <ServiceQualitySection />
+      {/* ── Section 2: Service Quality & Engagement ── */}
+      <ServiceQualitySection />
 
-        {/* ── Section 3: Trajectory & Spatial Behavior ── */}
-        <TrajectorySection />
+      {/* ── Section 3: Trajectory & Spatial Behavior ── */}
+      <TrajectorySection />
 
-        {/* ── Section 4: Additional Insights ── */}
-        <AdditionalInsightsSection />
-      </main>
-    </div>
+      {/* ── Section 4: Additional Insights ── */}
+      <AdditionalInsightsSection />
+    </ManagerPage>
   );
 }
 
@@ -140,19 +129,13 @@ export default function CustomerInfoPage() {
    Page Header
    ═══════════════════════════════════════════════════════════════ */
 
-function PageHeader() {
+function SummaryMetrics() {
   return (
-    <RetroWindow title="Customer Info - Today's Overview">
-      <p className="font-mono text-xs text-text-muted mb-5 tracking-wide">
-        {formatDate()}
-      </p>
-
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <StatPill label="Customers In" value="247" color="var(--color-accent)" />
-        <StatPill label="Customers Out" value="219" color="var(--color-accent-soft)" />
-        <StatPill label="Avg. Time in Store" value="14m 30s" color="var(--color-success)" />
-      </div>
-    </RetroWindow>
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <StatPill label="Customers In" value="247" color="var(--color-accent)" />
+      <StatPill label="Customers Out" value="219" color="var(--color-accent)" />
+      <StatPill label="Avg. Time in Store" value="14m 30s" color="var(--color-success)" />
+    </div>
   );
 }
 
@@ -166,12 +149,12 @@ function StatPill({
   color: string;
 }) {
   return (
-    <RetroCard className="text-center">
-      <p className="font-mono text-2xl font-bold" style={{ color }}>
+    <ManagerCard className="text-center">
+      <p className="font-heading text-3xl font-bold tabular-nums tracking-tight" style={{ color }}>
         {value}
       </p>
       <p className="text-xs text-text-muted mt-1">{label}</p>
-    </RetroCard>
+    </ManagerCard>
   );
 }
 
@@ -181,37 +164,37 @@ function StatPill({
 
 function TrafficFootfallSection() {
   return (
-    <RetroWindow title="Traffic & Footfall">
+    <ManagerPanel title="Traffic & Footfall">
       <div className="space-y-6">
         {/* Footfall Counter Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <RetroCard className="text-center">
-            <p className="font-mono text-3xl font-bold text-accent">247</p>
+          <ManagerCard className="text-center">
+            <p className="font-heading text-3xl font-bold tabular-nums tracking-tight text-accent">247</p>
             <p className="text-xs text-text-muted mt-1">Total Customers In</p>
-          </RetroCard>
+          </ManagerCard>
 
-          <RetroCard className="text-center">
-            <p className="font-mono text-3xl font-bold text-accent-soft">219</p>
+          <ManagerCard className="text-center">
+            <p className="font-heading text-3xl font-bold tabular-nums tracking-tight text-accent-soft">219</p>
             <p className="text-xs text-text-muted mt-1">Total Customers Out</p>
-          </RetroCard>
+          </ManagerCard>
 
-          <RetroCard className="text-center">
+          <ManagerCard className="text-center">
             <div className="flex items-center justify-center gap-2">
               <span className="relative flex h-2.5 w-2.5">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75" />
                 <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-success" />
               </span>
-              <p className="font-mono text-3xl font-bold text-success">28</p>
+              <p className="font-heading text-3xl font-bold tabular-nums tracking-tight text-success">28</p>
             </div>
             <p className="text-xs text-text-muted mt-1">Currently In Store</p>
-          </RetroCard>
+          </ManagerCard>
         </div>
 
         {/* Hourly Traffic Chart */}
-        <RetroCard label="Peak Crowd Density - Hourly Traffic">
+        <ManagerCard label="Peak Crowd Density - Hourly Traffic">
           <div className="pt-4">
-            <ResponsiveContainer width="100%" height={260}>
-              <AreaChart data={HOURLY_TRAFFIC} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+            <ResponsiveContainer minWidth={0} width="100%" height={260}>
+              <AreaChart accessibilityLayer data={HOURLY_TRAFFIC} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
                 <defs>
                   <linearGradient id="trafficGrad" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="var(--color-accent)" stopOpacity={0.3} />
@@ -225,12 +208,12 @@ function TrafficFootfallSection() {
                 />
                 <XAxis
                   dataKey="hour"
-                  tick={{ fontSize: 11, fontFamily: "var(--font-mono)", fill: "var(--color-text-muted)" }}
+                  tick={{ fontSize: 11, fontFamily: "var(--font-jetbrains-mono)", fill: "var(--color-text-muted)" }}
                   tickLine={false}
                   axisLine={{ stroke: "var(--color-border-soft)", strokeOpacity: 0.5 }}
                 />
                 <YAxis
-                  tick={{ fontSize: 11, fontFamily: "var(--font-mono)", fill: "var(--color-text-muted)" }}
+                  tick={{ fontSize: 11, fontFamily: "var(--font-jetbrains-mono)", fill: "var(--color-text-muted)" }}
                   tickLine={false}
                   axisLine={false}
                 />
@@ -239,13 +222,14 @@ function TrafficFootfallSection() {
                     backgroundColor: "var(--color-surface)",
                     border: "1px solid var(--color-border-soft)",
                     borderRadius: "6px",
-                    fontFamily: "var(--font-mono)",
+                    fontFamily: "var(--font-jetbrains-mono)",
                     fontSize: 12,
                     color: "var(--color-text)",
                   }}
                   labelStyle={{ color: "var(--color-text-muted)", fontWeight: 600 }}
                 />
                 <Area
+                  isAnimationActive={false}
                   type="monotone"
                   dataKey="customers"
                   stroke="var(--color-accent)"
@@ -257,9 +241,11 @@ function TrafficFootfallSection() {
               </AreaChart>
             </ResponsiveContainer>
           </div>
-        </RetroCard>
+          <ManagerChartValues label="Hourly customer traffic" columns={["Hour", "Customers"]}
+            rows={HOURLY_TRAFFIC.map(({ hour, customers }) => [hour, customers])} />
+        </ManagerCard>
       </div>
-    </RetroWindow>
+    </ManagerPanel>
   );
 }
 
@@ -269,15 +255,16 @@ function TrafficFootfallSection() {
 
 function ServiceQualitySection() {
   return (
-    <RetroWindow title="Service Quality & Engagement">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <ManagerPanel title="Service Quality & Engagement">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
         {/* ── Donut: Attended vs Unattended ── */}
-        <RetroCard label="Customer Attendance">
+        <ManagerCard label="Customer Attendance">
           <div className="flex flex-col items-center py-2">
             <div className="relative w-full max-w-[220px] aspect-square">
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer minWidth={0} width="100%" height="100%">
                 <PieChart>
                   <Pie
+                    isAnimationActive={false}
                     data={ATTENDANCE_DATA}
                     cx="50%"
                     cy="50%"
@@ -296,7 +283,7 @@ function ServiceQualitySection() {
                       backgroundColor: "var(--color-surface)",
                       border: "1px solid var(--color-border-soft)",
                       borderRadius: "6px",
-                      fontFamily: "var(--font-mono)",
+                      fontFamily: "var(--font-jetbrains-mono)",
                       fontSize: 12,
                       color: "var(--color-text)",
                     }}
@@ -306,7 +293,7 @@ function ServiceQualitySection() {
               </ResponsiveContainer>
               {/* Center label */}
               <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                <span className="font-mono text-3xl font-bold text-success">72%</span>
+                <span className="font-heading text-3xl font-bold tabular-nums tracking-tight text-success">72%</span>
                 <span className="text-[10px] text-text-muted">Attended</span>
               </div>
             </div>
@@ -321,10 +308,10 @@ function ServiceQualitySection() {
               </span>
             </div>
           </div>
-        </RetroCard>
+        </ManagerCard>
 
         {/* ── Avg Response Time ── */}
-        <RetroCard label="Avg. Response Time">
+        <ManagerCard label="Avg. Response Time">
           <div className="flex flex-col items-center justify-center h-full py-4">
             <p className="font-mono text-4xl font-bold text-accent">1m 48s</p>
             <p className="text-xs text-text-muted mt-2 text-center">
@@ -334,10 +321,10 @@ function ServiceQualitySection() {
               Target: <span className="text-success font-mono">≤ 2m 00s</span>
             </p>
           </div>
-        </RetroCard>
+        </ManagerCard>
 
         {/* ── Avg Interaction Duration ── */}
-        <RetroCard label="Avg. Interaction Duration">
+        <ManagerCard label="Avg. Interaction Duration">
           <div className="flex flex-col items-center justify-center py-4">
             <p className="font-mono text-4xl font-bold text-accent">3m 42s</p>
             <p className="text-xs text-text-muted mt-2 mb-4">last 7 days</p>
@@ -360,12 +347,12 @@ function ServiceQualitySection() {
               })}
             </div>
           </div>
-        </RetroCard>
+        </ManagerCard>
 
         {/* ── Unattended Events ── */}
-        <RetroCard label="Unattended Events">
+        <ManagerCard label="Unattended Events">
           <div className="space-y-3">
-            <p className="font-mono text-2xl font-bold text-danger">
+            <p className="font-heading text-3xl font-bold tabular-nums tracking-tight text-danger">
               17 <span className="text-xs font-normal text-text-muted">events today</span>
             </p>
 
@@ -382,9 +369,9 @@ function ServiceQualitySection() {
               ))}
             </div>
           </div>
-        </RetroCard>
+        </ManagerCard>
       </div>
-    </RetroWindow>
+    </ManagerPanel>
   );
 }
 
@@ -394,23 +381,23 @@ function ServiceQualitySection() {
 
 function TrajectorySection() {
   return (
-    <RetroWindow title="Trajectory & Spatial Behavior">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <ManagerPanel title="Trajectory & Spatial Behavior">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
         {/* ── Avg Time in Store ── */}
-        <RetroCard label="Avg. Time in Store">
+        <ManagerCard label="Avg. Time in Store">
           <div className="flex flex-col items-center justify-center h-full py-4">
             <p className="font-mono text-4xl font-bold text-accent">14m 30s</p>
             <p className="text-xs text-text-muted mt-2">
               across <span className="font-mono text-text">247</span> customers today
             </p>
           </div>
-        </RetroCard>
+        </ManagerCard>
 
         {/* ── Zone Dwell Horizontal Bar Chart ── */}
-        <RetroCard label="Zone Dwell Time (avg mins)">
+        <ManagerCard label="Zone Dwell Time (avg mins)">
           <div className="pt-2">
-            <ResponsiveContainer width="100%" height={200}>
-              <BarChart
+            <ResponsiveContainer minWidth={0} width="100%" height={200}>
+              <BarChart accessibilityLayer
                 data={ZONE_DWELL}
                 layout="vertical"
                 margin={{ top: 5, right: 20, left: 5, bottom: 5 }}
@@ -423,7 +410,7 @@ function TrajectorySection() {
                 />
                 <XAxis
                   type="number"
-                  tick={{ fontSize: 11, fontFamily: "var(--font-mono)", fill: "var(--color-text-muted)" }}
+                  tick={{ fontSize: 11, fontFamily: "var(--font-jetbrains-mono)", fill: "var(--color-text-muted)" }}
                   tickLine={false}
                   axisLine={false}
                   unit="m"
@@ -431,7 +418,7 @@ function TrajectorySection() {
                 <YAxis
                   type="category"
                   dataKey="zone"
-                  tick={{ fontSize: 11, fontFamily: "var(--font-mono)", fill: "var(--color-text-muted)" }}
+                  tick={{ fontSize: 11, fontFamily: "var(--font-jetbrains-mono)", fill: "var(--color-text-muted)" }}
                   tickLine={false}
                   axisLine={false}
                   width={95}
@@ -441,25 +428,28 @@ function TrajectorySection() {
                     backgroundColor: "var(--color-surface)",
                     border: "1px solid var(--color-border-soft)",
                     borderRadius: "6px",
-                    fontFamily: "var(--font-mono)",
+                    fontFamily: "var(--font-jetbrains-mono)",
                     fontSize: 12,
                     color: "var(--color-text)",
                   }}
                   formatter={(value) => [`${value} mins`, "Dwell"]}
                 />
-                <Bar dataKey="mins" fill="var(--color-accent)" radius={[0, 4, 4, 0]} barSize={16} />
+                <Bar isAnimationActive={false} dataKey="mins" fill="var(--color-accent)" radius={[0, 4, 4, 0]} barSize={16} />
               </BarChart>
             </ResponsiveContainer>
           </div>
-        </RetroCard>
+          <ManagerChartValues label="Average zone dwell" columns={["Zone", "Average (minutes)"]}
+            rows={ZONE_DWELL.map(({ zone, mins }) => [zone, mins])} />
+        </ManagerCard>
 
         {/* ── Shopper Behavior Donut ── */}
-        <RetroCard label="Shopper Behavior">
+        <ManagerCard label="Shopper Behavior">
           <div className="flex flex-col items-center py-2">
             <div className="relative w-full max-w-[220px] aspect-square">
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer minWidth={0} width="100%" height="100%">
                 <PieChart>
                   <Pie
+                    isAnimationActive={false}
                     data={BEHAVIOR_DATA}
                     cx="50%"
                     cy="50%"
@@ -478,7 +468,7 @@ function TrajectorySection() {
                       backgroundColor: "var(--color-surface)",
                       border: "1px solid var(--color-border-soft)",
                       borderRadius: "6px",
-                      fontFamily: "var(--font-mono)",
+                      fontFamily: "var(--font-jetbrains-mono)",
                       fontSize: 12,
                       color: "var(--color-text)",
                     }}
@@ -500,10 +490,10 @@ function TrajectorySection() {
               ))}
             </div>
           </div>
-        </RetroCard>
+        </ManagerCard>
 
         {/* ── Top Customer Paths ── */}
-        <RetroCard label="Top Customer Paths">
+        <ManagerCard label="Top Customer Paths">
           <div className="space-y-2">
             {TOP_PATHS.map((p) => (
               <div
@@ -518,9 +508,9 @@ function TrajectorySection() {
               </div>
             ))}
           </div>
-        </RetroCard>
+        </ManagerCard>
       </div>
-    </RetroWindow>
+    </ManagerPanel>
   );
 }
 
@@ -530,10 +520,10 @@ function TrajectorySection() {
 
 function AdditionalInsightsSection() {
   return (
-    <RetroWindow title="Additional Insights">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <ManagerPanel title="Additional Insights">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
         {/* ── Return Visit Rate ── */}
-        <RetroCard label="Return Visit Rate">
+        <ManagerCard label="Return Visit Rate">
           <div className="flex flex-col items-center justify-center py-6">
             <p className="font-mono text-5xl font-bold text-success">34%</p>
             <p className="text-xs text-text-muted mt-3 text-center">
@@ -545,10 +535,10 @@ function AdditionalInsightsSection() {
               <span className="text-text-muted">vs last week</span>
             </div>
           </div>
-        </RetroCard>
+        </ManagerCard>
 
         {/* ── Peak Service Pressure ── */}
-        <RetroCard label="Peak Service Pressure">
+        <ManagerCard label="Peak Service Pressure">
           <div className="flex flex-col items-center justify-center py-6">
             <p className="font-mono text-4xl font-bold text-danger">1:00 PM</p>
             <p className="text-xs text-text-muted mt-2 text-center">
@@ -563,9 +553,9 @@ function AdditionalInsightsSection() {
               </p>
             </div>
           </div>
-        </RetroCard>
+        </ManagerCard>
       </div>
-    </RetroWindow>
+    </ManagerPanel>
   );
 }
 

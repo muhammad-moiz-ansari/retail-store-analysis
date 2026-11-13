@@ -4,12 +4,11 @@ import React, { useEffect, useState, FormEvent } from "react";
 import Link from "next/link";
 import { useAuth } from "@/components/auth/AuthProvider";
 import {
-  RetroWindow,
-  RetroCard,
   RetroButton,
   RetroInput,
   Badge,
 } from "@/components/ui";
+import { ManagerPage, ManagerHeader, ManagerPanel, ManagerCard, ManagerTable } from "@/components/ui/ManagerLayout";
 
 /* ═══════════════════════════════════════════════════════════════
    Role gate - hardcoded to "Manager" to match NavbarShell.
@@ -126,11 +125,11 @@ export default function SettingsPage() {
   if (!ready) {
     return (
       <div className="min-h-[70vh] flex items-center justify-center px-4">
-        <RetroWindow title="Loading Settings" className="w-full max-w-md">
+        <ManagerPanel title="Loading Settings" className="w-full max-w-md">
           <p className="font-body text-sm text-text-muted text-center">
             Loading your manager session...
           </p>
-        </RetroWindow>
+        </ManagerPanel>
       </div>
     );
   }
@@ -149,7 +148,7 @@ export default function SettingsPage() {
 function AccessRestricted() {
   return (
     <div className="min-h-[70vh] flex items-center justify-center px-4">
-      <RetroWindow title="Access Restricted" className="w-full max-w-md">
+      <ManagerPanel title="Access Restricted" className="w-full max-w-md">
         <div className="text-center space-y-4">
           <p className="font-body text-sm text-text">
             Store Settings is available to Managers only.
@@ -158,7 +157,7 @@ function AccessRestricted() {
             <RetroButton variant="secondary">← Back to Dashboard</RetroButton>
           </Link>
         </div>
-      </RetroWindow>
+      </ManagerPanel>
     </div>
   );
 }
@@ -220,23 +219,18 @@ function SettingsContent() {
   }, []);
 
   return (
-    <main className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-6 md:py-8 space-y-8">
+    <ManagerPage>
       {/* ── Page Header ── */}
-      <RetroWindow title="Store Settings - Configuration & Management">
-        <div className="flex flex-wrap items-center gap-3">
-          <Badge variant="accent">Manager Access</Badge>
-          <span className="text-sm text-text-muted">
-            Changes here are saved to the RetailPulse demo backend.
-          </span>
-        </div>
-      </RetroWindow>
+      <ManagerHeader title="Store settings">
+        <p>Manage cameras, zones, shifts, alerts, accounts, and privacy settings saved by the backend.</p>
+      </ManagerHeader>
 
       {(loading || error) && (
-        <RetroWindow title="Backend Connection">
+        <ManagerPanel title="Backend Connection">
           <p className={`text-sm ${error ? "text-danger" : "text-text-muted"}`}>
-            {error || "Loading saved store configuration..."}
+            {error ? `${error} The form may show local defaults or the last loaded settings.` : "Loading saved store configuration..."}
           </p>
-        </RetroWindow>
+        </ManagerPanel>
       )}
 
       {/* ── Section 1: Camera Management ── */}
@@ -269,7 +263,7 @@ function SettingsContent() {
 
       {/* ── Section 6: Data & Privacy Settings ── */}
       <DataPrivacy privacy={snapshot.privacy} saveSettings={saveSettings} />
-    </main>
+    </ManagerPage>
   );
 }
 
@@ -331,11 +325,11 @@ function CameraManagement({
   }
 
   return (
-    <RetroWindow title="Cameras">
+    <ManagerPanel title="Cameras">
       {/* Camera list */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
         {cameras.map((cam) => (
-          <RetroCard key={cam.id} label={cam.name}>
+          <ManagerCard key={cam.id} label={cam.name}>
             <div className="pt-2 space-y-2">
               <p className="text-xs text-text-muted font-mono">
                 Zone: <span className="text-text">{cam.zone}</span>
@@ -354,7 +348,7 @@ function CameraManagement({
                 </RetroButton>
               </div>
             </div>
-          </RetroCard>
+          </ManagerCard>
         ))}
         {cameras.length === 0 && (
           <p className="text-sm text-text-muted col-span-full italic">
@@ -364,7 +358,7 @@ function CameraManagement({
       </div>
 
       {/* Add Camera form */}
-      <RetroCard label="Add Camera">
+      <ManagerCard label="Add Camera">
         <form onSubmit={handleAdd} className="pt-2 flex flex-col sm:flex-row items-end gap-3">
           <RetroInput
             label="Camera Name"
@@ -393,8 +387,8 @@ function CameraManagement({
           </RetroButton>
         </form>
         {error && <p className="mt-3 text-sm font-semibold text-danger">{error}</p>}
-      </RetroCard>
-    </RetroWindow>
+      </ManagerCard>
+    </ManagerPanel>
   );
 }
 
@@ -470,9 +464,9 @@ function ZoneManagement({
   }
 
   return (
-    <RetroWindow title="Zones">
-      <RetroCard>
-        <div className="overflow-x-auto">
+    <ManagerPanel title="Zones">
+      <ManagerCard>
+        <ManagerTable label="Store zones">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b-2 border-border-soft text-left">
@@ -527,11 +521,11 @@ function ZoneManagement({
               ))}
             </tbody>
           </table>
-        </div>
-      </RetroCard>
+        </ManagerTable>
+      </ManagerCard>
 
       {/* Add Zone form */}
-      <RetroCard label="Add Zone" className="mt-4">
+      <ManagerCard label="Add Zone" className="mt-4">
         <form onSubmit={handleAddZone} className="pt-2 flex flex-col sm:flex-row items-end gap-3">
           <RetroInput
             label="Zone Name"
@@ -568,8 +562,8 @@ function ZoneManagement({
           </RetroButton>
         </form>
         {error && <p className="mt-3 text-sm font-semibold text-danger">{error}</p>}
-      </RetroCard>
-    </RetroWindow>
+      </ManagerCard>
+    </ManagerPanel>
   );
 }
 
@@ -643,9 +637,9 @@ function StaffShifts({
   }
 
   return (
-    <RetroWindow title="Staff Shifts">
-      <RetroCard>
-        <div className="overflow-x-auto">
+    <ManagerPanel title="Staff Shifts">
+      <ManagerCard>
+        <ManagerTable label="Staff shifts">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b-2 border-border-soft text-left">
@@ -714,15 +708,15 @@ function StaffShifts({
               ))}
             </tbody>
           </table>
-        </div>
+        </ManagerTable>
         <div className="mt-4">
           <RetroButton variant="primary" onClick={handleAddStaff}>
             Add Staff Member
           </RetroButton>
           {error && <p className="mt-3 text-sm font-semibold text-danger">{error}</p>}
         </div>
-      </RetroCard>
-    </RetroWindow>
+      </ManagerCard>
+    </ManagerPanel>
   );
 }
 
@@ -778,14 +772,14 @@ function AlertThresholds({
   }
 
   return (
-    <RetroWindow title="Alert Thresholds">
+    <ManagerPanel title="Alert Thresholds">
       <p className="text-sm text-text-muted mb-5">
         These thresholds control the targets and alerts shown across the dashboard.
       </p>
 
       {/* Three threshold cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-5">
-        <RetroCard label="Response Time">
+        <ManagerCard label="Response Time">
           <div className="pt-2 space-y-2">
             <RetroInput
               label="Target (minutes)"
@@ -801,9 +795,9 @@ function AlertThresholds({
               Currently used as the target line on Employee Info.
             </p>
           </div>
-        </RetroCard>
+        </ManagerCard>
 
-        <RetroCard label="Unattended Wait">
+        <ManagerCard label="Unattended Wait">
           <div className="pt-2 space-y-2">
             <RetroInput
               label="Threshold (minutes)"
@@ -816,9 +810,9 @@ function AlertThresholds({
               minutes before a customer is flagged unattended
             </p>
           </div>
-        </RetroCard>
+        </ManagerCard>
 
-        <RetroCard label="Crowd Density">
+        <ManagerCard label="Crowd Density">
           <div className="pt-2 space-y-2">
             <RetroInput
               label="Alert Threshold (%)"
@@ -832,11 +826,11 @@ function AlertThresholds({
               % of zone capacity before a Crowded alert fires on Spatial Analytics
             </p>
           </div>
-        </RetroCard>
+        </ManagerCard>
       </div>
 
       {/* Notification routing toggle */}
-      <RetroCard label="Unattended Notification Routing" className="mb-5">
+      <ManagerCard label="Unattended Notification Routing" className="mb-5">
         <div className="pt-2 space-y-3">
           <div className="flex rounded-md overflow-hidden border-2 border-border">
             <button
@@ -869,9 +863,9 @@ function AlertThresholds({
             Determines who is alerted when a customer is flagged unattended.
           </p>
         </div>
-      </RetroCard>
+      </ManagerCard>
 
-      <RetroCard label="Automatic Dispatch" className="mb-5">
+      <ManagerCard label="Automatic Dispatch" className="mb-5">
         <label className="pt-2 flex items-center gap-3 text-sm font-semibold text-text">
           <input
             type="checkbox"
@@ -884,7 +878,7 @@ function AlertThresholds({
         <p className="mt-2 text-xs text-text-muted">
           When paused, orchestration events create alerts without assigning staff tasks.
         </p>
-      </RetroCard>
+      </ManagerCard>
 
       {/* Save button */}
       <div className="flex items-center gap-3">
@@ -898,7 +892,7 @@ function AlertThresholds({
         )}
         {error && <span className="text-sm font-semibold text-danger">{error}</span>}
       </div>
-    </RetroWindow>
+    </ManagerPanel>
   );
 }
 
@@ -956,9 +950,9 @@ function AccountManagement({
   }
 
   return (
-    <RetroWindow title="Accounts">
-      <RetroCard>
-        <div className="overflow-x-auto">
+    <ManagerPanel title="Accounts">
+      <ManagerCard>
+        <ManagerTable label="Store accounts">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b-2 border-border-soft text-left">
@@ -1013,11 +1007,11 @@ function AccountManagement({
               ))}
             </tbody>
           </table>
-        </div>
-      </RetroCard>
+        </ManagerTable>
+      </ManagerCard>
 
       {/* Invite form */}
-      <RetroCard label="Invite New User" className="mt-4">
+      <ManagerCard label="Invite New User" className="mt-4">
         <form onSubmit={handleInvite} className="pt-2 flex flex-col sm:flex-row items-end gap-3">
           <RetroInput
             label="Email"
@@ -1049,8 +1043,8 @@ function AccountManagement({
           </p>
         )}
         {error && <p className="mt-3 text-sm font-semibold text-danger">{error}</p>}
-      </RetroCard>
-    </RetroWindow>
+      </ManagerCard>
+    </ManagerPanel>
   );
 }
 
@@ -1092,10 +1086,10 @@ function DataPrivacy({
   }
 
   return (
-    <RetroWindow title="Data & Privacy">
+    <ManagerPanel title="Data & Privacy">
       <div className="space-y-5">
         {/* Anonymized tracking - locked ON */}
-        <RetroCard label="Anonymized Tracking">
+        <ManagerCard label="Anonymized Tracking">
           <div className="pt-2 flex items-start gap-3">
             {/* Locked toggle */}
             <div
@@ -1115,10 +1109,10 @@ function DataPrivacy({
               </p>
             </div>
           </div>
-        </RetroCard>
+        </ManagerCard>
 
         {/* Data retention - configurable */}
-        <RetroCard label="Data Retention">
+        <ManagerCard label="Data Retention">
           <div className="pt-2 space-y-2">
             <label className="block mb-1.5 font-heading text-xs font-semibold tracking-wide text-text-muted uppercase">
               Retention Period
@@ -1138,7 +1132,7 @@ function DataPrivacy({
               How long tracking event data is kept before automatic deletion.
             </p>
           </div>
-        </RetroCard>
+        </ManagerCard>
 
         {/* Save button */}
         <div className="flex items-center gap-3">
@@ -1153,6 +1147,6 @@ function DataPrivacy({
           {error && <span className="text-sm font-semibold text-danger">{error}</span>}
         </div>
       </div>
-    </RetroWindow>
+    </ManagerPanel>
   );
 }

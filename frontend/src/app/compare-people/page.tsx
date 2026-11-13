@@ -2,6 +2,7 @@
 
 import { FormEvent, useMemo, useState } from "react";
 import { runBackendJob } from "@/lib/backend-job";
+import { ManagerHeader, ManagerPage, ManagerPanel, ManagerTable } from "@/components/ui/ManagerLayout";
 
 type ComparisonResult = {
   video1: string;
@@ -72,74 +73,72 @@ export default function ComparePeoplePage() {
   }
 
   return (
-    <main className="mx-auto max-w-6xl px-4 py-8 md:px-6">
-      <div className="mb-8 space-y-3">
-        <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-accent-soft">
-          People count analyzer
-        </p>
-        <h1 className="font-heading text-3xl font-bold text-text">Compare people counts</h1>
-      </div>
+    <ManagerPage>
+      <ManagerHeader title="Compare people counts">
+        <p>Compare counts from two recordings at matching sampled times.</p>
+      </ManagerHeader>
 
-      <form onSubmit={handleSubmit} className="rounded-xl border border-border-soft bg-surface p-5 shadow-[4px_4px_0_rgba(74,46,30,0.15)]">
-        <div className="grid gap-4 md:grid-cols-2">
-          <label className="block">
-            <span className="mb-2 block font-mono text-[11px] uppercase tracking-[0.2em] text-text-muted">
-              Video 1 path
+      <ManagerPanel title="Video sources">
+        <form onSubmit={handleSubmit}>
+          <div className="grid gap-4 md:grid-cols-2">
+            <label className="block">
+              <span className="mb-2 block font-mono text-[11px] uppercase tracking-[0.2em] text-text-muted">
+                Video 1 path
+              </span>
+              <input
+                value={video1}
+                onChange={(e) => setVideo1(e.target.value)}
+                className="min-h-11 w-full rounded-lg border border-border-soft bg-surface px-3 py-2 font-mono text-sm"
+              />
+            </label>
+
+            <label className="block">
+              <span className="mb-2 block font-mono text-[11px] uppercase tracking-[0.2em] text-text-muted">
+                Video 2 path
+              </span>
+              <input
+                value={video2}
+                onChange={(e) => setVideo2(e.target.value)}
+                className="min-h-11 w-full rounded-lg border border-border-soft bg-surface px-3 py-2 font-mono text-sm"
+              />
+            </label>
+          </div>
+
+          <div className="mt-5 flex flex-wrap items-center gap-3">
+            <button
+              type="submit"
+              disabled={loading}
+              className="min-h-11 rounded-lg bg-accent px-5 py-2.5 font-heading text-sm font-semibold text-surface hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {loading ? "Processing..." : "Compare videos"}
+            </button>
+            <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-text-muted">
+              Sampling every 30 frames
             </span>
-            <input
-              value={video1}
-              onChange={(e) => setVideo1(e.target.value)}
-              className="w-full rounded-md border border-border-soft bg-bg px-3 py-2 font-mono text-sm text-text outline-none focus:border-accent"
-            />
-          </label>
-
-          <label className="block">
-            <span className="mb-2 block font-mono text-[11px] uppercase tracking-[0.2em] text-text-muted">
-              Video 2 path
-            </span>
-            <input
-              value={video2}
-              onChange={(e) => setVideo2(e.target.value)}
-              className="w-full rounded-md border border-border-soft bg-bg px-3 py-2 font-mono text-sm text-text outline-none focus:border-accent"
-            />
-          </label>
-        </div>
-
-        <div className="mt-5 flex items-center gap-3">
-          <button
-            type="submit"
-            disabled={loading}
-            className="rounded-md bg-accent px-5 py-2.5 font-heading text-sm font-semibold text-surface disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {loading ? "Processing..." : "Compare videos"}
-          </button>
-          <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-text-muted">
-            Sampling every 30 frames
-          </span>
-        </div>
-      </form>
+          </div>
+        </form>
+      </ManagerPanel>
 
       {error && (
-        <div className="mt-6 rounded-md border border-danger/40 bg-danger/10 p-4 text-sm text-text">
+        <div role="alert" className="rounded-lg border border-danger/40 bg-danger/10 p-4 text-sm text-danger">
           {error}
         </div>
       )}
 
       {outputLog && (
-        <section className="mt-6 rounded-xl border border-border-soft bg-surface p-4">
-          <h2 className="mb-3 font-heading text-lg font-bold text-text">Terminal output</h2>
+        <ManagerPanel title="Terminal output">
           <pre className="max-h-80 overflow-auto whitespace-pre-wrap break-words font-mono text-xs leading-6 text-text-muted">
             {outputLog}
           </pre>
-        </section>
+        </ManagerPanel>
       )}
 
       {summary && (
-        <section className="mt-8 space-y-6">
-          <div className="grid gap-4 md:grid-cols-5">
+        <section aria-label="Comparison results" className="space-y-4">
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
             <div className="rounded-lg border border-border-soft bg-surface p-4">
               <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-text-muted">Mode</div>
-              <div className="mt-2 text-xl font-bold text-text">{result?.count_mode ?? "ratio_verdict"}</div>
+              <div className="mt-2 text-xl font-bold [overflow-wrap:anywhere]">{result?.count_mode ?? "ratio_verdict"}</div>
             </div>
             <div className="rounded-lg border border-border-soft bg-surface p-4">
               <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-text-muted">Valid samples</div>
@@ -159,9 +158,8 @@ export default function ComparePeoplePage() {
             </div>
           </div>
 
-          <div className="rounded-xl border border-border-soft bg-surface p-4">
-            <h2 className="mb-4 font-heading text-lg font-bold text-text">Comparison output</h2>
-            <div className="overflow-x-auto">
+          <ManagerPanel title="Comparison output">
+            <ManagerTable label="Sample-by-sample results">
               <table className="min-w-full border-collapse text-left text-sm">
                 <thead>
                   <tr className="border-b border-border-soft text-text-muted">
@@ -188,10 +186,10 @@ export default function ComparePeoplePage() {
                   ))}
                 </tbody>
               </table>
-            </div>
-          </div>
+            </ManagerTable>
+          </ManagerPanel>
         </section>
       )}
-    </main>
+    </ManagerPage>
   );
 }

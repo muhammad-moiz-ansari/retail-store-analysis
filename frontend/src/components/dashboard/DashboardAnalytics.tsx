@@ -48,7 +48,14 @@ export function AnalyticsView({ state }: { state: DashboardState }) {
         {state.status === "unavailable" && <p className="text-sm text-text-muted">No supported analytics are available for this selection. Missing values are not zero.</p>}
       </div>
       <dl className="grid grid-cols-1 gap-x-6 gap-y-3 text-sm text-text-muted [overflow-wrap:anywhere] sm:grid-cols-2 xl:grid-cols-3">
-        <div><dt className="font-semibold">Observation window (UTC, end excluded)</dt><dd><time dateTime={snapshot.request.window.start}>{snapshot.request.window.start}</time> → <time dateTime={snapshot.request.window.end}>{snapshot.request.window.end}</time></dd></div>
+        <div>
+          <dt className="font-semibold">Observation window (UTC, end excluded)</dt>
+          <dd className="flex flex-wrap gap-x-1">
+            <time dateTime={snapshot.request.window.start}>{snapshot.request.window.start}</time>
+            <span>→</span>
+            <time dateTime={snapshot.request.window.end}>{snapshot.request.window.end}</time>
+          </dd>
+        </div>
         <div><dt className="font-semibold">Store / region</dt><dd>{snapshot.request.storeId} / {snapshot.request.filters.zoneId ?? "All permitted regions"}</dd></div>
         <div><dt className="font-semibold">Run / camera selection</dt><dd>{snapshot.request.filters.runId ?? "All permitted runs"} / {snapshot.request.filters.cameraId ?? "All permitted cameras"}</dd></div>
       </dl>

@@ -1,7 +1,8 @@
 "use client";
 
 import React, { FormEvent, useEffect, useMemo, useState } from "react";
-import { Badge, RetroButton, RetroCard, RetroInput, RetroWindow } from "@/components/ui";
+import { Badge, RetroButton, RetroInput } from "@/components/ui";
+import { ManagerPage, ManagerHeader, ManagerPanel, ManagerCard } from "@/components/ui/ManagerLayout";
 
 type ProviderStatus = {
   huggingFace?: {
@@ -134,20 +135,8 @@ export default function VoiceAgentPage() {
   }
 
   return (
-    <main className="mx-auto w-full max-w-[1180px] px-4 py-8 md:px-6 md:py-12 space-y-8">
-      <RetroWindow title="Voice Agent - Script & Speech Generator">
-        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-          <div>
-            <p className="font-mono text-xs font-semibold uppercase tracking-[0.16em] text-accent">
-              Orchestrator → NLP Agent → ElevenLabs
-            </p>
-            <h1 className="mt-2 font-heading text-3xl font-bold text-text">
-              Generate staff-ready voice updates
-            </h1>
-            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-text-muted">
-              Turn an operational event into a concise spoken script, then synthesize it into playable audio for the demo voice agent.
-            </p>
-          </div>
+    <ManagerPage>
+      <ManagerHeader title="Voice agent" actions={
           <div className="flex flex-wrap gap-2">
             <Badge variant={status.huggingFace?.configured ? "success" : "neutral"}>
               HF {status.huggingFace?.configured ? "Configured" : "Fallback"}
@@ -156,11 +145,12 @@ export default function VoiceAgentPage() {
               ElevenLabs {status.elevenLabs?.configured ? "Configured" : "No Key"}
             </Badge>
           </div>
-        </div>
-      </RetroWindow>
+      }>
+        <p>Turn an operational event into a concise script and generate playable audio for the demo voice agent.</p>
+      </ManagerHeader>
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
-        <RetroWindow title="Orchestration Event">
+      <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+        <ManagerPanel title="Orchestration Event">
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="grid gap-4 sm:grid-cols-2">
               <SelectField label="Event Type" value={eventType} onChange={setEventType} options={EVENT_TYPES} />
@@ -188,7 +178,7 @@ export default function VoiceAgentPage() {
             <TextAreaField label="Event Context" value={context} onChange={setContext} rows={3} />
             <TextAreaField label="Staff Instruction" value={instruction} onChange={setInstruction} rows={4} />
 
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
               <RetroButton type="submit" variant="primary" disabled={loading}>
                 {loading ? "Generating..." : "Generate Voice Agent Output"}
               </RetroButton>
@@ -199,11 +189,11 @@ export default function VoiceAgentPage() {
             </div>
             {orchestration && <p role="status" className="font-mono text-xs font-semibold text-text">{orchestration} See Alerts for the new alert.</p>}
           </form>
-        </RetroWindow>
+        </ManagerPanel>
 
-        <RetroWindow title="Voice Agent Output">
+        <ManagerPanel title="Voice Agent Output">
           <div className="space-y-5">
-            <RetroCard label="Generated Script">
+            <ManagerCard label="Generated Script">
               <p className="min-h-[120px] whitespace-pre-wrap pt-2 text-sm leading-relaxed text-text">
                 {result?.script.script || "Generate an event to create the staff voice script."}
               </p>
@@ -213,9 +203,9 @@ export default function VoiceAgentPage() {
                   {result.script.reason && <Badge variant="neutral">{result.script.reason}</Badge>}
                 </div>
               )}
-            </RetroCard>
+            </ManagerCard>
 
-            <RetroCard label="ElevenLabs Audio">
+            <ManagerCard label="ElevenLabs Audio">
               {audioUrl ? (
                 <audio className="mt-2 w-full" controls src={audioUrl} />
               ) : (
@@ -229,20 +219,20 @@ export default function VoiceAgentPage() {
                   {result.audio.reason && <Badge variant="neutral">{result.audio.reason}</Badge>}
                 </div>
               )}
-            </RetroCard>
+            </ManagerCard>
 
-            <RetroCard label="Provider Setup">
+            <ManagerCard label="Provider Setup">
               <dl className="grid gap-3 pt-2 text-xs text-text-muted">
                 <InfoRow label="HF model" value={status.huggingFace?.model || "Not loaded"} />
                 <InfoRow label="HF router" value={status.huggingFace?.routerUrl || "Not loaded"} />
                 <InfoRow label="Voice ID" value={status.elevenLabs?.voiceId || "Not loaded"} />
                 <InfoRow label="TTS model" value={status.elevenLabs?.modelId || "Not loaded"} />
               </dl>
-            </RetroCard>
+            </ManagerCard>
           </div>
-        </RetroWindow>
+        </ManagerPanel>
       </div>
-    </main>
+    </ManagerPage>
   );
 }
 

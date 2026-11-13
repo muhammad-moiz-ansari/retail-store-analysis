@@ -1,7 +1,8 @@
 "use client";
 
 import { FormEvent, useCallback, useEffect, useState } from "react";
-import { RetroButton, RetroInput, RetroWindow } from "@/components/ui";
+import { RetroButton, RetroInput } from "@/components/ui";
+import { ManagerPage, ManagerHeader, ManagerPanel, ManagerTable } from "@/components/ui/ManagerLayout";
 import { runBackendJob } from "@/lib/backend-job";
 
 type Handoff = {
@@ -65,12 +66,10 @@ export default function CameraHandoffPage() {
   const handoffs = result?.handoffs ?? [];
   const count = (status: Handoff["status"]) => handoffs.filter((item) => item.status === status).length;
 
-  return <main className="mx-auto w-full max-w-6xl px-4 py-8 md:px-8">
-    <p className="font-mono text-xs uppercase tracking-[0.18em] text-accent">Identity Association</p>
-    <h1 className="mt-2 font-heading text-3xl font-bold text-text">Camera Handoff</h1>
-    <p className="mt-2 max-w-2xl text-sm text-text-muted">Offline directional matching for the configured transition: Camera 1 right exit to Camera 2 left entry.</p>
-    <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(280px,0.7fr)]">
-      <RetroWindow title="Processing Configuration">
+  return <ManagerPage>
+    <ManagerHeader title="Camera Handoff"><p>Offline directional matching for the configured transition: Camera 1 right exit to Camera 2 left entry.</p></ManagerHeader>
+    <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+      <ManagerPanel title="Processing Configuration">
         <form onSubmit={run} className="space-y-4">
           <RetroInput label="Camera 1 video" value={form.cam1} onChange={(event) => setForm({ ...form, cam1: event.target.value })} />
           <RetroInput label="Camera 2 video" value={form.cam2} onChange={(event) => setForm({ ...form, cam2: event.target.value })} />
@@ -79,21 +78,65 @@ export default function CameraHandoffPage() {
           </div>
           <RetroButton type="submit" disabled={busy}>{busy ? "Processing..." : "Run Handoff Analysis"}</RetroButton>
         </form>
-      </RetroWindow>
-      <RetroWindow title="Association Status">
+      </ManagerPanel>
+      <ManagerPanel title="Association Status">
         <div className="grid grid-cols-3 gap-2 text-center">
-          {(["confirmed", "uncertain", "unmatched"] as const).map((status) => <div key={status} className="border border-border-soft bg-surface-alt p-3"><p className="font-mono text-2xl font-bold text-text">{count(status)}</p><p className="font-mono text-[10px] uppercase tracking-wider text-text-muted">{status}</p></div>)}
+          {(["confirmed", "uncertain", "unmatched"] as const).map((status) => <div key={status} className="min-w-0 rounded-lg bg-surface-alt p-2 [overflow-wrap:anywhere] sm:p-3"><p className="font-heading text-3xl font-bold tabular-nums text-text">{count(status)}</p><p className="text-xs text-text-muted">{status}</p></div>)}
         </div>
         {result?.processing && <p className="mt-4 text-xs text-text-muted">Completed in {result.processing.elapsed_seconds}s using {result.processing.appearance_method}.</p>}
-        {error && <p className="mt-4 border border-danger bg-surface-alt p-3 text-sm text-danger">{error}</p>}
-      </RetroWindow>
+        {error && <p role="alert" className="mt-4 rounded-lg border border-danger bg-surface-alt p-3 text-sm text-danger">{error}</p>}
+      </ManagerPanel>
     </div>
-    <RetroWindow title="Handoff Evidence" className="mt-6">
-      {handoffs.length === 0 ? <p className="text-sm text-text-muted">Run an analysis to view directional events and identity decisions.</p> : <div className="overflow-x-auto"><table className="w-full text-left text-xs"><thead><tr className="border-b border-border-soft font-mono uppercase tracking-wider text-text-muted"><th className="p-2">Status</th><th className="p-2">Master ID</th><th className="p-2">Tracks</th><th className="p-2">Score</th><th className="p-2">Evidence</th></tr></thead><tbody>{handoffs.map((item, index) => <tr key={`${item.source_event_id}-${item.target_event_id}-${index}`} className="border-b border-border-soft/50"><td className="p-2 font-semibold text-text">{item.status}</td><td className="p-2 font-mono text-accent">{item.master_id || "-"}</td><td className="p-2 font-mono">{item.source_track_id || "-"} → {item.target_track_id || "-"}</td><td className="p-2 font-mono">{item.score.toFixed(2)}</td><td className="p-2 text-text-muted">appearance {item.evidence.appearance_similarity?.toFixed(2) || "-"}, gap {item.evidence.gap_seconds?.toFixed(1) || "-"}s</td></tr>)}</tbody></table></div>}
-    </RetroWindow>
-    <RetroWindow title="Global People" className="mt-6">
-      {people.length === 0 ? <p className="text-sm text-text-muted">No global identities yet. Run a handoff analysis to create them.</p> : <div className="overflow-x-auto"><table className="w-full text-left text-xs"><thead><tr className="border-b border-border-soft font-mono uppercase tracking-wider text-text-muted"><th className="p-2">Global ID</th><th className="p-2">Role</th><th className="p-2">Source</th><th className="p-2">Action</th></tr></thead><tbody>{people.map((person) => <tr key={person.global_person_id} className="border-b border-border-soft/50"><td className="p-2 font-mono text-accent">{person.global_person_id}</td><td className="p-2 font-semibold text-text">{person.role}</td><td className="p-2 text-text-muted">{person.role_source}</td><td className="p-2">{person.role === "employee" ? <RetroButton type="button" variant="secondary" className="!px-3 !py-1 !text-xs" onClick={() => setRole(person.global_person_id, "unknown")}>Clear role</RetroButton> : <RetroButton type="button" variant="secondary" className="!px-3 !py-1 !text-xs" onClick={() => setRole(person.global_person_id, "employee")}>Register employee</RetroButton>}</td></tr>)}</tbody></table></div>}
-    </RetroWindow>
-    <RetroWindow title="Processing Log" className="mt-6"><pre className="max-h-56 overflow-auto whitespace-pre-wrap font-mono text-xs text-text-muted">{logs || "No run yet."}</pre></RetroWindow>
-  </main>;
+    <ManagerPanel title="Handoff Evidence">
+      {handoffs.length === 0 ? <p className="text-sm text-text-muted">Run an analysis to view directional events and identity decisions.</p> : <ManagerTable label="Handoff evidence">
+        <table className="w-full text-left text-xs">
+          <thead>
+            <tr className="border-b border-border-soft font-mono uppercase tracking-wider text-text-muted">
+              <th scope="col" className="p-2">Status</th>
+              <th scope="col" className="p-2">Master ID</th>
+              <th scope="col" className="p-2">Tracks</th>
+              <th scope="col" className="p-2">Score</th>
+              <th scope="col" className="p-2">Evidence</th>
+            </tr>
+          </thead>
+          <tbody>
+            {handoffs.map((item, index) => (
+              <tr key={`${item.source_event_id}-${item.target_event_id}-${index}`} className="border-b border-border-soft/50">
+                <td className="p-2 font-semibold text-text">{item.status}</td>
+                <td className="p-2 font-mono text-accent">{item.master_id || "-"}</td>
+                <td className="p-2 font-mono">{item.source_track_id || "-"} → {item.target_track_id || "-"}</td>
+                <td className="p-2 font-mono">{item.score.toFixed(2)}</td>
+                <td className="p-2 text-text-muted">appearance {item.evidence.appearance_similarity?.toFixed(2) || "-"}, gap {item.evidence.gap_seconds?.toFixed(1) || "-"}s</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </ManagerTable>}
+    </ManagerPanel>
+    <ManagerPanel title="Global People">
+      {people.length === 0 ? <p className="text-sm text-text-muted">No global identities yet. Run a handoff analysis to create them.</p> : <ManagerTable label="Global people">
+        <table className="w-full text-left text-xs">
+          <thead>
+            <tr className="border-b border-border-soft font-mono uppercase tracking-wider text-text-muted">
+              <th scope="col" className="p-2">Global ID</th>
+              <th scope="col" className="p-2">Role</th>
+              <th scope="col" className="p-2">Source</th>
+              <th scope="col" className="p-2">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {people.map((person) => (
+              <tr key={person.global_person_id} className="border-b border-border-soft/50">
+                <td className="p-2 font-mono text-accent">{person.global_person_id}</td>
+                <td className="p-2 font-semibold text-text">{person.role}</td>
+                <td className="p-2 text-text-muted">{person.role_source}</td>
+                <td className="p-2">{person.role === "employee" ? <RetroButton type="button" variant="secondary" className="!px-3 !py-1 !text-xs" onClick={() => setRole(person.global_person_id, "unknown")}>Clear role</RetroButton> : <RetroButton type="button" variant="secondary" className="!px-3 !py-1 !text-xs" onClick={() => setRole(person.global_person_id, "employee")}>Register employee</RetroButton>}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </ManagerTable>}
+    </ManagerPanel>
+    <ManagerPanel title="Processing Log"><pre className="max-h-56 overflow-auto whitespace-pre-wrap font-mono text-xs text-text-muted">{logs || "No run yet."}</pre></ManagerPanel>
+  </ManagerPage>;
 }
