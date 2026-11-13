@@ -33,6 +33,9 @@ test("ready view renders supported metrics with units, provenance, window and ev
   assert.match(html, /not live store measurements/);
   assert.match(html, /2026-11-03T09:00:00Z/);
   assert.match(html, /Recorded entries/);
+  assert.match(html, /<caption[^>]*>Recorded crossing counts<\/caption>/);
+  assert.match(html, /Entries<\/th><td[^>]*>12<\/td>/);
+  assert.match(html, /Exits<\/th><td[^>]*>7<\/td>/);
   assert.match(html, /75\.0%/);
   assert.match(html, /24 s/);
   assert.match(html, /get_interactions \/ interactions/);
@@ -46,6 +49,7 @@ test("empty view shows observed zero and explains undefined means and ratios", a
   const html = renderToStaticMarkup(<AnalyticsView state={state} />);
   assert.match(html, /Observed empty/);
   assert.match(html, />0<\/p>/);
+  assert.match(html, /Entries<\/th><td[^>]*>0<\/td>/);
   assert.match(html, />Unavailable<\/p>/);
   assert.match(html, /No samples or denominator/);
   assert.doesNotMatch(html, /0\.0%/);
@@ -62,6 +66,7 @@ test("partial, unavailable and stale views preserve explanations instead of fill
       assert.match(html, />12<\/p>/);
     } else if (scenario === "unavailable") {
       assert.match(html, /Missing values are not zero/);
+      assert.match(html, /Entries<\/th><td[^>]*>Unavailable<\/td>/);
       assert.equal((html.match(/>Unavailable<\/p>/g) ?? []).length, 8);
       assert.doesNotMatch(html, />0<\/p>/);
     } else {

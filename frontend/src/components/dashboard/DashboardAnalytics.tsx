@@ -1,10 +1,10 @@
 "use client";
 
 import React, { useEffect, useMemo, useState, useSyncExternalStore } from "react";
-import { RetroWindow } from "../ui/RetroWindow";
 import { RetroButton } from "../ui/RetroButton";
-import { RetroCard } from "../ui/RetroCard";
-import { type AnalyticsProvider, type AnalyticsRequest, type DashboardMetric, type DashboardState, type MetricKey, metricKeys } from "../../lib/analytics-provider/contracts";
+import { ManagerCard, ManagerPanel } from "../ui/ManagerLayout";
+import { FootfallChart } from "./FootfallChart";
+import { type AnalyticsProvider, type AnalyticsRequest, type AnalyticsSnapshot, type DashboardMetric, type DashboardState, type MetricKey, metricKeys } from "../../lib/analytics-provider/contracts";
 import { DashboardController } from "../../lib/analytics-provider/controller";
 import { createFixtureProvider, fixtureRequest, type FixtureScenario } from "../../lib/analytics-provider/fixture";
 import { createBackendProvider, loadBackendSelection } from "../../lib/analytics-provider/backend";
@@ -16,6 +16,9 @@ const labels: Record<MetricKey, string> = {
   staffedOpenRatio: "Staffed / open time",
 };
 const stateLabels = { ready: "Ready", partial: "Partial data", stale: "Stale data", unavailable: "Analytics unavailable" };
+const headlineMetrics: MetricKey[] = ["entries", "exits", "confirmedInteractions", "staffedOpenRatio"];
+const detailMetrics = metricKeys.filter(key => !headlineMetrics.includes(key));
+const selectClass = "min-h-11 w-full rounded-lg border border-border-soft bg-surface px-3 py-2 text-sm text-text sm:w-auto";
 const scenarios: { value: FixtureScenario; label: string }[] = [
   { value: "ready", label: "Ready" }, { value: "empty", label: "Observed empty" },
   { value: "partial", label: "Partial data" }, { value: "unavailable", label: "Unavailable" },
@@ -34,36 +37,64 @@ export function AnalyticsView({ state }: { state: DashboardState }) {
   const { snapshot } = state;
   return (
     <div className="space-y-5">
-      <div role="status" aria-live="polite" className="rounded-md border border-border-soft bg-surface-alt p-4 space-y-2">
-        <p className="font-heading font-semibold text-text">{snapshot.provenance.label}</p>
-        <p className="font-mono text-sm text-accent">{stateLabels[state.status]}</p>
+      <div role="status" aria-live="polite" className="space-y-2 rounded-xl bg-surface-alt p-4">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+          <p className="font-heading font-semibold text-text">{snapshot.provenance.label}</p>
+          <p className="rounded-full bg-surface px-2.5 py-1 text-xs font-semibold text-accent">{stateLabels[state.status]}</p>
+        </div>
         {snapshot.provenance.synthetic && <p className="text-sm text-text-muted">Synthetic preview. These values are illustrative and are not live store measurements.</p>}
         {state.status === "stale" && <p className="text-sm text-danger">Cached values have expired. Refresh before using them; individual data limitations still apply.</p>}
         {state.status === "partial" && <p className="text-sm text-text-muted">Some metrics lack sufficient data. Supported values remain visible.</p>}
         {state.status === "unavailable" && <p className="text-sm text-text-muted">No supported analytics are available for this selection. Missing values are not zero.</p>}
       </div>
-      <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-xs font-mono text-text-muted break-words">
+      <dl className="grid grid-cols-1 gap-x-6 gap-y-3 text-sm text-text-muted [overflow-wrap:anywhere] sm:grid-cols-2 xl:grid-cols-3">
+        <div><dt className="font-semibold">Observation window (UTC, end excluded)</dt><dd><time dateTime={snapshot.request.window.start}>{snapshot.request.window.start}</time> → <time dateTime={snapshot.request.window.end}>{snapshot.request.window.end}</time></dd></div>
         <div><dt className="font-semibold">Store / region</dt><dd>{snapshot.request.storeId} / {snapshot.request.filters.zoneId ?? "All permitted regions"}</dd></div>
         <div><dt className="font-semibold">Run / camera selection</dt><dd>{snapshot.request.filters.runId ?? "All permitted runs"} / {snapshot.request.filters.cameraId ?? "All permitted cameras"}</dd></div>
-        <div><dt className="font-semibold">Observation window (UTC, end excluded)</dt><dd>{snapshot.request.window.start} → {snapshot.request.window.end}</dd></div>
-        <div><dt className="font-semibold">Retrieved at (UTC)</dt><dd>{snapshot.generatedAt}</dd></div>
-        <div><dt className="font-semibold">Cache valid until (UTC)</dt><dd>{snapshot.validUntil}</dd></div>
       </dl>
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
-        {metricKeys.map(key => {
-          const metric = snapshot.metrics[key];
+      <MetricGrid keys={headlineMetrics} metrics={snapshot.metrics} headline />
+      <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+        <FootfallChart metrics={snapshot.metrics} />
+        <section aria-labelledby="activity-metrics-title">
+          <h3 id="activity-metrics-title" className="mb-3 text-lg font-bold">Interaction and dwell details</h3>
+          <MetricGrid keys={detailMetrics} metrics={snapshot.metrics} />
+        </section>
+      </div>
+      <details className="rounded-lg bg-bg p-4 text-sm text-text-muted">
+        <summary className="w-fit cursor-pointer font-semibold text-accent">Data freshness and coverage notes</summary>
+        <dl className="mt-3 grid gap-3 [overflow-wrap:anywhere] sm:grid-cols-2">
+          <div><dt className="font-semibold">Retrieved at (UTC)</dt><dd>{snapshot.generatedAt}</dd></div>
+          <div><dt className="font-semibold">Cache valid until (UTC)</dt><dd>{snapshot.validUntil}</dd></div>
+        </dl>
+        <ul className="mt-3 list-disc space-y-1 pl-5">
+          {snapshot.limitations.map((text, index) => <li key={index}>{text}</li>)}
+        </ul>
+      </details>
+    </div>
+  );
+}
+
+function MetricGrid({ keys, metrics, headline = false }: {
+  keys: MetricKey[];
+  metrics: AnalyticsSnapshot["metrics"];
+  headline?: boolean;
+}) {
+  return (
+      <div className={`grid gap-3 min-[540px]:grid-cols-2 ${headline ? "xl:grid-cols-4" : ""}`}>
+        {keys.map(key => {
+          const metric = metrics[key];
           return (
             <article key={key} aria-label={labels[key]}>
-              <RetroCard className="h-full">
-                <h3 className="font-heading text-sm font-semibold text-text">{labels[key]}</h3>
-                <p className="font-mono text-2xl font-bold text-text mt-3">{metricValue(metric)}</p>
-                <p className="font-mono text-xs text-text-muted mt-1">
+              <ManagerCard className={`h-full ${headline && key === "entries" ? "border-accent-soft bg-surface-alt" : ""}`}>
+                <p className="font-heading text-sm font-semibold text-text">{labels[key]}</p>
+                <p className={`mt-2 font-heading font-bold tabular-nums tracking-tight text-text ${headline && metric.value !== null ? "text-4xl" : "text-2xl"}`}>{metricValue(metric)}</p>
+                <p className="mt-1 text-xs text-text-muted">
                   {metric.unit} · {metric.status === "empty" ? "Observed empty" : metric.status}
                   {metric.estimated ? " · Estimated" : ""}
                 </p>
                 {metric.reason && <p className="text-sm text-text-muted mt-2">{metric.reason}</p>}
                 <details className="mt-3 text-xs text-text-muted break-words">
-                  <summary className="cursor-pointer font-semibold">Evidence and limitations</summary>
+                  <summary className="w-fit cursor-pointer font-semibold text-accent">Evidence and limitations</summary>
                   <ul className="mt-2 space-y-2 list-disc pl-4">
                     {metric.limitations.map((text, index) => <li key={`limitation-${index}`}>{text}</li>)}
                     {metric.evidence.map((item, index) => <li key={`evidence-${index}`}>
@@ -73,19 +104,15 @@ export function AnalyticsView({ state }: { state: DashboardState }) {
                     {!metric.evidence.length && <li>No source row IDs supplied; zero values require sufficient observation.</li>}
                   </ul>
                 </details>
-              </RetroCard>
+              </ManagerCard>
             </article>
           );
         })}
       </div>
-      <ul className="list-disc pl-5 text-sm text-text-muted space-y-1">
-        {snapshot.limitations.map((text, index) => <li key={index}>{text}</li>)}
-      </ul>
-    </div>
   );
 }
 
-/** Phase 3 can supply a real provider/request here without replacing the view. */
+/** The same view supports authorized backend results and explicit fixtures. */
 export function DashboardAnalytics({ provider, request }: { provider: AnalyticsProvider; request: AnalyticsRequest }) {
   const controller = useMemo(() => new DashboardController(provider, request), [provider, request]);
   const state = useSyncExternalStore(controller.subscribe, controller.getSnapshot, controller.getServerSnapshot);
@@ -95,15 +122,15 @@ export function DashboardAnalytics({ provider, request }: { provider: AnalyticsP
   }, [controller]);
   return (
     <section aria-label="Dashboard analytics" aria-busy={state.status === "loading"}>
-      <RetroWindow title="Analytics">
+      <ManagerCard>
         <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
-          <h2 className="font-heading font-bold text-text">Selected-window analytics</h2>
+          <h2 className="text-xl font-bold tracking-tight">Selected-window analytics</h2>
           <RetroButton variant="secondary" onClick={() => void controller.refresh()} disabled={state.status === "loading"}>
             Refresh analytics
           </RetroButton>
         </div>
         <AnalyticsView state={state} />
-      </RetroWindow>
+      </ManagerCard>
     </section>
   );
 }
@@ -113,15 +140,15 @@ export function DashboardPreview() {
   const provider = useMemo(() => createFixtureProvider(scenario), [scenario]);
   return (
     <div className="space-y-5">
-      <RetroCard>
+      <ManagerCard>
         <p className="font-heading font-semibold text-text">Dashboard fixture preview</p>
         <p className="text-sm text-text-muted mt-1">Analytics are in synthetic preview mode. Backend system status and the recorded clip below are separate sources.</p>
         <label htmlFor="dashboard-scenario" className="block font-mono text-xs text-text-muted mt-4 mb-2">Preview scenario</label>
         <select id="dashboard-scenario" value={scenario} onChange={event => setScenario(event.target.value as FixtureScenario)}
-          className="w-full sm:w-auto rounded border border-border bg-surface px-3 py-2 text-text">
+          className={selectClass}>
           {scenarios.map(item => <option key={item.value} value={item.value}>{item.label}</option>)}
         </select>
-      </RetroCard>
+      </ManagerCard>
       <DashboardAnalytics provider={provider} request={fixtureRequest} />
     </div>
   );
@@ -141,27 +168,27 @@ function BackendDashboard() {
     });
     return () => controller.abort();
   }, [attempt]);
-  if (!selection) return <RetroWindow title="Backend analytics">
+  if (!selection) return <ManagerPanel title="Backend analytics">
     <p role="status" className="text-sm text-text-muted">{failed
       ? "Backend analytics unavailable. Check your manager membership, server source configuration and backend connection. No preview data has been substituted."
       : "Loading authorized backend selection…"}</p>
     {failed && <RetroButton variant="secondary" className="mt-4" onClick={() => { setFailed(false); setAttempt(value => value + 1); }}>Retry backend connection</RetroButton>}
-  </RetroWindow>;
+  </ManagerPanel>;
   return <DashboardAnalytics provider={provider} request={selection} />;
 }
 
 export function DashboardDataSource() {
   const [mode, setMode] = useState<"backend" | "fixture">("backend");
   return <div className="space-y-5">
-    <RetroCard>
+    <ManagerCard>
       <label htmlFor="dashboard-source" className="font-heading font-semibold text-text block mb-2">Analytics data source</label>
       <select id="dashboard-source" value={mode} onChange={event => setMode(event.target.value as "backend" | "fixture")}
-        className="w-full sm:w-auto rounded border border-border bg-surface px-3 py-2 text-text">
+        className={selectClass}>
         <option value="backend">Configured backend</option>
         <option value="fixture">Synthetic fixture preview</option>
       </select>
       <p className="text-sm text-text-muted mt-2">Backend mode uses your server-authorized selection. Preview mode is an explicit synthetic demonstration.</p>
-    </RetroCard>
+    </ManagerCard>
     {mode === "backend" ? <BackendDashboard /> : <DashboardPreview />}
   </div>;
 }
