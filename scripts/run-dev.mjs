@@ -23,7 +23,7 @@ function start(label, command, args, env = {}) {
   return child;
 }
 
-const backend = start("backend", python, ["-m", "uvicorn", "backend.app:app", "--host", "127.0.0.1", "--port", "8011"], { PYTHONPATH: root });
+const backend = start("backend", python, ["-m", "uvicorn", "backend.app:app", "--host", "127.0.0.1", "--port", "8011"], { PYTHONPATH: root, RETAILPULSE_DEV_DEFAULTS: process.env.RETAILPULSE_DEV_DEFAULTS || "1" });
 const frontend = start("frontend", process.execPath, ["node_modules/next/dist/bin/next", "dev", "frontend"], {
   NEXT_TELEMETRY_DISABLED: "1",
   NODE_OPTIONS: process.env.FRONTEND_NODE_OPTIONS || process.env.NODE_OPTIONS || "--max-old-space-size=768",

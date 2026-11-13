@@ -1,6 +1,40 @@
 # Implementation Plan
 
+**Database decision (11 November 2026):** PostgreSQL is the shared runtime database for application, event and identity data. Follow [setup and legacy import](POSTGRESQL_SETUP.md) for the destination cutover. Earlier phase notes describe their checkpoint.
+
+## Current decision — 11 November 2026
+
+The [combined team plan](RetailPulse_FYP2_Implementation_Plan.md) governs current work and ownership. Implement camera/CV first, then register the supplied map, then render live role occupancy and confirmed-interaction layers. Exactly four dynamic occupancy categories are allowed: **Customer, Employee, Customer–employee both, No one**. They are not fixed permitted-role polygons. Invalid/missing/unknown observation is separate quality metadata, never a fifth category or a false No one. Historical z1–z6, staff zones, queue/counter geometries and hot/gray terminology below are legacy technical references, not additional category requirements. No existing runtime/schema/fixture has been migrated by this documentation update.
+
 Order matters: each step uses the output of the one before it. Shapes are in [CONTRACTS.md](CONTRACTS.md).
+
+## Current shared ownership and agent phases (2026-11-10)
+
+This tracked table preserves the agreed member division independently of local/ignored handoffs. The Steps 0–4 below remain the original CV/dashboard implementation plan, not the same numbering as Moiz's four tool/graph phases. Current evidence and dependencies are in [PROGRESS.md](PROGRESS.md) and [PENDING.md](PENDING.md).
+
+| Owner | Retained responsibility |
+|---|---|
+| Moiz Ansari | Read-only tools; LangGraph Orchestrator; Query and supporting reasoning (Anomaly/next-day planning); manager/dashboard analytics, data visualization, frontend binding/integration. Completed Interaction detection reused; data integration/evaluation/UI binding remain independent work. |
+| Saqib Atif | Canonical CV/event schema, fixture generator and ingestion; backend/AI integration and CV feeds; labels/split audit, CV benchmarks and handoff evaluation; actual employee selection, source-zone safety, task persistence/idempotency, delivery/voice and deployment. |
+| Ruhab Ahmad | Customer Behavior and Employee Activity business logic; model fine-tuning using Saqib's labels/factors; manager/employee interface refinement; Insight Narration/Digest and Clip Review; QA, documentation, presentation, output validation and acceptance. |
+
+Finalized top-level architecture: Customer Behavior (Ruhab), Employee Activity (Ruhab), Interaction (Moiz, existing), Employee Task Assignment (Saqib), Insight Narration (Ruhab), Query (Moiz), Orchestrator (Moiz). Classification/tracking/zones are shared CV tools; supporting reasoning does not silently become extra top-level agents.
+
+Moiz phases: **M-P1** typed contract/fixture foundation (implemented); **M-P2** five concrete read-only tools (implemented with fixture/security regression tests; production context/identity binding pending); **M-P3** callable injectable grounded LangGraph, scoped development traces and specialist hooks (offline implemented; actual business agents, HTTP auth binding, durable/provider evaluation pending); **M-P4** isolated internal operational adapter and teammate handoff (fake-only verified; actual producer auth, idempotency, assignment/voice and business policy remain pending). Wider A1 tools, real-agent/provider evaluation and frontend integration remain separate pending work. Moiz's Protocols/adapters do not complete Ruhab's business agents or Saqib's operational service.
+
+Direct aisle dispatch requires no manager approval or manager-enabled auto mode. Separate next-day schedule/roster proposals can retain their own approval workflow. Metric floor calibration and POS analytics are not reopened by these phases.
+
+## Dashboard provider/binding phases — current Moiz UI work
+
+These are distinct from finished M-P1–M-P4 tool/graph phases. Current contracts and commands: [CONTRACTS.md](CONTRACTS.md#dashboard-presentation-provider--m-ui-p1-moiz), [PROGRESS.md](PROGRESS.md).
+
+| Key | Scope | Done when / status |
+|---|---|---|
+| M-UI-P1 (Moiz) | Typed provider boundary, runtime scope/value/evidence validation, synthetic ready/empty/partial/unavailable/stale scenarios and offline checks | Implemented; 16 provider tests, full frontend typecheck, targeted lint and legacy data regression passed. No page binding/live-data claim |
+| M-UI-P2 (Moiz; Ruhab refinement) | Bind dashboard through the provider, remove fabricated metrics, show provenance/quality/freshness and handle refresh/cancellation | Implemented; 27 provider/lifecycle/render checks, typecheck/lint/build and isolated Chrome scenario/refresh/route/mobile checks passed. Interaction rows, Ask answers and map layers remain explicitly unavailable |
+| M-UI-P3 (Moiz adapter; Saqib real config/deployment; Ruhab outputs/QA) | Configured authenticated backend provider/read-tool adapter and scoped dashboard routes | Connection implemented with active-account checks and explicit membership/context config; synthetic actual-login browser flow, 155 backend tests/1 existing skip, 34 frontend tests, lint/typecheck/build passed. Real config/feed/agent/deployment acceptance remains pending |
+
+No Report edits, schema/model changes, PostgreSQL migration or dispatch delivery are included. M-UI-P1/P2/P3 connection code is implemented; current work stops after Phase 3. Adoption/real-data acceptance requires verified values and integration from Saqib/Ruhab, not invented context. Setup: [DASHBOARD_BACKEND_SETUP.md](DASHBOARD_BACKEND_SETUP.md). The separate Query graph HTTP/durable-trace scope is not completed by dashboard routes.
 
 ## Step 0: Model consolidation (done)
 

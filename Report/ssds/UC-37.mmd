@@ -1,0 +1,12 @@
+sequenceDiagram
+    actor A as Manager
+    participant S as RetailPulse system
+    A->>S: askAnalyticsQuestion(question, interval, zone)
+    alt authorized and sufficiently specified question with evidence
+    S-->>A: analyticsAnswer(figures, interval, sources, limitations)
+    else ambiguous request
+    S-->>A: clarificationRequest(missingContext)
+    else missing evidence, unauthorized retrieval or LLM failure
+    S-->>A: answerUnavailable(reason, permittedEvidenceOnly)
+    end
+    Note over A,S: Question answering does not silently assign tasks or change store settings.

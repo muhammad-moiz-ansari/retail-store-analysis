@@ -1,0 +1,29 @@
+{
+  "ssd_count": 17,
+  "use_case_suffixes": [
+    "01",
+    "02",
+    "04",
+    "07",
+    "10",
+    "11",
+    "12",
+    "13",
+    "17",
+    "18",
+    "19",
+    "20",
+    "29",
+    "34",
+    "35",
+    "36",
+    "37"
+  ],
+  "one_actor_one_black_box_per_diagram": true,
+  "all_uc_and_figure_links_present": true,
+  "mermaid_participants_and_fragments": "structural checks passed",
+  "assignment_starts_system_to_employee_without_manager_approval": true,
+  "largest_estimated_diagram_height_cm": 14.14,
+  "latex_compilation": "success confirmed with built-in compiler",
+  "rendered_layout_review": "Not available from compiler export; page fit checked structurally, not claimed as visual inspection."
+}

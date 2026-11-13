@@ -26,27 +26,30 @@ ID & Test & Expected result & Req.\\
 \endhead
 TC-01 & Log in as Manager using a valid existing account & Session cookie set; manager pages open & FR-10\\
 TC-02 & Open a protected manager application route without a cookie, or call backend without the secret & Request rejected & NFR-07/08\\
-TC-07 & Person detection on a labelled clip & Detection precision/recall reported & FR-01/02\\
-TC-08 & Staff/customer classification on a labelled clip & Accuracy reported & FR-03\\
-TC-09 & Controlled clip with unattended customer & Unattended flag and alert raised & FR-04/05\\
+TC-07 & Person detection on a labelled clip & Detection precision/recall reported & FR-01\\
+TC-08 & Staff/customer classification on a labelled clip & Accuracy reported & FR-01\\
+TC-09 & Controlled clip with unattended customer & Unattended flag and alert raised & FR-04\\
 TC-10 & Path and dwell on a labelled clip & Zone dwell matches annotation within tolerance & FR-07\\
-TC-12 & Navigate all pages for both roles & Pages render; employee blocked from manager pages & FR-11--13, 18--20\\
+TC-12 & Representative manager/employee page checks & Recorded pages render; role checks assessed only within the tested subset & FR-10--FR-13 (subset)\\
 TC-13 & Build report and export PDF & PDF contains selected sections and narrative & FR-17\\
-TC-14 & Uncalibrated trained-model preview & Role labels, IDs and foot proxies exported without fabricated metres & FR-21\\
-TC-15 & Headless landmark calibration & Provisional H, grid and floor map generated & FR-22/26\\
-TC-16 & Interactive point selection & Ordered clicks, undo/reset/save preserve original pixels & FR-22\\
-TC-17 & Known geometry and preprocessing & Expected projections, metre units and coordinate recovery & FR-23; NFR-11\\
-TC-18 & Invalid/unsupported positions & Explicit unavailable states rather than zero distances & FR-24; NFR-11\\
-TC-19 & Camera alignment / no features & Shifted and unverified frames suppress supported output & FR-25\\
-TC-20 & Demo and diagnostic exports & Readable videos, timestamps and approximate/provisional labels & FR-27/28\\
+TC-14 & Uncalibrated trained-model preview & Role labels, IDs and foot proxies exported without fabricated metres & Historical FR-21\\
+TC-15 & Headless landmark calibration & Provisional H, grid and floor map generated & Historical FR-22/26\\
+TC-16 & Interactive point selection & Ordered clicks, undo/reset/save preserve original pixels & Historical FR-22\\
+TC-17 & Known geometry and preprocessing & Expected projections, metre units and coordinate recovery & Historical FR-23; NFR-11\\
+TC-18 & Invalid/unsupported positions & Explicit unavailable states rather than zero distances & Historical FR-24; NFR-11\\
+TC-19 & Camera alignment / no features & Shifted and unverified frames suppress supported output & Historical FR-25\\
+TC-20 & Demo and diagnostic exports & Readable videos, timestamps and approximate/provisional labels & Historical FR-27/28\\
 TC-21 & Pose judge decision logic & Facing heads confirm; heads turned away or backs to camera reject; no pose or a failing judge keeps the proximity result as \texttt{unverified} & FR-04\\
 TC-22 & Pass-by and moving-camera cases & A customer walking past produces no interaction; a pair under a panning camera still interacts & FR-04\\
-TC-23 & Benchmark metric functions & One-to-one temporal-IoU matching; correct precision, recall and F1 & FR-03/04\\
-TC-24 & Interaction CLI on the local clip set & Every clip completes; annotated video, confirmed and rejected interactions written & FR-04; NFR-02\\
-TC-25 & Repeat run with the same inputs & Byte-identical JSON outputs & NFR-01\\
+TC-23 & Benchmark metric functions & One-to-one temporal-IoU matching; correct precision, recall and F1 & FR-34\\
+TC-24 & Interaction CLI on the local clip set & Every clip completes; annotated video, confirmed and rejected interactions written & FR-01; FR-04 evidence; NFR-02\\
+TC-25 & Repeat run with the same inputs & Byte-identical JSON outputs for the recorded clip; stricter than numerical tolerance & NFR-01 supporting case\\
 \bottomrule
 \end{longtable}
 Detailed steps are in Appendix~\ref{app:tests}.
+
+\section{Proposed Capability Scenarios}
+The revised baseline maps TC-07/08 to FR-01, TC-09/21/22 to FR-04, TC-10 to FR-07, TC-23 to FR-34 and diagnostic TC-24 primarily to FR-01. Detector results do not validate FR-02 crossing counts. TC-14--TC-20 are historical floor-prototype evidence, not active acceptance. New TC-26--TC-48 in Appendix~\ref{app:tests} are Planned / Not executed; they cover unverified functional and NFR concerns, including direct dispatch without an approval gate and authorized Query Agent retrieval. Recorded Passed, Pending, Partial and Unavailable outcomes below are unchanged.
 
 \section{Test Results}
 \begin{table}[H]

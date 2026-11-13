@@ -1,0 +1,462 @@
+% Canonical SSD figures for the 17 active use cases.
+\section{System Sequence Diagrams}
+\label{sec:ssds}
+Each SSD treats RetailPulse as one black-box system and shows only its external primary actor. Solid arrows are requests or the initial assignment notification; dashed arrows are responses. Combined fragments use \texttt{alt}/\texttt{opt} guards. Internal agents, databases, trackers and LLM calls are intentionally not extra lifelines. These are target interaction specifications, not proof that the complete capability is implemented. The implementation/evidence status remains in Chapter~\ref{ch:req}.
+
+UC-10 and UC-20 apply to both Manager and Employee roles. UC-36 is system-initiated: the supported operational trigger is a note, and the first actor-facing message is the direct employee instruction. No employee request or manager approval is invented to start dispatch. Abbreviated camel-case operation names are conceptual system events, not claims about current endpoint names or schemas.
+
+\clearpage
+\subsection{UC-01: Analyze a video}
+Primary capability: FR-01; detailed specification: \hyperref[uc:01]{UC-01}.
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[>=Stealth,font=\small,header/.style={draw,fill=white,align=center,text width=2.7cm,minimum height=0.8cm},msg/.style={font=\footnotesize,align=center,text width=7.4cm},sn/.style={draw,fill=gray!7,align=left,text width=9.3cm,font=\footnotesize,inner sep=5pt}]
+\node[header] (actor) at (0,0) {Operator / project team};
+\node[header] (system) at (8.4,0) {RetailPulse\\(black-box system)};
+\draw[dashed,gray] (0,-0.42) -- (0,-8.96);
+\draw[dashed,gray] (8.4,-0.42) -- (8.4,-8.96);
+\draw[gray] (-0.55,-1.70) rectangle (8.95,-7.05);
+\node[anchor=north west,fill=white,font=\footnotesize,align=left,text width=8.8cm] at (-0.55,-1.70) {\textbf{alt} [input and required models are valid]};
+\draw[dashed,gray] (-0.55,-4.90) -- (8.95,-4.90);
+\node[anchor=north west,fill=white,font=\footnotesize,align=left,text width=8.8cm] at (-0.55,-4.90) {\textbf{else} [invalid input, missing model or interrupted processing]};
+\draw[->] (0,-1.00) -- node[msg,above=2pt] {analyzeVideo(video, configuration, outputLocation)} (8.4,-1.00);
+\draw[->,dashed] (8.4,-3.10) -- node[msg,above=2pt] {processingAccepted(runId, samplingConfiguration)} (0,-3.10);
+\draw[->,dashed] (8.4,-4.15) -- node[msg,above=2pt] {analysisCompleted(runId, coverage, diagnosticOutputLocations)} (0,-4.15);
+\draw[->,dashed] (8.4,-6.30) -- node[msg,above=2pt] {analysisFailed(reason, partialOutputStatus)} (0,-6.30);
+\node[sn,anchor=north] at (4.2,-7.38) {A processed sample with no people is a valid empty observation; it is distinct from a failed frame.};
+\end{tikzpicture}
+\caption{System sequence diagram for UC-01: Analyze a video}
+\label{fig:ssd-01}
+\end{figure}
+\noindent\textit{Status: Implemented CLI; recorded subset. Target sequence; see the use case for full alternatives and minimum guarantees.}
+
+\clearpage
+\subsection{UC-02: Obtain entrance footfall}
+Primary capability: FR-02; detailed specification: \hyperref[uc:02]{UC-02}.
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[>=Stealth,font=\small,header/.style={draw,fill=white,align=center,text width=2.7cm,minimum height=0.8cm},msg/.style={font=\footnotesize,align=center,text width=7.4cm},sn/.style={draw,fill=gray!7,align=left,text width=9.3cm,font=\footnotesize,inner sep=5pt}]
+\node[header] (actor) at (0,0) {Manager};
+\node[header] (system) at (8.4,0) {RetailPulse\\(black-box system)};
+\draw[dashed,gray] (0,-0.42) -- (0,-10.29);
+\draw[dashed,gray] (8.4,-0.42) -- (8.4,-10.29);
+\draw[gray] (-0.55,-1.70) rectangle (8.95,-8.38);
+\node[anchor=north west,fill=white,font=\footnotesize,align=left,text width=8.8cm] at (-0.55,-1.70) {\textbf{alt} [crossing configuration and observation coverage support counts]};
+\draw[dashed,gray] (-0.55,-6.23) -- (8.95,-6.23);
+\node[anchor=north west,fill=white,font=\footnotesize,align=left,text width=8.8cm] at (-0.55,-6.23) {\textbf{else} [boundary, role evidence or source coverage is incomplete]};
+\draw[gray] (-0.41,-3.80) rectangle (8.81,-5.95);
+\node[anchor=north west,fill=white,font=\footnotesize,align=left,text width=8.8cm] at (-0.41,-3.80) {\textbf{opt} [initial occupancy is known]};
+\draw[->] (0,-1.00) -- node[msg,above=2pt] {requestEntranceFootfall(interval, entranceSource)} (8.4,-1.00);
+\draw[->,dashed] (8.4,-3.10) -- node[msg,above=2pt] {footfallCounts(entries, exits, netChange, coverage)} (0,-3.10);
+\draw[->,dashed] (8.4,-5.20) -- node[msg,above=2pt] {absoluteOccupancy(initialOccupancy + netChange)} (0,-5.20);
+\draw[->,dashed] (8.4,-7.63) -- node[msg,above=2pt] {partialOrUnavailableCounts(reason, supportedPeriod)} (0,-7.63);
+\node[sn,anchor=north] at (4.2,-8.71) {Unknown initial occupancy permits net change, not an invented whole-store count.};
+\end{tikzpicture}
+\caption{System sequence diagram for UC-02: Obtain entrance footfall}
+\label{fig:ssd-02}
+\end{figure}
+\noindent\textit{Status: Target; count evaluation not established. Target sequence; see the use case for full alternatives and minimum guarantees.}
+
+\clearpage
+\subsection{UC-04: Analyze customer service interactions}
+Primary capability: FR-04; detailed specification: \hyperref[uc:04]{UC-04}.
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[>=Stealth,font=\small,header/.style={draw,fill=white,align=center,text width=2.7cm,minimum height=0.8cm},msg/.style={font=\footnotesize,align=center,text width=7.4cm},sn/.style={draw,fill=gray!7,align=left,text width=9.3cm,font=\footnotesize,inner sep=5pt}]
+\node[header] (actor) at (0,0) {Manager};
+\node[header] (system) at (8.4,0) {RetailPulse\\(black-box system)};
+\draw[dashed,gray] (0,-0.42) -- (0,-10.47);
+\draw[dashed,gray] (8.4,-0.42) -- (8.4,-10.47);
+\draw[gray] (-0.55,-1.70) rectangle (8.95,-8.38);
+\node[anchor=north west,fill=white,font=\footnotesize,align=left,text width=8.8cm] at (-0.55,-1.70) {\textbf{alt} [supported role and track observations are available]};
+\draw[dashed,gray] (-0.55,-6.23) -- (8.95,-6.23);
+\node[anchor=north west,fill=white,font=\footnotesize,align=left,text width=8.8cm] at (-0.55,-6.23) {\textbf{else} [unknown roles, occlusion or missing history]};
+\draw[gray] (-0.41,-3.80) rectangle (8.81,-5.95);
+\node[anchor=north west,fill=white,font=\footnotesize,align=left,text width=8.8cm] at (-0.41,-3.80) {\textbf{opt} [entry history and store policy support further timing]};
+\draw[->] (0,-1.00) -- node[msg,above=2pt] {requestServiceAnalysis(interval, zone)} (8.4,-1.00);
+\draw[->,dashed] (8.4,-3.10) -- node[msg,above=2pt] {serviceEvidence(interactions, durations, verdicts, coverage)} (0,-3.10);
+\draw[->,dashed] (8.4,-5.20) -- node[msg,above=2pt] {serviceTiming(approachTimes, potentiallyUnattendedEvents)} (0,-5.20);
+\draw[->,dashed] (8.4,-7.63) -- node[msg,above=2pt] {partialServiceEvidence(unsupportedMetrics, reasons)} (0,-7.63);
+\node[sn,anchor=north] at (4.2,-8.71) {Judge off, unavailable or failing retains an unverified proximity fallback; possible service is not verified assistance.};
+\end{tikzpicture}
+\caption{System sequence diagram for UC-04: Analyze customer service interactions}
+\label{fig:ssd-04}
+\end{figure}
+\noindent\textit{Status: Implemented candidate logic; service metrics partial. Target sequence; see the use case for full alternatives and minimum guarantees.}
+
+\clearpage
+\subsection{UC-07: Analyze spatial customer activity}
+Primary capability: FR-07; detailed specification: \hyperref[uc:07]{UC-07}.
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[>=Stealth,font=\small,header/.style={draw,fill=white,align=center,text width=2.7cm,minimum height=0.8cm},msg/.style={font=\footnotesize,align=center,text width=7.4cm},sn/.style={draw,fill=gray!7,align=left,text width=9.3cm,font=\footnotesize,inner sep=5pt}]
+\node[header] (actor) at (0,0) {Manager};
+\node[header] (system) at (8.4,0) {RetailPulse\\(black-box system)};
+\draw[dashed,gray] (0,-0.42) -- (0,-7.91);
+\draw[dashed,gray] (8.4,-0.42) -- (8.4,-7.91);
+\draw[gray] (-0.55,-1.70) rectangle (8.95,-6.00);
+\node[anchor=north west,fill=white,font=\footnotesize,align=left,text width=8.8cm] at (-0.55,-1.70) {\textbf{alt} [valid zones and adequate observation coverage]};
+\draw[dashed,gray] (-0.55,-3.85) -- (8.95,-3.85);
+\node[anchor=north west,fill=white,font=\footnotesize,align=left,text width=8.8cm] at (-0.55,-3.85) {\textbf{else} [invalid zone or inadequate coverage]};
+\draw[->] (0,-1.00) -- node[msg,above=2pt] {requestSpatialActivity(interval, zone)} (8.4,-1.00);
+\draw[->,dashed] (8.4,-3.10) -- node[msg,above=2pt] {spatialActivity(paths, dwell, occupancyMap, hotGrayZones, coverage)} (0,-3.10);
+\draw[->,dashed] (8.4,-5.25) -- node[msg,above=2pt] {unavailableSpatialFindings(reason, supportedScope)} (0,-5.25);
+\node[sn,anchor=north] at (4.2,-6.33) {Unsupported cross-camera identity cannot produce a whole-store path; absent coverage is not low activity.};
+\end{tikzpicture}
+\caption{System sequence diagram for UC-07: Analyze spatial customer activity}
+\label{fig:ssd-07}
+\end{figure}
+\noindent\textit{Status: Target; demo UI. Target sequence; see the use case for full alternatives and minimum guarantees.}
+
+\clearpage
+\subsection{UC-10: Access a role-specific account}
+Primary capability: FR-10; detailed specification: \hyperref[uc:10]{UC-10}.
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[>=Stealth,font=\small,header/.style={draw,fill=white,align=center,text width=2.7cm,minimum height=0.8cm},msg/.style={font=\footnotesize,align=center,text width=7.4cm},sn/.style={draw,fill=gray!7,align=left,text width=9.3cm,font=\footnotesize,inner sep=5pt}]
+\node[header] (actor) at (0,0) {User (Manager / Employee)};
+\node[header] (system) at (8.4,0) {RetailPulse\\(black-box system)};
+\draw[dashed,gray] (0,-0.42) -- (0,-13.44);
+\draw[dashed,gray] (8.4,-0.42) -- (8.4,-13.44);
+\draw[gray] (-0.55,-0.65) rectangle (8.95,-3.85);
+\node[anchor=north west,fill=white,font=\footnotesize,align=left,text width=8.8cm] at (-0.55,-0.65) {\textbf{opt} [account activation is needed]};
+\draw[gray] (-0.55,-5.13) rectangle (8.95,-11.53);
+\node[anchor=north west,fill=white,font=\footnotesize,align=left,text width=8.8cm] at (-0.55,-5.13) {\textbf{alt} [credentials, active account and assigned role are valid]};
+\draw[dashed,gray] (-0.55,-9.38) -- (8.95,-9.38);
+\node[anchor=north west,fill=white,font=\footnotesize,align=left,text width=8.8cm] at (-0.55,-9.38) {\textbf{else} [invalid credentials, role mismatch or expired access]};
+\draw[->] (0,-2.05) -- node[msg,above=2pt] {activateAccount(invitationToken, permittedRegistrationDetails)} (8.4,-2.05);
+\draw[->,dashed] (8.4,-3.10) -- node[msg,above=2pt] {activationResult(accountStatus, validationErrors)} (0,-3.10);
+\draw[->] (0,-4.43) -- node[msg,above=2pt] {login(credentials, requestedRole)} (8.4,-4.43);
+\draw[->,dashed] (8.4,-6.53) -- node[msg,above=2pt] {authenticatedSession(permittedWorkspace)} (0,-6.53);
+\draw[->] (0,-7.58) -- node[msg,above=2pt] {logout()} (8.4,-7.58);
+\draw[->,dashed] (8.4,-8.63) -- node[msg,above=2pt] {sessionEnded()} (0,-8.63);
+\draw[->,dashed] (8.4,-10.78) -- node[msg,above=2pt] {accessDenied(reason)} (0,-10.78);
+\node[sn,anchor=north] at (4.2,-11.86) {Activation/login errors create no authorized session; a selected role cannot elevate the account.};
+\end{tikzpicture}
+\caption{System sequence diagram for UC-10: Access a role-specific account}
+\label{fig:ssd-10}
+\end{figure}
+\noindent\textit{Status: Implemented mechanisms; subset tested. Target sequence; see the use case for full alternatives and minimum guarantees.}
+
+\clearpage
+\subsection{UC-11: Monitor camera observations}
+Primary capability: FR-11; detailed specification: \hyperref[uc:11]{UC-11}.
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[>=Stealth,font=\small,header/.style={draw,fill=white,align=center,text width=2.7cm,minimum height=0.8cm},msg/.style={font=\footnotesize,align=center,text width=7.4cm},sn/.style={draw,fill=gray!7,align=left,text width=9.3cm,font=\footnotesize,inner sep=5pt}]
+\node[header] (actor) at (0,0) {Manager};
+\node[header] (system) at (8.4,0) {RetailPulse\\(black-box system)};
+\draw[dashed,gray] (0,-0.42) -- (0,-10.01);
+\draw[dashed,gray] (8.4,-0.42) -- (8.4,-10.01);
+\draw[gray] (-0.55,-3.80) rectangle (8.95,-8.10);
+\node[anchor=north west,fill=white,font=\footnotesize,align=left,text width=8.8cm] at (-0.55,-3.80) {\textbf{alt} [source and analytical observations are available]};
+\draw[dashed,gray] (-0.55,-5.95) -- (8.95,-5.95);
+\node[anchor=north west,fill=white,font=\footnotesize,align=left,text width=8.8cm] at (-0.55,-5.95) {\textbf{else} [offline source, stale output or missing overlays]};
+\draw[->] (0,-1.00) -- node[msg,above=2pt] {openCameraMonitoring()} (8.4,-1.00);
+\draw[->,dashed] (8.4,-2.05) -- node[msg,above=2pt] {configuredSources(availability)} (0,-2.05);
+\draw[->] (0,-3.10) -- node[msg,above=2pt] {selectCamera(sourceId)} (8.4,-3.10);
+\draw[->,dashed] (8.4,-5.20) -- node[msg,above=2pt] {cameraView(availableOverlays, observedAt, processedAt)} (0,-5.20);
+\draw[->,dashed] (8.4,-7.35) -- node[msg,above=2pt] {cameraAvailability(state, lastObservation, overlayLimitations)} (0,-7.35);
+\node[sn,anchor=north] at (4.2,-8.43) {Observation freshness is explicit; the target view does not imply guaranteed real-time processing.};
+\end{tikzpicture}
+\caption{System sequence diagram for UC-11: Monitor camera observations}
+\label{fig:ssd-11}
+\end{figure}
+\noindent\textit{Status: Partial; recording/snapshot UI. Target sequence; see the use case for full alternatives and minimum guarantees.}
+
+\clearpage
+\subsection{UC-12: Review manager analytics}
+Primary capability: FR-12; detailed specification: \hyperref[uc:12]{UC-12}.
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[>=Stealth,font=\small,header/.style={draw,fill=white,align=center,text width=2.7cm,minimum height=0.8cm},msg/.style={font=\footnotesize,align=center,text width=7.4cm},sn/.style={draw,fill=gray!7,align=left,text width=9.3cm,font=\footnotesize,inner sep=5pt}]
+\node[header] (actor) at (0,0) {Manager};
+\node[header] (system) at (8.4,0) {RetailPulse\\(black-box system)};
+\draw[dashed,gray] (0,-0.42) -- (0,-10.21);
+\draw[dashed,gray] (8.4,-0.42) -- (8.4,-10.21);
+\draw[gray] (-0.55,-1.70) rectangle (8.95,-6.00);
+\node[anchor=north west,fill=white,font=\footnotesize,align=left,text width=8.8cm] at (-0.55,-1.70) {\textbf{alt} [authorized valid filters]};
+\draw[dashed,gray] (-0.55,-3.85) -- (8.95,-3.85);
+\node[anchor=north west,fill=white,font=\footnotesize,align=left,text width=8.8cm] at (-0.55,-3.85) {\textbf{else} [invalid filter, no records or unauthorized scope]};
+\draw[gray] (-0.55,-6.23) rectangle (8.95,-9.43);
+\node[anchor=north west,fill=white,font=\footnotesize,align=left,text width=8.8cm] at (-0.55,-6.23) {\textbf{opt} [manager changes the selection]};
+\draw[->] (0,-1.00) -- node[msg,above=2pt] {requestManagerAnalytics(interval, zone)} (8.4,-1.00);
+\draw[->,dashed] (8.4,-3.10) -- node[msg,above=2pt] {analyticsViews(customer, staff, interaction, spatial, coverage)} (0,-3.10);
+\draw[->,dashed] (8.4,-5.25) -- node[msg,above=2pt] {validationOrAvailabilityResponse(reason, partialMetrics)} (0,-5.25);
+\draw[->] (0,-7.63) -- node[msg,above=2pt] {requestManagerAnalytics(updatedInterval, updatedZone)} (8.4,-7.63);
+\draw[->,dashed] (8.4,-8.68) -- node[msg,above=2pt] {updatedViews(coverageContext)} (0,-8.68);
+\end{tikzpicture}
+\caption{System sequence diagram for UC-12: Review manager analytics}
+\label{fig:ssd-12}
+\end{figure}
+\noindent\textit{Status: Partial; demo/snapshot metrics. Target sequence; see the use case for full alternatives and minimum guarantees.}
+
+\clearpage
+\subsection{UC-13: Review personal workspace}
+Primary capability: FR-13; detailed specification: \hyperref[uc:13]{UC-13}.
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[>=Stealth,font=\small,header/.style={draw,fill=white,align=center,text width=2.7cm,minimum height=0.8cm},msg/.style={font=\footnotesize,align=center,text width=7.4cm},sn/.style={draw,fill=gray!7,align=left,text width=9.3cm,font=\footnotesize,inner sep=5pt}]
+\node[header] (actor) at (0,0) {Employee};
+\node[header] (system) at (8.4,0) {RetailPulse\\(black-box system)};
+\draw[dashed,gray] (0,-0.42) -- (0,-10.01);
+\draw[dashed,gray] (8.4,-0.42) -- (8.4,-10.01);
+\draw[gray] (-0.55,-1.70) rectangle (8.95,-8.10);
+\node[anchor=north west,fill=white,font=\footnotesize,align=left,text width=8.8cm] at (-0.55,-1.70) {\textbf{alt} [authenticated account and permitted own-record scope]};
+\draw[dashed,gray] (-0.55,-5.95) -- (8.95,-5.95);
+\node[anchor=north west,fill=white,font=\footnotesize,align=left,text width=8.8cm] at (-0.55,-5.95) {\textbf{else} [expired session or another employee requested]};
+\draw[->] (0,-1.00) -- node[msg,above=2pt] {openPersonalWorkspace()} (8.4,-1.00);
+\draw[->,dashed] (8.4,-3.10) -- node[msg,above=2pt] {ownWorkspace(shift, assignedZone, currentTasks, updates)} (0,-3.10);
+\draw[->] (0,-4.15) -- node[msg,above=2pt] {requestOwnActivityHistory(interval)} (8.4,-4.15);
+\draw[->,dashed] (8.4,-5.20) -- node[msg,above=2pt] {ownActivityHistory(records, coverageOrEmptyState)} (0,-5.20);
+\draw[->,dashed] (8.4,-7.35) -- node[msg,above=2pt] {accessDeniedOrLoginRequired()} (0,-7.35);
+\node[sn,anchor=north] at (4.2,-8.43) {Task status changes belong to UC-36; no composite employee score is required.};
+\end{tikzpicture}
+\caption{System sequence diagram for UC-13: Review personal workspace}
+\label{fig:ssd-13}
+\end{figure}
+\noindent\textit{Status: Partial; own tasks plus demo history. Target sequence; see the use case for full alternatives and minimum guarantees.}
+
+\clearpage
+\subsection{UC-17: Generate an insight report}
+Primary capability: FR-17; detailed specification: \hyperref[uc:17]{UC-17}.
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[>=Stealth,font=\small,header/.style={draw,fill=white,align=center,text width=2.7cm,minimum height=0.8cm},msg/.style={font=\footnotesize,align=center,text width=7.4cm},sn/.style={draw,fill=gray!7,align=left,text width=9.3cm,font=\footnotesize,inner sep=5pt}]
+\node[header] (actor) at (0,0) {Manager};
+\node[header] (system) at (8.4,0) {RetailPulse\\(black-box system)};
+\draw[dashed,gray] (0,-0.42) -- (0,-12.36);
+\draw[dashed,gray] (8.4,-0.42) -- (8.4,-12.36);
+\draw[gray] (-0.55,-1.70) rectangle (8.95,-6.00);
+\node[anchor=north west,fill=white,font=\footnotesize,align=left,text width=8.8cm] at (-0.55,-1.70) {\textbf{alt} [permitted metrics and narration are available]};
+\draw[dashed,gray] (-0.55,-3.85) -- (8.95,-3.85);
+\node[anchor=north west,fill=white,font=\footnotesize,align=left,text width=8.8cm] at (-0.55,-3.85) {\textbf{else} [incomplete evidence or narration unavailable]};
+\draw[gray] (-0.55,-7.28) rectangle (8.95,-11.58);
+\node[anchor=north west,fill=white,font=\footnotesize,align=left,text width=8.8cm] at (-0.55,-7.28) {\textbf{alt} [export succeeds]};
+\draw[dashed,gray] (-0.55,-9.43) -- (8.95,-9.43);
+\node[anchor=north west,fill=white,font=\footnotesize,align=left,text width=8.8cm] at (-0.55,-9.43) {\textbf{else} [export unavailable or failed]};
+\draw[->] (0,-1.00) -- node[msg,above=2pt] {requestInsightReport(interval, sections)} (8.4,-1.00);
+\draw[->,dashed] (8.4,-3.10) -- node[msg,above=2pt] {reportPreview(metrics, groundedNarrative, dispatchContext, limitations)} (0,-3.10);
+\draw[->,dashed] (8.4,-5.25) -- node[msg,above=2pt] {partialOrMetricsOnlyPreview(missingSections, explanation)} (0,-5.25);
+\draw[->] (0,-6.58) -- node[msg,above=2pt] {exportReportPDF(reportSelection)} (8.4,-6.58);
+\draw[->,dashed] (8.4,-8.68) -- node[msg,above=2pt] {reportPDF(file)} (0,-8.68);
+\draw[->,dashed] (8.4,-10.83) -- node[msg,above=2pt] {exportFailure(reason, retainedSelection)} (0,-10.83);
+\end{tikzpicture}
+\caption{System sequence diagram for UC-17: Generate an insight report}
+\label{fig:ssd-17}
+\end{figure}
+\noindent\textit{Status: Target; route unavailable. Target sequence; see the use case for full alternatives and minimum guarantees.}
+
+\clearpage
+\subsection{UC-18: Manage operational alerts}
+Primary capability: FR-18; detailed specification: \hyperref[uc:18]{UC-18}.
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[>=Stealth,font=\small,header/.style={draw,fill=white,align=center,text width=2.7cm,minimum height=0.8cm},msg/.style={font=\footnotesize,align=center,text width=7.4cm},sn/.style={draw,fill=gray!7,align=left,text width=9.3cm,font=\footnotesize,inner sep=5pt}]
+\node[header] (actor) at (0,0) {Manager};
+\node[header] (system) at (8.4,0) {RetailPulse\\(black-box system)};
+\draw[dashed,gray] (0,-0.42) -- (0,-12.11);
+\draw[dashed,gray] (8.4,-0.42) -- (8.4,-12.11);
+\draw[gray] (-0.55,-5.90) rectangle (8.95,-10.20);
+\node[anchor=north west,fill=white,font=\footnotesize,align=left,text width=8.8cm] at (-0.55,-5.90) {\textbf{alt} [authorized current record and successful save]};
+\draw[dashed,gray] (-0.55,-8.05) -- (8.95,-8.05);
+\node[anchor=north west,fill=white,font=\footnotesize,align=left,text width=8.8cm] at (-0.55,-8.05) {\textbf{else} [stale record, denied access or save failure]};
+\draw[->] (0,-1.00) -- node[msg,above=2pt] {requestAlerts(status, categoryFilters)} (8.4,-1.00);
+\draw[->,dashed] (8.4,-2.05) -- node[msg,above=2pt] {alertFeed(matchingAlerts)} (0,-2.05);
+\draw[->] (0,-3.10) -- node[msg,above=2pt] {inspectAlert(alertId)} (8.4,-3.10);
+\draw[->,dashed] (8.4,-4.15) -- node[msg,above=2pt] {alertContext(evidence, relatedAssignments)} (0,-4.15);
+\draw[->] (0,-5.20) -- node[msg,above=2pt] {resolveAlert(alertId)} (8.4,-5.20);
+\draw[->,dashed] (8.4,-7.30) -- node[msg,above=2pt] {resolvedAlert(resolvedBy, resolvedAt)} (0,-7.30);
+\draw[->,dashed] (8.4,-9.45) -- node[msg,above=2pt] {resolutionOutcome(currentState, error)} (0,-9.45);
+\node[sn,anchor=north] at (4.2,-10.53) {Alert resolution does not authorize or gate employee dispatch.};
+\end{tikzpicture}
+\caption{System sequence diagram for UC-18: Manage operational alerts}
+\label{fig:ssd-18}
+\end{figure}
+\noindent\textit{Status: Implemented API/UI; scenarios unverified. Target sequence; see the use case for full alternatives and minimum guarantees.}
+
+\clearpage
+\subsection{UC-19: Inspect system status}
+Primary capability: FR-19; detailed specification: \hyperref[uc:19]{UC-19}.
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[>=Stealth,font=\small,header/.style={draw,fill=white,align=center,text width=2.7cm,minimum height=0.8cm},msg/.style={font=\footnotesize,align=center,text width=7.4cm},sn/.style={draw,fill=gray!7,align=left,text width=9.3cm,font=\footnotesize,inner sep=5pt}]
+\node[header] (actor) at (0,0) {Manager};
+\node[header] (system) at (8.4,0) {RetailPulse\\(black-box system)};
+\draw[dashed,gray] (0,-0.42) -- (0,-10.19);
+\draw[dashed,gray] (8.4,-0.42) -- (8.4,-10.19);
+\draw[gray] (-0.55,-3.80) rectangle (8.95,-8.10);
+\node[anchor=north west,fill=white,font=\footnotesize,align=left,text width=8.8cm] at (-0.55,-3.80) {\textbf{alt} [measured telemetry is available]};
+\draw[dashed,gray] (-0.55,-5.95) -- (8.95,-5.95);
+\node[anchor=north west,fill=white,font=\footnotesize,align=left,text width=8.8cm] at (-0.55,-5.95) {\textbf{else} [telemetry missing, stale, inactive or failed]};
+\draw[->] (0,-1.00) -- node[msg,above=2pt] {requestSystemStatus()} (8.4,-1.00);
+\draw[->,dashed] (8.4,-2.05) -- node[msg,above=2pt] {componentStatus(health, availableThroughput, activity, timestamps)} (0,-2.05);
+\draw[->] (0,-3.10) -- node[msg,above=2pt] {inspectComponent(componentId)} (8.4,-3.10);
+\draw[->,dashed] (8.4,-5.20) -- node[msg,above=2pt] {componentDetails(measures, recordedAt)} (0,-5.20);
+\draw[->,dashed] (8.4,-7.35) -- node[msg,above=2pt] {explicitStatus(state, unavailableMeasures, reason)} (0,-7.35);
+\node[sn,anchor=north] at (4.2,-8.43) {The seven agreed target components are distinguished from shared tools; hard-coded/demo values are labelled.};
+\end{tikzpicture}
+\caption{System sequence diagram for UC-19: Inspect system status}
+\label{fig:ssd-19}
+\end{figure}
+\noindent\textit{Status: Partial; hard-coded status. Target sequence; see the use case for full alternatives and minimum guarantees.}
+
+\clearpage
+\subsection{UC-20: Manage personal settings}
+Primary capability: FR-20; detailed specification: \hyperref[uc:20]{UC-20}.
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[>=Stealth,font=\small,header/.style={draw,fill=white,align=center,text width=2.7cm,minimum height=0.8cm},msg/.style={font=\footnotesize,align=center,text width=7.4cm},sn/.style={draw,fill=gray!7,align=left,text width=9.3cm,font=\footnotesize,inner sep=5pt}]
+\node[header] (actor) at (0,0) {User (Manager / Employee)};
+\node[header] (system) at (8.4,0) {RetailPulse\\(black-box system)};
+\draw[dashed,gray] (0,-0.42) -- (0,-12.31);
+\draw[dashed,gray] (8.4,-0.42) -- (8.4,-12.31);
+\draw[gray] (-0.55,-3.80) rectangle (8.95,-8.10);
+\node[anchor=north west,fill=white,font=\footnotesize,align=left,text width=8.8cm] at (-0.55,-3.80) {\textbf{alt} [authorized valid changes and successful persistence]};
+\draw[dashed,gray] (-0.55,-5.95) -- (8.95,-5.95);
+\node[anchor=north west,fill=white,font=\footnotesize,align=left,text width=8.8cm] at (-0.55,-5.95) {\textbf{else} [invalid fields, duplicate email, denied access or save failure]};
+\draw[gray] (-0.55,-8.33) rectangle (8.95,-11.53);
+\node[anchor=north west,fill=white,font=\footnotesize,align=left,text width=8.8cm] at (-0.55,-8.33) {\textbf{opt} [password change is requested]};
+\draw[->] (0,-1.00) -- node[msg,above=2pt] {openPersonalSettings()} (8.4,-1.00);
+\draw[->,dashed] (8.4,-2.05) -- node[msg,above=2pt] {permittedProfileAndPreferences()} (0,-2.05);
+\draw[->] (0,-3.10) -- node[msg,above=2pt] {savePersonalSettings(allowedFields, notificationPreferences)} (8.4,-3.10);
+\draw[->,dashed] (8.4,-5.20) -- node[msg,above=2pt] {savedPersonalSettings(readBackValues)} (0,-5.20);
+\draw[->,dashed] (8.4,-7.35) -- node[msg,above=2pt] {saveRejected(reason, previousSavedState)} (0,-7.35);
+\draw[->] (0,-9.73) -- node[msg,above=2pt] {changePassword(requiredCredentials, newPassword)} (8.4,-9.73);
+\draw[->,dashed] (8.4,-10.78) -- node[msg,above=2pt] {passwordChangeResult(policyValidation, savedStatus)} (0,-10.78);
+\end{tikzpicture}
+\caption{System sequence diagram for UC-20: Manage personal settings}
+\label{fig:ssd-20}
+\end{figure}
+\noindent\textit{Status: UI/proposed persistence. Target sequence; see the use case for full alternatives and minimum guarantees.}
+
+\clearpage
+\subsection{UC-29: Configure store operations}
+Primary capability: FR-29; detailed specification: \hyperref[uc:29]{UC-29}.
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[>=Stealth,font=\small,header/.style={draw,fill=white,align=center,text width=2.7cm,minimum height=0.8cm},msg/.style={font=\footnotesize,align=center,text width=7.4cm},sn/.style={draw,fill=gray!7,align=left,text width=9.3cm,font=\footnotesize,inner sep=5pt}]
+\node[header] (actor) at (0,0) {Manager};
+\node[header] (system) at (8.4,0) {RetailPulse\\(black-box system)};
+\draw[dashed,gray] (0,-0.42) -- (0,-10.01);
+\draw[dashed,gray] (8.4,-0.42) -- (8.4,-10.01);
+\draw[gray] (-0.55,-3.80) rectangle (8.95,-8.10);
+\node[anchor=north west,fill=white,font=\footnotesize,align=left,text width=8.8cm] at (-0.55,-3.80) {\textbf{alt} [valid references, geometry, values and permissions]};
+\draw[dashed,gray] (-0.55,-5.95) -- (8.95,-5.95);
+\node[anchor=north west,fill=white,font=\footnotesize,align=left,text width=8.8cm] at (-0.55,-5.95) {\textbf{else} [invalid source, employee, geometry, roster conflict or failed save]};
+\draw[->] (0,-1.00) -- node[msg,above=2pt] {requestStoreSettings()} (8.4,-1.00);
+\draw[->,dashed] (8.4,-2.05) -- node[msg,above=2pt] {currentCameraZoneRosterAndPolicySettings()} (0,-2.05);
+\draw[->] (0,-3.10) -- node[msg,above=2pt] {saveStoreConfiguration(cameraZoneRosterOrPolicyChanges)} (8.4,-3.10);
+\draw[->,dashed] (8.4,-5.20) -- node[msg,above=2pt] {savedConfiguration(updatedSettings, effectiveScope)} (0,-5.20);
+\draw[->,dashed] (8.4,-7.35) -- node[msg,above=2pt] {configurationRejected(reason, previousValidSettings)} (0,-7.35);
+\node[sn,anchor=north] at (4.2,-8.43) {Subsequent supported processing uses saved configuration; consumers not yet integrated remain explicit.};
+\end{tikzpicture}
+\caption{System sequence diagram for UC-29: Configure store operations}
+\label{fig:ssd-29}
+\end{figure}
+\noindent\textit{Status: Partial; stored config, incomplete consumers. Target sequence; see the use case for full alternatives and minimum guarantees.}
+
+\clearpage
+\subsection{UC-34: Evaluate analytical outputs}
+Primary capability: FR-34; detailed specification: \hyperref[uc:34]{UC-34}.
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[>=Stealth,font=\small,header/.style={draw,fill=white,align=center,text width=2.7cm,minimum height=0.8cm},msg/.style={font=\footnotesize,align=center,text width=7.4cm},sn/.style={draw,fill=gray!7,align=left,text width=9.3cm,font=\footnotesize,inner sep=5pt}]
+\node[header] (actor) at (0,0) {Operator / project team};
+\node[header] (system) at (8.4,0) {RetailPulse\\(black-box system)};
+\draw[dashed,gray] (0,-0.42) -- (0,-8.09);
+\draw[dashed,gray] (8.4,-0.42) -- (8.4,-8.09);
+\draw[gray] (-0.55,-1.70) rectangle (8.95,-6.00);
+\node[anchor=north west,fill=white,font=\footnotesize,align=left,text width=8.8cm] at (-0.55,-1.70) {\textbf{alt} [compatible labelled inputs and supported metrics]};
+\draw[dashed,gray] (-0.55,-3.85) -- (8.95,-3.85);
+\node[anchor=north west,fill=white,font=\footnotesize,align=left,text width=8.8cm] at (-0.55,-3.85) {\textbf{else} [missing or mismatched labels, empty set or failed processing]};
+\draw[->] (0,-1.00) -- node[msg,above=2pt] {evaluateOutputs(predictions, annotations, benchmarkConfiguration)} (8.4,-1.00);
+\draw[->,dashed] (8.4,-3.10) -- node[msg,above=2pt] {evaluationResults(accuracy, speed, coverage, configuration, outputLocations)} (0,-3.10);
+\draw[->,dashed] (8.4,-5.25) -- node[msg,above=2pt] {evaluationLimitations(unavailableMetrics, partialResults, reason)} (0,-5.25);
+\node[sn,anchor=north] at (4.2,-6.33) {Unlabelled clips support speed/output observations only; detector metrics do not establish footfall, dwell or task accuracy.};
+\end{tikzpicture}
+\caption{System sequence diagram for UC-34: Evaluate analytical outputs}
+\label{fig:ssd-34}
+\end{figure}
+\noindent\textit{Status: Implemented; labels limited. Target sequence; see the use case for full alternatives and minimum guarantees.}
+
+\clearpage
+\subsection{UC-35: Assess staff availability and coverage}
+Primary capability: FR-35; detailed specification: \hyperref[uc:35]{UC-35}.
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[>=Stealth,font=\small,header/.style={draw,fill=white,align=center,text width=2.7cm,minimum height=0.8cm},msg/.style={font=\footnotesize,align=center,text width=7.4cm},sn/.style={draw,fill=gray!7,align=left,text width=9.3cm,font=\footnotesize,inner sep=5pt}]
+\node[header] (actor) at (0,0) {Manager};
+\node[header] (system) at (8.4,0) {RetailPulse\\(black-box system)};
+\draw[dashed,gray] (0,-0.42) -- (0,-7.91);
+\draw[dashed,gray] (8.4,-0.42) -- (8.4,-7.91);
+\draw[gray] (-0.55,-1.70) rectangle (8.95,-6.00);
+\node[anchor=north west,fill=white,font=\footnotesize,align=left,text width=8.8cm] at (-0.55,-1.70) {\textbf{alt} [supported roster, task, interaction and linked observation context]};
+\draw[dashed,gray] (-0.55,-3.85) -- (8.95,-3.85);
+\node[anchor=north west,fill=white,font=\footnotesize,align=left,text width=8.8cm] at (-0.55,-3.85) {\textbf{else} [unknown account-track link, missing task/break context or occlusion]};
+\draw[->] (0,-1.00) -- node[msg,above=2pt] {requestStaffAvailabilityAndCoverage(interval, zones)} (8.4,-1.00);
+\draw[->,dashed] (8.4,-3.10) -- node[msg,above=2pt] {staffAssessment(availability, activity, sustainedCoverageGaps, evidence)} (0,-3.10);
+\draw[->,dashed] (8.4,-5.25) -- node[msg,above=2pt] {partialStaffAssessment(unknownStates, observationCoverage, reasons)} (0,-5.25);
+\node[sn,anchor=north] at (4.2,-6.33) {Stationary assistance is not automatically idle; an unobserved area is not automatically unstaffed.};
+\end{tikzpicture}
+\caption{System sequence diagram for UC-35: Assess staff availability and coverage}
+\label{fig:ssd-35}
+\end{figure}
+\noindent\textit{Status: Target contextual analysis. Target sequence; see the use case for full alternatives and minimum guarantees.}
+
+\clearpage
+\subsection{UC-36: Receive and update an aisle assignment}
+Primary capability: FR-36; detailed specification: \hyperref[uc:36]{UC-36}.
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[>=Stealth,font=\small,header/.style={draw,fill=white,align=center,text width=2.7cm,minimum height=0.8cm},msg/.style={font=\footnotesize,align=center,text width=7.4cm},sn/.style={draw,fill=gray!7,align=left,text width=9.3cm,font=\footnotesize,inner sep=5pt}]
+\node[header] (actor) at (0,0) {Employee};
+\node[header] (system) at (8.4,0) {RetailPulse\\(black-box system)};
+\draw[dashed,gray] (0,-0.42) -- (0,-14.14);
+\draw[dashed,gray] (8.4,-0.42) -- (8.4,-14.14);
+\draw[gray] (-0.55,-1.96) rectangle (8.95,-12.05);
+\node[anchor=north west,fill=white,font=\footnotesize,align=left,text width=8.8cm] at (-0.55,-1.96) {\textbf{alt} [eligible employee and supported direct delivery]};
+\draw[dashed,gray] (-0.55,-9.64) -- (8.95,-9.64);
+\node[anchor=north west,fill=white,font=\footnotesize,align=left,text width=8.8cm] at (-0.55,-9.64) {\textbf{else} [no eligible account, policy conflict, stale evidence or delivery failure]};
+\draw[gray] (-0.41,-6.16) rectangle (8.81,-9.36);
+\node[anchor=north west,fill=white,font=\footnotesize,align=left,text width=8.8cm] at (-0.41,-6.16) {\textbf{opt} [employee acknowledges or reports progress]};
+\node[sn,anchor=north] at (4.2,-0.75) {Trigger: supported aisle staffing need arrives. The system checks eligible accounts, current tasks, freshness and source-zone policy; no manager approval gate.};
+\draw[->] (8.4,-3.36) -- node[msg,above=2pt] {aisleAssignment(taskId, targetAisle, instruction, reason)} (0,-3.36);
+\draw[->] (0,-4.41) -- node[msg,above=2pt] {viewOwnAssignment(taskId)} (8.4,-4.41);
+\draw[->,dashed] (8.4,-5.46) -- node[msg,above=2pt] {assignmentDetails(currentState, dueAt)} (0,-5.46);
+\draw[->] (0,-7.56) -- node[msg,above=2pt] {updateOwnAssignment(taskId, acknowledged / inProgress / completed)} (8.4,-7.56);
+\draw[->,dashed] (8.4,-8.61) -- node[msg,above=2pt] {recordedTaskStatus(state, actor, time)} (0,-8.61);
+\node[sn,anchor=north] at (4.2,-10.79) {Record unresolved need and explicit dispatch/delivery outcome; no unsafe or duplicate instruction is promised.};
+\node[sn,anchor=north] at (4.2,-12.38) {Current API state is in\_progress; declined, expired and cancelled are also accepted. Stored delivered is not proof of receipt, arrival or completion.};
+\end{tikzpicture}
+\caption{System sequence diagram for UC-36: Receive and update an aisle assignment}
+\label{fig:ssd-36}
+\end{figure}
+\noindent\textit{Status: Partial backend; policy/integration gaps. Target sequence; see the use case for full alternatives and minimum guarantees.}
+
+\clearpage
+\subsection{UC-37: Ask an analytics question}
+Primary capability: FR-37; detailed specification: \hyperref[uc:37]{UC-37}.
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[>=Stealth,font=\small,header/.style={draw,fill=white,align=center,text width=2.7cm,minimum height=0.8cm},msg/.style={font=\footnotesize,align=center,text width=7.4cm},sn/.style={draw,fill=gray!7,align=left,text width=9.3cm,font=\footnotesize,inner sep=5pt}]
+\node[header] (actor) at (0,0) {Manager};
+\node[header] (system) at (8.4,0) {RetailPulse\\(black-box system)};
+\draw[dashed,gray] (0,-0.42) -- (0,-10.06);
+\draw[dashed,gray] (8.4,-0.42) -- (8.4,-10.06);
+\draw[gray] (-0.55,-1.70) rectangle (8.95,-8.15);
+\node[anchor=north west,fill=white,font=\footnotesize,align=left,text width=8.8cm] at (-0.55,-1.70) {\textbf{alt} [authorized and sufficiently specified question with evidence]};
+\draw[dashed,gray] (-0.55,-3.85) -- (8.95,-3.85);
+\node[anchor=north west,fill=white,font=\footnotesize,align=left,text width=8.8cm] at (-0.55,-3.85) {\textbf{else} [ambiguous request]};
+\draw[dashed,gray] (-0.55,-6.00) -- (8.95,-6.00);
+\node[anchor=north west,fill=white,font=\footnotesize,align=left,text width=8.8cm] at (-0.55,-6.00) {\textbf{else} [missing evidence, unauthorized retrieval or LLM failure]};
+\draw[->] (0,-1.00) -- node[msg,above=2pt] {askAnalyticsQuestion(question, interval, zone)} (8.4,-1.00);
+\draw[->,dashed] (8.4,-3.10) -- node[msg,above=2pt] {analyticsAnswer(figures, interval, sources, limitations)} (0,-3.10);
+\draw[->,dashed] (8.4,-5.25) -- node[msg,above=2pt] {clarificationRequest(missingContext)} (0,-5.25);
+\draw[->,dashed] (8.4,-7.40) -- node[msg,above=2pt] {answerUnavailable(reason, permittedEvidenceOnly)} (0,-7.40);
+\node[sn,anchor=north] at (4.2,-8.48) {Question answering does not silently assign tasks or change store settings.};
+\end{tikzpicture}
+\caption{System sequence diagram for UC-37: Ask an analytics question}
+\label{fig:ssd-37}
+\end{figure}
+\noindent\textit{Status: Target; retrieval integration pending. Target sequence; see the use case for full alternatives and minimum guarantees.}

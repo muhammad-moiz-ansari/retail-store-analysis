@@ -1,0 +1,1 @@
+Before RetailPulse FYP-2 work, read docs/extra-docs/CODEX_WORK_INSTRUCTIONS.md and the current requested handoff there, when present; consult docs/fyp2-plan/ for shared contracts and status. If local handoffs are absent, ask for the requested handoff rather than inventing its contents.

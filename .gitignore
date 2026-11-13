@@ -68,7 +68,6 @@ yolo26n-cls.pt
 /data/outputs/
 
 
-.claude/
 # Claude Code local state (worktrees, settings)
 .claude/
 
@@ -78,3 +77,7 @@ yolo26n-cls.pt
 *.MOV
 *.MP4
 dummydataset/creds.txt
+
+# Local assistant handoffs and working notes
+/docs/extra-docs/
+.neon

@@ -1,0 +1,13 @@
+sequenceDiagram
+    actor A as Manager
+    participant S as RetailPulse system
+    A->>S: requestEntranceFootfall(interval, entranceSource)
+    alt crossing configuration and observation coverage support counts
+    S-->>A: footfallCounts(entries, exits, netChange, coverage)
+    opt initial occupancy is known
+    S-->>A: absoluteOccupancy(initialOccupancy + netChange)
+    end
+    else boundary, role evidence or source coverage is incomplete
+    S-->>A: partialOrUnavailableCounts(reason, supportedPeriod)
+    end
+    Note over A,S: Unknown initial occupancy permits net change, not an invented whole-store count.

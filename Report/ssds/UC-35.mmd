@@ -1,0 +1,10 @@
+sequenceDiagram
+    actor A as Manager
+    participant S as RetailPulse system
+    A->>S: requestStaffAvailabilityAndCoverage(interval, zones)
+    alt supported roster, task, interaction and linked observation context
+    S-->>A: staffAssessment(availability, activity, sustainedCoverageGaps, evidence)
+    else unknown account-track link, missing task/break context or occlusion
+    S-->>A: partialStaffAssessment(unknownStates, observationCoverage, reasons)
+    end
+    Note over A,S: Stationary assistance is not automatically idle; an unobserved area is not automatically unstaffed.

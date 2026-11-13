@@ -1,0 +1,13 @@
+sequenceDiagram
+    actor A as Manager
+    participant S as RetailPulse system
+    A->>S: requestServiceAnalysis(interval, zone)
+    alt supported role and track observations are available
+    S-->>A: serviceEvidence(interactions, durations, verdicts, coverage)
+    opt entry history and store policy support further timing
+    S-->>A: serviceTiming(approachTimes, potentiallyUnattendedEvents)
+    end
+    else unknown roles, occlusion or missing history
+    S-->>A: partialServiceEvidence(unsupportedMetrics, reasons)
+    end
+    Note over A,S: Judge off, unavailable or failing retains an unverified proximity fallback; possible service is not verified assistance.

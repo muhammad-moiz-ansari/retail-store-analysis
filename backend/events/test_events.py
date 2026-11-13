@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 
 from .fixtures import RUN_ID, generate
-from .ingest import connect, ingest_run, validate
+from .ingest import ingest_run, validate
 
 START = datetime(2026, 11, 3, 9, tzinfo=timezone.utc)
 
@@ -34,37 +34,37 @@ def write_run(prefix: Path) -> None:
         prefix.with_suffix(suffix).write_text(json.dumps(data))
 
 
-def test_ingest_is_idempotent_and_derives_unattended(tmp_path) -> None:
+def test_ingest_is_idempotent_and_derives_unattended(tmp_path, postgres_connection) -> None:
     prefix = tmp_path / "interaction"
     write_run(prefix)
-    conn = connect(tmp_path / "events.sqlite3")
+    conn = postgres_connection
     for _ in range(2):  # re-ingesting the same run replaces it
         counts = ingest_run(conn, prefix, "r1", "c2", "z2", START, unattended_after_s=180)
     assert counts == {"tracks": 4, "role_decisions": 5, "interactions": 2, "zone_dwell": 4, "footfall": 0, "queue_samples": 0, "heatmaps": 0, "unattended_episodes": 2}
-    assert conn.execute("SELECT COUNT(*) FROM tracks").fetchone()[0] == 4
+    assert conn.execute("SELECT COUNT(*) FROM tracks").fetchone()["count"] == 4
     episodes = {row["customer_track_id"]: (row["waited_s"], row["helped"]) for row in conn.execute("SELECT * FROM unattended_episodes")}
     assert episodes == {2: (200.0, 1), 4: (190.0, 0)}
     health = conn.execute("SELECT * FROM pipeline_health ORDER BY ts_start").fetchall()
     assert [(h["fps"], h["id_churn"], h["unknown_role_share"]) for h in health] == [(1.0, 1, 0.0), (1.0, 1, 0.5)]
-    assert health[0]["ts_start"] == "2026-11-03T09:00:00+00:00"
+    assert health[0]["ts_start"] == START
     assert [h["frozen_or_dark"] for h in health] == [0, 1]  # 40 of the second minute's 60 frames flagged
     assert validate(conn) == []
 
 
-def test_fixture_day_is_valid_and_has_the_planted_patterns(tmp_path) -> None:
-    conn = connect(tmp_path / "fixture.sqlite3")
+def test_fixture_day_is_valid_and_has_the_planted_patterns(postgres_connection) -> None:
+    conn = postgres_connection
     first = generate(conn)
     assert generate(conn) == first  # seeded and idempotent
     assert validate(conn) == []
-    one = lambda sql: conn.execute(sql).fetchone()[0]
-    rush = one("SELECT COUNT(*) FROM footfall WHERE direction = 'in' AND substr(ts_start, 12, 2) IN ('17', '18')") / 2
-    calm = one("SELECT COUNT(*) FROM footfall WHERE direction = 'in' AND substr(ts_start, 12, 2) IN ('10', '11')") / 2
+    one = lambda sql: next(iter(conn.execute(sql).fetchone().values()))
+    rush = one("SELECT COUNT(*) FROM footfall WHERE direction = 'in' AND extract(hour FROM ts_start AT TIME ZONE 'UTC') IN (17, 18)") / 2
+    calm = one("SELECT COUNT(*) FROM footfall WHERE direction = 'in' AND extract(hour FROM ts_start AT TIME ZONE 'UTC') IN (10, 11)") / 2
     assert rush > 2 * calm
-    unattended = dict(conn.execute("SELECT zone_id, COUNT(*) FROM unattended_episodes GROUP BY zone_id").fetchall())
+    unattended = {r["zone_id"]: r["count"] for r in conn.execute("SELECT zone_id, COUNT(*) FROM unattended_episodes GROUP BY zone_id")}
     assert unattended["z3"] > 2 * max(unattended.get("z2", 0), unattended.get("z4", 0))
     assert one("SELECT COUNT(*) FROM pipeline_health WHERE camera_id = 'c2' AND frozen_or_dark = 1") == 40
     assert one("SELECT COUNT(*) FROM tracks WHERE camera_id = 'c2' AND role = 'customer' "
-               "AND ts_start >= '2026-11-03T14:00' AND ts_start < '2026-11-03T14:40'") == 0
+               "AND ts_start >= '2026-11-03T14:00Z' AND ts_start < '2026-11-03T14:40Z'") == 0
     assert one(f"SELECT COUNT(DISTINCT run_id) FROM tracks") == 1 and one("SELECT run_id FROM tracks LIMIT 1") == RUN_ID
 
 
@@ -73,9 +73,9 @@ RUNS = [p for p in sorted(Path(__file__).resolve().parents[1].glob("output/**/*.
 
 
 @pytest.mark.parametrize("people", RUNS[:5], ids=lambda p: str(p.parent.name))
-def test_real_cv_runs_meet_schema_v1(tmp_path, people) -> None:
+def test_real_cv_runs_meet_schema_v1(tmp_path, postgres_connection, people) -> None:
     """Contract: whatever the CLI wrote locally must load and fill every common field (skipped without runs)."""
-    conn = connect(tmp_path / "events.sqlite3")
+    conn = postgres_connection
     ingest_run(conn, people.with_name(people.name.removesuffix(".people.json")), "real", "c2", "z2", START)
     assert validate(conn) == []
 
@@ -87,7 +87,7 @@ def test_zone_segments_ignore_border_flicker() -> None:
     assert zone_segments(samples, 1.0) == [("z2", 0, 3), ("z3", 3, 4.5)]  # the 0.5 s blip and the final sample don't count
 
 
-def test_ingest_splits_tracks_into_floor_zones_and_hourly_heatmaps(tmp_path) -> None:
+def test_ingest_splits_tracks_into_floor_zones_and_hourly_heatmaps(tmp_path, postgres_connection) -> None:
     prefix = tmp_path / "run"
     # Track 1 (customer) walks from the left half (z2) into the right half (z3) at 10 s; track 2 (employee) stays right.
     detections = [{"frame": i, "timestamp": float(i), "people": [
@@ -99,19 +99,19 @@ def test_ingest_splits_tracks_into_floor_zones_and_hourly_heatmaps(tmp_path) -> 
     for suffix, data in ((".people.json", {"frame_size": [400, 100], "people": people}),
                          (".interactions.json", interactions), (".detections.json", detections)):
         prefix.with_suffix(suffix).write_text(json.dumps(data))
-    conn = connect(tmp_path / "events.sqlite3")
+    conn = postgres_connection
     layout = {"floor_zones": {"z2": [[0, 0], [0.5, 0], [0.5, 1], [0, 1]], "z3": [[0.5, 0], [1, 0], [1, 1], [0.5, 1]]},
               "heatmap_grid": (4, 2)}
     started = datetime(2026, 11, 3, 9, 59, 50, tzinfo=timezone.utc)  # crosses 10:00, so two hourly heatmaps
     counts = ingest_run(conn, prefix, "r", "c2", "z1", started, layout={**layout, "entrance_line": 0.5})
     assert (counts["zone_dwell"], counts["heatmaps"], counts["footfall"]) == (3, 2, 1)
-    assert conn.execute("SELECT track_id, direction, ts_start FROM footfall").fetchone()[:] == (1, "in", "2026-11-03T10:00:00+00:00")
+    assert conn.execute("SELECT track_id, direction, ts_start FROM footfall").fetchone() == {"track_id": 1, "direction": "in", "ts_start": START.replace(hour=10)}
     dwell = [(r["track_id"], r["zone_id"], r["dwell_s"]) for r in conn.execute("SELECT * FROM zone_dwell ORDER BY track_id, ts_start")]
     assert dwell == [(1, "z2", 10.0), (1, "z3", 9.0), (2, "z3", 19.0)]
-    assert conn.execute("SELECT zone_id FROM interactions").fetchone()[0] == "z3"
-    assert dict(conn.execute("SELECT track_id, zone_id FROM tracks").fetchall()) == {1: "z2", 2: "z3"}
+    assert conn.execute("SELECT zone_id FROM interactions").fetchone()["zone_id"] == "z3"
+    assert {r["track_id"]: r["zone_id"] for r in conn.execute("SELECT track_id, zone_id FROM tracks")} == {1: "z2", 2: "z3"}
     maps = conn.execute("SELECT ts_start, cells FROM heatmaps ORDER BY ts_start").fetchall()
-    assert maps[0]["ts_start"] == "2026-11-03T09:00:00+00:00" and sum(map(sum, json.loads(maps[0]["cells"]))) == 20  # 10 frames x 2
+    assert maps[0]["ts_start"] == START and sum(map(sum, json.loads(maps[0]["cells"]))) == 20  # 10 frames x 2
     assert validate(conn) == []
 
 
@@ -125,7 +125,7 @@ def test_entrance_line_counts_net_crossings_once() -> None:
     assert line_crossing(walk_in, 0.5, "left") == ("out", 4)
 
 
-def test_queue_counts_customers_in_the_polygon_and_estimates_wait(tmp_path) -> None:
+def test_queue_counts_customers_in_the_polygon_and_estimates_wait(tmp_path, postgres_connection) -> None:
     from .zones import queue_lengths
 
     box = lambda x: [x, 0, x + 10, 100]  # feet at the bottom edge, x centre = x + 5 of a 100 px wide frame
@@ -142,6 +142,22 @@ def test_queue_counts_customers_in_the_polygon_and_estimates_wait(tmp_path) -> N
                          (".detections.json", [{**d, "people": [{**p, "track_id": i, "confidence": 0.9} for i, p in enumerate(d["people"])]}
                                                for d in detections])):
         prefix.with_suffix(suffix).write_text(json.dumps(data))
-    conn = connect(tmp_path / "events.sqlite3")
+    conn = postgres_connection
     ingest_run(conn, prefix, "t", "c3", "z6", START, layout={"queue_zone": queue})
-    assert [tuple(r) for r in conn.execute("SELECT queue_length, est_wait_s FROM queue_samples ORDER BY ts_start")] == [(1, 60.0), (2, 120.0), (2, 120.0)]
+    assert [tuple(r.values()) for r in conn.execute("SELECT queue_length, est_wait_s FROM queue_samples ORDER BY ts_start")] == [(1, 60.0), (2, 120.0), (2, 120.0)]
+
+
+def test_judge_rejected_pair_does_not_end_an_unattended_wait(tmp_path, postgres_connection) -> None:
+    """S-B0-VERDICT: only confirmed verdicts (pipeline's CONFIRMED) count as help."""
+    prefix = tmp_path / "rejected"
+    people = [{"track_id": 1, "first_seen": 0.0, "last_seen": 300.0, "frames_observed": 300, "role": "employee"},
+              {"track_id": 2, "first_seen": 0.0, "last_seen": 300.0, "frames_observed": 300, "role": "customer"},
+              {"track_id": 3, "first_seen": 0.0, "last_seen": 300.0, "frames_observed": 300, "role": "customer"}]
+    interactions = [{"employee_track_id": 1, "customer_track_id": 2, "started_at": 20.0, "last_seen_at": 40.0, "verdict": "no_interaction"},
+                    {"employee_track_id": 1, "customer_track_id": 3, "started_at": 20.0, "last_seen_at": 40.0, "verdict": "unverified"}]
+    for suffix, data in ((".people.json", {"people": people}), (".interactions.json", interactions), (".detections.json", [])):
+        prefix.with_suffix(suffix).write_text(json.dumps(data))
+    conn = postgres_connection
+    assert ingest_run(conn, prefix, "v", "c2", "z2", START, unattended_after_s=180.0)["unattended_episodes"] == 1
+    episode = conn.execute("SELECT customer_track_id, waited_s, helped FROM unattended_episodes").fetchone()
+    assert episode == {"customer_track_id": 2, "waited_s": 300.0, "helped": 0}

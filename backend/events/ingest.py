@@ -11,15 +11,15 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
-import sqlite3
-from datetime import datetime, timedelta
+from psycopg import Connection
+
+from ..database import connect
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
+from ..interaction.types import CONFIRMED
 from .zones import foot_point, heatmap, line_crossing, queue_lengths, zone_of, zone_segments
 
-SCHEMA = Path(__file__).with_name("schema.sql")
-DEFAULT_DB_PATH = Path(os.getenv("EVENTS_DB_PATH", Path(__file__).resolve().parents[1] / "events.sqlite3"))
 TABLES = ("tracks", "role_decisions", "interactions", "zone_dwell", "footfall", "queue_samples",
           "unattended_episodes", "pipeline_health", "heatmaps")
 COMMON = ("event_id", "run_id", "store_id", "camera_id", "zone_id", "ts_start", "ts_end")
@@ -29,36 +29,30 @@ LAYOUT = {"floor_zones": {}, "zone_hold_seconds": 1.0, "heatmap_grid": (32, 18),
           "queue_zone": None, "queue_sample_seconds": 5.0}
 
 
-def connect(path: Path | str = DEFAULT_DB_PATH) -> sqlite3.Connection:
-    conn = sqlite3.connect(path)
-    conn.row_factory = sqlite3.Row
-    conn.executescript(SCHEMA.read_text(encoding="utf-8"))
-    return conn
-
-
-def insert(conn: sqlite3.Connection, table: str, rows: list[dict]) -> None:
+def insert(conn: Connection, table: str, rows: list[dict]) -> None:
     if rows:
         columns = list(rows[0])
-        conn.executemany(f"INSERT INTO {table} ({', '.join(columns)}) VALUES ({', '.join('?' * len(columns))})",
+        conn.cursor().executemany(f"INSERT INTO {table} ({', '.join(columns)}) VALUES ({', '.join(['%s'] * len(columns))})",
                          [[row[c] for c in columns] for row in rows])
 
 
-def delete_run(conn: sqlite3.Connection, run_id: str) -> None:
+def delete_run(conn: Connection, run_id: str) -> None:
+    conn.execute("SELECT pg_advisory_xact_lock(hashtextextended(%s, 0))", (run_id,))
     for table in TABLES:
-        conn.execute(f"DELETE FROM {table} WHERE run_id = ?", (run_id,))
+        conn.execute(f"DELETE FROM {table} WHERE run_id = %s", (run_id,))
 
 
-def derive_unattended(conn: sqlite3.Connection, run_id: str, min_seconds: float) -> int:
+def derive_unattended(conn: Connection, run_id: str, min_seconds: float) -> int:
     """A customer whose wait from first sighting to their first confirmed interaction (or exit, if never
     helped) is at least `min_seconds`. Track IDs are per camera, so customers match on (camera, track)."""
     first_help = {(row["camera_id"], row["customer_track_id"]): row["ts_start"] for row in conn.execute(
-        "SELECT camera_id, customer_track_id, MIN(ts_start) AS ts_start FROM interactions WHERE run_id = ? "
-        "GROUP BY camera_id, customer_track_id", (run_id,))}
+        "SELECT camera_id, customer_track_id, MIN(ts_start) AS ts_start FROM interactions WHERE run_id = %s "
+        "AND verdict = ANY(%s) GROUP BY camera_id, customer_track_id", (run_id, list(CONFIRMED)))}  # a judge-rejected pair is not help
     episodes = []
-    for track in conn.execute("SELECT * FROM tracks WHERE run_id = ? AND role = 'customer'", (run_id,)):
+    for track in conn.execute("SELECT * FROM tracks WHERE run_id = %s AND role = 'customer'", (run_id,)):
         helped_at = first_help.get((track["camera_id"], track["track_id"]))
         wait_end = helped_at if helped_at and helped_at < track["ts_end"] else track["ts_end"]
-        waited = (datetime.fromisoformat(wait_end) - datetime.fromisoformat(track["ts_start"])).total_seconds()
+        waited = (wait_end - track["ts_start"]).total_seconds()
         if waited >= min_seconds:
             episodes.append({**{c: track[c] for c in COMMON}, "event_id": f"{run_id}:unattended:{track['camera_id']}:{track['track_id']}",
                              "ts_end": wait_end, "customer_track_id": track["track_id"], "waited_s": round(waited, 3),
@@ -91,11 +85,14 @@ def health_rows(detections: list[dict], at, base: dict) -> list[dict]:
     return rows
 
 
-def ingest_run(conn: sqlite3.Connection, prefix: Path | str, run_id: str, camera_id: str, zone_id: str,
+def ingest_run(conn: Connection, prefix: Path | str, run_id: str, camera_id: str, zone_id: str,
                started_at: datetime, store_id: str = "store-1", unattended_after_s: float = DEFAULT_UNATTENDED_S,
                layout: dict | None = None) -> dict:
     """Replace `run_id`'s rows with this CV run. `zone_id` is the camera's zone; `layout` (LAYOUT keys) splits the
     frame into floor zones. Runs written before the CLI recorded frame_size get the camera zone only, no heatmap."""
+    if started_at.utcoffset() is None:
+        raise ValueError("Event start must include a UTC offset")
+    started_at = started_at.astimezone(timezone.utc)
     prefix = Path(prefix)
     layout = {**LAYOUT, **(layout or {})}
     read = lambda suffix: json.loads(prefix.with_suffix(suffix).read_text(encoding="utf-8"))
@@ -153,7 +150,7 @@ def ingest_run(conn: sqlite3.Connection, prefix: Path | str, run_id: str, camera
                  "ts_end": (hour0 + timedelta(hours=hour + 1)).isoformat(), "cols": cols, "rows": rows, "cells": json.dumps(cells)}
                 for hour, cells in heatmap([{**f, "timestamp": f["timestamp"] + offset} for f in detections], frame_size, (cols, rows)).items()
                 ] if frame_size else []
-    with conn:
+    with conn.transaction():
         delete_run(conn, run_id)
         for table, table_rows in (("tracks", tracks), ("role_decisions", roles), ("interactions", interactions), ("zone_dwell", dwell), ("footfall", footfall), ("queue_samples", queue),
                                   ("pipeline_health", health_rows(detections, at, base)), ("heatmaps", heatmaps)):
@@ -163,16 +160,17 @@ def ingest_run(conn: sqlite3.Connection, prefix: Path | str, run_id: str, camera
             "footfall": len(footfall), "queue_samples": len(queue), "heatmaps": len(heatmaps), "unattended_episodes": unattended}
 
 
-def validate(conn: sqlite3.Connection) -> list[str]:
+def validate(conn: Connection) -> list[str]:
     """Contract check: every row of every table has the common fields filled. Returns the problems found."""
     problems = []
     for table in TABLES:
-        columns = {row["name"] for row in conn.execute(f"PRAGMA table_info({table})")}
+        columns = {row["attname"] for row in conn.execute(
+            "SELECT attname FROM pg_attribute WHERE attrelid = to_regclass(%s) AND attnum > 0 AND NOT attisdropped", (table,))}
         problems += [f"{table} lacks column {c}" for c in COMMON if c not in columns]
         if columns.issuperset(COMMON):
-            empty = conn.execute(f"SELECT COUNT(*) FROM {table} WHERE " + " OR ".join(f"{c} IS NULL OR {c} = ''" for c in COMMON)).fetchone()[0]
+            empty = conn.execute(f"SELECT COUNT(*) AS count FROM {table} WHERE " + " OR ".join(f"{c} IS NULL OR {c} = ''" for c in COMMON if c not in ("ts_start", "ts_end"))).fetchone()["count"]
             problems += [f"{table}: {empty} rows with an empty common field"] if empty else []
-            bad = conn.execute(f"SELECT COUNT(*) FROM {table} WHERE ts_end < ts_start").fetchone()[0]
+            bad = conn.execute(f"SELECT COUNT(*) AS count FROM {table} WHERE ts_end < ts_start").fetchone()["count"]
             problems += [f"{table}: {bad} rows end before they start"] if bad else []
     return problems
 
@@ -201,18 +199,17 @@ def main() -> None:
     parser.add_argument("--zone", required=True, help="zone_id the camera covers, e.g. z2")
     parser.add_argument("--start", required=True, type=datetime.fromisoformat, help="UTC time of the clip's first frame (ISO 8601)")
     parser.add_argument("--store", default="store-1")
-    parser.add_argument("--db", type=Path, default=DEFAULT_DB_PATH)
     parser.add_argument("--unattended-after", type=float, help="Seconds; default from settings thresholds")
     parser.add_argument("--config", type=Path, help="The camera's --config JSON; its floor_zones etc. split the frame into zones")
     args = parser.parse_args()
     if args.start.tzinfo is None:
         parser.error("--start needs a UTC offset, e.g. 2026-11-03T09:00:00+00:00")
-    with connect(args.db) as conn:
+    with connect() as conn:
         counts = ingest_run(conn, args.prefix, args.run_id, args.camera, args.zone, args.start, args.store,
                             args.unattended_after if args.unattended_after is not None else unattended_threshold(),
                             layout_from(json.loads(args.config.read_text(encoding="utf-8")) if args.config else {}))
         problems = validate(conn)
-    print(f"{args.run_id} -> {args.db}: {counts}")
+    print(f"{args.run_id}: {counts}")
     if problems:
         raise SystemExit("schema v1 violations:\n" + "\n".join(problems))
 

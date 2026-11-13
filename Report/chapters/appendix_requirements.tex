@@ -1,16 +1,97 @@
-\chapter{Detailed Requirements}
-\section{Requirement Priorities}
-High-priority requirements: FR-01 to FR-05, FR-07, FR-10 to FR-13, FR-29 and FR-30 to FR-32. Medium: FR-06, FR-17, FR-18, FR-33 and FR-34. Low: FR-19, FR-20. Security requirements NFR-07 to NFR-10 apply to all modules.
+\chapter{Requirement Consolidation and Historical Register}
+\label{app:req-history}
+\section{Identifier Policy and Old-to-New Mapping}
+Exactly 17 active FR/primary UC pairs are defined in Chapter~\ref{ch:req}. Current UC suffixes match their FRs. Previous UCs used a different grouping: old UC-01 login maps to UC-10; old UC-02 camera view to UC-11; old UC-03/04 manager customer/staff views and old UC-05 spatial presentation to UC-12, with calculation responsibilities in UC-04/07/35; old UC-08 reports to UC-17; old UC-09 alerts to UC-18; old UC-10 status to UC-19; old UC-11 personal performance to UC-13; old UC-13 settings to UC-20. Historical UC-14 calibration is not an active UC. Removed out-of-scope identifiers are not reassigned to unrelated functions.
 
-\section{Additional Use Case: UC-11 View personal performance}
+\begin{longtable}{P{0.22\textwidth}P{0.23\textwidth}P{0.45\textwidth}}
+\caption{Functional requirement consolidation and retirement mapping}\label{tab:fr-migration}\\
+\toprule
+Previous item & Current destination & Treatment\\
+\midrule
+\endfirsthead
+\toprule
+Previous item & Current destination & Treatment\\
+\midrule
+\endhead
+FR-01, FR-03, FR-33 & FR-01 / UC-01 & Merge detection, role-labelled tracking and diagnostic export into video analysis; old FR-03/33 are no longer separate active definitions.\\
+FR-02 & FR-02 / UC-02 & Retain entrance footfall; detector precision does not establish crossing-count accuracy.\\
+FR-04, FR-05, FR-30--FR-32 & FR-04 / UC-04 & Merge service analysis, candidate nomination, pass-by filtering, pose uncertainty and unattended evidence; move staff activity into FR-35.\\
+FR-06 & FR-35 / UC-35 & Retire mandatory composite employee scoring/ranking and replace it with explainable activity, availability and coverage.\\
+FR-07 & FR-07 / UC-07 & Retain spatial activity with sustained hot/gray-zone interpretation and coverage.\\
+FR-10--FR-13 & Same-numbered FR/UC pairs & Retain distinct account access, monitoring, manager views and own workspace; old UC suffixes are not reused by meaning.\\
+FR-17 & FR-17 / UC-17 & Narrative and PDF export remain one report-generation capability.\\
+FR-18--FR-20 & Same-numbered FR/UC pairs & Retain alerts, system status and permitted personal settings.\\
+FR-29 & FR-29 / UC-29 & Expand store policy to camera, zone, roster and dispatch configuration.\\
+FR-34 & FR-34 / UC-34 & Retain operator-facing evaluation; metrics do not guarantee product performance.\\
+Previously missing staff activity & FR-35 / UC-35 & Add contextual availability and zone coverage; assisting staff are not automatically idle.\\
+Original staffing/assignment scope & FR-36 / UC-36 & Explicit direct aisle assignment and account-bound task lifecycle; no manager approval gate.\\
+Agreed Query Agent & FR-37 / UC-37 & Explicit authorized analytics question answering, separate from report narration or dispatch.\\
+FR-21--FR-28; old UC-14 & Historical register only & Floor-homography prototype removed in commit 8c3a6fe; excluded from the 17 active pairs.\\
+\bottomrule
+\end{longtable}
+\section{Retired Floor-Prototype Functional Requirements}
+The records below describe the descoped prototype only, not the current body-height proximity pipeline. Their former priorities are historical. Existing design, equations and dated TC-14--TC-20 evidence remain in the implementation/testing chapters with historical labels; no metric floor accuracy is inferred for the current runtime.
+\begin{longtable}{P{0.19\textwidth}P{0.59\textwidth}P{0.12\textwidth}}
+\caption{Historical floor-prototype requirement register}\\
+\toprule
+Historical ID & Former requirement & Former priority\\
+\midrule
+\endfirsthead
+\toprule
+Historical ID & Former requirement & Former priority\\
+\midrule
+\endhead
+Historical FR-21 & \textit{(Descoped prototype.)} The system shall preview role labels, confidence, track IDs and box-bottom points without calibration. & High\\
+Historical FR-22 & \textit{(Descoped prototype.)} The system shall support ordered floor correspondences through saved configuration and a point-selection interface. & High\\
+Historical FR-23 & \textit{(Descoped prototype.)} The system shall calculate supported same-camera, same-timestamp pair separations in floor metres. & High\\
+Historical FR-24 & \textit{(Descoped prototype.)} Invalid or unsupported positions and distances shall have explicit states/reasons and unavailable values rather than fabricated zeroes. & High\\
+Historical FR-25 & \textit{(Descoped prototype.)} Camera alignment shall be monitored and shifted or unverified frames shall not produce supported metric output. & High\\
+Historical FR-26 & \textit{(Descoped prototype.)} Measurements, landmarks and operational coverage shall be editable so the homography can be regenerated. & High\\
+Historical FR-27 & \textit{(Descoped prototype.)} The system shall export annotated video, floor maps and timestamped diagnostic records. & Medium\\
+Historical FR-28 & \textit{(Descoped prototype.)} Estimated calibration and its distance outputs shall be labelled provisional and approximate. & High\\
+\bottomrule
+\end{longtable}
+
+\section{Historical UC-14: Calibrate and inspect floor distance (descoped)}
 \begin{tabular}{P{0.22\textwidth}P{0.68\textwidth}}
 \toprule
-Actor & Employee\\
-Precondition & Employee is authenticated.\\
-Main flow & 1. Employee opens My Workspace and sees shift overview, today's score, zone assignment, and updates. 2. Employee opens My Performance and sees the rubric breakdown, trend charts, and daily log. 3. Employee selects a day to see its details.\\
-Postcondition & Only the employee's own data is shown.\\
+Actor & Calibration operator or project team.\\
+Precondition & Local video and trained weights exist. Image/floor landmarks or explicitly estimated rectangle dimensions are available.\\
+Main flow & 1. Generate the uncalibrated foot-point preview. 2. Select or load ordered landmarks. 3. Save calibration and inspect the grid. 4. Run the distance demo and inspect video, floor map and records.\\
+Alternative flow & Missing files, incompatible geometry, invalid calibration, unsupported foot positions or unverified alignment produce actionable errors or unavailable measurements.\\
+Postcondition & Local diagnostic files and their configured measurement-status metadata are produced.\\
 \bottomrule
 \end{tabular}
 
-\section{Floor-Distance Requirement Priorities and Operator Use Case}
-FR-21--FR-26 and FR-28 are high priority; FR-27 is medium priority. NFR-11 applies to all floor-distance paths. UC-14 in Chapter~\ref{ch:req} covers the operator-facing calibration and diagnostic workflow. It supplements existing manager/employee use cases and does not imply that a calibration interface or metric interaction feature is deployed in the web application. The prototype that implemented these requirements was descoped in commit \texttt{8c3a6fe} (Section~\ref{sec:floor-descoped}).
+\section{Historical NFR-11 and Its Solution}
+\begin{longtable}{P{0.16\textwidth}P{0.32\textwidth}P{0.42\textwidth}}
+\caption{Historical NFR solution; excluded from active NFRs}\\
+\toprule
+Historical ID & Requirement / concern & Short historical solution and verification\\
+\midrule
+\endfirsthead
+\toprule
+Historical ID & Requirement / concern & Short historical solution and verification\\
+\midrule
+\endhead
+NFR-11 & Unsupported floor geometry shall not yield supported metric distances; smoothing/prediction shall not conceal alignment failures. & The removed prototype checked frame geometry, matrix freshness, homogeneous denominators and region/alignment coverage, returning explicit unavailable states and excluding unsupported predictions. Historical TC-17--TC-19 exercise these guards; this is not a current metric-floor capability.\\
+\bottomrule
+\end{longtable}
+
+\begin{longtable}{P{0.16\textwidth}P{0.22\textwidth}P{0.32\textwidth}P{0.16\textwidth}}
+\caption{Floor-distance requirements traceability (descoped prototype)}\label{tab:floor-traceability}\\
+\toprule
+Requirement & Component & Implementation / design & Test case\\
+\midrule
+\endfirsthead
+\toprule
+Requirement & Component & Implementation / design & Test case\\
+\midrule
+\endhead
+FR-21 & \textit{(Descoped prototype.)} Detector / preview & Shared trained inference, ByteTrack, original-pixel foot proxy & TC-14\\
+FR-22, FR-26 & Calibration & Landmark JSON, point UI and regenerable homography & TC-15, TC-16\\
+FR-23, FR-24, NFR-11 & Floor geometry & Supported projection, unit/region guards and explicit failure states & TC-17, TC-18\\
+FR-25 & \textit{(Descoped prototype.)} Motion monitor & Masked ORB matching, RANSAC and alignment-quality gates & TC-19\\
+FR-27, FR-28 & Distance demo & Video/map/JSONL exports and provisional metadata & TC-20\\
+\bottomrule
+\end{longtable}

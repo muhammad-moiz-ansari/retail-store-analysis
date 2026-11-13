@@ -1,0 +1,15 @@
+sequenceDiagram
+    actor A as Manager
+    participant S as RetailPulse system
+    A->>S: requestInsightReport(interval, sections)
+    alt permitted metrics and narration are available
+    S-->>A: reportPreview(metrics, groundedNarrative, dispatchContext, limitations)
+    else incomplete evidence or narration unavailable
+    S-->>A: partialOrMetricsOnlyPreview(missingSections, explanation)
+    end
+    A->>S: exportReportPDF(reportSelection)
+    alt export succeeds
+    S-->>A: reportPDF(file)
+    else export unavailable or failed
+    S-->>A: exportFailure(reason, retainedSelection)
+    end

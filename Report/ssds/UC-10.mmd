@@ -1,0 +1,16 @@
+sequenceDiagram
+    actor A as User (Manager / Employee)
+    participant S as RetailPulse system
+    opt account activation is needed
+    A->>S: activateAccount(invitationToken, permittedRegistrationDetails)
+    S-->>A: activationResult(accountStatus, validationErrors)
+    end
+    A->>S: login(credentials, requestedRole)
+    alt credentials, active account and assigned role are valid
+    S-->>A: authenticatedSession(permittedWorkspace)
+    A->>S: logout()
+    S-->>A: sessionEnded()
+    else invalid credentials, role mismatch or expired access
+    S-->>A: accessDenied(reason)
+    end
+    Note over A,S: Activation/login errors create no authorized session; a selected role cannot elevate the account.

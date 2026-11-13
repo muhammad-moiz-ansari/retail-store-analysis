@@ -180,7 +180,6 @@ def main() -> None:
     parser.add_argument("--run-id", help="Event store run_id (default: the output path); re-using one replaces that run")
     parser.add_argument("--start", type=datetime.fromisoformat,
                         help="UTC time of the video's first frame, e.g. 2026-11-03T09:00:00+00:00 (default: when processing starts)")
-    parser.add_argument("--events-db", type=Path, help="Event store path (default: EVENTS_DB_PATH or backend/events.sqlite3)")
     args = parser.parse_args()
     if args.start and args.start.tzinfo is None:
         parser.error("--start needs a UTC offset, e.g. 2026-11-03T09:00:00+00:00")
@@ -284,13 +283,20 @@ def main() -> None:
         encoding="utf-8",
     )
     if args.camera:
-        from ..events.ingest import DEFAULT_DB_PATH, connect, ingest_run, layout_from, unattended_threshold
+        from ..events.ingest import connect, ingest_run, layout_from, unattended_threshold
 
         run_id = args.run_id or str(args.output.with_suffix(""))
-        with connect(args.events_db or DEFAULT_DB_PATH) as events:
+        with connect() as events:
             counts = ingest_run(events, args.output, run_id, args.camera, zone, started_at,
                                 unattended_after_s=unattended_threshold(), layout=layout_from(pipeline.config))
         print(f"event store: run {run_id} as {args.camera}/{zone}: {counts}")
+        from ..dispatch import dispatch_unattended
+        from ..store_core import connect as store_connect
+
+        with store_connect() as store, connect() as events:
+            decisions = [r["decision"] for r in dispatch_unattended(store, events, run_id)]
+            store.commit()
+        print(f"dispatch: {len(decisions)} unattended episodes -> {dict((d, decisions.count(d)) for d in set(decisions))}")
 
 
 def camera_zone(camera_id: str) -> str:
@@ -298,7 +304,7 @@ def camera_zone(camera_id: str) -> str:
     from ..store_core import connect
 
     with connect() as store:
-        row = store.execute("SELECT zone_id FROM cameras WHERE id = ?", (camera_id,)).fetchone()
+        row = store.execute("SELECT zone_id FROM cameras WHERE id = %s", (camera_id,)).fetchone()
     if not row or not row["zone_id"]:
         raise SystemExit(f"camera {camera_id!r} is not configured with a zone in settings (or pass --zone)")
     return row["zone_id"]

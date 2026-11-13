@@ -1,0 +1,880 @@
+{
+  "diagrams": [
+    {
+      "uc": "UC-01",
+      "primary_fr": "FR-01",
+      "title": "Analyze a video",
+      "actor": "Operator / project team",
+      "file": "UC-01.mmd",
+      "figure_label": "fig:ssd-01",
+      "estimated_height_cm": 8.96
+    },
+    {
+      "uc": "UC-02",
+      "primary_fr": "FR-02",
+      "title": "Obtain entrance footfall",
+      "actor": "Manager",
+      "file": "UC-02.mmd",
+      "figure_label": "fig:ssd-02",
+      "estimated_height_cm": 10.29
+    },
+    {
+      "uc": "UC-04",
+      "primary_fr": "FR-04",
+      "title": "Analyze customer service interactions",
+      "actor": "Manager",
+      "file": "UC-04.mmd",
+      "figure_label": "fig:ssd-04",
+      "estimated_height_cm": 10.47
+    },
+    {
+      "uc": "UC-07",
+      "primary_fr": "FR-07",
+      "title": "Analyze spatial customer activity",
+      "actor": "Manager",
+      "file": "UC-07.mmd",
+      "figure_label": "fig:ssd-07",
+      "estimated_height_cm": 7.91
+    },
+    {
+      "uc": "UC-10",
+      "primary_fr": "FR-10",
+      "title": "Access a role-specific account",
+      "actor": "User (Manager / Employee)",
+      "file": "UC-10.mmd",
+      "figure_label": "fig:ssd-10",
+      "estimated_height_cm": 13.44
+    },
+    {
+      "uc": "UC-11",
+      "primary_fr": "FR-11",
+      "title": "Monitor camera observations",
+      "actor": "Manager",
+      "file": "UC-11.mmd",
+      "figure_label": "fig:ssd-11",
+      "estimated_height_cm": 10.01
+    },
+    {
+      "uc": "UC-12",
+      "primary_fr": "FR-12",
+      "title": "Review manager analytics",
+      "actor": "Manager",
+      "file": "UC-12.mmd",
+      "figure_label": "fig:ssd-12",
+      "estimated_height_cm": 10.21
+    },
+    {
+      "uc": "UC-13",
+      "primary_fr": "FR-13",
+      "title": "Review personal workspace",
+      "actor": "Employee",
+      "file": "UC-13.mmd",
+      "figure_label": "fig:ssd-13",
+      "estimated_height_cm": 10.01
+    },
+    {
+      "uc": "UC-17",
+      "primary_fr": "FR-17",
+      "title": "Generate an insight report",
+      "actor": "Manager",
+      "file": "UC-17.mmd",
+      "figure_label": "fig:ssd-17",
+      "estimated_height_cm": 12.36
+    },
+    {
+      "uc": "UC-18",
+      "primary_fr": "FR-18",
+      "title": "Manage operational alerts",
+      "actor": "Manager",
+      "file": "UC-18.mmd",
+      "figure_label": "fig:ssd-18",
+      "estimated_height_cm": 12.11
+    },
+    {
+      "uc": "UC-19",
+      "primary_fr": "FR-19",
+      "title": "Inspect system status",
+      "actor": "Manager",
+      "file": "UC-19.mmd",
+      "figure_label": "fig:ssd-19",
+      "estimated_height_cm": 10.19
+    },
+    {
+      "uc": "UC-20",
+      "primary_fr": "FR-20",
+      "title": "Manage personal settings",
+      "actor": "User (Manager / Employee)",
+      "file": "UC-20.mmd",
+      "figure_label": "fig:ssd-20",
+      "estimated_height_cm": 12.31
+    },
+    {
+      "uc": "UC-29",
+      "primary_fr": "FR-29",
+      "title": "Configure store operations",
+      "actor": "Manager",
+      "file": "UC-29.mmd",
+      "figure_label": "fig:ssd-29",
+      "estimated_height_cm": 10.01
+    },
+    {
+      "uc": "UC-34",
+      "primary_fr": "FR-34",
+      "title": "Evaluate analytical outputs",
+      "actor": "Operator / project team",
+      "file": "UC-34.mmd",
+      "figure_label": "fig:ssd-34",
+      "estimated_height_cm": 8.09
+    },
+    {
+      "uc": "UC-35",
+      "primary_fr": "FR-35",
+      "title": "Assess staff availability and coverage",
+      "actor": "Manager",
+      "file": "UC-35.mmd",
+      "figure_label": "fig:ssd-35",
+      "estimated_height_cm": 7.91
+    },
+    {
+      "uc": "UC-36",
+      "primary_fr": "FR-36",
+      "title": "Receive and update an aisle assignment",
+      "actor": "Employee",
+      "file": "UC-36.mmd",
+      "figure_label": "fig:ssd-36",
+      "estimated_height_cm": 14.14
+    },
+    {
+      "uc": "UC-37",
+      "primary_fr": "FR-37",
+      "title": "Ask an analytics question",
+      "actor": "Manager",
+      "file": "UC-37.mmd",
+      "figure_label": "fig:ssd-37",
+      "estimated_height_cm": 10.06
+    }
+  ],
+  "events": {
+    "1": {
+      "actor": "Operator / project team",
+      "events": [
+        [
+          "C",
+          "analyzeVideo(video, configuration, outputLocation)"
+        ],
+        [
+          "A",
+          "input and required models are valid"
+        ],
+        [
+          "R",
+          "processingAccepted(runId, samplingConfiguration)"
+        ],
+        [
+          "R",
+          "analysisCompleted(runId, coverage, diagnosticOutputLocations)"
+        ],
+        [
+          "E",
+          "invalid input, missing model or interrupted processing"
+        ],
+        [
+          "R",
+          "analysisFailed(reason, partialOutputStatus)"
+        ],
+        [
+          "Z"
+        ],
+        [
+          "N",
+          "A processed sample with no people is a valid empty observation; it is distinct from a failed frame."
+        ]
+      ]
+    },
+    "2": {
+      "actor": "Manager",
+      "events": [
+        [
+          "C",
+          "requestEntranceFootfall(interval, entranceSource)"
+        ],
+        [
+          "A",
+          "crossing configuration and observation coverage support counts"
+        ],
+        [
+          "R",
+          "footfallCounts(entries, exits, netChange, coverage)"
+        ],
+        [
+          "O",
+          "initial occupancy is known"
+        ],
+        [
+          "R",
+          "absoluteOccupancy(initialOccupancy + netChange)"
+        ],
+        [
+          "Z"
+        ],
+        [
+          "E",
+          "boundary, role evidence or source coverage is incomplete"
+        ],
+        [
+          "R",
+          "partialOrUnavailableCounts(reason, supportedPeriod)"
+        ],
+        [
+          "Z"
+        ],
+        [
+          "N",
+          "Unknown initial occupancy permits net change, not an invented whole-store count."
+        ]
+      ]
+    },
+    "4": {
+      "actor": "Manager",
+      "events": [
+        [
+          "C",
+          "requestServiceAnalysis(interval, zone)"
+        ],
+        [
+          "A",
+          "supported role and track observations are available"
+        ],
+        [
+          "R",
+          "serviceEvidence(interactions, durations, verdicts, coverage)"
+        ],
+        [
+          "O",
+          "entry history and store policy support further timing"
+        ],
+        [
+          "R",
+          "serviceTiming(approachTimes, potentiallyUnattendedEvents)"
+        ],
+        [
+          "Z"
+        ],
+        [
+          "E",
+          "unknown roles, occlusion or missing history"
+        ],
+        [
+          "R",
+          "partialServiceEvidence(unsupportedMetrics, reasons)"
+        ],
+        [
+          "Z"
+        ],
+        [
+          "N",
+          "Judge off, unavailable or failing retains an unverified proximity fallback; possible service is not verified assistance."
+        ]
+      ]
+    },
+    "7": {
+      "actor": "Manager",
+      "events": [
+        [
+          "C",
+          "requestSpatialActivity(interval, zone)"
+        ],
+        [
+          "A",
+          "valid zones and adequate observation coverage"
+        ],
+        [
+          "R",
+          "spatialActivity(paths, dwell, occupancyMap, hotGrayZones, coverage)"
+        ],
+        [
+          "E",
+          "invalid zone or inadequate coverage"
+        ],
+        [
+          "R",
+          "unavailableSpatialFindings(reason, supportedScope)"
+        ],
+        [
+          "Z"
+        ],
+        [
+          "N",
+          "Unsupported cross-camera identity cannot produce a whole-store path; absent coverage is not low activity."
+        ]
+      ]
+    },
+    "10": {
+      "actor": "User (Manager / Employee)",
+      "events": [
+        [
+          "O",
+          "account activation is needed"
+        ],
+        [
+          "C",
+          "activateAccount(invitationToken, permittedRegistrationDetails)"
+        ],
+        [
+          "R",
+          "activationResult(accountStatus, validationErrors)"
+        ],
+        [
+          "Z"
+        ],
+        [
+          "C",
+          "login(credentials, requestedRole)"
+        ],
+        [
+          "A",
+          "credentials, active account and assigned role are valid"
+        ],
+        [
+          "R",
+          "authenticatedSession(permittedWorkspace)"
+        ],
+        [
+          "C",
+          "logout()"
+        ],
+        [
+          "R",
+          "sessionEnded()"
+        ],
+        [
+          "E",
+          "invalid credentials, role mismatch or expired access"
+        ],
+        [
+          "R",
+          "accessDenied(reason)"
+        ],
+        [
+          "Z"
+        ],
+        [
+          "N",
+          "Activation/login errors create no authorized session; a selected role cannot elevate the account."
+        ]
+      ]
+    },
+    "11": {
+      "actor": "Manager",
+      "events": [
+        [
+          "C",
+          "openCameraMonitoring()"
+        ],
+        [
+          "R",
+          "configuredSources(availability)"
+        ],
+        [
+          "C",
+          "selectCamera(sourceId)"
+        ],
+        [
+          "A",
+          "source and analytical observations are available"
+        ],
+        [
+          "R",
+          "cameraView(availableOverlays, observedAt, processedAt)"
+        ],
+        [
+          "E",
+          "offline source, stale output or missing overlays"
+        ],
+        [
+          "R",
+          "cameraAvailability(state, lastObservation, overlayLimitations)"
+        ],
+        [
+          "Z"
+        ],
+        [
+          "N",
+          "Observation freshness is explicit; the target view does not imply guaranteed real-time processing."
+        ]
+      ]
+    },
+    "12": {
+      "actor": "Manager",
+      "events": [
+        [
+          "C",
+          "requestManagerAnalytics(interval, zone)"
+        ],
+        [
+          "A",
+          "authorized valid filters"
+        ],
+        [
+          "R",
+          "analyticsViews(customer, staff, interaction, spatial, coverage)"
+        ],
+        [
+          "E",
+          "invalid filter, no records or unauthorized scope"
+        ],
+        [
+          "R",
+          "validationOrAvailabilityResponse(reason, partialMetrics)"
+        ],
+        [
+          "Z"
+        ],
+        [
+          "O",
+          "manager changes the selection"
+        ],
+        [
+          "C",
+          "requestManagerAnalytics(updatedInterval, updatedZone)"
+        ],
+        [
+          "R",
+          "updatedViews(coverageContext)"
+        ],
+        [
+          "Z"
+        ]
+      ]
+    },
+    "13": {
+      "actor": "Employee",
+      "events": [
+        [
+          "C",
+          "openPersonalWorkspace()"
+        ],
+        [
+          "A",
+          "authenticated account and permitted own-record scope"
+        ],
+        [
+          "R",
+          "ownWorkspace(shift, assignedZone, currentTasks, updates)"
+        ],
+        [
+          "C",
+          "requestOwnActivityHistory(interval)"
+        ],
+        [
+          "R",
+          "ownActivityHistory(records, coverageOrEmptyState)"
+        ],
+        [
+          "E",
+          "expired session or another employee requested"
+        ],
+        [
+          "R",
+          "accessDeniedOrLoginRequired()"
+        ],
+        [
+          "Z"
+        ],
+        [
+          "N",
+          "Task status changes belong to UC-36; no composite employee score is required."
+        ]
+      ]
+    },
+    "17": {
+      "actor": "Manager",
+      "events": [
+        [
+          "C",
+          "requestInsightReport(interval, sections)"
+        ],
+        [
+          "A",
+          "permitted metrics and narration are available"
+        ],
+        [
+          "R",
+          "reportPreview(metrics, groundedNarrative, dispatchContext, limitations)"
+        ],
+        [
+          "E",
+          "incomplete evidence or narration unavailable"
+        ],
+        [
+          "R",
+          "partialOrMetricsOnlyPreview(missingSections, explanation)"
+        ],
+        [
+          "Z"
+        ],
+        [
+          "C",
+          "exportReportPDF(reportSelection)"
+        ],
+        [
+          "A",
+          "export succeeds"
+        ],
+        [
+          "R",
+          "reportPDF(file)"
+        ],
+        [
+          "E",
+          "export unavailable or failed"
+        ],
+        [
+          "R",
+          "exportFailure(reason, retainedSelection)"
+        ],
+        [
+          "Z"
+        ]
+      ]
+    },
+    "18": {
+      "actor": "Manager",
+      "events": [
+        [
+          "C",
+          "requestAlerts(status, categoryFilters)"
+        ],
+        [
+          "R",
+          "alertFeed(matchingAlerts)"
+        ],
+        [
+          "C",
+          "inspectAlert(alertId)"
+        ],
+        [
+          "R",
+          "alertContext(evidence, relatedAssignments)"
+        ],
+        [
+          "C",
+          "resolveAlert(alertId)"
+        ],
+        [
+          "A",
+          "authorized current record and successful save"
+        ],
+        [
+          "R",
+          "resolvedAlert(resolvedBy, resolvedAt)"
+        ],
+        [
+          "E",
+          "stale record, denied access or save failure"
+        ],
+        [
+          "R",
+          "resolutionOutcome(currentState, error)"
+        ],
+        [
+          "Z"
+        ],
+        [
+          "N",
+          "Alert resolution does not authorize or gate employee dispatch."
+        ]
+      ]
+    },
+    "19": {
+      "actor": "Manager",
+      "events": [
+        [
+          "C",
+          "requestSystemStatus()"
+        ],
+        [
+          "R",
+          "componentStatus(health, availableThroughput, activity, timestamps)"
+        ],
+        [
+          "C",
+          "inspectComponent(componentId)"
+        ],
+        [
+          "A",
+          "measured telemetry is available"
+        ],
+        [
+          "R",
+          "componentDetails(measures, recordedAt)"
+        ],
+        [
+          "E",
+          "telemetry missing, stale, inactive or failed"
+        ],
+        [
+          "R",
+          "explicitStatus(state, unavailableMeasures, reason)"
+        ],
+        [
+          "Z"
+        ],
+        [
+          "N",
+          "The seven agreed target components are distinguished from shared tools; hard-coded/demo values are labelled."
+        ]
+      ]
+    },
+    "20": {
+      "actor": "User (Manager / Employee)",
+      "events": [
+        [
+          "C",
+          "openPersonalSettings()"
+        ],
+        [
+          "R",
+          "permittedProfileAndPreferences()"
+        ],
+        [
+          "C",
+          "savePersonalSettings(allowedFields, notificationPreferences)"
+        ],
+        [
+          "A",
+          "authorized valid changes and successful persistence"
+        ],
+        [
+          "R",
+          "savedPersonalSettings(readBackValues)"
+        ],
+        [
+          "E",
+          "invalid fields, duplicate email, denied access or save failure"
+        ],
+        [
+          "R",
+          "saveRejected(reason, previousSavedState)"
+        ],
+        [
+          "Z"
+        ],
+        [
+          "O",
+          "password change is requested"
+        ],
+        [
+          "C",
+          "changePassword(requiredCredentials, newPassword)"
+        ],
+        [
+          "R",
+          "passwordChangeResult(policyValidation, savedStatus)"
+        ],
+        [
+          "Z"
+        ]
+      ]
+    },
+    "29": {
+      "actor": "Manager",
+      "events": [
+        [
+          "C",
+          "requestStoreSettings()"
+        ],
+        [
+          "R",
+          "currentCameraZoneRosterAndPolicySettings()"
+        ],
+        [
+          "C",
+          "saveStoreConfiguration(cameraZoneRosterOrPolicyChanges)"
+        ],
+        [
+          "A",
+          "valid references, geometry, values and permissions"
+        ],
+        [
+          "R",
+          "savedConfiguration(updatedSettings, effectiveScope)"
+        ],
+        [
+          "E",
+          "invalid source, employee, geometry, roster conflict or failed save"
+        ],
+        [
+          "R",
+          "configurationRejected(reason, previousValidSettings)"
+        ],
+        [
+          "Z"
+        ],
+        [
+          "N",
+          "Subsequent supported processing uses saved configuration; consumers not yet integrated remain explicit."
+        ]
+      ]
+    },
+    "34": {
+      "actor": "Operator / project team",
+      "events": [
+        [
+          "C",
+          "evaluateOutputs(predictions, annotations, benchmarkConfiguration)"
+        ],
+        [
+          "A",
+          "compatible labelled inputs and supported metrics"
+        ],
+        [
+          "R",
+          "evaluationResults(accuracy, speed, coverage, configuration, outputLocations)"
+        ],
+        [
+          "E",
+          "missing or mismatched labels, empty set or failed processing"
+        ],
+        [
+          "R",
+          "evaluationLimitations(unavailableMetrics, partialResults, reason)"
+        ],
+        [
+          "Z"
+        ],
+        [
+          "N",
+          "Unlabelled clips support speed/output observations only; detector metrics do not establish footfall, dwell or task accuracy."
+        ]
+      ]
+    },
+    "35": {
+      "actor": "Manager",
+      "events": [
+        [
+          "C",
+          "requestStaffAvailabilityAndCoverage(interval, zones)"
+        ],
+        [
+          "A",
+          "supported roster, task, interaction and linked observation context"
+        ],
+        [
+          "R",
+          "staffAssessment(availability, activity, sustainedCoverageGaps, evidence)"
+        ],
+        [
+          "E",
+          "unknown account-track link, missing task/break context or occlusion"
+        ],
+        [
+          "R",
+          "partialStaffAssessment(unknownStates, observationCoverage, reasons)"
+        ],
+        [
+          "Z"
+        ],
+        [
+          "N",
+          "Stationary assistance is not automatically idle; an unobserved area is not automatically unstaffed."
+        ]
+      ]
+    },
+    "36": {
+      "actor": "Employee",
+      "events": [
+        [
+          "N",
+          "Trigger: supported aisle staffing need arrives. The system checks eligible accounts, current tasks, freshness and source-zone policy; no manager approval gate."
+        ],
+        [
+          "A",
+          "eligible employee and supported direct delivery"
+        ],
+        [
+          "P",
+          "aisleAssignment(taskId, targetAisle, instruction, reason)"
+        ],
+        [
+          "C",
+          "viewOwnAssignment(taskId)"
+        ],
+        [
+          "R",
+          "assignmentDetails(currentState, dueAt)"
+        ],
+        [
+          "O",
+          "employee acknowledges or reports progress"
+        ],
+        [
+          "C",
+          "updateOwnAssignment(taskId, acknowledged / inProgress / completed)"
+        ],
+        [
+          "R",
+          "recordedTaskStatus(state, actor, time)"
+        ],
+        [
+          "Z"
+        ],
+        [
+          "E",
+          "no eligible account, policy conflict, stale evidence or delivery failure"
+        ],
+        [
+          "N",
+          "Record unresolved need and explicit dispatch/delivery outcome; no unsafe or duplicate instruction is promised."
+        ],
+        [
+          "Z"
+        ],
+        [
+          "N",
+          "Current API state is in_progress; declined, expired and cancelled are also accepted. Stored delivered is not proof of receipt, arrival or completion."
+        ]
+      ]
+    },
+    "37": {
+      "actor": "Manager",
+      "events": [
+        [
+          "C",
+          "askAnalyticsQuestion(question, interval, zone)"
+        ],
+        [
+          "A",
+          "authorized and sufficiently specified question with evidence"
+        ],
+        [
+          "R",
+          "analyticsAnswer(figures, interval, sources, limitations)"
+        ],
+        [
+          "E",
+          "ambiguous request"
+        ],
+        [
+          "R",
+          "clarificationRequest(missingContext)"
+        ],
+        [
+          "E",
+          "missing evidence, unauthorized retrieval or LLM failure"
+        ],
+        [
+          "R",
+          "answerUnavailable(reason, permittedEvidenceOnly)"
+        ],
+        [
+          "Z"
+        ],
+        [
+          "N",
+          "Question answering does not silently assign tasks or change store settings."
+        ]
+      ]
+    }
+  }
+}

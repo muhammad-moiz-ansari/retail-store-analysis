@@ -1,11 +1,21 @@
 # RetailPulse — Complete Future-Work Implementation Plan
 
+**Database decision (11 November 2026):** PostgreSQL is the shared runtime database for application, event and identity data. Follow [setup and legacy import](POSTGRESQL_SETUP.md) for the destination cutover. Earlier phase notes describe their checkpoint.
+
+## Current decision — 11 November 2026
+
+The [combined team plan](RetailPulse_FYP2_Implementation_Plan.md) governs current work and ownership. Implement camera/CV first, then register the supplied map, then render live role occupancy and confirmed-interaction layers. Exactly four dynamic occupancy categories are allowed: **Customer, Employee, Customer–employee both, No one**. They are not fixed permitted-role polygons. Invalid/missing/unknown observation is separate quality metadata, never a fifth category or a false No one. Historical z1–z6, staff zones, queue/counter geometries and hot/gray terminology below are legacy technical references, not additional category requirements. No existing runtime/schema/fixture has been migrated by this documentation update.
+
 ## Context
 
+**Current dashboard work (11 Nov 2026):** Moiz's M-UI-P1/P2/P3 provider/fixture/configured-backend connection is implemented with scoped existing readers, active-account and server-membership checks, source quality/freshness and explicit preview selection. Regression, lint/typecheck/build and synthetic actual-login Chrome integration passed. Actual verified config/CV/feed/deployment and business acceptance remain Saqib/Ruhab dependencies. See PLAN/PROGRESS/PENDING, CONTRACTS and DASHBOARD_BACKEND_SETUP.md. Do not mark the historical summary module, maps, Ask/graph HTTP/durable traces, real business agents or deployment complete from this synthetic integration evidence. PostgreSQL now serves the dashboard readers.
+
 `FYP Report-main.pdf` lists unfinished work in three places: the out-of-scope list (§1.6), current limitations (§8.11) and the Remaining FYP Plan (Ch. 9). Requirements are tracked in the FR/TC tables (§4.7–4.8, App. C).
-`docs/fyp2-plan/` already covers part of this (Steps 0–4: model consolidation, analytics, dashboard binding, alerts, evaluation). It explicitly **leaves out** the out-of-scope items, the narration/query agents, report export and the employee-linkage work. None of Steps 0–4 is implemented yet (`backend/interaction/analytics.py` does not exist; `yolov8n.pt` is still referenced).
+`docs/fyp2-plan/` already covers part of this (Steps 0–4: model consolidation, analytics, dashboard binding, alerts, evaluation). It explicitly **leaves out** the out-of-scope items, the narration/query agents, report export and the employee-linkage work. A0 model consolidation is implemented: COCO tracks and `best.pt` labels roles; see `MODELS.md` and `interaction/pipeline.py`/`role_classifier.py`. The remaining summary/dashboard steps are separate from the existing event-store feeds. Saqib's B0/B4 event code and Moiz's typed contracts, five read-only tools/registry and callable LangGraph/trace foundation and fake-verified internal operational adapter now exist; this does not complete the planned summary module, real business agents, public/internal producer auth, real assignment/idempotency/voice delivery, live-provider evaluation or frontend binding.
 
 This plan covers **every** item. Phase A reuses the existing fyp2-plan steps and adds the details they leave open. Phases B–D cover everything else.
+
+Current owner-specific implementation, verification and blockers are maintained in [PROGRESS.md](PROGRESS.md) and [PENDING.md](PENDING.md), with responsibilities in [PLAN.md](PLAN.md). For Moiz's tool tasks, generated fixture/check outputs use ignored `data/outputs/moiz-phase1/`, `data/outputs/moiz-phase2/` `data/outputs/moiz-phase3/` or `data/outputs/moiz-phase4/`; no `Report/` edits or report-evidence generation are authorized. The user separately authorized committing pre-existing report contents without editing them. The broader guides below retain future work rather than expanding this phase.
 
 ### Ground rules (apply to every step)
 - Plain logic over the existing tracks first. A new model is allowed only in Phase D, and only where the report itself says a model is needed (depth, optional re-ID upgrade). Each new model needs a benchmark showing it beats the logic-only baseline.

@@ -4,7 +4,7 @@
 Build the application platform and data services that later vision analytics plug into, secure it, and demonstrate person/role analysis and interaction detection.
 
 \section{Selected Use Cases / Features}
-UC-01--UC-05, UC-08--UC-11, UC-13 and the operator-facing UC-14 (Chapter~\ref{ch:req}), covering the application and person-analysis features and the additional FR-21--FR-28 floor-distance prototype. The floor-distance prototype has since been descoped and removed from the current branch (commit \texttt{8c3a6fe}); its sections below are kept as historical evidence.
+The revised baseline in Chapter~\ref{ch:req} links current video-analysis and interaction evidence to UC-01/FR-01 and UC-04/FR-04, account access to UC-10/FR-10, representative monitoring/analytics/workspace views to UC-11--UC-13 and benchmarking to UC-34/FR-34. These are evidence subsets, not completion claims for all 17 target capabilities. Former FR-21--FR-28 and old UC-14 describe the retired floor prototype only, retained in Appendix~\ref{app:req-history} and the explicitly historical sections below.
 
 \section{Design}
 The design follows Chapter~\ref{ch:design}: a Next.js frontend with a server-side proxy, a FastAPI service for application and \texttt{/camera/*} workflows, SQLite for application records, and local person-distance diagnostics.
@@ -196,6 +196,9 @@ Figures~\ref{fig:floor-preview}--\ref{fig:floor-map} show actual local prototype
 \caption{Approximate top-down person-position proxies in the reference snapshot}
 \label{fig:floor-map}
 \end{figure}
+
+\section{Target Architecture and Iteration Boundary}
+The seven agreed agent/coordinator names in Chapter~\ref{ch:design} describe the target design. Perception algorithms are shared tools; they are not extra business agents. Current account/alert/task endpoints and the interaction CLI provide partial foundations. Direct account-based dispatch already has a backend path, while vision-trigger integration, reliable track-account linking, staff coverage protection, Query Agent retrieval and complete reporting remain unverified or planned. No manager approval step is introduced. Historical demo scores are UI data, not a mandatory staff-ranking requirement.
 
 \section{Iteration Outcome}
 Iteration 1 covers the application platform, role-aware access, person/role analysis, interaction cues and the distance-estimation prototypes. The vision-derived dashboard metrics still use prototype data, and binding them to real agent output is the first goal of Iteration 2.
