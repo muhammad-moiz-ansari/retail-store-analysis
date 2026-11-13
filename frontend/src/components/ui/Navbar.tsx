@@ -146,6 +146,7 @@ export function Navbar({ authenticated = false, role = "Manager" }: NavbarProps)
               return (
                 <Link
                   key={link.href}
+                  aria-current={isActive ? "page" : undefined}
                   href={link.href}
                   ref={(el) => {
                     linkRefs.current[index] = el;
@@ -209,6 +210,8 @@ export function Navbar({ authenticated = false, role = "Manager" }: NavbarProps)
           className="min-[1090px]:hidden w-[38px] h-[38px] flex flex-col items-center justify-center gap-[4px] border border-border bg-surface rounded"
           style={{ borderWidth: "1.5px" }}
           aria-label="Toggle menu"
+          aria-expanded={mobileMenuOpen}
+          aria-controls="public-mobile-navigation"
         >
           <span
             className={[
@@ -237,6 +240,8 @@ export function Navbar({ authenticated = false, role = "Manager" }: NavbarProps)
 
       {/* ── Mobile Dropdown Menu ── */}
       <div
+        id="public-mobile-navigation"
+        inert={!mobileMenuOpen}
         className={[
           "min-[1090px]:hidden overflow-hidden transition-all duration-350 ease-in-out bg-surface-alt border-t border-border-soft",
           mobileMenuOpen ? "max-h-[500px]" : "max-h-0",
@@ -252,6 +257,7 @@ export function Navbar({ authenticated = false, role = "Manager" }: NavbarProps)
           return (
             <Link
               key={link.href}
+              aria-current={isActive ? "page" : undefined}
               href={link.href}
               onClick={() => setMobileMenuOpen(false)}
               className={[

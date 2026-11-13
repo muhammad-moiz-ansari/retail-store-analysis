@@ -4,7 +4,7 @@ import React, { useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "./AuthProvider";
 
-const MANAGER_ROUTES = [
+export const MANAGER_ROUTES = [
   "/dashboard",
   "/customer-info",
   "/employee-info",
@@ -16,10 +16,10 @@ const MANAGER_ROUTES = [
   "/camera-handoff",
   "/compare-people",
 ];
-const EMPLOYEE_ROUTES = ["/employee-home", "/my-performance", "/employee"];
+export const EMPLOYEE_ROUTES = ["/employee-home", "/my-performance", "/employee"];
 const SHARED_AUTHENTICATED_ROUTES = ["/profile"];
 
-function matchesRoute(pathname: string, routes: string[]) {
+export function matchesRoute(pathname: string, routes: string[]) {
   return routes.some((route) => pathname === route || pathname.startsWith(`${route}/`));
 }
 
@@ -51,7 +51,7 @@ export function RouteAccessGuard({ children }: { children: React.ReactNode }) {
         (needsEmployeeSession && role === "Employee")));
 
   if (!mayView) {
-    return <div className="flex-1 bg-bg" aria-live="polite" aria-label="Checking access" />;
+    return <p className="mx-auto max-w-lg p-6 text-sm text-text-muted" role="status">Checking access…</p>;
   }
 
   return <>{children}</>;
