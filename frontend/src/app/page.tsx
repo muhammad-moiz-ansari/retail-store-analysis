@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { PublicReveal } from "@/components/ui/PublicReveal";
+import { EffectLink, HoloPreview } from "@/components/ui/PointerEffect";
 import styles from "./public-pages.module.css";
 
 const activity = [
@@ -16,7 +17,7 @@ function DashboardPreview() {
   const peak = Math.max(...activity.map((hour) => hour.interactions));
 
   return (
-    <figure className={styles.preview}>
+    <HoloPreview className={`${styles.preview} ${styles.holo}`}>
       <figcaption className={styles.previewCaption}>
         <span className="font-heading font-bold">Store overview</span>
         <span className={styles.sample}>Sample data</span>
@@ -47,7 +48,7 @@ function DashboardPreview() {
           </div>
         </div>
       </div>
-    </figure>
+    </HoloPreview>
   );
 }
 
@@ -63,7 +64,7 @@ export default function LandingPage() {
             RetailPulse helps retail teams review customer and employee activity from camera observations and coordinate aisle assignments from the same workspace.
           </p>
           <div className={styles.actions}>
-            <Link href="/login" className={styles.primary}>Sign in</Link>
+            <EffectLink href="/login" className={`${styles.primary} ${styles.specular}`}>Sign in</EffectLink>
             <a href="#how-it-works" className={styles.secondary}>See how it works <span aria-hidden="true">↓</span></a>
           </div>
         </div>
@@ -74,11 +75,11 @@ export default function LandingPage() {
         <PublicReveal>
           <h2 id="workflow-title" className={styles.sectionTitle}>From store activity to aisle assignments</h2>
           <div className={styles.cardGrid}>
-            <article className={styles.card}>
+            <article className={`${styles.card} ${styles.featureCard}`}>
               <h3>Review store activity</h3>
               <p>Managers can review recorded customer–employee interactions and see how activity varies across mapped areas when observation data is available.</p>
             </article>
-            <article className={styles.card}>
+            <article className={`${styles.card} ${styles.featureCard}`}>
               <h3>Coordinate floor coverage</h3>
               <p>Managers can review and assign aisle tasks. Employees can open their workspace to see their assignments and update task status.</p>
             </article>
@@ -89,12 +90,12 @@ export default function LandingPage() {
 
       <section className={styles.section} aria-labelledby="join-title">
         <PublicReveal>
-          <div className={styles.callout}>
+          <div className={`${styles.callout} ${styles.invite}`}>
             <div>
               <h2 id="join-title" className={styles.sectionTitle}>Have an invite?</h2>
               <p>Use your invite token to create your RetailPulse account.</p>
             </div>
-            <Link href="/signup" className={styles.primary}>Create an account</Link>
+            <EffectLink href="/signup" className={`${styles.primary} ${styles.magnetic}`}>Create an account</EffectLink>
           </div>
         </PublicReveal>
       </section>

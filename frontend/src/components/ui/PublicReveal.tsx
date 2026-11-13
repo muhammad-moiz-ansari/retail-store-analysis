@@ -21,7 +21,7 @@ export function PublicReveal({ children }: { children: ReactNode }) {
 
       animation = element.animate(
         [{ opacity: 0.55, transform: "translateY(14px)" }, { opacity: 1, transform: "translateY(0)" }],
-        { duration: 340, easing: "ease-out" },
+        { delay: 110, duration: 420, easing: "ease-out", fill: "backwards" },
       );
     });
 

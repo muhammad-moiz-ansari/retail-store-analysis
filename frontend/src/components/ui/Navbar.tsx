@@ -1,6 +1,8 @@
 "use client";
 
 import { ThemeToggle } from "./ThemeToggle";
+import { EffectLink } from "./PointerEffect";
+import publicStyles from "../../app/public-pages.module.css";
 
 import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
@@ -11,7 +13,7 @@ import { RetroButton } from "./RetroButton";
 import { useAuth } from "@/components/auth/AuthProvider";
 
 const publicAction = "inline-flex min-h-11 items-center justify-center rounded-lg border px-3 text-sm font-semibold";
-const signInAction = `${publicAction} border-accent text-accent hover:bg-surface`;
+const signInAction = `${publicAction} ${publicStyles.specular} border-accent text-accent hover:bg-surface`;
 const signUpAction = `${publicAction} border-transparent bg-accent text-on-accent hover:bg-accent-hover`;
 
 interface NavbarProps {
@@ -127,7 +129,7 @@ export function Navbar({ authenticated = false, role = "Manager" }: NavbarProps)
   return (
     <header
       ref={navbarRef}
-      className="sticky top-0 z-50 bg-surface-alt border-b border-border-soft select-none"
+      className="translucent-nav sticky top-0 z-50 border-b border-border-soft select-none"
       style={{ borderBottomWidth: "1.5px" }}
     >
       {/* ── Desktop & Mobile Container ── */}
@@ -196,7 +198,7 @@ export function Navbar({ authenticated = false, role = "Manager" }: NavbarProps)
         ) : (
           // Not authenticated: Sign In + Get Started
           <div className="hidden min-[1090px]:flex items-center gap-3 xl:w-[200px] w-auto justify-end shrink-0">
-            <Link href="/login" className={signInAction}>Sign in</Link>
+            <EffectLink href="/login" className={signInAction}>Sign in</EffectLink>
             <Link href="/signup" className={signUpAction}>Sign up</Link>
           </div>
         )}
@@ -284,7 +286,7 @@ export function Navbar({ authenticated = false, role = "Manager" }: NavbarProps)
           </div>
         ) : (
           <div className="py-3 px-5 border-t border-border-soft flex flex-col gap-2">
-            <Link href="/login" className={signInAction}>Sign in</Link>
+            <EffectLink href="/login" className={signInAction}>Sign in</EffectLink>
             <Link href="/signup" className={signUpAction}>Sign up</Link>
           </div>
         )}

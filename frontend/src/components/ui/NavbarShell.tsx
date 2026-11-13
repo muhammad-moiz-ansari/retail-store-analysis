@@ -54,13 +54,13 @@ export function NavbarShell({ children }: { children: React.ReactNode }) {
 
   return <div className={manager ? "min-h-screen lg:grid lg:grid-cols-[15rem_minmax(0,1fr)]" : "min-h-screen"}>
     {skip}
-    {manager && <aside className="workspace-sidebar sticky top-0 hidden h-dvh flex-col overflow-y-auto bg-sidebar p-4 lg:flex">
+    {manager && <aside className="workspace-sidebar translucent-nav sticky top-0 hidden h-dvh flex-col overflow-y-auto p-4 lg:flex">
       <div className="flex items-center justify-between gap-2 px-3 pb-5">{brand}<ThemeToggle /></div>
       {navigation}
       <div className="mt-auto border-t border-white/20 pt-3">{logout}</div>
     </aside>}
     <div className="min-w-0">
-      <header className={`workspace-sidebar sticky top-0 z-40 bg-sidebar px-4 py-3 text-on-sidebar ${manager ? "lg:hidden" : ""}`}>
+      <header className={`workspace-sidebar translucent-nav sticky top-0 z-40 px-4 py-3 text-on-sidebar ${manager ? "lg:hidden" : ""}`}>
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-3">
           {brand}
           <div className="flex items-center gap-2">

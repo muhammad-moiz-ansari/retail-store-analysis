@@ -61,7 +61,7 @@ export function Footer() {
     : PUBLIC_QUICK_LINKS;
 
   return (
-    <footer className="bg-surface-alt border-t border-border-soft mt-auto">
+    <footer className="relative mt-auto border-t border-border-soft bg-surface-alt shadow-[0_-8px_24px_-12px_rgb(5_10_28_/_28%)]">
       {/* ── Three-column content ── */}
       <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-10">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">

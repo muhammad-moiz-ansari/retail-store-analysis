@@ -268,3 +268,43 @@
   .primary,
   .secondary { transition: none; }
 }
+
+/* Pointer-driven foil and specular highlights keep the underlying content readable. */
+.holo, .specular { position: relative; isolation: isolate; }
+.specular { overflow: hidden; }
+.holo::after, .specular::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 180ms ease-out;
+}
+.holo::after {
+  background: radial-gradient(ellipse at calc(50% + var(--pointer-x, 0) * 100%) calc(50% + var(--pointer-y, 0) * 100%), var(--color-cyan), transparent 65%),
+    linear-gradient(115deg, transparent 25%, var(--color-accent-soft), var(--color-coral), transparent 75%);
+}
+.specular::after {
+  border: 1px solid color-mix(in srgb, currentColor 65%, transparent);
+  background: radial-gradient(ellipse at calc(50% + var(--pointer-x, 0) * 100%) calc(50% + var(--pointer-y, 0) * 100%), color-mix(in srgb, currentColor 30%, transparent), transparent 75%);
+}
+.featureCard, .invite {
+  box-shadow: 0 14px 32px -21px var(--color-sidebar);
+}
+@media (hover: hover) and (pointer: fine) {
+  .holo:hover::after { opacity: 0.12; }
+  .specular:hover::after { opacity: 0.38; }
+  .featureCard:hover { box-shadow: 0 20px 38px -18px var(--color-sidebar); }
+}
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .holo, .featureCard, .magnetic { transition: transform 180ms ease-out, box-shadow 180ms ease-out, background-color 150ms; }
+  .holo:hover {
+    transform: perspective(1000px) rotateX(calc(var(--pointer-y, 0) * -5deg)) rotateY(calc(var(--pointer-x, 0) * 5deg));
+  }
+  .featureCard:hover { transform: translateY(-3px); }
+  .magnetic:hover { transform: translate(calc(var(--pointer-x, 0) * 8px), calc(var(--pointer-y, 0) * 6px)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .holo::after, .specular::after { transition: none; }
+}

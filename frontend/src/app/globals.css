@@ -181,3 +181,10 @@ html:has([data-public-shell]) {
     scroll-behavior: smooth;
   }
 }
+
+.translucent-nav {
+  background: color-mix(in srgb, var(--nav-surface, var(--color-surface-alt)) 92%, transparent);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 6px 20px rgb(5 10 28 / 18%);
+}
+.translucent-nav.workspace-sidebar { --nav-surface: var(--color-sidebar); }
