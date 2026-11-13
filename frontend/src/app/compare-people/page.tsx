@@ -136,23 +136,23 @@ export default function ComparePeoplePage() {
       {summary && (
         <section aria-label="Comparison results" className="space-y-4">
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-            <div className="rounded-lg border border-border-soft bg-surface p-4">
+            <div className="workspace-card rounded-lg border border-border-soft bg-surface p-4">
               <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-text-muted">Mode</div>
               <div className="mt-2 text-xl font-bold [overflow-wrap:anywhere]">{result?.count_mode ?? "ratio_verdict"}</div>
             </div>
-            <div className="rounded-lg border border-border-soft bg-surface p-4">
+            <div className="workspace-card rounded-lg border border-border-soft bg-surface p-4">
               <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-text-muted">Valid samples</div>
               <div className="mt-2 text-2xl font-bold text-text">{summary.validSamples}</div>
             </div>
-            <div className="rounded-lg border border-border-soft bg-surface p-4">
+            <div className="workspace-card rounded-lg border border-border-soft bg-surface p-4">
               <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-text-muted">Video 1 total</div>
               <div className="mt-2 text-2xl font-bold text-text">{summary.totalVideo1}</div>
             </div>
-            <div className="rounded-lg border border-border-soft bg-surface p-4">
+            <div className="workspace-card rounded-lg border border-border-soft bg-surface p-4">
               <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-text-muted">Video 2 total</div>
               <div className="mt-2 text-2xl font-bold text-text">{summary.totalVideo2}</div>
             </div>
-            <div className="rounded-lg border border-border-soft bg-surface p-4">
+            <div className="workspace-card rounded-lg border border-border-soft bg-surface p-4">
               <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-text-muted">Common frames</div>
               <div className="mt-2 text-2xl font-bold text-text">{summary.commonFrames}</div>
             </div>

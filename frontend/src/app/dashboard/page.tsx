@@ -78,13 +78,16 @@ export default function DashboardPage() {
             <p className="text-sm text-text-muted">Map analytics unavailable. A registered store map and role/interaction layers have not been connected.</p>
           </ManagerPanel>
         </section>
-        <ManagerPanel title="Ask RetailPulse">
-          <p className="text-sm text-text-muted mb-3">Ask is unavailable until the authenticated Query service is connected.</p>
-          <div className="flex flex-wrap gap-3">
+        <section aria-label="Ask RetailPulse" className="sticky bottom-0 z-20 rounded-xl border border-border-soft bg-surface px-3 py-2 shadow-lg">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <h2 className="text-sm font-semibold">Ask RetailPulse</h2>
+            <p className="text-xs text-text-muted">Unavailable until the Query service is connected.</p>
+          </div>
+          <div className="mt-1.5 flex items-center gap-2">
             <RetroInput aria-label="Ask RetailPulse (unavailable)" placeholder="Ask about store performance" disabled className="flex-1" />
             <RetroButton disabled>Ask</RetroButton>
           </div>
-        </ManagerPanel>
+        </section>
     </ManagerPage>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { ThemeToggle } from "./ThemeToggle";
+import { useState } from "react";
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -35,6 +35,7 @@ export function NavbarShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const { authenticated, role, signOut } = useAuth();
+  const [collapsed, setCollapsed] = useState(false);
   const workspace = matchesRoute(pathname, [...MANAGER_ROUTES, ...EMPLOYEE_ROUTES, "/profile"]);
   const manager = role === "Manager";
   const home = manager ? "/dashboard" : "/employee-home";
@@ -49,23 +50,35 @@ export function NavbarShell({ children }: { children: React.ReactNode }) {
   }
 
   const navigation = <Navigation links={links} pathname={pathname} label={manager ? "Manager navigation" : "Employee navigation"} />;
-  const logout = <button type="button" className="min-h-11 rounded-lg px-3 text-left text-sm text-on-sidebar hover:bg-white/15"
+  const logout = <button type="button" className="min-h-11 w-full rounded-lg px-3 text-left text-sm font-semibold text-[#FFA5AA] hover:bg-[#FFA5AA]/15"
     onClick={async () => { await signOut(); router.push("/"); }}>Log out</button>;
-  const brand = <Link href={home} className="font-heading text-xl font-bold tracking-tight text-on-sidebar">RetailPulse</Link>;
+  const brand = <Link href={home} className="flex shrink-0 items-center gap-2 font-heading text-lg font-bold tracking-tight text-on-sidebar"><NavLogo />RetailPulse</Link>;
 
-  return <div data-employee-shell={!manager ? "" : undefined} className={manager ? "min-h-screen lg:grid lg:grid-cols-[15rem_minmax(0,1fr)]" : "min-h-screen"}>
+  return <div data-employee-shell={!manager ? "" : undefined} data-manager-shell={manager ? "" : undefined}
+    data-sidebar-collapsed={manager && collapsed ? "" : undefined} className={manager ? "manager-shell min-h-screen" : "min-h-screen"}>
     {skip}
-    {manager && <aside className="workspace-sidebar translucent-nav sticky top-0 hidden h-dvh flex-col overflow-y-auto p-4 lg:flex">
-      <div className="flex items-center justify-between gap-2 px-3 pb-5">{brand}<ThemeToggle /></div>
-      {navigation}
-      <div className="mt-auto border-t border-white/20 pt-3">{logout}</div>
+    {manager && <aside className="workspace-sidebar translucent-nav sticky top-0 hidden h-dvh min-w-0 flex-col overflow-x-hidden overflow-y-auto p-4 lg:flex">
+      <div className="flex items-center justify-between gap-1 pb-5">
+        {!collapsed && brand}
+        <button type="button" aria-expanded={!collapsed} aria-controls="manager-sidebar-links"
+          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          onClick={() => setCollapsed(value => !value)}
+          className="grid size-9 shrink-0 place-items-center rounded-lg border border-white/35 text-on-sidebar hover:bg-white/15">
+          <svg aria-hidden="true" viewBox="0 0 24 24" className="size-5 fill-none stroke-current" strokeWidth="1.7">
+            <rect x="3" y="4" width="18" height="16" rx="2" /><path d="M9 4v16" />
+          </svg>
+        </button>
+      </div>
+      <div id="manager-sidebar-links" hidden={collapsed} className="min-w-48 flex-1 flex-col not-[hidden]:flex">
+        {navigation}
+        <div className="mt-auto border-t border-white/20 pt-3">{logout}</div>
+      </div>
     </aside>}
     <div className="min-w-0">
       {manager ? <header className="workspace-sidebar translucent-nav sticky top-0 z-40 px-4 py-3 text-on-sidebar lg:hidden">
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-3">
           {brand}
           <div className="flex items-center gap-2">
-          <ThemeToggle />
           <details key={pathname} className="relative">
             <summary className="flex min-h-11 cursor-pointer items-center rounded-lg border border-white/35 px-3 text-sm">Menu</summary>
             <div className="absolute right-0 top-full mt-2 grid max-h-[70dvh] w-[min(16rem,80vw)] gap-2 overflow-y-auto rounded-xl border border-white/25 bg-sidebar p-2 shadow-lg">
@@ -84,7 +97,6 @@ export function NavbarShell({ children }: { children: React.ReactNode }) {
             className="flex min-h-9 items-center rounded-lg px-3 text-sm hover:bg-white/15 aria-[current=page]:bg-surface-alt aria-[current=page]:text-text">{title}</Link>)}
         </nav>
         <div className="col-start-2 row-start-1 flex items-center justify-self-end gap-2 py-1 md:col-start-3">
-          <ThemeToggle />
           <EmployeeAccountMenu key={pathname} onLogout={async () => { await signOut(); router.push("/"); }} />
         </div>
       </header>}

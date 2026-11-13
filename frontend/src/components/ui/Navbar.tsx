@@ -1,6 +1,5 @@
 "use client";
 
-import { ThemeToggle } from "./ThemeToggle";
 import { EffectLink } from "./PointerEffect";
 import publicStyles from "../../app/public-pages.module.css";
 
@@ -205,7 +204,6 @@ export function Navbar({ authenticated = false, role = "Manager" }: NavbarProps)
         )}
 
         <div className="ml-3 flex shrink-0 items-center gap-2">
-        <ThemeToggle />
         {/* ── Right: Hamburger (mobile only) ── */}
         <button
           type="button"
