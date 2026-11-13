@@ -25,7 +25,9 @@ class IdempotencyConflict(ValueError):
 
 def select_dispatch_employee(conn, target_zone_id: str | None):
     """First eligible employee: active, rostered and available, no open task, and taking them does not drop
-    their own rostered zone below its min_staff (unless that zone is the target). Prefers staff of the target zone.
+    their own rostered zone below its min_staff (unless that zone is the target). Ranked: staff of the target zone, then
+    floaters, then the zone with the most spare staff above its minimum. Adjacency and "mid-interaction" are not inputs yet:
+    there is no store map (MAP-2) and no link from CV tracks to employee accounts.
     shortcut: the roster's shift text ('9 AM - 1 PM') is not checked against the clock; parse it once shifts are structured."""
     return conn.execute(
         """
@@ -37,16 +39,26 @@ def select_dispatch_employee(conn, target_zone_id: str | None):
             AND users.id NOT IN (SELECT employee_id FROM busy)
         ),
         free_per_zone AS (SELECT zone_id, count(DISTINCT id) AS n FROM free GROUP BY zone_id)
-        SELECT free.id
+        SELECT free.id, free.name, free.zone_id, free_per_zone.n - coalesce(zones.min_staff, 0) AS spare
         FROM free
         LEFT JOIN zones ON zones.id = free.zone_id
         LEFT JOIN free_per_zone ON free_per_zone.zone_id = free.zone_id
         WHERE free.zone_id IS NULL OR free.zone_id = %(zone)s OR free_per_zone.n > coalesce(zones.min_staff, 0)
-        ORDER BY CASE WHEN free.zone_id = %(zone)s THEN 0 ELSE 1 END, free.name
+        ORDER BY CASE WHEN free.zone_id = %(zone)s THEN 0 WHEN free.zone_id IS NULL THEN 1 ELSE 2 END,
+                 free_per_zone.n - coalesce(zones.min_staff, 0) DESC, free.name
         LIMIT 1
         """,
         {"active": list(ACTIVE_TASK_STATES), "zone": target_zone_id},
     ).fetchone()
+
+
+def choice_reason(employee, target_zone_id: str | None) -> str:
+    """One line for the manager and the decision log."""
+    if employee["zone_id"] == target_zone_id:
+        return f"{employee['name']}: rostered in this zone, free and available."
+    if employee["zone_id"] is None:
+        return f"{employee['name']}: free floater with no rostered zone."
+    return f"{employee['name']}: free; zone {employee['zone_id']} keeps {employee['spare'] - 1} above its minimum staff."
 
 
 def create_task_for_employee(
@@ -144,7 +156,7 @@ def handle_event(conn, body: dict) -> dict:
             employee_id = employee["id"]
             task_id = create_task_for_employee(conn, employee_id, str(body.get("instruction") or DEFAULT_INSTRUCTION), zone_id,
                                                body.get("sourceZoneId") or None, alert_id, evidence)
-            decision, reason = "dispatched", "Selected an available rostered employee with no active task, keeping zone minimum staffing."
+            decision, reason = "dispatched", choice_reason(employee, zone_id)
         else:
             decision, reason = "no_eligible_employee", "No rostered, available employee could be sent without breaking zone minimum staffing."
 

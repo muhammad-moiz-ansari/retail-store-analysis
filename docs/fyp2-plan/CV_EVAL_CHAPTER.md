@@ -27,7 +27,7 @@ Commands: `python -m backend.interaction.benchmark <spec> --output <report>`; in
 | Timing, with judge | start / end error (s) | 1.16 / 2.93 | 1.15 / 1.96 | reports above |
 | Roles | accuracy per track | 1.000 (59 tracks, fitted roles) | | `report_set_b_roles_hand.json` |
 | Tracking | ID switches per minute | 1.82 | 2.29 | reports above |
-| Speed | CPU realtime factor | 0.87× (clean run, 7 Nov) | | `report_set_b.json`; later runs (0.09–0.48×) shared the CPU with other jobs and are not valid speed figures |
+| Speed | CPU realtime factor | **0.60×** (idle machine, 13 Nov, current pipeline; per clip up to ~1.5×, frame p50 ~95 ms, judge 240–320 ms per call). 0.87× on 7 Nov was the pre-merge code | | `report_set_b_speed_idle.json` (CVAT stopped, nothing else running). Other runs (0.09–0.48×) shared the CPU and are not valid |
 
 Per-second scores credit one long predicted span that covers several short labelled ones, which strict matching counts as a miss plus a false alarm (see section 6). Report both. GPU throughput: not measured (no GPU laptop run).
 
@@ -60,6 +60,6 @@ Not evaluated: no labelled crossings. Code and tests exist (`backend/test_handof
 - Small labelled set (30 interactions, 25 clips, one store, two cameras); the CI on set B F1 spans 0.27–0.65.
 - Set B was seen once during tuning (the span merge).
 - Customer ID switches (1.8/min on set B) cause duplicate spans; no tracking fix was made, so it stays a limitation.
-- CPU only; the one clean speed run is 0.87× realtime, so the demo runs on recorded footage.
+- CPU only; the clean idle speed run is 0.60× realtime, so the demo runs on recorded footage. The 13 Nov idle rerun reproduced F1 0.462 exactly.
 - No zone polygons yet: zone-level signals are fixture-only.
 - The 11-clip labels have no second annotator; pass-bys are judgement calls.

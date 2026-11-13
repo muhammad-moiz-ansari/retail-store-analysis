@@ -122,3 +122,15 @@ def test_handler_refuses_another_store_or_unknown_zone(store, postgres_dsn, monk
     store.commit()
     with pytest.raises(PermissionError):
         handler(event=event(), scope=operational_scope())
+
+
+def test_ranking_and_scenario_harness():
+    import json, os
+    from backend.dispatch_eval import DEFAULT, evaluate
+    if not os.getenv("TEST_DATABASE_URL"):
+        pytest.skip("Set TEST_DATABASE_URL to a disposable PostgreSQL database")
+    scenarios = {s["id"]: s for s in json.loads(DEFAULT.read_text())["scenarios"]}
+    picked = [dict(s, rater_choice=r) for s, r in ((scenarios["S11"], "f"), (scenarios["S12"], "c"), (scenarios["S08"], "none"))]
+    report = evaluate(picked, os.environ["TEST_DATABASE_URL"])
+    assert [r["system"] for r in report["scenarios"]] == ["f", "c", "none"] and report["agreement"] == 1.0
+    assert "keeps 1 above" in report["scenarios"][1]["reason"]  # z6 had the most spare staff
