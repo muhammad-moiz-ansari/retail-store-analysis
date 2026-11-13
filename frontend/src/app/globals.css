@@ -1,21 +1,24 @@
 @import "tailwindcss" source("..");  /* scan only frontend/src: the repo root holds live CV output that changes many times a second */
 
-/* ── Design System: Elegant Retro OS ── */
+/* ── RetailPulse design system ── */
 
 :root {
-  /* Core palette */
-  --color-bg: #EDE0C8;
-  --color-surface: #F7EFDD;
-  --color-surface-alt: #E4D4B0;
-  --color-border: #4A2E1E;
-  --color-border-soft: #8B6A4A;
-  --color-accent: #C1652F;
-  --color-accent-hover: #A6521F;
-  --color-accent-soft: #E8B84B;
-  --color-success: #4C7A5A;
-  --color-danger: #B5432E;
-  --color-text: #2E1F14;
-  --color-text-muted: #6B5642;
+  --color-coral: #C54F3D;
+  --color-attention: #8A4B08;
+  --panel-radius: 1rem;
+  --workspace-gap: clamp(1rem, 3vw, 2rem);
+  --color-bg: #FAF8F2;
+  --color-surface: #FFFFFF;
+  --color-surface-alt: #EEEDFA;
+  --color-border: #101B46;
+  --color-border-soft: #DADCEC;
+  --color-accent: #4646B5;
+  --color-accent-hover: #373794;
+  --color-accent-soft: #7779CD;
+  --color-success: #276749;
+  --color-danger: #9B2934;
+  --color-text: #101B46;
+  --color-text-muted: #51586B;
 }
 
 @theme inline {
@@ -62,4 +65,25 @@ h1, h2, h3, h4, h5, h6 {
     rgba(0, 0, 0, 0.03) 4px
   );
   pointer-events: none;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+}
+
+.workspace-sidebar :focus-visible {
+  outline-color: var(--color-surface);
+}
+
+.workspace-content {
+  min-width: 0;
+  scroll-margin-top: 5rem;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html:has([data-public-shell]) {
+    scroll-behavior: smooth;
+    scroll-padding-top: 5rem;
+  }
 }

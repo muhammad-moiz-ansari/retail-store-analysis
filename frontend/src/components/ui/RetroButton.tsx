@@ -33,10 +33,10 @@ export function RetroButton({
         "rounded-md border-2 cursor-pointer select-none",
         "transition-all duration-100",
         /* Shadow & active press */
-        "shadow-[2px_2px_0px_rgba(74,46,30,0.25)]",
+        "shadow-[2px_2px_0px_rgba(16,27,70,0.25)]",
         "active:shadow-none active:translate-x-[2px] active:translate-y-[2px]",
         /* Disabled */
-        "disabled:opacity-50 disabled:cursor-not-allowed disabled:active:shadow-[2px_2px_0px_rgba(74,46,30,0.25)] disabled:active:translate-x-0 disabled:active:translate-y-0",
+        "disabled:opacity-50 disabled:cursor-not-allowed disabled:active:shadow-[2px_2px_0px_rgba(16,27,70,0.25)] disabled:active:translate-x-0 disabled:active:translate-y-0",
         /* Variant */
         variantStyles[variant],
         className,

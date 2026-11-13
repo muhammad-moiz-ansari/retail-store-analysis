@@ -47,7 +47,7 @@ export function RetroInput({
             "font-body text-sm text-text placeholder:text-text-muted/60",
             "focus:outline-none focus:ring-1 transition-colors",
             /* Inset look */
-            "shadow-[inset_1px_2px_4px_rgba(74,46,30,0.15)]",
+            "shadow-[inset_1px_2px_4px_rgba(16,27,70,0.15)]",
             /* Error vs normal border */
             error
               ? "border-danger focus:border-danger focus:ring-danger/30"
