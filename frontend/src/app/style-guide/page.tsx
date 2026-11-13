@@ -6,6 +6,7 @@ import {
   RetroCard,
   Badge,
 } from "@/components/ui";
+import { ManagerHeader, ManagerPanel } from "@/components/ui/ManagerLayout";
 
 /* ── Small icon helpers (inline SVGs, no deps) ── */
 
@@ -52,32 +53,33 @@ function Section({
 export default function StyleGuidePage() {
   return (
     <main className="min-h-screen bg-bg p-6 md:p-12 max-w-5xl mx-auto space-y-12">
-      {/* Header */}
-      <div className="space-y-1">
-        <h1 className="font-heading text-3xl md:text-4xl font-bold text-text">
-          RetailPulse - Style Guide
-        </h1>
-        <p className="font-body text-text-muted text-sm">
-          Design system components · Elegant Retro OS
-        </p>
-      </div>
+      <ManagerHeader title="RetailPulse style guide"><p>Theme colors, workspace panels, and shared controls.</p></ManagerHeader>
+      <ManagerPanel title="Workspace states">
+        <div className="flex flex-wrap gap-2">
+          <Badge variant="accent">In progress</Badge>
+          <Badge variant="success">Completed</Badge>
+          <Badge variant="danger">Needs attention</Badge>
+          <Badge variant="neutral">Unavailable</Badge>
+        </div>
+      </ManagerPanel>
 
       {/* ─── Color Palette ─── */}
       <Section title="Color Palette">
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
           {[
-            { name: "bg", hex: "#EDE0C8" },
-            { name: "surface", hex: "#F7EFDD" },
-            { name: "surface-alt", hex: "#E4D4B0" },
-            { name: "border", hex: "#4A2E1E" },
-            { name: "border-soft", hex: "#8B6A4A" },
-            { name: "accent", hex: "#C1652F" },
-            { name: "accent-hover", hex: "#A6521F" },
-            { name: "accent-soft", hex: "#E8B84B" },
-            { name: "success", hex: "#4C7A5A" },
-            { name: "danger", hex: "#B5432E" },
-            { name: "text", hex: "#2E1F14" },
-            { name: "text-muted", hex: "#6B5642" },
+            { name: "bg", hex: "#FAF8F2" },
+            { name: "surface", hex: "#FFFFFF" },
+            { name: "surface-alt", hex: "#EEEDFA" },
+            { name: "border", hex: "#101B46" },
+            { name: "border-soft", hex: "#DADCEC" },
+            { name: "accent", hex: "#4646B5" },
+            { name: "accent-hover", hex: "#373794" },
+            { name: "accent-soft", hex: "#7779CD" },
+            { name: "success", hex: "#276749" },
+            { name: "danger", hex: "#9B2934" },
+            { name: "text", hex: "#101B46" },
+            { name: "text-muted", hex: "#51586B" },
+            { name: "coral", hex: "#C54F3D" },
           ].map(({ name, hex }) => (
             <div
               key={name}
@@ -85,7 +87,7 @@ export default function StyleGuidePage() {
             >
               <div
                 className="h-16"
-                style={{ backgroundColor: hex }}
+                style={{ backgroundColor: "var(--color-" + name + ")" }}
               />
               <div className="bg-surface px-3 py-2">
                 <p className="font-mono text-[11px] text-text font-semibold">

@@ -3,7 +3,49 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { RetroButton } from "@/components/ui";
-import { ManagerPage, ManagerHeader, ManagerCard } from "@/components/ui/ManagerLayout";
+import { ManagerPage, ManagerHeader, ManagerCard, ManagerPanel, ManagerTable } from "@/components/ui/ManagerLayout";
+
+type DispatchTask = { id: string; instruction: string; state: string; target_zone_id?: string | null };
+
+function DispatchStatus() {
+  const [tasks, setTasks] = useState<DispatchTask[] | null>(null);
+  const [failed, setFailed] = useState(false);
+  const [refresh, setRefresh] = useState(0);
+  useEffect(() => {
+    const controller = new AbortController();
+    fetch("/api/backend/tasks/me", { cache: "no-store", signal: controller.signal })
+      .then(async response => {
+        if (!response.ok) throw new Error("Task list unavailable");
+        const data = await response.json();
+        if (!controller.signal.aborted) {
+          setTasks(data.tasks);
+          setFailed(false);
+        }
+      })
+      .catch(() => { if (!controller.signal.aborted) setFailed(true); });
+    return () => controller.abort();
+  }, [refresh]);
+  return (
+    <ManagerPanel title="Staff assignment status">
+      <RetroButton type="button" variant="secondary" className="mb-3 min-h-11" onClick={() => setRefresh(value => value + 1)}>Refresh assignments</RetroButton>
+      {failed && <p role="status" className="mb-3 text-sm text-danger">Assignment status could not be refreshed.</p>}
+      {tasks?.length ? (
+        <ManagerTable label="Staff assignments">
+          <table className="w-full text-left text-sm">
+            <thead><tr><th scope="col" className="p-2">Instruction</th><th scope="col" className="p-2">Zone</th><th scope="col" className="p-2">Status</th></tr></thead>
+            <tbody>{tasks.map(task => (
+              <tr key={task.id} className="border-b border-border-soft">
+                <th scope="row" className="p-2 font-medium">{task.instruction}</th>
+                <td className="p-2">{task.target_zone_id || "Unspecified"}</td>
+                <td className="p-2">{task.state.replaceAll("_", " ")}</td>
+              </tr>
+            ))}</tbody>
+          </table>
+        </ManagerTable>
+      ) : !failed && <p role="status" className="text-sm text-text-muted">{tasks ? "No staff assignments." : "Loading assignment status…"}</p>}
+    </ManagerPanel>
+  );
+}
 
 type Category = "Unattended Customers" | "Unstaffed Zones" | "High Idle Time" | "Unusual Traffic" | "System";
 type Status = "all" | "active" | "resolved";
@@ -247,6 +289,7 @@ export default function AlertsPage() {
             )}
           </div>
         </section>
+        <DispatchStatus />
       </ManagerPage>
   );
 }
