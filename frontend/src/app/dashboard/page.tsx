@@ -49,11 +49,6 @@ export default function DashboardPage() {
         <ManagerHeader title="Manager dashboard">
           <p>Review recorded activity for your selected window, then check backend and camera status.</p>
         </ManagerHeader>
-        <DashboardDataSource />
-        <ManagerPanel title="Backend system status">
-          <p className="mb-4 text-sm text-text-muted">Application status reported by the backend, separate from event analytics and camera-feed verification.</p>
-          <SystemStatusStrip />
-        </ManagerPanel>
         <ManagerPanel title="Camera previews">
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             <div>
@@ -69,6 +64,11 @@ export default function DashboardPage() {
               <p className="text-sm text-text-muted mt-3">Live floor feed unavailable.</p>
             </div>
           </div>
+        </ManagerPanel>
+        <DashboardDataSource />
+        <ManagerPanel title="Backend system status">
+          <p className="mb-4 text-sm text-text-muted">Application status reported by the backend, separate from event analytics and camera-feed verification.</p>
+          <SystemStatusStrip />
         </ManagerPanel>
         <section aria-label="Additional analytics" className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <ManagerPanel title="Recent interactions">

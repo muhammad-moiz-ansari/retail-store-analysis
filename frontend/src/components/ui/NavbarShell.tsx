@@ -57,19 +57,24 @@ export function NavbarShell({ children }: { children: React.ReactNode }) {
   return <div data-employee-shell={!manager ? "" : undefined} data-manager-shell={manager ? "" : undefined}
     data-sidebar-collapsed={manager && collapsed ? "" : undefined} className={manager ? "manager-shell min-h-screen" : "min-h-screen"}>
     {skip}
-    {manager && <aside className="workspace-sidebar translucent-nav sticky top-0 hidden h-dvh min-w-0 flex-col overflow-x-hidden overflow-y-auto p-4 lg:flex">
+    {manager && <aside className="workspace-sidebar translucent-nav sticky top-0 z-40 hidden h-dvh min-w-0 flex-col p-4 lg:flex">
       <div className="flex items-center justify-between gap-1 pb-5">
         {!collapsed && brand}
         <button type="button" aria-expanded={!collapsed} aria-controls="manager-sidebar-links"
-          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          aria-label={collapsed ? "Open sidebar" : "Close sidebar"}
           onClick={() => setCollapsed(value => !value)}
-          className="grid size-9 shrink-0 place-items-center rounded-lg border border-white/35 text-on-sidebar hover:bg-white/15">
-          <svg aria-hidden="true" viewBox="0 0 24 24" className="size-5 fill-none stroke-current" strokeWidth="1.7">
+          className="group relative grid size-9 shrink-0 place-items-center rounded-xl text-on-sidebar hover:bg-white/15 focus-visible:bg-white/15">
+          {collapsed && <span aria-hidden="true" className="group-hover:hidden group-focus-visible:hidden"><NavLogo /></span>}
+          <svg aria-hidden="true" viewBox="0 0 24 24" className={`size-5 fill-none stroke-current ${collapsed ? "hidden group-hover:block group-focus-visible:block" : ""}`} strokeWidth="1.7">
             <rect x="3" y="4" width="18" height="16" rx="2" /><path d="M9 4v16" />
+            <path d={collapsed ? "m12 9 4 3-4 3" : "m16 9-4 3 4 3"} className="opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100" />
           </svg>
+          <span aria-hidden="true" className="pointer-events-none absolute left-full top-1/2 ml-3 hidden -translate-y-1/2 whitespace-nowrap rounded-xl border border-border-soft bg-surface px-3 py-2 text-sm text-text shadow-lg group-hover:block group-focus-visible:block">
+            {collapsed ? "Open sidebar" : "Close sidebar"}
+          </span>
         </button>
       </div>
-      <div id="manager-sidebar-links" hidden={collapsed} className="min-w-48 flex-1 flex-col not-[hidden]:flex">
+      <div id="manager-sidebar-links" hidden={collapsed} className="min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden not-[hidden]:flex">
         {navigation}
         <div className="mt-auto border-t border-white/20 pt-3">{logout}</div>
       </div>
