@@ -129,10 +129,14 @@ h1, h2, h3, h4, h5, h6 {
   outline-color: var(--color-sidebar-focus);
 }
 
-.auth-field:focus {
+.auth-field:focus,
+.profile-field:focus {
   outline: 2px solid transparent;
   box-shadow: 0 4px 20px 3px color-mix(in srgb, var(--color-accent) 24%, transparent);
 }
+
+.profile-field:focus:not([aria-invalid="true"]) { border-color: var(--color-border-soft); }
+.employee-navbar { box-shadow: 0 6px 20px rgb(5 10 28 / 24%); }
 
 .auth-backdrop {
   background:
@@ -141,8 +145,8 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .auth-field { transition: box-shadow 160ms ease-out; }
-  .auth-field:focus { transition-delay: 45ms; }
+  :is(.auth-field, .profile-field) { transition: box-shadow 160ms ease-out; }
+  :is(.auth-field, .profile-field):focus { transition-delay: 45ms; }
 }
 
 .theme-toggle {

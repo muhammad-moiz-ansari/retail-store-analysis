@@ -74,14 +74,14 @@ export function NavbarShell({ children }: { children: React.ReactNode }) {
           </details>
           </div>
         </div>
-      </header> : <header className="workspace-sidebar translucent-nav sticky top-0 z-40 grid min-h-[52px] grid-cols-[1fr_auto] items-center gap-x-3 px-4 text-on-sidebar md:grid-cols-[1fr_auto_1fr] md:px-6">
+      </header> : <header className="workspace-sidebar translucent-nav employee-navbar sticky top-0 z-40 grid min-h-[52px] grid-cols-[1fr_auto] items-center gap-x-3 px-4 text-on-sidebar md:grid-cols-[1fr_auto_1fr] md:px-6">
         <Link href={home} className="flex w-fit items-center gap-2.5 font-heading text-lg font-bold tracking-tight">
           <NavLogo />RetailPulse
         </Link>
-        <nav aria-label="Employee shortcuts" className="col-span-2 row-start-2 flex flex-wrap justify-center gap-1 pb-2 md:col-span-1 md:col-start-2 md:row-start-1 md:pb-0">
+        <nav aria-label="Employee shortcuts" className="col-span-2 row-start-2 flex flex-wrap justify-center gap-1 pb-1 md:col-span-1 md:col-start-2 md:row-start-1 md:pb-0">
           {employeeLinks.map(([href, title]) => <Link key={href} href={href}
             aria-current={pathname === href || (href === "/employee-home" && pathname === "/employee") ? "page" : undefined}
-            className="flex min-h-11 items-center rounded-lg px-3 text-sm hover:bg-white/15 aria-[current=page]:bg-surface-alt aria-[current=page]:text-text">{title}</Link>)}
+            className="flex min-h-9 items-center rounded-lg px-3 text-sm hover:bg-white/15 aria-[current=page]:bg-surface-alt aria-[current=page]:text-text">{title}</Link>)}
         </nav>
         <div className="col-start-2 row-start-1 flex items-center justify-self-end gap-2 py-1 md:col-start-3">
           <ThemeToggle />

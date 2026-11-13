@@ -31,7 +31,7 @@ export function EmployeeAccountMenu({ onLogout }: { onLogout: () => Promise<void
       <div className="employee-account-dropdown absolute right-0 top-full mt-2 grid w-44 gap-1 rounded-xl border border-white/25 bg-sidebar p-2 shadow-xl">
         <Link href="/profile" className="rounded-lg px-3 py-2 hover:bg-white/15">Profile</Link>
         <Link href="/about" className="rounded-lg px-3 py-2 hover:bg-white/15">About</Link>
-        <button type="button" onClick={onLogout} className="rounded-lg px-3 py-2 text-left hover:bg-white/15">Log out</button>
+        <button type="button" onClick={onLogout} className="rounded-lg px-3 py-2 text-left font-semibold text-[#FFA5AA] hover:bg-[#FFA5AA]/15">Log out</button>
       </div>
     </details>
   );

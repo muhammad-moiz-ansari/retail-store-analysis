@@ -42,6 +42,7 @@ export function RetroInput({
         <input
           id={inputId}
           {...props}
+          aria-invalid={props["aria-invalid"] ?? (error || undefined)}
           className={[
             "w-full rounded-md border-2 bg-surface px-3 py-2",
             "font-body text-sm text-text placeholder:text-text-muted/60",

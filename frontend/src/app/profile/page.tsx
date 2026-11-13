@@ -103,10 +103,13 @@ export default function ProfilePage() {
         <form onSubmit={handleDetailsSubmit} className="space-y-6">
           <ManagerCard>
             <div className="grid gap-5 md:grid-cols-2">
-              <RetroInput label="Full Name" type="text" value={fullName || profile.name} onChange={(event) => setFullName(event.target.value)} autoComplete="name" />
-              <RetroInput label="Email Address" type="email" value={email || (role === "Manager" ? "alex.morgan@retailpulse.com" : "staff03@retailpulse.com")} onChange={(event) => setEmail(event.target.value)} autoComplete="email" />
-              <RetroInput label="Phone Number" type="text" value={phone} onChange={(event) => setPhone(event.target.value)} autoComplete="tel" />
-              <RetroInput label="Employee/Staff ID" type="text" value={profile.employeeId} disabled readOnly />
+              <RetroInput className="profile-field" label="Full Name" type="text" value={fullName || profile.name} onChange={(event) => setFullName(event.target.value)} autoComplete="name" />
+              <RetroInput className="profile-field" label="Email Address" type="email" value={email || (role === "Manager" ? "alex.morgan@retailpulse.com" : "staff03@retailpulse.com")} onChange={(event) => setEmail(event.target.value)} autoComplete="email" />
+              <RetroInput className="profile-field" label="Phone Number" type="text" value={phone} onChange={(event) => setPhone(event.target.value)} autoComplete="tel" />
+              <div className="select-none cursor-default">
+                <p className="mb-1.5 font-heading text-xs font-semibold uppercase tracking-wide text-text-muted">Employee/Staff ID</p>
+                <p className="rounded-md border-2 border-border-soft bg-surface-alt px-3 py-2 text-sm">{profile.employeeId}</p>
+              </div>
               {role === "Employee" && (
                 <label className="block md:col-span-2">
                   <span className="mb-1.5 block font-heading text-xs font-semibold uppercase tracking-wide text-text-muted">Assigned Zone</span>
@@ -127,12 +130,12 @@ export default function ProfilePage() {
         <form onSubmit={handlePasswordSubmit} className="space-y-6">
           <ManagerCard>
             <div className="space-y-5">
-              <RetroInput label="Current Password" type="password" value={currentPassword} onChange={(event) => setCurrentPassword(event.target.value)} autoComplete="current-password" />
+              <RetroInput className="profile-field" label="Current Password" type="password" value={currentPassword} onChange={(event) => setCurrentPassword(event.target.value)} autoComplete="current-password" />
               <div>
-                <RetroInput label="New Password" type="password" value={newPassword} onChange={(event) => { setNewPassword(event.target.value); setPasswordError(""); }} autoComplete="new-password" error={!!passwordError} />
+                <RetroInput className="profile-field" label="New Password" type="password" value={newPassword} onChange={(event) => { setNewPassword(event.target.value); setPasswordError(""); }} autoComplete="new-password" error={!!passwordError} />
                 <p className="mt-1.5 text-xs text-text-muted">Minimum 8 characters, include a number.</p>
               </div>
-              <RetroInput label="Confirm New Password" type="password" value={confirmPassword} onChange={(event) => { setConfirmPassword(event.target.value); setPasswordError(""); }} autoComplete="new-password" error={!!passwordError} helperText={passwordError} />
+              <RetroInput className="profile-field" label="Confirm New Password" type="password" value={confirmPassword} onChange={(event) => { setConfirmPassword(event.target.value); setPasswordError(""); }} autoComplete="new-password" error={!!passwordError} helperText={passwordError} />
             </div>
           </ManagerCard>
           <RetroButton type="submit" variant="secondary" disabled={savingPassword}>{savingPassword ? "Updating..." : "Update Password"}</RetroButton>
