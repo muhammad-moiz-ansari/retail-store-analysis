@@ -17,6 +17,17 @@ Reviewed 12 November 2026 on `fyp2-ruhab` (based on `fyp2-moiz` at `5f2c77c`). S
 | S9 | Info | `camera_service.resolve_video` | Good: video paths are confined to the repository, with a suffix allow-list | None | — |
 | S10 | Info | `business/clip_render.resolve_video` | Good: opaque references only, confined to one recording root and tested against `../` escapes | Supply the recording root from server configuration | Ruhab |
 
+### Fix status (backend, Saqib, 13 Nov 2026)
+Tests: `backend/tests/test_security.py`.
+- **S1 backend fixed.** `backend/runtime_secrets.py`: the backend and the POS service refuse to start when the internal secret is missing or equals `local-dev-pos-secret`, unless `RETAILPULSE_DEV_DEFAULTS=1` (set by `npm run dev`, `npm run backend:api` and the tests). **Frontend half (Next routes, `pos-auth.ts`) is still open (Moiz).**
+- **S2 fixed.** Both secret checks use `hmac.compare_digest`.
+- **S3 login part fixed.** 5 failed sign-ins per account in 15 minutes lock that account (429), in memory per process. Per-IP limits belong in the Next proxy; the `/agents/ask` budget is Moiz's.
+- **S4** unchanged: keep the secret server-side and rotate it per deployment (deployment checklist).
+- **S5 fixed.** New hashes use 600 000 iterations and store the count; old 120 000 hashes still verify and are rehashed at the next successful login.
+- **S6 fixed.** Invitation sign-up needs 8+ characters.
+- **S7 fixed.** Invitation tokens are stored as SHA-256 hashes. Invites made before the change still work until they expire (7 days).
+- **S8 fixed.** At most 2 CV jobs run at once (429 otherwise); only the last 50 finished jobs are kept.
+
 ## Privacy notes for the report and demo
 
 - No agent names or ranks individual employees; the router refuses `rank`, `identify` and `identity` questions (`routing.py`).

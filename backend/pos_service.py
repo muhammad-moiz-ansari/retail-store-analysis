@@ -7,6 +7,7 @@ from typing import Annotated
 from fastapi import Depends, FastAPI, File, Form, Header, HTTPException, Query, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 
+from .runtime_secrets import internal_secret, matches
 from .pos_core import (
     answer_query,
     commit_import,
@@ -20,7 +21,7 @@ from .pos_core import (
 )
 
 
-INTERNAL_SECRET = os.getenv("POS_INTERNAL_SECRET", "local-dev-pos-secret")
+INTERNAL_SECRET = internal_secret("POS_INTERNAL_SECRET")
 app = FastAPI(title="RetailPulse POS Analytics", version="0.1.0")
 app.add_middleware(
     CORSMiddleware,
@@ -32,7 +33,7 @@ app.add_middleware(
 
 
 def require_internal(x_pos_internal_secret: Annotated[str | None, Header()] = None) -> None:
-    if x_pos_internal_secret != INTERNAL_SECRET:
+    if not matches(x_pos_internal_secret, INTERNAL_SECRET):
         raise HTTPException(status_code=401, detail="Unauthorized POS service request")
 
 

@@ -9,6 +9,7 @@ import re
 from psycopg import IntegrityError
 import subprocess
 import sys
+import time
 import uuid
 from datetime import datetime
 from typing import Annotated, Any
@@ -22,6 +23,7 @@ from .camera_service import REPO_ROOT, resolve_video
 from .camera_service import app as camera_app
 from .dispatch import create_task_for_employee, handle_event, select_dispatch_employee
 from .pos_service import app as pos_app
+from .runtime_secrets import internal_secret, matches
 from .store_core import (
     accept_invitation,
     authenticate,
@@ -42,11 +44,11 @@ app.mount("/pos", pos_app)
 # Read-only analytics remain unavailable until explicit server membership/source configuration.
 app.include_router(dashboard_router)
 
-INTERNAL_SECRET = os.getenv("RETAILPULSE_INTERNAL_SECRET", os.getenv("POS_INTERNAL_SECRET", "local-dev-pos-secret"))
+INTERNAL_SECRET = internal_secret("RETAILPULSE_INTERNAL_SECRET", "POS_INTERNAL_SECRET")
 
 
 def require_internal(x_retailpulse_internal_secret: Annotated[str | None, Header()] = None) -> None:
-    if x_retailpulse_internal_secret != INTERNAL_SECRET:
+    if not matches(x_retailpulse_internal_secret, INTERNAL_SECRET):
         raise HTTPException(status_code=401, detail="Unauthorized service request")
 
 
@@ -116,7 +118,14 @@ def run_script(job_id: str, args: list[str], read_result) -> None:
         job.update(status="failed", error=str(exc))
 
 
+MAX_RUNNING_JOBS, MAX_KEPT_JOBS = 2, 50  # S8
+
+
 def start_job(args: list[str], read_result) -> dict[str, str]:
+    if sum(job["status"] in {"queued", "running"} for job in _jobs.values()) >= MAX_RUNNING_JOBS:
+        raise HTTPException(status_code=429, detail=f"{MAX_RUNNING_JOBS} CV jobs are already running; wait for one to finish")
+    for old in [k for k, job in _jobs.items() if job["status"] not in {"queued", "running"}][:-MAX_KEPT_JOBS or None]:
+        del _jobs[old]  # dicts keep insertion order, so this drops the oldest finished jobs
     job_id = uuid.uuid4().hex
     _jobs[job_id] = {"id": job_id, "status": "queued", "logs": [], "result": None}
     asyncio.get_running_loop().run_in_executor(None, run_script, job_id, args, read_result)
@@ -272,6 +281,12 @@ def health() -> dict[str, bool]:
     return {"ok": True}
 
 
+MIN_PASSWORD_LENGTH = 8  # S6
+LOGIN_MAX_FAILURES, LOGIN_WINDOW_S = 5, 15 * 60  # S3, per account
+# shortcut: in-memory and per process; move to the database if the backend ever runs more than one worker.
+_failed_logins: dict[str, list[float]] = {}
+
+
 @app.post("/auth/login", dependencies=[Depends(require_internal)])
 def login(body: dict) -> dict:
     email = str(body.get("email") or "").strip()
@@ -279,11 +294,19 @@ def login(body: dict) -> dict:
     role = str(body.get("role") or "").strip() or None
     if role not in {None, "Manager", "Employee"}:
         raise HTTPException(status_code=400, detail="role must be Manager or Employee")
+    key = email.lower()
+    now = time.monotonic()
+    recent = [t for t in _failed_logins.get(key, []) if now - t < LOGIN_WINDOW_S]
+    if len(recent) >= LOGIN_MAX_FAILURES:
+        raise HTTPException(status_code=429, detail="Too many failed sign-ins for this account; try again in 15 minutes")
     with connect() as conn:
         try:
-            return {"authenticated": True, "user": authenticate(conn, email, password, role)}
+            user = authenticate(conn, email, password, role)
         except ValueError as exc:
+            _failed_logins[key] = recent + [now]
             raise HTTPException(status_code=401, detail=str(exc)) from None
+    _failed_logins.pop(key, None)
+    return {"authenticated": True, "user": user}
 
 
 @app.post("/auth/invitations/accept", dependencies=[Depends(require_internal)])
@@ -291,8 +314,8 @@ def signup(body: dict) -> dict:
     token = str(body.get("token") or "").strip()
     name = str(body.get("name") or "").strip()
     password = str(body.get("password") or "")
-    if not token or not name or len(password) < 6:
-        raise HTTPException(status_code=400, detail="Invite token, name and a 6+ character password are required")
+    if not token or not name or len(password) < MIN_PASSWORD_LENGTH:
+        raise HTTPException(status_code=400, detail=f"Invite token, name and a {MIN_PASSWORD_LENGTH}+ character password are required")
     with connect() as conn:
         try:
             return {"authenticated": True, "user": accept_invitation(conn, token, name, password)}
