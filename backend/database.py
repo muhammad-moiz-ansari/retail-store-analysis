@@ -32,7 +32,15 @@ ROOT = Path(__file__).resolve().parent
 SCHEMAS = (ROOT / "store_schema.sql", ROOT / "events" / "schema.sql", ROOT / "interaction" / "schema.sql")
 
 
+# Columns added after a table first shipped; CREATE TABLE IF NOT EXISTS leaves existing tables unchanged.
+# Run before the schema files so their indexes on the new columns succeed.
+UPGRADES = ("ALTER TABLE IF EXISTS orchestration_events ADD COLUMN IF NOT EXISTS dedupe_key TEXT",
+            "ALTER TABLE IF EXISTS tasks ADD COLUMN IF NOT EXISTS ack_seconds DOUBLE PRECISION")
+
+
 def initialize(conn, schemas=SCHEMAS):
+    for statement in UPGRADES:
+        conn.execute(statement)
     for schema in schemas:
         conn.execute(schema.read_text(encoding="utf-8"))
 

@@ -12,18 +12,23 @@ Usage:
 import base64
 import json
 import sys
+import threading
 from pathlib import Path
 
 import cv2
 import numpy as np
 from ultralytics import YOLO
 
-from device import DEVICE
+try:
+    from .device import DEVICE
+except ImportError:  # run as a script
+    from device import DEVICE
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 MODEL_PATH = PROJECT_ROOT / "backend" / "yolov8n.pt"
 
 _model = None
+_lock = threading.Lock()  # one inference at a time on the shared model
 
 
 def get_model():
@@ -149,43 +154,25 @@ def analyze_interaction(employees, customers):
     }
 
 
-def main():
-    aisle_id = sys.argv[1] if len(sys.argv) > 1 else "aisle"
-
-    # Read base64 from stdin
-    raw = sys.stdin.read().strip()
+def analyze(raw: str, aisle_id: str = "aisle") -> dict:
+    """Detect and classify people in one base64 image. Raises ValueError on bad input. The model loads once per process."""
+    raw = raw.strip()
     if not raw:
-        print(json.dumps({"error": "No frame data"}))
-        sys.exit(1)
-
-    # Decode
+        raise ValueError("No frame data")
     try:
-        img_bytes = base64.b64decode(raw)
-        arr = np.frombuffer(img_bytes, dtype=np.uint8)
-        frame = cv2.imdecode(arr, cv2.IMREAD_COLOR)
+        frame = cv2.imdecode(np.frombuffer(base64.b64decode(raw), dtype=np.uint8), cv2.IMREAD_COLOR)
     except Exception as e:
-        print(json.dumps({"error": f"Decode failed: {e}"}))
-        sys.exit(1)
-
+        raise ValueError(f"Decode failed: {e}") from e
     if frame is None:
-        print(json.dumps({"error": "Invalid image"}))
-        sys.exit(1)
+        raise ValueError("Invalid image")
 
     h, w = frame.shape[:2]
-
-    # Run YOLO
-    model = get_model()
-    results = model(frame, verbose=False, classes=[0], device=DEVICE)
-
-    boxes = []
-    for r in results:
-        for box in r.boxes:
-            boxes.append(box)
+    with _lock:
+        results = get_model()(frame, verbose=False, classes=[0], device=DEVICE)
+    boxes = [box for r in results for box in r.boxes]
 
     employees, customers = classify_people(boxes, h, w)
-    interaction = analyze_interaction(employees, customers)
-
-    output = {
+    return {
         "aisle": aisle_id,
         "frame_size": [w, h],
         "total_people": len(employees) + len(customers),
@@ -193,10 +180,16 @@ def main():
         "employee_count": len(employees),
         "customers": customers,
         "customer_count": len(customers),
-        "interaction": interaction,
+        "interaction": analyze_interaction(employees, customers),
     }
 
-    print(json.dumps(output))
+
+def main():
+    try:
+        print(json.dumps(analyze(sys.stdin.read(), sys.argv[1] if len(sys.argv) > 1 else "aisle")))
+    except ValueError as e:
+        print(json.dumps({"error": str(e)}))
+        sys.exit(1)
 
 
 if __name__ == "__main__":

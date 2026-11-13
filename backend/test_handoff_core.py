@@ -1,10 +1,10 @@
 import unittest
 
-from compare_people import build_ratio_verdict
-from camera_handoff import attach_global_identities
-from handoff_core import HandoffConfig, boundary_side, crossing_direction, match_handoff_events
-from interaction.identity import EphemeralIdentityRegistry
-from interaction.schemas import CustomerEntryRule
+from .compare_people import build_ratio_verdict
+from .camera_handoff import attach_global_identities
+from .handoff_core import HandoffConfig, boundary_side, crossing_direction, match_handoff_events
+from .interaction.identity import EphemeralIdentityRegistry
+from .interaction.schemas import CustomerEntryRule
 
 
 class HandoffCoreTests(unittest.TestCase):

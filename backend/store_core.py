@@ -17,20 +17,33 @@ def now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
-def hash_password(password: str, salt: str | None = None) -> str:
+PBKDF2_ITERATIONS = 600_000  # S5, OWASP; hashes made before this carry no count and used 120 000
+LEGACY_ITERATIONS = 120_000
+
+
+def hash_password(password: str, salt: str | None = None, iterations: int = PBKDF2_ITERATIONS) -> str:
     salt = salt or secrets.token_hex(16)
-    digest = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt.encode("utf-8"), 120_000)
-    return f"pbkdf2_sha256${salt}${digest.hex()}"
+    digest = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt.encode("utf-8"), iterations)
+    return f"pbkdf2_sha256${iterations}${salt}${digest.hex()}"
 
 
 def verify_password(password: str, stored: str) -> bool:
-    try:
-        algorithm, salt, digest = stored.split("$", 2)
-    except ValueError:
+    parts = stored.split("$")
+    if parts[0] != "pbkdf2_sha256" or len(parts) not in (3, 4):
         return False
-    if algorithm != "pbkdf2_sha256":
-        return False
-    return hmac.compare_digest(hash_password(password, salt), stored)
+    iterations, salt, digest = (LEGACY_ITERATIONS, *parts[1:]) if len(parts) == 3 else (int(parts[1]), parts[2], parts[3])
+    actual = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt.encode("utf-8"), iterations).hex()
+    return hmac.compare_digest(actual, digest)
+
+
+def needs_rehash(stored: str) -> bool:
+    parts = stored.split("$")
+    return len(parts) != 4 or parts[1] != str(PBKDF2_ITERATIONS)
+
+
+def token_hash(token: str) -> str:
+    """Invitation tokens are stored hashed (S7); the plain token is only ever in the invite link."""
+    return hashlib.sha256(token.encode("utf-8")).hexdigest()
 
 
 def seed_defaults(conn: Connection) -> None:
@@ -161,6 +174,9 @@ def authenticate(conn: Connection, email: str, password: str, role: str | None =
         raise ValueError("Invalid email or password")
     if role and user["role"] != role:
         raise ValueError(f"Account is not a {role}")
+    if needs_rehash(user["password_hash"]):
+        conn.execute("UPDATE users SET password_hash = %s, updated_at = %s WHERE id = %s", (hash_password(password), now_iso(), user["id"]))
+        conn.commit()
     return public_user(user)
 
 
@@ -174,14 +190,15 @@ def create_invitation(conn: Connection, email: str, role: str, created_by: str |
         INSERT INTO invitations(id, email, role, token, expires_at, created_by, created_at)
         VALUES (%s, %s, %s, %s, %s, %s, %s)
         """,
-        (invitation_id, email.lower(), role, token, expires_at, created_by, timestamp),
+        (invitation_id, email.lower(), role, token_hash(token), expires_at, created_by, timestamp),
     )
     conn.commit()
     return {"id": invitation_id, "email": email.lower(), "role": role, "token": token, "expiresAt": expires_at}
 
 
 def accept_invitation(conn: Connection, token: str, name: str, password: str) -> dict[str, Any]:
-    invitation = conn.execute("SELECT * FROM invitations WHERE token = %s FOR UPDATE", (token,)).fetchone()
+    # shortcut: also matches a plain token so invites made before S7 still work; drop once they expire (7 days).
+    invitation = conn.execute("SELECT * FROM invitations WHERE token IN (%s, %s) FOR UPDATE", (token_hash(token), token)).fetchone()
     if not invitation or invitation["accepted_at"]:
         raise ValueError("Invite token is invalid or already used")
     if datetime.fromisoformat(invitation["expires_at"]) < datetime.now(timezone.utc):

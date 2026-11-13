@@ -1,6 +1,8 @@
 """Use an isolated PostgreSQL schema per database-dependent test."""
 
 import os
+
+os.environ.setdefault("RETAILPULSE_DEV_DEFAULTS", "1")  # tests use the local default secrets (runtime_secrets)
 from uuid import uuid4
 
 import pytest

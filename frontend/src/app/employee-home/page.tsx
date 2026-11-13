@@ -73,6 +73,17 @@ export default function EmployeeHomePage() {
     if (response.ok) setTasks(data.tasks || []);
   }
 
+  async function playInstruction(taskId: string) {
+    const response = await fetch(`/api/backend/tasks/${taskId}/voice`, { method: "POST" });
+    const data = await response.json().catch(() => null);
+    if (!response.ok || !data) return;
+    if (data.audio?.audioBase64) {
+      void new Audio(`data:${data.audio.contentType || "audio/mpeg"};base64,${data.audio.audioBase64}`).play();
+    } else if (typeof window !== "undefined" && "speechSynthesis" in window) {
+      window.speechSynthesis.speak(new SpeechSynthesisUtterance(data.script?.script || ""));
+    }
+  }
+
   const activeTasks = tasks.filter((task) => ["pending", "delivered", "acknowledged", "in_progress"].includes(task.state));
 
   return (
@@ -125,6 +136,9 @@ export default function EmployeeHomePage() {
                         </p>
                       </div>
                       <div className="flex flex-wrap gap-2">
+                        <RetroButton type="button" variant="secondary" className="!px-3 !py-1.5 !text-xs" onClick={() => playInstruction(task.id)} aria-label="Play spoken instruction">
+                          Play
+                        </RetroButton>
                         {task.state === "delivered" && (
                           <RetroButton type="button" variant="primary" className="!px-3 !py-1.5 !text-xs" onClick={() => transitionTask(task.id, "acknowledged")}>
                             Acknowledge

@@ -6,6 +6,7 @@ python -m backend.interaction.benchmark backend/interaction/benchmarks/benchmark
 from __future__ import annotations
 
 import argparse
+import csv
 import json
 import statistics
 import tempfile
@@ -40,6 +41,34 @@ def match_events(predicted: list[tuple[float, float]], truth: list[tuple[float, 
     return {"tp": tp, "fp": len(predicted) - tp, "fn": len(truth) - tp,
             "start_error_s": statistics.mean(e[0] for e in errors) if errors else None,
             "end_error_s": statistics.mean(e[1] for e in errors) if errors else None}
+
+
+def union_spans(spans: list[tuple[float, float]]) -> list[tuple[float, float]]:
+    merged: list[tuple[float, float]] = []
+    for start, end in sorted(spans):
+        if merged and start <= merged[-1][1]:
+            merged[-1] = (merged[-1][0], max(merged[-1][1], end))
+        else:
+            merged.append((start, end))
+    return merged
+
+
+def overlap_seconds(predicted: list[tuple[float, float]], truth: list[tuple[float, float]]) -> dict:
+    """Seconds predicted, labelled and both, each side unioned first. Credits one long prediction that covers
+    several short labelled spans, which one-to-one matching counts as a miss plus a false positive."""
+    predicted, truth = union_spans(predicted), union_spans(truth)
+    return {"overlap_s": sum(max(0.0, min(p[1], t[1]) - max(p[0], t[0])) for p in predicted for t in truth),
+            "predicted_s": sum(e - s for s, e in predicted), "labelled_s": sum(e - s for s, e in truth)}
+
+
+def second_scores(seconds: dict) -> dict:
+    o = seconds["overlap_s"]
+    s = scores({"tp": o, "fp": seconds["predicted_s"] - o, "fn": seconds["labelled_s"] - o})
+    return {**seconds, "precision": s["precision"], "recall": s["recall"], "f1": s["f1"]}
+
+
+def event_kpis(predicted: list[tuple[float, float]], truth: list[tuple[float, float]], min_iou: float) -> dict:
+    return {**match_events(predicted, truth, min_iou), "per_second": second_scores(overlap_seconds(predicted, truth))}
 
 
 def scores(counts: dict) -> dict:
@@ -105,17 +134,16 @@ def video_kpis(spec: dict, judge: str, device: str, min_iou: float) -> dict:
     # A per-video store/camera config (e.g. with or without role_references) measures cross-store generalisation.
     config = InteractionConfig.from_json(spec.get("config") and ROOT / spec["config"], device=device, interaction_judge=judge)
     pipeline = InteractionPipeline(config)
-    judge_times: list[float] = []
+    judge_times, track_times, classify_times = [], [], []
     if pipeline.judge:
-        classify = pipeline.judge.classify_interaction
+        timed(pipeline.judge, "classify_interaction", judge_times)
+    timed(pipeline.tracker, "detect_and_track", track_times)  # detector + BoT-SORT (+ReID) + relink
+    timed(pipeline.classifier, "classify", classify_times)
+    track_ids, people = set(), []
 
-        def timed(*args, **kwargs):
-            started = time.perf_counter()
-            try:
-                return classify(*args, **kwargs)
-            finally:
-                judge_times.append(time.perf_counter() - started)
-        pipeline.judge.classify_interaction = timed
+    def seen(_frame_number, _frame, result):
+        track_ids.update(person["track_id"] for person in result["people"])
+        people.append(len(result["people"]))
     cap = cv2.VideoCapture(str(ROOT / spec["path"]))
     if not cap.isOpened():
         raise SystemExit(f"Cannot open video: {spec['path']}")
@@ -125,6 +153,7 @@ def video_kpis(spec: dict, judge: str, device: str, min_iou: float) -> dict:
     track_roles: dict[int, list[str]] = {}  # role sequence per track, for flips
 
     def tally(_frame_number, _frame, result):
+        seen(_frame_number, _frame, result)
         for person in result["people"]:
             frames = role_frames.setdefault(person["track_id"], {})
             frames[person["role"]] = frames.get(person["role"], 0) + 1
@@ -140,8 +169,8 @@ def video_kpis(spec: dict, judge: str, device: str, min_iou: float) -> dict:
     return {
         "path": spec["path"], "duration_s": run["frames"] / fps,
         # Proximity alone = every candidate the judge saw; with judge = the ones it kept.
-        "proximity_only": None if truth is None else match_events([interval(e) for e in events], truth, min_iou),
-        "with_judge": None if truth is None else match_events([interval(e) for e in merge_spans([e for e in run["interactions"].values() if e["verdict"] in CONFIRMED], config.max_missing_seconds)], truth, min_iou),
+        "proximity_only": None if truth is None else event_kpis([interval(e) for e in events], truth, min_iou),
+        "with_judge": None if truth is None else event_kpis([interval(e) for e in merge_spans([e for e in run["interactions"].values() if e["verdict"] in CONFIRMED], config.max_missing_seconds)], truth, min_iou),
         # "roles": {"<track_id>": "employee" | "customer"} from a reviewed run with the same settings.
         "roles": role_counts({t: max(f, key=f.get) for t, f in role_frames.items()}, spec["roles"]) if "roles" in spec else None,
         # "people": distinct people a reviewer counted in the clip; extra track IDs are fragments.
@@ -152,8 +181,39 @@ def video_kpis(spec: dict, judge: str, device: str, min_iou: float) -> dict:
                   "frame_ms_p50": 1000 * latencies[len(latencies) // 2] if latencies else None,
                   "frame_ms_p95": 1000 * latencies[int(len(latencies) * 0.95)] if latencies else None,
                   "judge_calls": len(judge_times),
-                  "judge_ms_mean": 1000 * statistics.mean(judge_times) if judge_times else None},
+                  "judge_ms_mean": 1000 * statistics.mean(judge_times) if judge_times else None,
+                  "track_ms_mean": 1000 * statistics.mean(track_times) if track_times else None,
+                  "classify_ms_mean": 1000 * statistics.mean(classify_times) if classify_times else None,
+                  # Wall time outside the pipeline: mostly reading/decoding frames.
+                  "decode_s": elapsed - sum(track_times) - sum(classify_times) - sum(judge_times),
+                  "people_per_frame_mean": statistics.mean(people) if people else None},
+        # ID fragmentation proxy: more distinct IDs for the same footage = more ID switches.
+        "track_ids": len(track_ids),
     }
+
+
+def timed(obj, name: str, times: list[float]) -> None:
+    """Wrap obj.name so every call's duration is appended to times."""
+    original = getattr(obj, name)
+
+    def wrapper(*args, **kwargs):
+        started = time.perf_counter()
+        try:
+            return original(*args, **kwargs)
+        finally:
+            times.append(time.perf_counter() - started)
+    setattr(obj, name, wrapper)
+
+
+def log_row(label: str, report: dict) -> dict:
+    """One speed_log.csv row: the worst video's speed plus the accuracy guards."""
+    worst = min(report["videos"], key=lambda v: v["speed"]["realtime_factor"])
+    sp, judged = worst["speed"], report["interactions"]["with_judge"]
+    return {"label": label, "videos": len(report["videos"]), "worst_video": Path(worst["path"]).name,
+            "realtime_factor": round(sp["realtime_factor"], 3), "frame_ms_p50": round(sp["frame_ms_p50"]),
+            "frame_ms_p95": round(sp["frame_ms_p95"]), "decode_s": round(sp["decode_s"], 1),
+            "track_ms": round(sp["track_ms_mean"]), "judge_ms": None if sp["judge_ms_mean"] is None else round(sp["judge_ms_mean"]),
+            "track_ids": sum(v["track_ids"] for v in report["videos"]), "with_judge_f1": judged["f1"]}
 
 
 def check_targets(report: dict, targets: dict) -> list[str]:
@@ -176,15 +236,22 @@ def main() -> None:
     parser.add_argument("--judge", choices=("pose", "off"), default="pose")
     parser.add_argument("--device", default=DEVICE)
     parser.add_argument("--skip-detector", action="store_true")
+    parser.add_argument("--only", help="Run only the videos whose path contains this text")
+    parser.add_argument("--label", help="Append a row under this label to benchmarks/speed_log.csv")
     args = parser.parse_args()
     spec = json.loads(args.spec.read_text())
+    if args.only:
+        spec["videos"] = [video for video in spec["videos"] if args.only in video["path"]]
     min_iou = spec.get("temporal_iou", 0.5)
     report: dict = {"judge": args.judge, "device": args.device}
     if not args.skip_detector:
         report["detector"] = detector_kpis(spec["detector"], args.device)
     videos = [video_kpis(video, args.judge, args.device, min_iou) for video in spec["videos"]]
     total = lambda key: {k: sum(v[key][k] for v in videos if v[key]) for k in ("tp", "fp", "fn")}
-    report["interactions"] = {key: {**scores(total(key)), **timing_error([v[key] for v in videos if v[key]])}
+    seconds = lambda key: {k: sum(v[key]["per_second"][k] for v in videos if v[key])
+                           for k in ("overlap_s", "predicted_s", "labelled_s")}
+    report["interactions"] = {key: {**scores(total(key)), **timing_error([v[key] for v in videos if v[key]]),
+                                    "per_second": second_scores(seconds(key))}
                               for key in ("proximity_only", "with_judge")}
     tracked = [v["tracking"] for v in videos]
     minutes, counted = sum(t["minutes"] for t in tracked), [t for t in tracked if t["people"] is not None]
@@ -202,6 +269,14 @@ def main() -> None:
     report["videos"] = videos
     report["target_failures"] = check_targets(report, spec.get("targets", {}))
     args.output.write_text(json.dumps(report, indent=2), encoding="utf-8")
+    if args.label:
+        log = Path(__file__).with_name("benchmarks") / "speed_log.csv"
+        row = log_row(args.label, report)
+        with log.open("a", newline="", encoding="utf-8") as handle:
+            writer = csv.DictWriter(handle, fieldnames=list(row))
+            if handle.tell() == 0:
+                writer.writeheader()
+            writer.writerow(row)
 
     show = lambda v: "n/a" if v is None else f"{v:.3f}"
     if "detector" in report:
@@ -215,6 +290,9 @@ def main() -> None:
     for name, s in report["interactions"].items():
         print(f"interactions {name:15} P {show(s['precision'])}  R {show(s['recall'])}  F1 {show(s['f1'])}  (tp {s['tp']} fp {s['fp']} fn {s['fn']})"
               f"  start err {show(s['start_error_s'])} s  end err {show(s['end_error_s'])} s")
+        ps = s["per_second"]
+        print(f"  per second {'':13} P {show(ps['precision'])}  R {show(ps['recall'])}  F1 {show(ps['f1'])}"
+              f"  ({ps['overlap_s']:.1f} s overlap of {ps['predicted_s']:.1f} s predicted, {ps['labelled_s']:.1f} s labelled)")
     t = report["tracking"]
     print(f"tracking: ID switches {show(t['id_switches_per_min'])}/min (videos with a people count), role flips {show(t['role_flips_per_min'])}/min")
     if "roles" in report:
@@ -225,7 +303,8 @@ def main() -> None:
     for v in videos:
         sp = v["speed"]
         print(f"speed {v['path']}: {sp['realtime_factor']:.2f}x realtime, frame p50 {show(sp['frame_ms_p50'])} ms "
-              f"p95 {show(sp['frame_ms_p95'])} ms, judge {sp['judge_calls']} calls x {show(sp['judge_ms_mean'])} ms")
+              f"p95 {show(sp['frame_ms_p95'])} ms, track {show(sp['track_ms_mean'])} ms, decode {sp['decode_s']:.1f} s, "
+              f"judge {sp['judge_calls']} calls x {show(sp['judge_ms_mean'])} ms, {v['track_ids']} IDs")
     print("targets: " + ("all met" if not report["target_failures"] else "; ".join(report["target_failures"])))
 
 
