@@ -135,7 +135,7 @@ h1, h2, h3, h4, h5, h6 {
   box-shadow: 0 4px 20px 3px color-mix(in srgb, var(--color-accent) 24%, transparent);
 }
 
-.profile-field:focus:not([aria-invalid="true"]) { border-color: var(--color-border-soft); }
+:is(.auth-field, .profile-field):focus:not([aria-invalid="true"]) { border-color: var(--color-border-soft); }
 .employee-navbar { box-shadow: 0 6px 20px rgb(5 10 28 / 24%); }
 
 .auth-backdrop {

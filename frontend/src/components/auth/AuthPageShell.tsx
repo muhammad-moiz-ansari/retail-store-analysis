@@ -1,5 +1,6 @@
 import { useId, type ComponentPropsWithoutRef, type ReactNode } from "react";
 import { Logo } from "@/components/ui/Logo";
+import { RetroInput } from "@/components/ui/RetroInput";
 
 export function AuthPageShell({
   title,
@@ -33,20 +34,8 @@ export function AuthField({
   error?: string;
 }) {
   const id = useId();
-  const errorId = `${id}-error`;
-
   return (
-    <div>
-      <label className="mb-1.5 block text-sm font-semibold" htmlFor={id}>{label}</label>
-      <input
-        {...inputProps}
-        id={id}
-        required
-        aria-invalid={error ? true : undefined}
-        aria-describedby={error ? errorId : undefined}
-        className={`auth-field min-h-11 w-full rounded-lg border bg-surface px-3 text-base text-text placeholder:text-text-muted ${error ? "border-danger" : "border-border-soft"}`}
-      />
-      {error && <p id={errorId} className="mt-1 text-sm text-danger">{error}</p>}
-    </div>
+    <RetroInput {...inputProps} id={id} label={label} required error={Boolean(error)}
+      helperText={error} className="auth-field min-h-11 !text-base" />
   );
 }

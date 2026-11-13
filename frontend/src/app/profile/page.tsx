@@ -176,8 +176,11 @@ function PreferenceToggle({ label, description, checked, onChange }: { label: st
         <p className="font-heading text-sm font-semibold text-text">{label}</p>
         <p className="mt-1 text-xs text-text-muted">{description}</p>
       </div>
-      <button type="button" role="switch" aria-checked={checked} aria-label={`${label}: ${checked ? "on" : "off"}`} onClick={onChange} className={`relative h-6 w-11 shrink-0 rounded border-2 border-border-soft transition-colors ${checked ? "bg-accent" : "bg-border-soft"}`}>
-        <span className={`absolute top-0.5 h-4 w-4 rounded-sm bg-surface transition-transform ${checked ? "translate-x-5" : "translate-x-0.5"}`} />
+      <button type="button" role="switch" aria-checked={checked} aria-label={label} onClick={onChange}
+        className="grid min-h-11 shrink-0 cursor-pointer place-items-center rounded-full">
+        <span aria-hidden="true" className={`flex h-6 w-11 items-center rounded-full p-0.5 motion-safe:transition-colors ${checked ? "bg-accent" : "bg-text-muted"}`}>
+          <span className={`size-5 rounded-full shadow-sm motion-safe:transition-transform ${checked ? "translate-x-5 bg-on-accent" : "bg-surface"}`} />
+        </span>
       </button>
     </div>
   );

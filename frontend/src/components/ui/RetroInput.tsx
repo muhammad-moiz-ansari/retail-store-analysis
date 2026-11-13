@@ -22,6 +22,7 @@ export function RetroInput({
   ...props
 }: RetroInputProps) {
   const inputId = id || (label ? label.toLowerCase().replace(/\s+/g, "-") : undefined);
+  const helperId = inputId && helperText ? `${inputId}-help` : undefined;
 
   return (
     <div className="w-full">
@@ -43,6 +44,7 @@ export function RetroInput({
           id={inputId}
           {...props}
           aria-invalid={props["aria-invalid"] ?? (error || undefined)}
+          aria-describedby={[props["aria-describedby"], helperId].filter(Boolean).join(" ") || undefined}
           className={[
             "w-full rounded-md border-2 bg-surface px-3 py-2",
             "font-body text-sm text-text placeholder:text-text-muted/60",
@@ -60,6 +62,7 @@ export function RetroInput({
       </div>
       {helperText && (
         <p
+          id={helperId}
           className={`mt-1 text-xs ${
             error ? "text-danger" : "text-text-muted"
           }`}
