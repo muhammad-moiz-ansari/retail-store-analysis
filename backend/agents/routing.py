@@ -13,7 +13,7 @@ class OfflineRouter:
         text = request.question.lower()
         if prohibited_question(text):
             return RouteDecision(target='unsupported')
-        if re.search(r'\b(coverage|staffed|employee|employees|staff)\b', text):
+        if re.search(r'\b(coverage|staffed|staffing|understaffed|employee|employees|staff|gaps?)\b', text):
             return RouteDecision(target='employee_activity')
         if re.search(r'\b(footfall|entries|exits|dwell|customers?|traffic|unattended|interactions?)\b', text):
             return RouteDecision(target='customer_behavior')

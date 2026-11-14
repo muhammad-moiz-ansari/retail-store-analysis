@@ -5,9 +5,9 @@ from .common import base_arguments
 from .golden import GoldenQuestion, evaluate, load_golden
 from .test_customer_behavior import offline  # noqa: F401
 
-# Known gaps in Moiz's OfflineRouter (routing.py), kept visible instead of hidden:
-# "staffing" does not match its \bstaff\b pattern, so the question is refused.
-KNOWN_ROUTER_GAPS = {'EA1'}
+# Known gaps in Moiz's OfflineRouter (routing.py), kept visible instead of hidden. Empty since 14 Nov 2026:
+# EA1 ("staffing gaps") was refused because \bstaff\b missed "staffing"; the router now routes staffing/gaps.
+KNOWN_ROUTER_GAPS: set[str] = set()
 
 
 def test_golden_set_has_five_or_more_questions_per_agent():

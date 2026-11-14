@@ -8,7 +8,7 @@ from pydantic import ValidationError
 from .contracts import EventFilters, TimeWindow
 from .graph import run_analytics
 from .graph_contracts import AskRequest, GraphLimits, GraphRun, RouteDecision, SpecialistDraft
-from .routing import JsonRouter
+from .routing import JsonRouter, OfflineRouter
 from .specialists import ALLOWED_TOOLS, SpecialistRegistration, claim_for
 from .test_read_tools import START, WINDOW, database, event, put, scope
 from .test_tool_integration import make_tools
@@ -176,3 +176,9 @@ def test_missing_sources_return_insufficient_or_unavailable_not_invented_metrics
     missing = make_conninfo(postgres_dsn, options='-csearch_path=retailpulse_missing')
     result = run_analytics(request(), registry(missing))
     assert result.status == 'unavailable' and not result.claims
+
+
+@pytest.mark.parametrize('question', ['Where are the staffing gaps?', 'Is aisle 2 understaffed?', 'Any coverage gap today?'])
+def test_offline_router_sends_staffing_questions_to_employee_activity(question):
+    # ACCEPTANCE.md A4 asks "Where are the staffing gaps?"; it used to fall through to 'unsupported' and be refused.
+    assert OfflineRouter()(request(question), scope()).target == 'employee_activity'

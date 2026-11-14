@@ -60,6 +60,7 @@ Branch `feature/fyp2-b0-event-store` (B0 to B5 code). Contract details in [CONTR
 - [x] **B3** `python -m backend.interaction.refit`: leave-one-clip-out role accuracy hand-set 0.960 / 0.915 (11 clips / set B),
       fitted 1.000 / 1.000; fitted on the 11 clips scores set B 59/59. Fitted weights as a store config:
       `benchmarks/store_roles_fitted.json` (uncalibrated cameras only; reference factor absent from all clips).
+      Decision (Ruhab, 14 Nov): fitted weights ship; both benchmark specs name them per video. To do: rerun before the B6 freeze.
 - [x] **B4** CLI `--camera` writes runs to the store; `floor_zones` dwell/transitions/heatmaps, `entrance_line` footfall,
       `queue_zone` queue length/wait, frozen-or-dark frame check. Zone polygons not drawn by decision: interactions use
       person-to-person distance, so zone signals stay off until a camera has a `--config` with polygons.
