@@ -17,6 +17,7 @@ from ..database import connect
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
+from ..interaction.types import CONFIRMED
 from .zones import foot_point, heatmap, line_crossing, queue_lengths, zone_of, zone_segments
 
 TABLES = ("tracks", "role_decisions", "interactions", "zone_dwell", "footfall", "queue_samples",
@@ -46,7 +47,7 @@ def derive_unattended(conn: Connection, run_id: str, min_seconds: float) -> int:
     helped) is at least `min_seconds`. Track IDs are per camera, so customers match on (camera, track)."""
     first_help = {(row["camera_id"], row["customer_track_id"]): row["ts_start"] for row in conn.execute(
         "SELECT camera_id, customer_track_id, MIN(ts_start) AS ts_start FROM interactions WHERE run_id = %s "
-        "GROUP BY camera_id, customer_track_id", (run_id,))}
+        "AND verdict = ANY(%s) GROUP BY camera_id, customer_track_id", (run_id, list(CONFIRMED)))}  # a judge-rejected pair is not help
     episodes = []
     for track in conn.execute("SELECT * FROM tracks WHERE run_id = %s AND role = 'customer'", (run_id,)):
         helped_at = first_help.get((track["camera_id"], track["track_id"]))

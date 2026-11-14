@@ -1,0 +1,486 @@
+{
+ "about": "C3 dispatch scenarios. rater_choice: employee id a human would send, or 'none'. Fill in blind, without running the evaluator first.",
+ "scenarios": [
+  {
+   "id": "S01",
+   "name": "one free employee in the target zone",
+   "target_zone": "z2",
+   "employees": [
+    {
+     "id": "ali",
+     "zone": "z2",
+     "available": true,
+     "busy": false
+    }
+   ],
+   "note": "",
+   "rater_choice": null
+  },
+  {
+   "id": "S02",
+   "name": "target-zone employee busy, floater free",
+   "target_zone": "z2",
+   "employees": [
+    {
+     "id": "ali",
+     "zone": "z2",
+     "available": true,
+     "busy": true
+    },
+    {
+     "id": "sara",
+     "zone": null,
+     "available": true,
+     "busy": false
+    }
+   ],
+   "note": "",
+   "rater_choice": null
+  },
+  {
+   "id": "S03",
+   "name": "only candidate would leave own zone below minimum",
+   "target_zone": "z3",
+   "employees": [
+    {
+     "id": "ali",
+     "zone": "z2",
+     "available": true,
+     "busy": false
+    }
+   ],
+   "note": "z2 min 1",
+   "rater_choice": null
+  },
+  {
+   "id": "S04",
+   "name": "two in z2, one may go to z3",
+   "target_zone": "z3",
+   "employees": [
+    {
+     "id": "ali",
+     "zone": "z2",
+     "available": true,
+     "busy": false
+    },
+    {
+     "id": "bilal",
+     "zone": "z2",
+     "available": true,
+     "busy": false
+    }
+   ],
+   "note": "",
+   "rater_choice": null
+  },
+  {
+   "id": "S05",
+   "name": "nobody available",
+   "target_zone": "z4",
+   "employees": [
+    {
+     "id": "ali",
+     "zone": "z2",
+     "available": false,
+     "busy": false
+    },
+    {
+     "id": "sara",
+     "zone": null,
+     "available": false,
+     "busy": false
+    }
+   ],
+   "note": "",
+   "rater_choice": null
+  },
+  {
+   "id": "S06",
+   "name": "unrostered person is not eligible",
+   "target_zone": "z4",
+   "employees": [
+    {
+     "id": "temp",
+     "zone": null,
+     "rostered": false,
+     "available": true,
+     "busy": false
+    }
+   ],
+   "note": "",
+   "rater_choice": null
+  },
+  {
+   "id": "S07",
+   "name": "checkout needs two, third may leave",
+   "target_zone": "z1",
+   "employees": [
+    {
+     "id": "a",
+     "zone": "z6",
+     "available": true,
+     "busy": false
+    },
+    {
+     "id": "b",
+     "zone": "z6",
+     "available": true,
+     "busy": false
+    },
+    {
+     "id": "c",
+     "zone": "z6",
+     "available": true,
+     "busy": false
+    }
+   ],
+   "note": "z6 min 2",
+   "rater_choice": null
+  },
+  {
+   "id": "S08",
+   "name": "checkout has exactly two, nobody may leave",
+   "target_zone": "z1",
+   "employees": [
+    {
+     "id": "a",
+     "zone": "z6",
+     "available": true,
+     "busy": false
+    },
+    {
+     "id": "b",
+     "zone": "z6",
+     "available": true,
+     "busy": false
+    }
+   ],
+   "note": "",
+   "rater_choice": null
+  },
+  {
+   "id": "S09",
+   "name": "promo display has no minimum",
+   "target_zone": "z2",
+   "employees": [
+    {
+     "id": "p",
+     "zone": "z5",
+     "available": true,
+     "busy": false
+    }
+   ],
+   "note": "z5 min 0",
+   "rater_choice": null
+  },
+  {
+   "id": "S10",
+   "name": "prefer target zone over floater",
+   "target_zone": "z3",
+   "employees": [
+    {
+     "id": "f",
+     "zone": null,
+     "available": true,
+     "busy": false
+    },
+    {
+     "id": "t",
+     "zone": "z3",
+     "available": true,
+     "busy": false
+    }
+   ],
+   "note": "",
+   "rater_choice": null
+  },
+  {
+   "id": "S11",
+   "name": "prefer floater over pulling from another zone",
+   "target_zone": "z3",
+   "employees": [
+    {
+     "id": "x",
+     "zone": "z2",
+     "available": true,
+     "busy": false
+    },
+    {
+     "id": "y",
+     "zone": "z2",
+     "available": true,
+     "busy": false
+    },
+    {
+     "id": "f",
+     "zone": null,
+     "available": true,
+     "busy": false
+    }
+   ],
+   "note": "",
+   "rater_choice": null
+  },
+  {
+   "id": "S12",
+   "name": "more spare staff wins",
+   "target_zone": "z4",
+   "employees": [
+    {
+     "id": "a",
+     "zone": "z2",
+     "available": true,
+     "busy": false
+    },
+    {
+     "id": "b",
+     "zone": "z2",
+     "available": true,
+     "busy": false
+    },
+    {
+     "id": "c",
+     "zone": "z6",
+     "available": true,
+     "busy": false
+    },
+    {
+     "id": "d",
+     "zone": "z6",
+     "available": true,
+     "busy": false
+    },
+    {
+     "id": "e",
+     "zone": "z6",
+     "available": true,
+     "busy": false
+    },
+    {
+     "id": "g",
+     "zone": "z6",
+     "available": true,
+     "busy": false
+    }
+   ],
+   "note": "z6 spare 2, z2 spare 1",
+   "rater_choice": null
+  },
+  {
+   "id": "S13",
+   "name": "busy target employee, free colleague in same zone",
+   "target_zone": "z2",
+   "employees": [
+    {
+     "id": "ali",
+     "zone": "z2",
+     "available": true,
+     "busy": true
+    },
+    {
+     "id": "bilal",
+     "zone": "z2",
+     "available": true,
+     "busy": false
+    }
+   ],
+   "note": "",
+   "rater_choice": null
+  },
+  {
+   "id": "S14",
+   "name": "everyone busy",
+   "target_zone": "z2",
+   "employees": [
+    {
+     "id": "a",
+     "zone": "z2",
+     "available": true,
+     "busy": true
+    },
+    {
+     "id": "b",
+     "zone": null,
+     "available": true,
+     "busy": true
+    }
+   ],
+   "note": "",
+   "rater_choice": null
+  },
+  {
+   "id": "S15",
+   "name": "unavailable target employee, available other-zone surplus",
+   "target_zone": "z4",
+   "employees": [
+    {
+     "id": "t",
+     "zone": "z4",
+     "available": false,
+     "busy": false
+    },
+    {
+     "id": "a",
+     "zone": "z1",
+     "available": true,
+     "busy": false
+    },
+    {
+     "id": "b",
+     "zone": "z1",
+     "available": true,
+     "busy": false
+    }
+   ],
+   "note": "",
+   "rater_choice": null
+  },
+  {
+   "id": "S16",
+   "name": "entrance event, entrance staff free",
+   "target_zone": "z1",
+   "employees": [
+    {
+     "id": "door",
+     "zone": "z1",
+     "available": true,
+     "busy": false
+    },
+    {
+     "id": "f",
+     "zone": null,
+     "available": true,
+     "busy": false
+    }
+   ],
+   "note": "",
+   "rater_choice": null
+  },
+  {
+   "id": "S17",
+   "name": "checkout event with checkout staff free",
+   "target_zone": "z6",
+   "employees": [
+    {
+     "id": "a",
+     "zone": "z6",
+     "available": true,
+     "busy": false
+    },
+    {
+     "id": "b",
+     "zone": "z2",
+     "available": true,
+     "busy": false
+    }
+   ],
+   "note": "target zone member may go even at minimum",
+   "rater_choice": null
+  },
+  {
+   "id": "S18",
+   "name": "alphabetical tie-break between equal floaters",
+   "target_zone": "z3",
+   "employees": [
+    {
+     "id": "zara",
+     "zone": null,
+     "available": true,
+     "busy": false
+    },
+    {
+     "id": "adam",
+     "zone": null,
+     "available": true,
+     "busy": false
+    }
+   ],
+   "note": "",
+   "rater_choice": null
+  },
+  {
+   "id": "S19",
+   "name": "surplus in two zones, equal spare",
+   "target_zone": "z4",
+   "employees": [
+    {
+     "id": "a",
+     "zone": "z1",
+     "available": true,
+     "busy": false
+    },
+    {
+     "id": "b",
+     "zone": "z1",
+     "available": true,
+     "busy": false
+    },
+    {
+     "id": "c",
+     "zone": "z2",
+     "available": true,
+     "busy": false
+    },
+    {
+     "id": "d",
+     "zone": "z2",
+     "available": true,
+     "busy": false
+    }
+   ],
+   "note": "",
+   "rater_choice": null
+  },
+  {
+   "id": "S20",
+   "name": "large store, many choices",
+   "target_zone": "z5",
+   "employees": [
+    {
+     "id": "a",
+     "zone": "z1",
+     "available": true,
+     "busy": false
+    },
+    {
+     "id": "b",
+     "zone": "z2",
+     "available": true,
+     "busy": false
+    },
+    {
+     "id": "c",
+     "zone": "z3",
+     "available": true,
+     "busy": false
+    },
+    {
+     "id": "d",
+     "zone": "z3",
+     "available": true,
+     "busy": false
+    },
+    {
+     "id": "e",
+     "zone": null,
+     "available": true,
+     "busy": false
+    },
+    {
+     "id": "f",
+     "zone": "z6",
+     "available": true,
+     "busy": false
+    },
+    {
+     "id": "g",
+     "zone": "z6",
+     "available": true,
+     "busy": false
+    }
+   ],
+   "note": "",
+   "rater_choice": null
+  }
+ ]
+}

@@ -10,7 +10,7 @@
     "dev:all": "node scripts/run-dev.mjs",
     "lint": "eslint frontend --config frontend/eslint.config.mjs",
     "test:dashboard-provider": "node scripts/test-dashboard-provider.mjs",
-    "backend:api": "PYTHONPATH=. ./.venv/bin/uvicorn backend.app:app --host 127.0.0.1 --port 8011"
+    "backend:api": "RETAILPULSE_DEV_DEFAULTS=1 PYTHONPATH=. ./.venv/bin/uvicorn backend.app:app --host 127.0.0.1 --port 8011"
   },
   "dependencies": {
     "@neon/config": "^1.14.0",

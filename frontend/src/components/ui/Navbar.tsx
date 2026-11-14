@@ -39,6 +39,7 @@ const PUBLIC_NAV_LINKS: NavLink[] = [
 const AUTHENTICATED_NAV_LINKS: NavLink[] = [
   { label: "Home", href: "/dashboard" },
   { label: "Customer Info", href: "/customer-info" },
+  { label: "POS Assistant", href: "/pos-info" },
   { label: "Employee Info", href: "/employee-info" },
   { label: "Spatial Analytics", href: "/spatial-analytics" },
   { label: "Interactions", href: "/interactions" },

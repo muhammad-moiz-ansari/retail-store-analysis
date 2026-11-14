@@ -1,6 +1,6 @@
 """KPI maths used by the benchmark."""
 
-from .benchmark import check_targets, interval_iou, match_events, scores
+from .benchmark import check_targets, interval_iou, log_row, match_events, scores
 
 
 def test_interval_iou() -> None:
@@ -44,3 +44,34 @@ def test_timing_error_and_tracking_kpis() -> None:
     kpis = tracking_kpis({1: ["customer", "employee", "employee"], 2: ["customer"], 3: ["employee", "customer", "employee"]}, 2.0, 2)
     assert (kpis["role_flips_per_min"], kpis["id_switches_per_min"]) == (1.5, 0.5)
     assert tracking_kpis({}, 1.0, None)["id_switches_per_min"] is None
+
+
+def test_per_second_overlap() -> None:
+    from pytest import approx
+
+    from .benchmark import event_kpis, overlap_seconds, second_scores
+
+    exact = second_scores(overlap_seconds([(10.0, 20.0)], [(10.0, 20.0)]))
+    assert (exact["precision"], exact["recall"], exact["f1"]) == (1.0, 1.0, 1.0)
+    # One long prediction over two short labels: strict matching misses both, per second credits the overlap.
+    long = event_kpis([(0.0, 30.0)], [(2.0, 8.0), (20.0, 26.0)], 0.5)
+    assert (long["tp"], long["fp"], long["fn"]) == (0, 1, 2)
+    assert long["per_second"]["overlap_s"] == 12.0 and long["per_second"]["precision"] == approx(0.4)
+    assert long["per_second"]["recall"] == 1.0
+    # Overlapping predictions are unioned, not double counted.
+    assert overlap_seconds([(0.0, 10.0), (5.0, 15.0), (14.0, 16.0)], [(0.0, 20.0)]) == {
+        "overlap_s": 16.0, "predicted_s": 16.0, "labelled_s": 20.0}
+    none = second_scores(overlap_seconds([], [(0.0, 5.0)]))
+    assert (none["precision"], none["recall"], none["f1"]) == (None, 0.0, None)
+    unlabelled = second_scores(overlap_seconds([(0.0, 5.0)], []))
+    assert (unlabelled["precision"], unlabelled["recall"], unlabelled["f1"]) == (0.0, None, None)
+
+
+def test_log_row_reports_the_worst_video() -> None:
+    def video(name, rf, ids):
+        return {"path": f"d/{name}.MOV", "track_ids": ids, "speed": {
+            "realtime_factor": rf, "frame_ms_p50": 120.4, "frame_ms_p95": 300.6, "decode_s": 20.04,
+            "track_ms_mean": 90.2, "judge_ms_mean": None}}
+    report = {"videos": [video("fast", 1.5, 10), video("slow", 0.8, 7)], "interactions": {"with_judge": {"f1": 1.0}}}
+    row = log_row("baseline", report)
+    assert (row["worst_video"], row["realtime_factor"], row["track_ids"], row["judge_ms"]) == ("slow.MOV", 0.8, 17, None)

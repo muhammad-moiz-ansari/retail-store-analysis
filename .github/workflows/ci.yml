@@ -45,7 +45,7 @@ jobs:
       - name: pytest (fast)
         run: >-
           python -m pytest backend/agents backend/events/test_events.py backend/test_postgres_migration.py
-          backend/test_handoff_eval.py -q -ra -p no:cacheprovider --basetemp "$RUNNER_TEMP/pytest"
+          backend/test_handoff_eval.py backend/tests/test_dispatch.py backend/tests/test_pos_core.py -q -ra -p no:cacheprovider --basetemp "$RUNNER_TEMP/pytest"
 
   frontend:
     name: frontend checks
@@ -75,9 +75,9 @@ jobs:
           python-version: '3.11'
           cache: pip
           cache-dependency-path: backend/requirements.txt
-      - run: pip install torch --index-url https://download.pytorch.org/whl/cpu
+      - run: pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu  # matching pair; a PyPI torchvision lacks the CPU nms op
       - run: pip install -r backend/requirements.txt pytest
       - name: pytest (CV)
         run: >-
-          python -m pytest backend/interaction backend/agents/business/test_clip_render.py
+          python -m pytest backend/interaction backend/agents/business/test_clip_render.py backend/tests
           -q -ra -p no:cacheprovider --basetemp "$RUNNER_TEMP/pytest"

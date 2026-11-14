@@ -14,11 +14,14 @@ import { ManagerMobileMenu } from "./ManagerMobileMenu";
 const managerLinks = [
   ["/dashboard", "Overview"], ["/customer-info", "Customers"],
   ["/employee-info", "Employees"], ["/spatial-analytics", "Spatial analytics"],
-  ["/interactions", "Interactions"], ["/alerts", "Alerts"],
+  ["/interactions", "Interactions"], ["/alerts", "Alerts"], ["/pos-info", "POS Analytics"],
   ["/camera-handoff", "Camera handoff"], ["/compare-people", "Compare people"],
   ["/voice-agent", "Voice agent"], ["/settings", "Store settings"],
 ];
 const employeeLinks = [["/employee-home", "My workspace"], ["/my-performance", "My performance"]];
+
+/** Routes where the user is considered authenticated (show role + Log Out) */
+const AUTHENTICATED_ROUTES = ["/dashboard", "/customer-info", "/pos-info", "/employee-info", "/spatial-analytics", "/settings", "/alerts", "/voice-agent", "/profile", "/employee", "/employee-home", "/my-performance"];
 
 function Navigation({ links, pathname, label }: { links: string[][]; pathname: string; label: string }) {
   return <nav aria-label={label} className="grid gap-1">
