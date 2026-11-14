@@ -1,0 +1,592 @@
+{
+  "kind": "acceptance_rehearsal",
+  "synthetic": true,
+  "not_acceptance": true,
+  "generated_at": "2026-11-14T08:54:04+00:00",
+  "fixture_run": "fixture-2026-11-03",
+  "database_schema": "acceptance_synthetic",
+  "policy": {
+    "min_wait_s": 180,
+    "high_wait_s": 360,
+    "high_episode_count": 3,
+    "min_staffed_ratio": 0.25,
+    "max_unknown_share": 0.2,
+    "version": "ruhab-signal-policy-v1"
+  },
+  "summary": {
+    "A1": "rehearsal_pass",
+    "A2": "not_runnable",
+    "A3": "rehearsal_pass",
+    "A4": "rehearsal_pass",
+    "A5": "rehearsal_pass",
+    "A6": "rehearsal_pass",
+    "A7": "rehearsal_pass",
+    "A8": "rehearsal_pass",
+    "A9": "rehearsal_fail",
+    "A10": "not_runnable"
+  },
+  "scenarios": [
+    {
+      "id": "A1",
+      "scenario": "Recorded clip to events",
+      "status": "rehearsal_pass",
+      "synthetic": true,
+      "checks": [
+        {
+          "check": "rows land in every event table",
+          "passed": true,
+          "detail": {
+            "tracks": 5553,
+            "role_decisions": 5553,
+            "interactions": 772,
+            "zone_dwell": 5553,
+            "footfall": 2216,
+            "queue_samples": 1440,
+            "unattended_episodes": 381,
+            "pipeline_health": 2160,
+            "heatmaps": 36
+          }
+        },
+        {
+          "check": "validate() returns []",
+          "passed": true,
+          "detail": []
+        },
+        {
+          "check": "rows carry the run, store and camera IDs",
+          "passed": true,
+          "detail": "0 track rows with a wrong store or no camera"
+        },
+        {
+          "check": "health rows cover the whole day for every camera",
+          "passed": true,
+          "detail": {
+            "c1": "720/720 minutes",
+            "c2": "720/720 minutes",
+            "c3": "720/720 minutes"
+          }
+        }
+      ],
+      "evidence": {
+        "generated": {
+          "tracks": 5553,
+          "role_decisions": 5553,
+          "interactions": 772,
+          "zone_dwell": 5553,
+          "footfall": 2216,
+          "queue_samples": 1440,
+          "pipeline_health": 2160,
+          "heatmaps": 36,
+          "unattended_episodes": 381
+        },
+        "rows_by_table": {
+          "tracks": 5553,
+          "role_decisions": 5553,
+          "interactions": 772,
+          "zone_dwell": 5553,
+          "footfall": 2216,
+          "queue_samples": 1440,
+          "unattended_episodes": 381,
+          "pipeline_health": 2160,
+          "heatmaps": 36
+        }
+      },
+      "note": "CV inference is replaced by the fixture generator; `ingest --camera` on real CV output is not exercised."
+    },
+    {
+      "id": "A2",
+      "scenario": "Events to map",
+      "status": "not_runnable",
+      "synthetic": true,
+      "checks": [
+        {
+          "check": "an observation without map_version is rejected",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "check": "an unmapped cell is masked as 'unmapped'",
+          "passed": true,
+          "detail": [
+            null,
+            "unmapped"
+          ]
+        }
+      ],
+      "evidence": {},
+      "note": "Blocked: no map registration (MAP-2) exists to project events onto the supplied map; only the CellObservation contract is checked."
+    },
+    {
+      "id": "A3",
+      "scenario": "Live categories",
+      "status": "rehearsal_pass",
+      "synthetic": true,
+      "checks": [
+        {
+          "check": "customer -> no_one happens only after the 2-window hold",
+          "passed": true,
+          "detail": {
+            "held_transitions": 14,
+            "first": [
+              "2026-11-03T10:19:00+00:00",
+              "2026-11-03T10:50:00+00:00",
+              "2026-11-03T12:55:00+00:00"
+            ],
+            "changed_without_hold": []
+          }
+        },
+        {
+          "check": "staff plus a customer shows customer_employee",
+          "passed": true,
+          "detail": {
+            "windows": 61,
+            "first": [
+              "2026-11-03T09:24:00+00:00",
+              "2026-11-03T09:25:00+00:00",
+              "2026-11-03T09:26:00+00:00"
+            ]
+          }
+        },
+        {
+          "check": "the blocked lens gives insufficient_coverage, never no_one",
+          "passed": true,
+          "detail": {
+            "blocked_windows": 40,
+            "qualities": [
+              "insufficient_coverage"
+            ]
+          }
+        }
+      ],
+      "evidence": {
+        "published_minutes": {
+          "customer": 560,
+          "employee": 0,
+          "customer_employee": 61,
+          "no_one": 59,
+          "None": 40
+        }
+      },
+      "note": "Input cells are the fixture's z3 zone as a single cell, standing in for MAP-2 projected cells."
+    },
+    {
+      "id": "A4",
+      "scenario": "Manager question",
+      "status": "rehearsal_pass",
+      "synthetic": true,
+      "checks": [
+        {
+          "check": "\"Summarise customers today\": development_stub=false",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "check": "\"Summarise customers today\": answered with grounded claims",
+          "passed": true,
+          "detail": "status partial, 9 claims"
+        },
+        {
+          "check": "\"Summarise customers today\": every number matches a tool metric",
+          "passed": true,
+          "detail": []
+        },
+        {
+          "check": "\"Summarise customers today\": caveats shown",
+          "passed": true,
+          "detail": "4 limitations"
+        },
+        {
+          "check": "\"Where are the staffing gaps?\": development_stub=false",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "check": "\"Where are the staffing gaps?\": answered with grounded claims",
+          "passed": true,
+          "detail": "status partial, 12 claims"
+        },
+        {
+          "check": "\"Where are the staffing gaps?\": every number matches a tool metric",
+          "passed": true,
+          "detail": []
+        },
+        {
+          "check": "\"Where are the staffing gaps?\": caveats shown",
+          "passed": true,
+          "detail": "4 limitations"
+        }
+      ],
+      "evidence": {
+        "Summarise customers today": {
+          "status": "partial",
+          "development_stub": false,
+          "claims": 9,
+          "tools": [
+            "get_footfall",
+            "get_interactions",
+            "get_unattended"
+          ],
+          "limitations": [
+            "Footfall is stored net per-track crossing, not every entrance crossing; runs are not person-deduplicated",
+            "Observation has blocked, missing, or unknown-health intervals",
+            "Approach reference is camera_first_seen, not store or zone entry",
+            "Stored unattended derivation does not filter interaction verdict; helped is not confirmed assistance"
+          ]
+        },
+        "Where are the staffing gaps?": {
+          "status": "partial",
+          "development_stub": false,
+          "claims": 12,
+          "tools": [
+            "get_coverage"
+          ],
+          "limitations": [
+            "Coverage is healthy observed employee-presence union, not roster availability or employee-seconds",
+            "z2: Observation has blocked, missing, or unknown-health intervals",
+            "z3: Observation has blocked, missing, or unknown-health intervals",
+            "z4: Observation has blocked, missing, or unknown-health intervals"
+          ]
+        }
+      },
+      "note": "Clip Review confirmation of cited interactions needs recordings; not part of this rehearsal."
+    },
+    {
+      "id": "A5",
+      "scenario": "Unattended to eligible employee",
+      "status": "rehearsal_pass",
+      "synthetic": true,
+      "checks": [
+        {
+          "check": "a window with an unhelped z3 wait >= min_wait_s exists",
+          "passed": true,
+          "detail": "09:00-10:00 UTC"
+        },
+        {
+          "check": "evaluate_zone emits unattended_customer and the adapter calls the real handler",
+          "passed": true,
+          "detail": [
+            {
+              "event": "evt-159d6482cac1",
+              "key": "key-159d6482cac1",
+              "decision": "dispatched",
+              "task": "bd49586a40d7460b8e315829b09ea50f",
+              "employee": "u_rehearsal_floater",
+              "reason_code": "handler_reported"
+            },
+            {
+              "event": "evt-004cfdbc80d4",
+              "key": "key-004cfdbc80d4",
+              "decision": "duplicate",
+              "task": "bd49586a40d7460b8e315829b09ea50f",
+              "employee": "u_rehearsal_floater",
+              "reason_code": "handler_reported"
+            }
+          ]
+        },
+        {
+          "check": "an eligible employee gets a task",
+          "passed": true,
+          "detail": {
+            "decision": "dispatched",
+            "employee": "u_rehearsal_floater"
+          }
+        },
+        {
+          "check": "the manager view shows it (alert + task rows)",
+          "passed": true,
+          "detail": [
+            {
+              "id": "bd49586a40d7460b8e315829b09ea50f",
+              "employee_id": "u_rehearsal_floater",
+              "target_zone_id": "z3",
+              "state": "delivered",
+              "category": "Unattended Customers",
+              "status": "active"
+            }
+          ]
+        }
+      ],
+      "evidence": {
+        "window": [
+          "2026-11-03T09:00:00+00:00",
+          "2026-11-03T10:00:00+00:00"
+        ],
+        "rows_before": {
+          "orchestration_events": 0,
+          "dispatch_decisions": 0,
+          "alerts": 1,
+          "tasks": 0
+        },
+        "rows_after": {
+          "orchestration_events": 2,
+          "dispatch_decisions": 2,
+          "alerts": 2,
+          "tasks": 1
+        },
+        "suppressed": []
+      },
+      "note": ""
+    },
+    {
+      "id": "A6",
+      "scenario": "No eligible employee",
+      "status": "rehearsal_pass",
+      "synthetic": true,
+      "checks": [
+        {
+          "check": "outcome no_eligible_employee",
+          "passed": true,
+          "detail": [
+            {
+              "event": "evt-4da65c76638b",
+              "key": "key-4da65c76638b",
+              "decision": "no_eligible_employee",
+              "task": null,
+              "employee": null,
+              "reason_code": "handler_reported"
+            },
+            {
+              "event": "evt-971f94b13787",
+              "key": "key-971f94b13787",
+              "decision": "no_eligible_employee",
+              "task": null,
+              "employee": null,
+              "reason_code": "handler_reported"
+            }
+          ]
+        },
+        {
+          "check": "no task created",
+          "passed": true,
+          "detail": {
+            "before": 1,
+            "after": 1
+          }
+        },
+        {
+          "check": "the manager is told (alert raised)",
+          "passed": true,
+          "detail": {
+            "before": 2,
+            "after": 4
+          }
+        }
+      ],
+      "evidence": {
+        "window": [
+          "2026-11-03T10:00:00+00:00",
+          "2026-11-03T11:00:00+00:00"
+        ]
+      },
+      "note": ""
+    },
+    {
+      "id": "A7",
+      "scenario": "Duplicate event",
+      "status": "rehearsal_pass",
+      "synthetic": true,
+      "checks": [
+        {
+          "check": "same idempotencyKey",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "check": "outcome duplicate",
+          "passed": true,
+          "detail": [
+            {
+              "event": "evt-159d6482cac1",
+              "key": "key-159d6482cac1",
+              "decision": "duplicate",
+              "task": "bd49586a40d7460b8e315829b09ea50f",
+              "employee": "u_rehearsal_floater",
+              "reason_code": "handler_reported"
+            },
+            {
+              "event": "evt-004cfdbc80d4",
+              "key": "key-004cfdbc80d4",
+              "decision": "duplicate",
+              "task": null,
+              "employee": null,
+              "reason_code": "handler_reported"
+            }
+          ]
+        },
+        {
+          "check": "still one task",
+          "passed": true,
+          "detail": {
+            "tasks_before": 1,
+            "tasks_after": 1,
+            "events_with_key": 1
+          }
+        }
+      ],
+      "evidence": {},
+      "note": ""
+    },
+    {
+      "id": "A8",
+      "scenario": "Blind camera",
+      "status": "rehearsal_pass",
+      "synthetic": true,
+      "checks": [
+        {
+          "check": "a z3 wait overlaps the c2 blackout",
+          "passed": true,
+          "detail": "13:00-14:40 UTC"
+        },
+        {
+          "check": "policy suppresses with unknown_observation_too_high",
+          "passed": true,
+          "detail": [
+            {
+              "zoneId": "z3",
+              "eventType": "unattended_customer",
+              "reason": "unknown_observation_too_high"
+            },
+            {
+              "zoneId": "z3",
+              "eventType": "unstaffed_zone",
+              "reason": "unknown_observation_too_high"
+            }
+          ]
+        },
+        {
+          "check": "no task",
+          "passed": true,
+          "detail": {
+            "before": 1,
+            "after": 1
+          }
+        }
+      ],
+      "evidence": {
+        "window": [
+          "2026-11-03T13:00:00+00:00",
+          "2026-11-03T14:40:00+00:00"
+        ]
+      },
+      "note": "The digest caveat naming the blind time is checked under A9."
+    },
+    {
+      "id": "A9",
+      "scenario": "Digest",
+      "status": "rehearsal_fail",
+      "synthetic": true,
+      "checks": [
+        {
+          "check": "digest built from the A4 runs plus z3 decisions",
+          "passed": true,
+          "detail": [
+            "Traffic",
+            "Assistance",
+            "Waiting customers",
+            "Staff coverage",
+            "Raised for staff follow-up"
+          ]
+        },
+        {
+          "check": "all figures match the claims (verify_narrative)",
+          "passed": true,
+          "detail": []
+        },
+        {
+          "check": "synthetic provenance is labelled, never shown as real",
+          "passed": true,
+          "detail": "synthetic"
+        },
+        {
+          "check": "a caveat says the camera was blocked",
+          "passed": true,
+          "detail": [
+            "Observation has blocked, missing, or unknown-health intervals",
+            "z2: Observation has blocked, missing, or unknown-health intervals",
+            "z3: Observation has blocked, missing, or unknown-health intervals"
+          ]
+        },
+        {
+          "check": "the caveat names the blind time (14:00-14:40 UTC)",
+          "passed": false,
+          "detail": "the coverage caveat is generic: it does not say when the camera was blind"
+        }
+      ],
+      "evidence": {
+        "status": "partial",
+        "citations": 15,
+        "text": [
+          "Rehearsal digest (synthetic)",
+          "Window: 2026-11-03 09:00\u201321:00 UTC",
+          "NOTE: built from synthetic data, not a verified real-store feed.",
+          "",
+          "Traffic",
+          "- Busiest period: 217 entries (2026-11-03 17:00\u201318:00 UTC)",
+          "- 195 exits (2026-11-03 17:00\u201318:00 UTC)",
+          "- Quietest period: 58 entries (2026-11-03 15:00\u201316:00 UTC)",
+          "",
+          "Assistance",
+          "- Confirmed interactions: 772",
+          "- Average confirmed interaction length: 70.1 s",
+          "- Average time to first approach (from first seen on camera): 53 s",
+          "- Customers in the approach-time sample: 772",
+          "",
+          "Waiting customers",
+          "- Stored unattended episodes: 381",
+          "- Longest unhelped wait: 5.0 min (zone z2)",
+          "",
+          "Staff coverage",
+          "- Staffed share of open time: 0% (zone z5)",
+          "- Observed staffed time: 0 s (zone z5)",
+          "- Staffed share of open time: 100% (zone z1)",
+          "- Observed staffed time: 12.0 h (zone z1)",
+          "- Staffed share of open time: 100% (zone z6)",
+          "- Observed staffed time: 12.0 h (zone z6)",
+          "- Observed staffed time: 11.3 h (zone z2)",
+          "- Time the camera could not see: 40.0 min (zone z2)",
+          "- Observed staffed time: 60.0 min (zone z3)",
+          "- Time the camera could not see: 40.0 min (zone z3)",
+          "- Observed staffed time: 11.3 h (zone z4)",
+          "- Time the camera could not see: 40.0 min (zone z4)",
+          "",
+          "Raised for staff follow-up",
+          "- Customer left waiting in zone z3 (high priority)",
+          "",
+          "Caveats",
+          "- Footfall is stored net per-track crossing, not every entrance crossing; runs are not person-deduplicated",
+          "- Observation has blocked, missing, or unknown-health intervals",
+          "- Approach reference is camera_first_seen, not store or zone entry"
+        ]
+      },
+      "note": "Acceptance requires provenance 'real' with no FIXTURE caveat; on synthetic data the correct result is the opposite, which is what is checked here."
+    },
+    {
+      "id": "A10",
+      "scenario": "Clip Review precision",
+      "status": "not_runnable",
+      "synthetic": true,
+      "checks": [
+        {
+          "check": "at least 30 confirmed interactions to sample",
+          "passed": true,
+          "detail": 772
+        },
+        {
+          "check": "review items are blind (no CV verdict shown)",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "check": "without a recording map every item says why it cannot play",
+          "passed": true,
+          "detail": 30
+        }
+      ],
+      "evidence": {
+        "candidates": 772,
+        "sampled": 30
+      },
+      "note": "Blocked: precision and Cohen's kappa need two human reviewers watching recorded clips, and the run-to-recording map (S) does not exist. Only the blind sampling step is rehearsed."
+    }
+  ]
+}

@@ -195,7 +195,7 @@ def page_summary(runs, page) -> PageSummary:
 
 # ---- Grounding check for any model-written narrative (FUTURE_WORK B3 step 2) ---------------
 
-NUMBER = re.compile(r'\d+(?:\.\d+)?')
+NUMBER = re.compile(r'(?<![\w.])\d+(?:\.\d+)?')  # not digits inside identifiers such as zone z2 or camera c3
 
 
 class NarrativeCheck(Contract):

@@ -32,6 +32,25 @@ Owners: **S** = Saqib, **M** = Moiz, **R** = Ruhab. Status is "not run" until re
 
 The logic behind A3–A9 has been run on labelled fixtures only, by `backend/agents/business/test_*.py`: 48 tests, all passing on 12 November 2026. This is a rehearsal, not acceptance.
 
+### Synthetic end-to-end rehearsal on PostgreSQL (14 November 2026, Ruhab)
+
+`python -m backend.acceptance_rehearsal` runs A1–A10 through the integrated code paths on the synthetic fixture day (`backend/events/fixtures.py`: 17–19 h rush, understaffed z3, camera c2 blocked 14:00–14:40) against the team's Neon PostgreSQL, in its own schema `acceptance_synthetic`. Every row is `synthetic`; **none of this is acceptance**, and the status column above stays "not run" until real footage passes. Report: `evidence/acceptance_rehearsal_synthetic.json`.
+
+| ID | Rehearsal | What ran | Notes |
+|---|---|---|---|
+| A1 | pass | Fixture day → event store; `validate()` = `[]`; rows in all 9 tables; health covers 720/720 minutes per camera | CV inference and `ingest --camera` on real output not exercised |
+| A2 | blocked | `CellObservation` contract only (map_version required, unmapped masked) | No MAP-2 registration code exists |
+| A3 | pass | z3 as one cell from stored dwell + c2 health → `OccupancyTracker` | customer → no_one only after the 2-window hold; customer_employee seen; blackout gives `insufficient_coverage`, never no_one |
+| A4 | pass | Both questions via `business_specialists()` on stored events | `development_stub=false`; every claim equals its tool metric; caveats shown. Clip Review of cited interactions needs recordings |
+| A5 | pass | z3, 09:00–10:00: policy → adapter → real `dispatch` handler | Eligible floater got a task; alert + task rows visible to the manager |
+| A6 | pass | z3, 10:00–11:00 with every roster unavailable | `no_eligible_employee`, no task, alert raised |
+| A7 | pass | Replay of A5's window | Same `idempotencyKey`, `duplicate`, still one task |
+| A8 | pass | z3, 13:00–14:40 (c2 blind 40 of 100 min) | Suppressed `unknown_observation_too_high`, no task |
+| A9 | fail | Digest from A4 runs + z3 decisions | Provenance `synthetic` (correct for fixtures); figures verified. **Gap:** the caveat says observation was blocked but not *when* (14:00–14:40) |
+| A10 | blocked | Blind sampling of 30 stored interactions | Precision/kappa need two human reviewers and the run→recording map |
+
+Found and fixed by this rehearsal: the offline router refused A4's own question "Where are the staffing gaps?" (`routing.py` did not route *staffing*/*gaps*), and `verify_narrative` counted the digits in zone IDs such as `z3` as figures (`narration.py`). Both have regression tests. Open: the coverage caveat should name the blind interval (`agents/tools/common.py` `health`), so A9's "digest caveat names the blind time" can pass.
+
 ## Threshold review sheet
 
 These are Ruhab's proposed defaults. They are **not tuned on real store data**. The team should agree on them, or change them, before A5–A8. They are configured per store, so a different store can override them without code changes. That answers the generalisability question raised at the proposal defence.

@@ -97,3 +97,5 @@ def test_narrative_check_rejects_invented_numbers():
     assert verify_narrative(good, batch).supported
     bad = verify_narrative('Traffic peaked at 17 entries and 1,250 customers visited.', batch)
     assert not bad.supported and bad.unsupported_numbers == ('17', '1250')
+    # Zone and camera IDs are labels, not figures: the digest itself prints "zone z3".
+    assert verify_narrative('Customers waited in zone z9 near camera c7.', batch).supported

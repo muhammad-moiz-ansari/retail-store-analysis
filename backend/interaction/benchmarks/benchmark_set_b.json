@@ -9,6 +9,7 @@
   "videos": [
     {
       "path": "dummyoutputs/square_640/20261010_155639_part1_sq640.mp4",
+      "config": "backend/interaction/benchmarks/store_roles_fitted.json",
       "every": 10,
       "track_every": 10,
       "interactions": [
@@ -41,6 +42,7 @@
     },
     {
       "path": "dummyoutputs/square_640/20261010_162139_part1_sq640.mp4",
+      "config": "backend/interaction/benchmarks/store_roles_fitted.json",
       "every": 10,
       "track_every": 10,
       "interactions": [
@@ -59,6 +61,7 @@
     },
     {
       "path": "dummyoutputs/square_640/Copy of IMG_8884_part1_sq640.MOV",
+      "config": "backend/interaction/benchmarks/store_roles_fitted.json",
       "every": 10,
       "track_every": 10,
       "interactions": [
@@ -85,6 +88,7 @@
     },
     {
       "path": "dummyoutputs/square_640/Copy of IMG_8888_part1_sq640.MOV",
+      "config": "backend/interaction/benchmarks/store_roles_fitted.json",
       "every": 10,
       "track_every": 10,
       "interactions": [
@@ -109,6 +113,7 @@
     },
     {
       "path": "dummyoutputs/square_640/IMG_8826_part1_sq640.MOV",
+      "config": "backend/interaction/benchmarks/store_roles_fitted.json",
       "every": 10,
       "track_every": 10,
       "interactions": [],
@@ -133,6 +138,7 @@
     },
     {
       "path": "dummyoutputs/square_640/IMG_8828_part1_sq640.MOV",
+      "config": "backend/interaction/benchmarks/store_roles_fitted.json",
       "every": 10,
       "track_every": 10,
       "interactions": [
@@ -153,6 +159,7 @@
     },
     {
       "path": "dummyoutputs/square_640/IMG_8830_part1_sq640.MOV",
+      "config": "backend/interaction/benchmarks/store_roles_fitted.json",
       "every": 10,
       "track_every": 10,
       "interactions": [
@@ -172,6 +179,7 @@
     },
     {
       "path": "dummyoutputs/square_640/IMG_8831_part1_sq640.MOV",
+      "config": "backend/interaction/benchmarks/store_roles_fitted.json",
       "every": 10,
       "track_every": 10,
       "interactions": [
@@ -203,6 +211,7 @@
     },
     {
       "path": "dummyoutputs/square_640/IMG_8832_part1_sq640.MOV",
+      "config": "backend/interaction/benchmarks/store_roles_fitted.json",
       "every": 10,
       "track_every": 10,
       "interactions": [],
@@ -221,6 +230,7 @@
     },
     {
       "path": "dummyoutputs/square_640/IMG_8834_part1_sq640.MOV",
+      "config": "backend/interaction/benchmarks/store_roles_fitted.json",
       "every": 10,
       "track_every": 10,
       "interactions": [
@@ -252,6 +262,7 @@
     },
     {
       "path": "dummyoutputs/square_640/IMG_8836_part1_sq640.MOV",
+      "config": "backend/interaction/benchmarks/store_roles_fitted.json",
       "every": 10,
       "track_every": 10,
       "interactions": [
@@ -279,6 +290,7 @@
     },
     {
       "path": "dummyoutputs/square_640/IMG_8838_part1_sq640.MOV",
+      "config": "backend/interaction/benchmarks/store_roles_fitted.json",
       "every": 10,
       "track_every": 10,
       "interactions": [],
@@ -296,6 +308,7 @@
     },
     {
       "path": "dummyoutputs/square_640/IMG_8838_part2_sq640.MOV",
+      "config": "backend/interaction/benchmarks/store_roles_fitted.json",
       "every": 10,
       "track_every": 10,
       "interactions": [
@@ -320,6 +333,7 @@
     },
     {
       "path": "dummyoutputs/square_640/IMG_8839_part1_sq640.MOV",
+      "config": "backend/interaction/benchmarks/store_roles_fitted.json",
       "every": 10,
       "track_every": 10,
       "interactions": [
