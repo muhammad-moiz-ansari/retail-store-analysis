@@ -77,3 +77,7 @@ Reproducible automated commands and measured outcomes are in PROGRESS.md. With D
 ### Optional Ask trace retention
 
 Traces contain manager questions, responses and supporting event references. Enable only on an approved database after applying `backend/agents/ask_trace_schema.sql`. Set `RETAILPULSE_ASK_TRACE_ENABLED=1` in the backend environment. Runs expire after 24 hours and are pruned on subsequent writes. Configure periodic deletion of expired rows if physical deletion must occur during idle periods. The existing manager proxy protects `GET /api/backend/agents/runs/{run_id}`. Retrieval requires the same actor, store, allowed scope and dashboard selection. Until enabled, Ask answers without saving traces.
+
+### Optional shared Ask budget
+
+For multiple workers, apply `backend/agents/ask_budget_schema.sql` once to the common backend database and set `RETAILPULSE_ASK_SHARED_BUDGET=1` on every worker. The counter uses fixed one-minute windows shared across workers. A store outage returns 503 in shared mode. It has no dependency on trace retention.

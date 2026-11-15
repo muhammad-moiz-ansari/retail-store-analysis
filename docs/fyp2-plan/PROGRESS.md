@@ -6,6 +6,8 @@ The [combined team plan](RetailPulse_FYP2_Implementation_Plan.md) governs curren
 
 ## Latest reconciliation / next handoff
 
+- **Moiz, shared Ask budget:** Added an opt-in PostgreSQL counter shared by workers. It enforces ten authorized questions per manager and store per clock minute. Deployment schema and acceptance are pending.
+
 - **Moiz, durable Ask traces:** Added opt-in PostgreSQL persistence and scoped run retrieval. The schema has not been applied to any environment. Verification is deferred to the final pass.
 
 - **Moiz, unattended provenance:** Dashboard and Ask readers recognize server-attested store/camera/run tuples produced by the fixed derivation. Historical and mixed selections keep the warning. No event rows were changed.

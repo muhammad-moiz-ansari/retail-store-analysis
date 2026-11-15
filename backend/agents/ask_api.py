@@ -5,7 +5,10 @@ from threading import Lock
 from time import monotonic
 
 from fastapi import APIRouter, Depends, HTTPException, Response
+from psycopg import Error
 
+from ..database import DatabaseNotConfigured
+from .ask_budget import take_shared_request
 from .business.employee_activity import business_specialists
 from .dashboard_api import access
 from .graph import run_analytics
@@ -49,7 +52,12 @@ def ask(request: AskRequest, response: Response, authorized=Depends(access)):
     selection = membership.default_request
     if request.window != selection.window or request.filters != selection.filters.event_filters():
         raise HTTPException(403, "Ask selection must match the configured dashboard selection")
-    if not take_request(membership.user_id):
+    try:
+        allowed = (take_shared_request(membership.user_id, membership.store_id)
+                   if os.getenv("RETAILPULSE_ASK_SHARED_BUDGET") == "1" else take_request(membership.user_id))
+    except (Error, DatabaseNotConfigured):
+        raise HTTPException(503, "Shared Ask budget unavailable") from None
+    if not allowed:
         raise HTTPException(429, "Ask request budget exhausted", headers={"Retry-After": "60"})
     tools = PostgresAnalyticsTools(synthetic=config.synthetic, contexts=config.contexts,
                                   verified_unattended_runs=config.verified_unattended_runs)

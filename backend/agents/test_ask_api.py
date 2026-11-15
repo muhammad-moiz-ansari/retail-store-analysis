@@ -16,6 +16,7 @@ def test_ask_uses_only_authorized_selection_and_scope(monkeypatch):
         window=request.window, filters=SimpleNamespace(event_filters=lambda: request.filters)))
     authorized = SimpleNamespace(synthetic=True, contexts=(), verified_unattended_runs=()), membership
     monkeypatch.delenv("RETAILPULSE_ASK_TRACE_ENABLED", raising=False)
+    monkeypatch.delenv("RETAILPULSE_ASK_SHARED_BUDGET", raising=False)
     monkeypatch.setattr(ask_api, "_requests", {})
     monkeypatch.setattr(ask_api, "ScopedToolRegistry", lambda tools, actual_scope: actual_scope)
     def run(actual_request, registry, *, specialists):
