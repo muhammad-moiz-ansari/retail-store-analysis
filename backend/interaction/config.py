@@ -41,6 +41,12 @@ class InteractionConfig:
     # started is one footfall, "in" when it moved toward entrance_in_direction ("right" or "left").
     entrance_line: float | None = None
     entrance_in_direction: Literal["right", "left"] = "right"
+    # Directional counter (events.footfall.entrance_crossings): a track must stay entrance_hold_seconds beyond the
+    # +-entrance_half_band neutral band to confirm a side; a gap over entrance_max_gap_seconds between samples resets it.
+    # Keep --every / --track-every so recorded samples stay closer together than entrance_max_gap_seconds.
+    entrance_half_band: float = 0.02
+    entrance_hold_seconds: float = 0.25
+    entrance_max_gap_seconds: float = 1.0
     # Counter camera only: normalised polygon where customers queue; sampled every queue_sample_seconds.
     queue_zone: list[list[float]] | None = None
     queue_sample_seconds: float = 5.0
@@ -86,6 +92,15 @@ class InteractionConfig:
     judge_frames: int = 4  # frames sampled across the last min_interaction_seconds
     judge_recheck_seconds: float = 1.0  # a rejected pair is re-judged this often while still close
     device: str = DEVICE  # "cuda:0" runs YOLO on the GPU (the .pt model; OpenVINO is CPU-only)
+
+    def __post_init__(self) -> None:
+        if self.entrance_line is not None:
+            try:
+                from ..events.footfall import validate_entrance_config
+            except ImportError:  # run as a script, without the backend package
+                from events.footfall import validate_entrance_config
+            validate_entrance_config(self.entrance_line, self.entrance_in_direction, self.entrance_half_band,
+                                     self.entrance_hold_seconds, self.entrance_max_gap_seconds)
 
     @classmethod
     def from_json(cls, path: Path | None, **overrides) -> "InteractionConfig":

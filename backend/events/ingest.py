@@ -18,7 +18,8 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from ..interaction.types import CONFIRMED
-from .zones import foot_point, heatmap, line_crossing, queue_lengths, zone_of, zone_segments
+from .footfall import entrance_crossings, validate_entrance_config
+from .zones import foot_point, heatmap, queue_lengths, zone_of, zone_segments
 
 TABLES = ("tracks", "role_decisions", "interactions", "zone_dwell", "footfall", "queue_samples",
           "unattended_episodes", "pipeline_health", "heatmaps")
@@ -26,7 +27,7 @@ COMMON = ("event_id", "run_id", "store_id", "camera_id", "zone_id", "ts_start", 
 DEFAULT_UNATTENDED_S = 180.0  # store_core's default thresholds.unattendedWaitMinutes (3)
 # Camera layout keys of a camera's --config file (InteractionConfig fields) that ingestion uses.
 LAYOUT = {"floor_zones": {}, "zone_hold_seconds": 1.0, "heatmap_grid": (32, 18), "entrance_line": None, "entrance_in_direction": "right",
-          "queue_zone": None, "queue_sample_seconds": 5.0}
+          "entrance_half_band": 0.02, "entrance_hold_seconds": 0.25, "entrance_max_gap_seconds": 1.0, "queue_zone": None, "queue_sample_seconds": 5.0}
 
 
 def insert(conn: Connection, table: str, rows: list[dict]) -> None:
@@ -132,10 +133,18 @@ def ingest_run(conn: Connection, prefix: Path | str, run_id: str, camera_id: str
                      "zone_id": zone_at(e["customer_track_id"], e["started_at"]), "ts_start": at(e["started_at"]), "ts_end": at(e["last_seen_at"]),
                      "employee_track_id": e["employee_track_id"], "customer_track_id": e["customer_track_id"],
                      "duration_s": round(e["last_seen_at"] - e["started_at"], 3), "verdict": e["verdict"]} for e in events]
-    crossings = {track_id: line_crossing(track_xs, layout["entrance_line"], layout["entrance_in_direction"])
-                 for track_id, track_xs in xs.items()} if layout["entrance_line"] is not None else {}
-    footfall = [{**base, "event_id": key.format("footfall", track_id), "ts_start": at(t), "ts_end": at(t), "track_id": track_id,
-                 "direction": direction} for track_id, crossing in sorted(crossings.items()) if crossing for direction, t in [crossing]]
+    footfall = []
+    if layout["entrance_line"] is not None:
+        settings = (layout["entrance_line"], layout["entrance_in_direction"], layout["entrance_half_band"],
+                    layout["entrance_hold_seconds"], layout["entrance_max_gap_seconds"])
+        validate_entrance_config(*settings)
+        # Directional: every confirmed entry and exit of a track. The ID carries direction and time, so replaying the
+        # same CV output rewrites the same rows (delete_run also clears them first).
+        for track_id, track_xs in sorted(xs.items()):
+            for direction, t in entrance_crossings(track_xs, settings[0], settings[1], half_band=settings[2],
+                                                   hold_seconds=settings[3], max_gap_seconds=settings[4]):
+                footfall.append({**base, "event_id": key.format("footfall", f"{track_id}:{direction}:{t:.3f}"), "ts_start": at(t),
+                                 "ts_end": at(t), "track_id": track_id, "direction": direction})
     # Wait = people ahead x mean service time, service time = this run's mean interaction length at the counter.
     service_s = sum(e["last_seen_at"] - e["started_at"] for e in events) / len(events) if events else None
     queue = [{**base, "event_id": key.format("queue", f"{t:.1f}"), "ts_start": at(t), "ts_end": at(t), "queue_length": length,

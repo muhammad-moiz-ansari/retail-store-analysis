@@ -178,6 +178,9 @@ def main() -> None:
                                           "its zone comes from the camera settings")
     parser.add_argument("--zone", help="zone_id override for --camera")
     parser.add_argument("--run-id", help="Event store run_id (default: the output path); re-using one replaces that run")
+    parser.add_argument("--no-dispatch", action="store_true",
+                        help="With --camera: ingest only. Use when `python -m backend.operations` is the dispatch producer, "
+                             "so one waiting customer is not dispatched by both paths")
     parser.add_argument("--start", type=datetime.fromisoformat,
                         help="UTC time of the video's first frame, e.g. 2026-11-03T09:00:00+00:00 (default: when processing starts)")
     args = parser.parse_args()
@@ -290,13 +293,16 @@ def main() -> None:
             counts = ingest_run(events, args.output, run_id, args.camera, zone, started_at,
                                 unattended_after_s=unattended_threshold(), layout=layout_from(pipeline.config))
         print(f"event store: run {run_id} as {args.camera}/{zone}: {counts}")
-        from ..dispatch import dispatch_unattended
-        from ..store_core import connect as store_connect
+        if args.no_dispatch:
+            print("dispatch: skipped (--no-dispatch)")
+        else:
+            from ..dispatch import dispatch_unattended
+            from ..store_core import connect as store_connect
 
-        with store_connect() as store, connect() as events:
-            decisions = [r["decision"] for r in dispatch_unattended(store, events, run_id)]
-            store.commit()
-        print(f"dispatch: {len(decisions)} unattended episodes -> {dict((d, decisions.count(d)) for d in set(decisions))}")
+            with store_connect() as store, connect() as events:
+                decisions = [r["decision"] for r in dispatch_unattended(store, events, run_id)]
+                store.commit()
+            print(f"dispatch: {len(decisions)} unattended episodes -> {dict((d, decisions.count(d)) for d in set(decisions))}")
 
 
 def camera_zone(camera_id: str) -> str:

@@ -1,0 +1,9 @@
+# Deployed API only: auth, analytics, Ask, tasks and dispatch. No OpenCV, torch or YOLO.
+# The CV routes (/analyze-frame, /interaction/*, /camera/*) import their heavy packages lazily and need
+# backend/requirements.txt instead; run CV on a separate machine that writes to the same DATABASE_URL.
+fastapi
+uvicorn
+pydantic>=2.7,<3
+psycopg[binary]>=3.2,<4
+langgraph>=1.2.20,<2
+numpy

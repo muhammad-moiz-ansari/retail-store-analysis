@@ -105,7 +105,10 @@ def test_ingest_splits_tracks_into_floor_zones_and_hourly_heatmaps(tmp_path, pos
     started = datetime(2026, 11, 3, 9, 59, 50, tzinfo=timezone.utc)  # crosses 10:00, so two hourly heatmaps
     counts = ingest_run(conn, prefix, "r", "c2", "z1", started, layout={**layout, "entrance_line": 0.5})
     assert (counts["zone_dwell"], counts["heatmaps"], counts["footfall"]) == (3, 2, 1)
-    assert conn.execute("SELECT track_id, direction, ts_start FROM footfall").fetchone() == {"track_id": 1, "direction": "in", "ts_start": START.replace(hour=10)}
+    first_ids = {r["event_id"] for r in conn.execute("SELECT event_id FROM footfall")}
+    replay = ingest_run(conn, prefix, "r", "c2", "z1", started, layout={**layout, "entrance_line": 0.5})
+    assert replay["footfall"] == 1 and {r["event_id"] for r in conn.execute("SELECT event_id FROM footfall")} == first_ids  # stable IDs
+    assert conn.execute("SELECT track_id, direction, ts_start FROM footfall").fetchone() == {"track_id": 1, "direction": "in", "ts_start": START.replace(hour=10, second=1)}
     dwell = [(r["track_id"], r["zone_id"], r["dwell_s"]) for r in conn.execute("SELECT * FROM zone_dwell ORDER BY track_id, ts_start")]
     assert dwell == [(1, "z2", 10.0), (1, "z3", 9.0), (2, "z3", 19.0)]
     assert conn.execute("SELECT zone_id FROM interactions").fetchone()["zone_id"] == "z3"
@@ -115,14 +118,47 @@ def test_ingest_splits_tracks_into_floor_zones_and_hourly_heatmaps(tmp_path, pos
     assert validate(conn) == []
 
 
-def test_entrance_line_counts_net_crossings_once() -> None:
-    from .zones import line_crossing
+def test_entrance_crossings_are_directional_and_ignore_jitter() -> None:
+    from .footfall import entrance_crossings
 
-    walk_in = [(0, 0.2), (1, 0.45), (2, 0.55), (3, 0.48), (4, 0.6), (5, 0.9)]  # jitters on the line at 0.5
-    assert line_crossing(walk_in, 0.5, "right") == ("in", 4)
-    assert line_crossing(list(reversed([(5 - t, x) for t, x in walk_in])), 0.5, "right")[0] == "out"
-    assert line_crossing([(0, 0.2), (1, 0.7), (2, 0.3)], 0.5, "right") is None  # came back: browsing at the door
-    assert line_crossing(walk_in, 0.5, "left") == ("out", 4)
+    def walk(xs, step=0.1):
+        return [(i * step, x) for i, x in enumerate(xs)]
+
+    kwargs = dict(half_band=0.02, hold_seconds=0.25, max_gap_seconds=1.0)
+    # Stays left for 0.3 s, chatters on the line at 0.5, then settles right: one entry, timed at the first sample beyond the band.
+    jitter = [0.30] * 4 + [0.45, 0.49, 0.51, 0.49, 0.52, 0.48, 0.55, 0.60, 0.70, 0.80]
+    (direction, at), = entrance_crossings(walk(jitter), 0.5, "right", **kwargs)
+    assert (direction, round(at, 3)) == ("in", 1.0)
+    assert [d for d, _ in entrance_crossings(walk(jitter), 0.5, "left", **kwargs)] == ["out"]  # same walk, other inside direction
+    reverse = [(i * 0.1, x) for i, x in enumerate(reversed(jitter))]  # the walk backwards: leaving
+    assert [d for d, _ in entrance_crossings(reverse, 0.5, "right", **kwargs)] == ["out"]
+    # In and back out within one track: two crossings (the old per-track net count reported none).
+    there_and_back = walk([0.2] * 4 + [0.8] * 4 + [0.2] * 4)
+    assert [d for d, _ in entrance_crossings(there_and_back, 0.5, "right", **kwargs)] == ["in", "out"]
+    # A person who appears already inside, or only touches the neutral band, is not counted.
+    assert entrance_crossings(walk([0.8] * 6), 0.5, "right", **kwargs) == []
+    assert entrance_crossings(walk([0.2, 0.3, 0.49, 0.5, 0.49, 0.3]), 0.5, "right", **kwargs) == []
+
+
+def test_entrance_crossings_reset_over_gaps_and_reject_bad_input() -> None:
+    from .footfall import entrance_crossings
+
+    kwargs = dict(half_band=0.02, hold_seconds=0.25, max_gap_seconds=1.0)
+    # The track vanishes for 3 s on the left and reappears on the right: the crossing happened unseen, so it is unknown.
+    assert entrance_crossings([(0, 0.2), (0.3, 0.2), (3.3, 0.8), (3.6, 0.8), (3.9, 0.8)], 0.5, "right", **kwargs) == []
+    for bad in (dict(boundary=0.01), dict(in_direction="up"), dict(half_band=0.0), dict(hold_seconds=2.0)):
+        with pytest.raises(ValueError):
+            entrance_crossings([(0, 0.2)], **{"boundary": 0.5, "in_direction": "right", **kwargs, **bad})
+    with pytest.raises(ValueError):
+        entrance_crossings([(1, 0.2), (0.5, 0.3)], 0.5, "right", **kwargs)  # not time-ordered
+
+
+def test_camera_config_rejects_an_unusable_entrance_line() -> None:
+    from ..interaction.config import InteractionConfig
+
+    InteractionConfig(entrance_line=0.5)
+    with pytest.raises(ValueError):
+        InteractionConfig(entrance_line=0.01)  # inside the neutral band of the frame edge
 
 
 def test_queue_counts_customers_in_the_polygon_and_estimates_wait(tmp_path, postgres_connection) -> None:
