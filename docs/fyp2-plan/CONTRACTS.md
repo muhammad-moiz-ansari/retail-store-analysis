@@ -165,6 +165,10 @@ Zone and camera ids are the ones seeded in `store_core.py` (`z1`–`z6`, `c1`–
 - **footfall (B4.3)**: entrance camera config sets `entrance_line` (normalised x of a vertical line) and
   `entrance_in_direction` ("right"/"left"). A track that ends on the other side from where it started is one row at
   its last crossing time (net, so jitter on the line counts once; walking in and back out within one track counts 0).
+  Moiz’s `entrance_crossings` helper accepts a camera-local track’s time-ordered normalized x samples and returns
+  confirmed `(direction, seconds)` events. It arms on a stable side, ignores the neutral band, requires a hold on the
+  destination side, skips duplicate timestamps, and re-arms after a long gap. Separate confirmed return trips count.
+  Saqib owns integration, stable event IDs and camera setup. Defaults are provisional and require clip validation.
 - **queue_samples (B4.4)**: counter camera config sets `queue_zone` (normalised polygon) and `queue_sample_seconds` (5).
   Every sample counts customers (not staff, not unknown) whose feet are in the polygon; `est_wait_s` = length x the
   run's mean interaction duration (NULL when the run has no interactions).
