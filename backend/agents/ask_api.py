@@ -9,7 +9,10 @@ from fastapi import APIRouter, Depends, HTTPException, Response
 from .business.employee_activity import business_specialists
 from .dashboard_api import access
 from .graph import run_analytics
+from .contracts import Identifier
 from .graph_contracts import AskRequest, GraphRun
+from .postgres_traces import PostgresTraceStore
+from .service import AnalyticsService
 from .tools.contextual import PostgresAnalyticsTools
 from .tools.registry import ScopedToolRegistry
 
@@ -50,7 +53,28 @@ def ask(request: AskRequest, response: Response, authorized=Depends(access)):
         raise HTTPException(429, "Ask request budget exhausted", headers={"Retry-After": "60"})
     tools = PostgresAnalyticsTools(synthetic=config.synthetic, contexts=config.contexts,
                                   verified_unattended_runs=config.verified_unattended_runs)
-    registry = ScopedToolRegistry(tools, membership.scope())
+    scope = membership.scope()
     response.headers["Cache-Control"] = "no-store"
     response.headers["X-RetailPulse-Analytics-Source"] = "synthetic" if config.synthetic else "recorded"
-    return run_analytics(request, registry, specialists=business_specialists())
+    specialists = business_specialists()
+    if os.getenv("RETAILPULSE_ASK_TRACE_ENABLED") == "1":
+        return AnalyticsService(tools, specialists=specialists, traces=PostgresTraceStore()).ask(request, scope=scope)
+    return run_analytics(request, ScopedToolRegistry(tools, scope), specialists=specialists)
+
+
+@router.get("/runs/{run_id}", response_model=GraphRun, dependencies=[Depends(ask_enabled)])
+def get_run(run_id: Identifier, response: Response, authorized=Depends(access)):
+    _, membership = authorized
+    try:
+        if os.getenv("RETAILPULSE_ASK_TRACE_ENABLED") != "1":
+            raise KeyError(run_id)
+        run = PostgresTraceStore().get(run_id, membership.scope())
+        selection = membership.default_request
+        if run.request.window != selection.window or run.request.filters != selection.filters.event_filters():
+            raise KeyError(run_id)
+    except KeyError:
+        raise HTTPException(404, "Analytics run not found") from None
+    except RuntimeError:
+        raise HTTPException(503, "Ask trace storage unavailable") from None
+    response.headers["Cache-Control"] = "no-store"
+    return run

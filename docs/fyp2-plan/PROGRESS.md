@@ -6,6 +6,8 @@ The [combined team plan](RetailPulse_FYP2_Implementation_Plan.md) governs curren
 
 ## Latest reconciliation / next handoff
 
+- **Moiz, durable Ask traces:** Added opt-in PostgreSQL persistence and scoped run retrieval. The schema has not been applied to any environment. Verification is deferred to the final pass.
+
 - **Moiz, unattended provenance:** Dashboard and Ask readers recognize server-attested store/camera/run tuples produced by the fixed derivation. Historical and mixed selections keep the warning. No event rows were changed.
 
 - **Moiz, directional footfall:** The per-track entrance counter in `backend/events/footfall.py` uses hysteresis, stable-side confirmation and a gap reset. It returns each confirmed entry or exit for Saqib’s ingestion integration. Validation is deferred.
