@@ -3,6 +3,7 @@ import os
 from collections import deque
 from threading import Lock
 from time import monotonic
+from typing import Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Response
 from psycopg import Error
@@ -11,6 +12,7 @@ from ..database import DatabaseNotConfigured
 from ..voice_agent import call_hugging_face
 from .ask_budget import take_shared_request
 from .business.employee_activity import business_specialists
+from .business.narration import PageSummary, page_summary
 from .dashboard_api import access
 from .graph import run_analytics
 from .contracts import Identifier
@@ -92,3 +94,15 @@ def get_run(run_id: Identifier, response: Response, authorized=Depends(access)):
         raise HTTPException(503, "Ask trace storage unavailable") from None
     response.headers["Cache-Control"] = "no-store"
     return run
+
+
+@router.get("/runs/{run_id}/summary", response_model=PageSummary, dependencies=[Depends(ask_enabled)])
+def summarize_run(
+    run_id: Identifier,
+    response: Response,
+    page: Literal["dashboard", "customer-info", "employee-info", "alerts"] = "dashboard",
+    authorized=Depends(access),
+):
+    """Summarize only a retained run that the caller can still access."""
+    run = get_run(run_id, response, authorized)
+    return page_summary([run], page)

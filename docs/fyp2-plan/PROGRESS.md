@@ -6,6 +6,8 @@ The [combined team plan](RetailPulse_FYP2_Implementation_Plan.md) governs curren
 
 ## Latest reconciliation / next handoff
 
+- **Moiz, narrated Ask summaries:** Added an authenticated endpoint for page-specific cited summaries of retained Ask runs. Retrieval keeps the same manager, store, selection and expiry checks. The Ask panel offers the summary for retained runs. Final testing remains open.
+
 - **Moiz, optional provider routing:** Ask can use the existing Hugging Face configuration for route selection. The provider receives the question only and cannot choose tools or supply answer text. Offline routing remains the default. No provider request was made.
 
 - **Moiz, next-day staffing reasoning:** Added a scoped, approval-required proposal for cited forecasts, historical coverage and roster counts. No roster changes are made. Trusted source and approval wiring remain open.

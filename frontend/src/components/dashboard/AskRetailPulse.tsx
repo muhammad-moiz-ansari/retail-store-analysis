@@ -1,7 +1,7 @@
 "use client";
 
 import { type FormEvent, useEffect, useRef, useState } from "react";
-import { askDashboard, type AskAnswer } from "../../lib/analytics-provider/ask";
+import { askDashboard, loadAskSummary, type AskAnswer } from "../../lib/analytics-provider/ask";
 import type { AnalyticsRequest } from "../../lib/analytics-provider/contracts";
 import { RetroButton } from "../ui/RetroButton";
 import { RetroInput } from "../ui/RetroInput";
@@ -10,6 +10,35 @@ const labels: Record<AskAnswer["status"], string> = {
   ok: "Answer", partial: "Partial answer", insufficient_evidence: "Insufficient evidence",
   refused: "Unsupported question", unavailable: "Analytics unavailable",
 };
+
+function CitedSummary({ runId }: { runId: string }) {
+  const [sentences, setSentences] = useState<Awaited<ReturnType<typeof loadAskSummary>> | null>(null);
+  const [error, setError] = useState(false);
+  const [requested, setRequested] = useState(false);
+  useEffect(() => {
+    if (!requested) return;
+    const controller = new AbortController();
+    loadAskSummary(runId, controller.signal).then((result) => {
+      if (!controller.signal.aborted) setSentences(result);
+    }).catch(() => {
+      if (!controller.signal.aborted) setError(true);
+    });
+    return () => controller.abort();
+  }, [requested, runId]);
+
+  if (error) return <p role="status">Cited summary unavailable.</p>;
+  if (sentences) return <ul className="list-disc space-y-1 pl-5">
+    {sentences.map((sentence, i) => <li key={i}>
+      {sentence.text}
+      {sentence.citations.map((citation, j) => <span key={j} className="block text-xs text-text-muted">
+        {citation.source} · {citation.ids.join(", ")}
+      </span>)}
+    </li>)}
+  </ul>;
+  return <RetroButton type="button" variant="secondary" disabled={requested} onClick={() => setRequested(true)}>
+    {requested ? "Loading summary…" : "Show cited summary"}
+  </RetroButton>;
+}
 
 export function AskRetailPulse({ selection, unavailable }: { selection?: AnalyticsRequest; unavailable?: string }) {
   const [question, setQuestion] = useState("");
@@ -53,6 +82,7 @@ export function AskRetailPulse({ selection, unavailable }: { selection?: Analyti
         <div className="mt-2 max-h-[35vh] space-y-2 overflow-auto text-sm" role="status">
           <p className="font-semibold">{labels[answer.status]}{answer.synthetic && " · Synthetic backend data"}</p>
           <p className="whitespace-pre-wrap [overflow-wrap:anywhere]">{answer.response}</p>
+          {answer.retainedRunId && <CitedSummary key={answer.retainedRunId} runId={answer.retainedRunId} />}
           {(answer.citations.length > 0 || answer.limitations.length > 0) && (
             <details>
               <summary className="cursor-pointer font-semibold">Evidence and limitations</summary>

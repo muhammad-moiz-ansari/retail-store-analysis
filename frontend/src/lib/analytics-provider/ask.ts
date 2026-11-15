@@ -10,6 +10,7 @@ export type AskAnswer = {
   citations: Citation[];
   limitations: string[];
   synthetic: boolean;
+  retainedRunId?: string;
 };
 
 function isCitation(value: unknown): value is Citation {
@@ -47,5 +48,20 @@ export async function askDashboard(question: string, selection: AnalyticsRequest
     throw new Error("Ask RetailPulse returned an invalid answer.");
   }
   return { status: body.status, response: body.response, citations: body.citations,
-    limitations: body.limitations, synthetic: source === "synthetic" };
+    limitations: body.limitations, synthetic: source === "synthetic",
+    ...(body.trace_retained === true && typeof body.run_id === "string" ? { retainedRunId: body.run_id } : {}) };
+}
+
+
+export async function loadAskSummary(runId: string, signal: AbortSignal): Promise<{ text: string; citations: Citation[] }[]> {
+  const response = await fetch("/api/backend/agents/runs/" + encodeURIComponent(runId) + "/summary", {
+    credentials: "same-origin", cache: "no-store", signal,
+  });
+  if (!response.ok) throw new Error("Cited summary unavailable.");
+  const data = await response.json();
+  if (!Array.isArray(data?.sentences) || data.sentences.length > 5 || !data.sentences.every(
+    (sentence: { text?: unknown; citations?: unknown }) => sentence && typeof sentence.text === "string" &&
+      Array.isArray(sentence.citations) && sentence.citations.every(isCitation),
+  )) throw new Error("Invalid cited summary.");
+  return data.sentences;
 }
