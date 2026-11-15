@@ -5,7 +5,8 @@ from typing import Literal
 
 from pydantic import Field
 
-from ..contracts import Contract, Evidence, Identifier, MAX_RESULTS, ResultContext, ToolRequest
+from ..contracts import (Contract, CountMetric, Evidence, Identifier, MAX_RESULTS, Metric,
+                         ResultContext, SecondsMetric, ToolRequest)
 from .analytics import EventAnalytics
 from .store import SourceUnavailable, read_session
 
@@ -14,8 +15,8 @@ class QueueSample(Contract):
     camera_id: Identifier
     zone_id: Identifier
     observed_at: datetime
-    queue_length: int = Field(ge=0, strict=True)
-    estimated_wait_seconds: float | None = Field(ge=0)
+    queue_length: CountMetric
+    estimated_wait_seconds: SecondsMetric
     evidence: Evidence
 
 
@@ -23,7 +24,7 @@ class PipelineHealthSample(Contract):
     camera_id: Identifier
     observed_from: datetime
     observed_to: datetime
-    fps: float = Field(ge=0)
+    fps: Metric
     mean_confidence: float | None = Field(ge=0, le=1)
     unknown_role_share: float | None = Field(ge=0, le=1)
     id_churn: int = Field(ge=0, strict=True)
@@ -72,11 +73,15 @@ class OperationsAnalytics(EventAnalytics):
     @staticmethod
     def _queue_sample(row, evidence):
         return QueueSample(camera_id=row["camera_id"], zone_id=row["zone_id"], observed_at=row["_start"],
-                           queue_length=row["queue_length"], estimated_wait_seconds=row["est_wait_s"], evidence=evidence)
+                           queue_length=CountMetric(value=float(row["queue_length"]), evidence=(evidence,)),
+                           estimated_wait_seconds=SecondsMetric(
+                               value=row["est_wait_s"], estimated=True, evidence=(evidence,),
+                               unavailable_reason="Estimated wait is unavailable" if row["est_wait_s"] is None else None,
+                           ), evidence=evidence)
 
     @staticmethod
     def _health_sample(row, evidence):
         return PipelineHealthSample(camera_id=row["camera_id"], observed_from=row["_start"], observed_to=row["_end"],
-                                    fps=row["fps"], mean_confidence=row["mean_confidence"],
+                                    fps=Metric(value=row["fps"], unit="fps", evidence=(evidence,)), mean_confidence=row["mean_confidence"],
                                     unknown_role_share=row["unknown_role_share"], id_churn=row["id_churn"],
                                     frozen_or_dark=row["frozen_or_dark"], evidence=evidence)

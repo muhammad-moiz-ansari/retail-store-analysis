@@ -2,7 +2,7 @@
 from ..contracts import (Contract, CountMetric, Identifier, CoverageRequest, CoverageResult, CoverageSummary, RatioMetric,
                          SecondsMetric, TimeWindow, TrustedAccessScope, UnattendedEpisode,
                          UnattendedRequest, UnattendedResult)
-from .analytics import EventAnalytics
+from .operations import OperationsAnalytics
 from .common import clipped, count, evidence, health, intersect, merge, metric, seconds
 from .store import SourceUnavailable, read_session
 
@@ -13,7 +13,7 @@ class VerifiedUnattendedRun(Contract):
     run_id: Identifier
 
 
-class PostgresAnalyticsTools(EventAnalytics):
+class PostgresAnalyticsTools(OperationsAnalytics):
     """All five analytics interfaces; DB path and observation context are server-injected."""
 
     def __init__(self, dsn=None, *, synthetic: bool, contexts=(), verified_unattended_runs=()):

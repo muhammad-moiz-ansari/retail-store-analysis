@@ -13,7 +13,7 @@ from .graph_contracts import (AskRequest, GraphLimits, GraphRun, GroundingIssue,
 from .contracts import TrustedAccessScope
 from .routing import OfflineRouter, prohibited_question
 from .specialists import ALLOWED_TOOLS, development_specialists, metric_at
-from .tools.registry import REQUEST_TYPES, ScopedToolRegistry
+from .tools.registry import ALL_REQUEST_TYPES, ScopedToolRegistry
 
 
 class GraphState(TypedDict, total=False):
@@ -48,11 +48,11 @@ class ReadToolFacade:
             raise BudgetExceeded('tool_limit')
         call_id = f'tool-{len(self.calls)+1}'
         started, status, recorded = perf_counter(), 'error', {}
-        allowed = isinstance(name, str) and name in self.allowed and name in REQUEST_TYPES
+        allowed = isinstance(name, str) and name in self.allowed and name in ALL_REQUEST_TYPES
         try:
             if not allowed:
                 raise PermissionError('Tool is not registered for this specialist')
-            request = REQUEST_TYPES[name].model_validate(arguments)
+            request = ALL_REQUEST_TYPES[name].model_validate(arguments)
             recorded = request.model_dump(mode='json')
             if request.window != self._request.window:
                 raise PermissionError('Tool window must match the validated analytics request')
@@ -116,6 +116,12 @@ def render_claim(claim, result):
             details.append(parent.role)
         if hasattr(parent, 'zone_id'):
             details.append(parent.zone_id)
+        if hasattr(parent, 'camera_id'):
+            details.append(parent.camera_id)
+        if hasattr(parent, 'observed_at'):
+            details.append(parent.observed_at.isoformat())
+        if hasattr(parent, 'observed_from'):
+            details.append(parent.observed_from.isoformat())
         if hasattr(parent, 'window'):
             details.append(parent.window.start.isoformat() + ' to ' + parent.window.end.isoformat())
     suffix = f" ({'; '.join(details)})" if details else ''

@@ -6,6 +6,8 @@ The [combined team plan](RetailPulse_FYP2_Implementation_Plan.md) governs curren
 
 ## Latest reconciliation / next handoff
 
+- **Moiz, wider Query binding:** Ask can route explicit queue and camera-health questions through the grounded graph. It shows dated samples, with queue waits marked estimated. Alert analysis, causal investigation and schedule planning remain open.
+
 - **Moiz, wider analytics readers:** Added typed, read-only queue and pipeline-health samples with evidence and scope checks. The existing Ask graph still exposes its original five tools. Alert reads need a trusted store-ownership source.
 
 - **Moiz, shared Ask budget:** Added an opt-in PostgreSQL counter shared by workers. It enforces ten authorized questions per manager and store per clock minute. Deployment schema and acceptance are pending.

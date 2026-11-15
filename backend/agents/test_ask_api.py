@@ -21,7 +21,7 @@ def test_ask_uses_only_authorized_selection_and_scope(monkeypatch):
     monkeypatch.setattr(ask_api, "ScopedToolRegistry", lambda tools, actual_scope: actual_scope)
     def run(actual_request, registry, *, specialists):
         assert actual_request == request and registry is scope
-        assert set(specialists) == {"customer_behavior", "employee_activity"}
+        assert set(specialists) == {"customer_behavior", "employee_activity", "operations"}
         return "scoped"
     monkeypatch.setattr(ask_api, "run_analytics", run)
     response = Response()

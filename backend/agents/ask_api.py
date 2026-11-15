@@ -16,6 +16,7 @@ from .contracts import Identifier
 from .graph_contracts import AskRequest, GraphRun
 from .postgres_traces import PostgresTraceStore
 from .service import AnalyticsService
+from .specialists import operations_registration
 from .tools.contextual import PostgresAnalyticsTools
 from .tools.registry import ScopedToolRegistry
 
@@ -64,7 +65,7 @@ def ask(request: AskRequest, response: Response, authorized=Depends(access)):
     scope = membership.scope()
     response.headers["Cache-Control"] = "no-store"
     response.headers["X-RetailPulse-Analytics-Source"] = "synthetic" if config.synthetic else "recorded"
-    specialists = business_specialists()
+    specialists = business_specialists() | {"operations": operations_registration()}
     if os.getenv("RETAILPULSE_ASK_TRACE_ENABLED") == "1":
         return AnalyticsService(tools, specialists=specialists, traces=PostgresTraceStore()).ask(request, scope=scope)
     return run_analytics(request, ScopedToolRegistry(tools, scope), specialists=specialists)

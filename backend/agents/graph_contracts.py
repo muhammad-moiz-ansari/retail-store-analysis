@@ -6,8 +6,10 @@ from pydantic import Field, JsonValue
 from .contracts import (Contract, CoverageResult, EventFilters, Evidence, FootfallResult, Identifier,
                         InteractionsResult, TimeWindow, TrustedAccessScope, UnattendedResult, ZoneDwellResult)
 
-Target = Literal['customer_behavior', 'employee_activity', 'unsupported']
-ToolResult = Annotated[FootfallResult | ZoneDwellResult | InteractionsResult | UnattendedResult | CoverageResult,
+from .tools.operations import PipelineHealthResult, QueueResult
+
+Target = Literal['customer_behavior', 'employee_activity', 'operations', 'unsupported']
+ToolResult = Annotated[FootfallResult | ZoneDwellResult | InteractionsResult | UnattendedResult | CoverageResult | QueueResult | PipelineHealthResult,
                        Field(discriminator='tool')]
 
 
@@ -27,7 +29,7 @@ class Claim(Contract):
     call_id: Identifier
     path: tuple[Annotated[str, Field(min_length=1, max_length=100)] | Annotated[int, Field(strict=True, ge=0)], ...] = Field(min_length=1, max_length=8)
     value: float = Field(strict=True)
-    unit: Literal['count', 'seconds', 'ratio', 'percent']
+    unit: Literal['count', 'seconds', 'ratio', 'percent', 'fps']
     store_id: Identifier
     window: TimeWindow
     filters: EventFilters

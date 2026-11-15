@@ -142,7 +142,7 @@ class Evidence(Contract):
 
 class Metric(Contract):
     value: float | None = Field(strict=True)
-    unit: Literal["count", "seconds", "ratio", "percent"]
+    unit: Literal["count", "seconds", "ratio", "percent", "fps"]
     evidence: tuple[Evidence, ...] = Field(default=(), max_length=20)
     unavailable_reason: str | None = Field(default=None, min_length=1, max_length=1000)
     estimated: bool = False
