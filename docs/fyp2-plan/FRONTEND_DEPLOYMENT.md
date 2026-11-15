@@ -53,3 +53,7 @@ The existing Next configuration skips type checking and linting during productio
 Verification: root `npm ci` restored locked Next 15.5.25; final `npm run build` passed compilation, all 26 page-generation steps and build tracing. Manifest/lock/config/output paths were checked. Vercel cloud deployment and live backend/auth behavior are not verified by this local build.
 
 User subsequently confirmed the frontend deployment works. That is user-reported cloud success; live Python/CV backend, login/proxy and real-data connectivity still need separate verification. Current work resumes from the combined team plan, not the old deployment-blocker assumption.
+
+## Install RetailPulse on a phone
+
+Open the HTTPS RetailPulse URL. On Android Chrome, open the browser menu and choose **Install app** or **Add to Home screen**. On iPhone Safari, use **Share → Add to Home Screen**. The installed app opens the existing RetailPulse site and uses the existing sign-in and role routes. Login, analytics and task actions require a connection to the backend. The manifest ships the two general-purpose app icons. The Android maskable asset needs a safe-area export before it is enabled.

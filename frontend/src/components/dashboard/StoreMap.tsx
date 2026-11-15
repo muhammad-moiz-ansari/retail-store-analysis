@@ -44,7 +44,7 @@ function isMapCell(value: unknown): value is MapCell {
     Boolean(cell.values && typeof cell.values === "object" && !Array.isArray(cell.values) &&
       Object.entries(cell.values).every(([key, amount]) => Object.prototype.hasOwnProperty.call(layers, key) &&
         (amount === null || (typeof amount === "number" && Number.isFinite(amount) && amount >= 0 &&
-          (!key.endsWith("interactions") || Number.isInteger(amount))))) &&
+          (!key.endsWith("interactions") || Number.isInteger(amount)))))) &&
     (cell.quality !== "unmapped" || Object.values(cell.values ?? {}).every((amount) => amount === null));
 }
 

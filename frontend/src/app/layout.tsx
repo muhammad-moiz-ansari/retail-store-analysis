@@ -26,7 +26,11 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "RetailPulse",
   description: "Store analytics and employee workflows",
-  icons: { icon: { url: "/favicon-dark.png", type: "image/png" } },
+  icons: {
+    icon: { url: "/favicon-dark.png", type: "image/png" },
+    apple: { url: "/pwa-192.png", type: "image/png" },
+  },
+  appleWebApp: { capable: true, title: "RetailPulse" },
 };
 
 export default function RootLayout({

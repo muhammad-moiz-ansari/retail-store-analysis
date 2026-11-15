@@ -70,6 +70,13 @@ export default function LandingPage() {
               <EffectLink href="/login" className={`${styles.primary} ${styles.specular}`}>Sign in</EffectLink>
               <a href="#how-it-works" className={styles.secondary}>See how it works <span aria-hidden="true">↓</span></a>
             </div>
+            <details className="mt-4 text-sm text-text-muted">
+              <summary className="w-fit cursor-pointer font-semibold text-accent">Install RetailPulse</summary>
+              <ul className="mt-2 space-y-1">
+                <li><strong>Android Chrome</strong> · Open the browser menu and choose Install app or Add to Home screen.</li>
+                <li><strong>iPhone Safari</strong> · Tap Share, then Add to Home Screen.</li>
+              </ul>
+            </details>
           </div>
           <DashboardPreview />
         </section>
