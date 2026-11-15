@@ -1,6 +1,7 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 
-export const POS_SESSION_COOKIE = "retailpulse-pos-session";
+// Keep the cookie name compatible with sessions issued before the auth module rename.
+export const SESSION_COOKIE = "retailpulse-pos-session";
 
 type SessionPayload = {
   role: "Manager" | "Employee";
@@ -10,8 +11,10 @@ type SessionPayload = {
   exp: number;
 };
 
-function secret() {
-  return process.env.POS_SESSION_SECRET || process.env.NEXTAUTH_SECRET || "local-dev-pos-session-secret";
+export const DEV_SESSION_SECRET = "local-dev-pos-session-secret";
+
+export function configuredSessionSecret() {
+  return process.env.RETAILPULSE_SESSION_SECRET || process.env.POS_SESSION_SECRET || process.env.NEXTAUTH_SECRET;
 }
 
 function base64url(input: string) {
@@ -19,7 +22,7 @@ function base64url(input: string) {
 }
 
 function signPayload(payload: string) {
-  return createHmac("sha256", secret()).update(payload).digest("base64url");
+  return createHmac("sha256", (configuredSessionSecret() || DEV_SESSION_SECRET)).update(payload).digest("base64url");
 }
 
 export function createSession(session: Omit<SessionPayload, "exp">, ttlSeconds = 60 * 60 * 8) {

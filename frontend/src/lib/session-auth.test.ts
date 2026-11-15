@@ -1,11 +1,11 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { createHmac } from "node:crypto";
-import { createSession, verifySession } from "./pos-auth";
+import { createSession, verifySession } from "./session-auth";
 
 test("signed sessions reject missing/invalid expiry, invalid identity and extra token parts", () => {
-  const old = process.env.POS_SESSION_SECRET;
-  process.env.POS_SESSION_SECRET = "isolated-test-secret";
+  const old = process.env.RETAILPULSE_SESSION_SECRET;
+  process.env.RETAILPULSE_SESSION_SECRET = "isolated-test-secret";
   try {
     const valid = createSession({ role: "Manager", email: "manager@test.invalid", userId: "u1" });
     assert.equal(verifySession(valid)?.userId, "u1");
@@ -19,6 +19,6 @@ test("signed sessions reject missing/invalid expiry, invalid identity and extra 
       assert.equal(verifySession(`${payload}.${signature}`), null);
     }
   } finally {
-    if (old === undefined) delete process.env.POS_SESSION_SECRET; else process.env.POS_SESSION_SECRET = old;
+    if (old === undefined) delete process.env.RETAILPULSE_SESSION_SECRET; else process.env.RETAILPULSE_SESSION_SECRET = old;
   }
 });

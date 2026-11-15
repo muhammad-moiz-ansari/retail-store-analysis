@@ -7,7 +7,6 @@ import { useAuth } from "./AuthProvider";
 export const MANAGER_ROUTES = [
   "/dashboard",
   "/customer-info",
-  "/pos-info",
   "/employee-info",
   "/spatial-analytics",
   "/settings",

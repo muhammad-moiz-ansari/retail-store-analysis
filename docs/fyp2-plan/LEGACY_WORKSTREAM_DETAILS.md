@@ -1,6 +1,6 @@
 # Legacy workstream detail — reference only
 
-Superseded where it conflicts with [the combined plan](RetailPulse_FYP2_Implementation_Plan.md). This retains technical detail from the prior local team plan; old fixed zones, POS, model names, scheduling and stale checkboxes are not current authorization or requirements. Current ownership, seven agents and four dynamic categories govern.
+Superseded where it conflicts with [the combined plan](RetailPulse_FYP2_Implementation_Plan.md). This retains technical detail from the prior local team plan; old fixed zones, model names, scheduling and stale checkboxes are not current authorization or requirements. Current ownership, seven agents and four dynamic categories govern.
 
 # RetailPulse FYP-2 Implementation Plans
 
@@ -103,7 +103,6 @@ Agents never write SQL against production tables. They call typed, read-only Pyt
 | `get_unattended(window, zone?, min_seconds)` | Episodes with evidence IDs |
 | `get_coverage(window, zone?, shift?)` | Staffed minutes vs open minutes per zone |
 | `get_queue(window, counter?)` | Queue length and estimated wait |
-| `get_pos_sales(window, category?)` | Reuses the POS pillar's metrics |
 | `get_alerts(window, status?)` | Alerts with linked events |
 | `get_pipeline_health(window)` | Drift and health metrics from Saqib’s CV pipeline |
 | `run_readonly_sql(query)` | NL Query only, on a read-only connection with a row cap |
@@ -127,11 +126,11 @@ Agents never write SQL against production tables. They call typed, read-only Pyt
 
 Build in this order. Each workstream is a LangGraph node with a system prompt, an allowed tool subset and 5+ golden questions before it counts as done. Supporting nodes do not expand the finalized top-level agent list.
 
-1. **Owner: Ruhab.** **Customer Behavior Agent (weeks 6–7).** Tools: footfall, dwell, interactions, unattended, POS. Outputs behavior segments by zone and time (quick visits, browsing, lingering without help), friction points, and zone-level links to POS. Never per-person.
+1. **Owner: Ruhab.** **Customer Behavior Agent (weeks 6–7).** Tools: footfall, dwell, interactions, and unattended sessions. Outputs behavior segments by zone and time (quick visits, browsing, lingering without help), and friction points. Never per-person.
 2. **Owner: Ruhab.** **Employee/Coverage Agent (weeks 7–8).** Tools: coverage, interactions, unattended, alerts. Outputs coverage gaps, response-time patterns and explanations of score changes, aggregated by zone and shift. Its prompt forbids ranking individuals; the output is advisory.
 3. **Owner: Moiz.** **NL Query Agent (weeks 8–9).** Tries the typed tools first and falls back to `run_readonly_sql` against a documented schema. Returns the answer, the query used and the rows it rests on.
 4. **Owner: Moiz.** **Anomaly Investigation Agent (weeks 9–10).** Triggered by an alert ID. Pulls events in a window around it, checks coverage, queue and pipeline health, and returns a ranked list of likely causes with evidence. It must say "pipeline issue" when health metrics explain the alert.
-5. **Owner: Moiz.** **Staffing Planner (weeks 10–11).** Combines footfall forecasts (reusing the POS forecasting code), coverage history and the roster to propose a zone/shift plan for the next day. The proposal goes through the approval node; nothing changes automatically.
+5. **Owner: Moiz.** **Staffing Planner (weeks 10–11).** Combines footfall forecasts, coverage history and the roster to propose a zone/shift plan for the next day. The proposal goes through the approval node; nothing changes automatically.
 
 ### A4. Agent evaluation (weeks 11–13)
 
@@ -221,11 +220,11 @@ The team makes the system one working product: a single codebase, real data on s
 
 ### C1. Branch merge and CI (weeks 1–2)
 
-Keep one integrated `main` with POS and interaction, CI tests, and run scripts. Saqib owns backend/AI run scripts; Moiz owns frontend run integration.
+Keep one integrated `main` with the interaction pipeline, CI tests, and run scripts. Saqib owns backend/AI run scripts; Moiz owns frontend run integration.
 
 **Owner:** Saqib leads backend/AI merge and Python fixes; Moiz handles frontend build and integration; Ruhab coordinates CI and README structure updates.
 
-- [ ] Merge `feature/interaction` into `main`, restoring the POS routes (`/pos/*`) that this branch lacks. Fold in or close `interaction-factors`, `interaction-flag`, `interaction-live`, `interaction-optimization` and `fyp2-a0-tracker-tuning`.
+- [ ] Merge `feature/interaction` into `main`. Fold in or close `interaction-factors`, `interaction-flag`, `interaction-live`, `interaction-optimization` and `fyp2-a0-tracker-tuning`.
 - [ ] Fix the relative-import errors so tests pass from both the repo root and `backend/`.
 - [ ] Add a GitHub Actions workflow: Python tests, `npm run build` and lint on every PR.
 - [ ] Update the README project structure, which no longer matches the repo.
@@ -305,7 +304,6 @@ Five joint checkpoints gate the plan. If a gate fails, the next phase starts on 
 | Too few labelled interactions for meaningful numbers | Saqib | Record extra staged clips in week 4; report confidence intervals |
 | Free HF model too weak for routing or grounding | Moiz | Env switch to a paid API model for the demo; report both |
 | CV output misses fields the tools need | Saqib, Moiz | Contract test in CI that validates a CV run against schema v1 |
-| Merge breaks the POS pillar | Saqib | Merge behind tests written first for `/pos/*` |
 | Panel challenges employee scoring as surveillance | Ruhab, Moiz | Zone/shift aggregation, advisory labels, approval gate on separate approval-required schedule/roster actions |
 | CPU too slow for live demo | Saqib, Ruhab | Demo on recorded footage; GPU laptop as optional live mode |
 

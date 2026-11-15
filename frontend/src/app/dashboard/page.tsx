@@ -29,7 +29,7 @@ function SystemStatusStrip() {
     ["Active alerts", status.activeAlerts],
     ["Active tasks", status.activeTasks],
     ["Cameras online", `${status.cameras.online}/${status.cameras.total}`],
-    ...Object.entries(status.workers).filter(([name]) => name !== "pos").map(([name, state]) => [name, state.replace(/_/g, " ")]),
+    ...Object.entries(status.workers).map(([name, state]) => [name, state.replace(/_/g, " ")]),
   ];
   return (
       <dl className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">

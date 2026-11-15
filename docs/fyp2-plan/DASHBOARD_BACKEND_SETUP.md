@@ -10,13 +10,13 @@ Set these variables in the appropriate server environments, then restart both se
 
 | Variable | Where | Meaning |
 |---|---|---|
-| POS_SESSION_SECRET (or NEXTAUTH_SECRET) | Next.js only | Explicit signed-cookie secret; the built-in local fallback is not accepted for analytics |
+| RETAILPULSE_SESSION_SECRET (or NEXTAUTH_SECRET) | Next.js only | Explicit signed-cookie secret; the built-in local fallback is not accepted for analytics |
 | RETAILPULSE_INTERNAL_SECRET | Both servers | Same explicit service credential; the built-in local fallback is not accepted for analytics |
 | RETAILPULSE_SERVICE_URL | Next.js | Reachable Python backend URL; localhost only works when the backend runs on the same host |
 | DATABASE_URL | Python | Shared PostgreSQL database for application, event and identity records |
 | RETAILPULSE_ANALYTICS_CONFIG | Python | Path to the operator-owned JSON configuration below |
 
-Use the actual session variable name above; POS_AUTH_SECRET is not read by the current session implementation. Next.js reads its normal environment configuration; the standalone Python backend needs exported variables too. No NEXT_PUBLIC secret or database path is needed. Existing application login/bootstrap behavior is unchanged. Dashboard reads never initialize either database. Keep machine-specific runtime configuration out of Git (local demo files can live under ignored data/outputs/).
+Next.js reads its normal environment configuration; the standalone Python backend needs exported variables too. No NEXT_PUBLIC secret or database path is needed. Existing application login/bootstrap behavior is unchanged. Dashboard reads never initialize either database. Keep machine-specific runtime configuration out of Git (local demo files can live under ignored data/outputs/).
 
 Example **template**, requiring real identifiers/window/context from Saqib and the actual manager account ID. It is not installed or enabled automatically:
 

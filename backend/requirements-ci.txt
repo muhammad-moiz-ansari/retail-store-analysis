@@ -7,4 +7,3 @@ fastapi
 httpx
 numpy
 pytest
-python-multipart  # POS form uploads, imported when backend.app loads

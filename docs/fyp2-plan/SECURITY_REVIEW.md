@@ -1,12 +1,12 @@
 # Security review (Ruhab, C6)
 
-Reviewed 12 November 2026 on `fyp2-ruhab` (based on `fyp2-moiz` at `5f2c77c`). Scope: `backend/app.py`, `backend/store_core.py`, `backend/camera_service.py`, the Next.js auth and proxy routes under `frontend/src/app/api/`, `frontend/src/lib/pos-auth.ts` and `backend-identity.ts`, and Ruhab's `backend/agents/business/`. This was a code reading. No penetration test, dependency audit or deployed-environment check was run. No code was changed; each fix goes to the file's owner.
+Reviewed 12 November 2026 on `fyp2-ruhab` (based on `fyp2-moiz` at `5f2c77c`). Scope: `backend/app.py`, `backend/store_core.py`, `backend/camera_service.py`, the Next.js auth and proxy routes under `frontend/src/app/api/`, `frontend/src/lib/session-auth.ts` and `backend-identity.ts`, and Ruhab's `backend/agents/business/`. This was a code reading. No penetration test, dependency audit or deployed-environment check was run. No code was changed; each fix goes to the file's owner.
 
 ## Findings
 
 | # | Severity | Where | Finding | Fix | Owner |
 |---|---|---|---|---|---|
-| S1 | **High** | `backend/app.py:42`, `frontend/src/app/api/auth/{session,signup}/route.ts:6`, `frontend/src/app/api/backend/[...path]/route.ts:7`, `frontend/src/lib/pos-auth.ts:14` | Secrets fall back to fixed values (`local-dev-pos-secret`, `local-dev-pos-session-secret`) when the environment variables are unset. A deployment that forgets them accepts forged session cookies and lets anyone who knows the default call every backend route as any role. Only the `/analytics` proxy path refuses the defaults. | Fail closed outside local development: refuse to start (backend) or return 503 (Next routes) when the variable is missing or equals the default. Apply the analytics guard to every proxied route | Saqib (backend), Moiz (frontend) |
+| S1 | **High** | `backend/app.py:42`, `frontend/src/app/api/auth/{session,signup}/route.ts:6`, `frontend/src/app/api/backend/[...path]/route.ts:7`, `frontend/src/lib/session-auth.ts:14` | Secrets fall back to fixed values when the environment variables are unset. A deployment that forgets them accepts forged session cookies and lets anyone who knows the default call every backend route as any role. Only the `/analytics` proxy path refuses the defaults. | Fail closed outside local development: refuse to start (backend) or return 503 (Next routes) when the variable is missing or equals the default. Apply the analytics guard to every proxied route | Saqib (backend), Moiz (frontend) |
 | S2 | Medium | `backend/app.py:46` | The internal secret is compared with `!=`, not a constant-time comparison | `hmac.compare_digest(value or '', INTERNAL_SECRET)` | Saqib |
 | S3 | Medium | `/auth/login`, future `POST /agents/ask` | No rate limiting or lockout, so passwords can be brute-forced through the login proxy. Team plan C6 asks for a rate limit on `/agents/ask` | Per-IP and per-account attempt limits on login; a per-user request budget on Ask | Saqib (backend), Moiz (Ask) |
 | S4 | Medium | `backend/app.py:50-57` | After the secret check, the backend trusts the role and user headers as given. This is safe only while the secret never reaches a browser; the proxy does strip browser `x-retailpulse-*` headers (`backend-identity.ts`). | Keep the secret server-side only, rotate it per deployment, and record it in the deployment checklist. Longer term, sign the actor headers | Saqib, Moiz |
@@ -19,7 +19,7 @@ Reviewed 12 November 2026 on `fyp2-ruhab` (based on `fyp2-moiz` at `5f2c77c`). S
 
 ### Fix status (backend, Saqib, 13 Nov 2026)
 Tests: `backend/tests/test_security.py`.
-- **S1 backend fixed.** `backend/runtime_secrets.py`: the backend and the POS service refuse to start when the internal secret is missing or equals `local-dev-pos-secret`, unless `RETAILPULSE_DEV_DEFAULTS=1` (set by `npm run dev`, `npm run backend:api` and the tests). **Frontend half (Next routes, `pos-auth.ts`) is still open (Moiz).**
+- **S1 backend fixed.** `backend/runtime_secrets.py`: the backend refuses to start when the internal secret is missing or equals the development default, unless `RETAILPULSE_DEV_DEFAULTS=1` (set by `npm run dev`, `npm run backend:api` and the tests). **Frontend half (Next routes, `session-auth.ts`) is still open (Moiz).**
 - **S2 fixed.** Both secret checks use `hmac.compare_digest`.
 - **S3 login part fixed.** 5 failed sign-ins per account in 15 minutes lock that account (429), in memory per process. Per-IP limits belong in the Next proxy; the `/agents/ask` budget is Moiz's.
 - **S4** unchanged: keep the secret server-side and rotate it per deployment (deployment checklist).

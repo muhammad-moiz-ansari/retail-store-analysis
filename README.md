@@ -124,7 +124,6 @@ retailpulse/
 │   │   ├── customer-info/
 │   │   ├── employee-info/
 │   │   ├── spatial-analytics/
-│   │   ├── sales-trends/
 │   │   ├── reports/
 │   │   ├── alerts/
 │   │   ├── system-status/
@@ -189,7 +188,7 @@ talks to FastAPI through the session-checked `/api/backend/*` proxy:
 Manager routes require a signed HttpOnly session cookie. In the local FYP demo, choosing Manager with any valid email and a 6+ character password creates that cookie. Configure these secrets before running:
 
 ```bash
-export POS_SESSION_SECRET="change-me"
+export RETAILPULSE_SESSION_SECRET="change-me"
 ```
 
 Employee and Manager use the same demo credential rule. Manager still receives a server-signed session so manager APIs are not unlocked by changing localStorage alone.

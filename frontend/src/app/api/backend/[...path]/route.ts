@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
-import { POS_SESSION_COOKIE, verifySession } from "@/lib/pos-auth";
+import { configuredSessionSecret, DEV_SESSION_SECRET, SESSION_COOKIE, verifySession } from "@/lib/session-auth";
 import { backendHeaders } from "@/lib/backend-identity";
 
 const SERVICE_URL = process.env.RETAILPULSE_SERVICE_URL || "http://127.0.0.1:8011";
@@ -12,15 +12,15 @@ type Ctx = {
 
 async function proxy(request: NextRequest, ctx: Ctx) {
   const cookieStore = await cookies();
-  const session = verifySession(cookieStore.get(POS_SESSION_COOKIE)?.value);
+  const session = verifySession(cookieStore.get(SESSION_COOKIE)?.value);
   if (!session) {
     return NextResponse.json({ error: "RetailPulse session required" }, { status: 401 });
   }
 
   const { path } = await ctx.params;
   if (path[0] === "analytics") {
-    const sessionSecret = process.env.POS_SESSION_SECRET || process.env.NEXTAUTH_SECRET;
-    if (!sessionSecret || sessionSecret === "local-dev-pos-session-secret"
+    const sessionSecret = configuredSessionSecret();
+    if (!sessionSecret || sessionSecret === DEV_SESSION_SECRET
       || !process.env.RETAILPULSE_INTERNAL_SECRET || INTERNAL_SECRET === "local-dev-pos-secret") {
       return NextResponse.json({ error: "Analytics service authentication is not configured" }, { status: 503 });
     }

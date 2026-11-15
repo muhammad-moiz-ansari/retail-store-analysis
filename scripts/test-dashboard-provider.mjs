@@ -15,7 +15,7 @@ const compilation = spawnSync(process.execPath, [compiler,
   "frontend/src/lib/analytics-provider/provider.test.ts",
   "frontend/src/lib/analytics-provider/controller.test.ts",
   "frontend/src/lib/analytics-provider/backend.test.ts",
-  "frontend/src/lib/pos-auth.test.ts",
+  "frontend/src/lib/session-auth.test.ts",
   "frontend/src/components/dashboard/DashboardAnalytics.test.tsx",
 ], { cwd: root, stdio: "inherit" });
 if (compilation.error) throw compilation.error;
@@ -24,7 +24,7 @@ const tests = spawnSync(process.execPath, ["--test",
   join(output, "lib/analytics-provider/provider.test.js"),
   join(output, "lib/analytics-provider/controller.test.js"),
   join(output, "lib/analytics-provider/backend.test.js"),
-  join(output, "lib/pos-auth.test.js"),
+  join(output, "lib/session-auth.test.js"),
   join(output, "components/dashboard/DashboardAnalytics.test.js"),
 ], { cwd: root, stdio: "inherit" });
 if (tests.error) throw tests.error;

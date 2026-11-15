@@ -45,7 +45,7 @@ jobs:
       - name: pytest (fast)
         run: >-
           python -m pytest backend/agents backend/events/test_events.py backend/test_postgres_migration.py
-          backend/test_handoff_eval.py backend/tests/test_dispatch.py backend/tests/test_pos_core.py -q -ra -p no:cacheprovider --basetemp "$RUNNER_TEMP/pytest"
+          backend/test_handoff_eval.py backend/tests/test_dispatch.py -q -ra -p no:cacheprovider --basetemp "$RUNNER_TEMP/pytest"
 
   frontend:
     name: frontend checks

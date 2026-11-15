@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
-import { createSession, POS_SESSION_COOKIE } from "@/lib/pos-auth";
+import { createSession, SESSION_COOKIE } from "@/lib/session-auth";
 
 const SERVICE_URL = process.env.RETAILPULSE_SERVICE_URL || "http://127.0.0.1:8011";
 const INTERNAL_SECRET = process.env.RETAILPULSE_INTERNAL_SECRET || process.env.POS_INTERNAL_SECRET || "local-dev-pos-secret";
@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
   }
   const user = data.user;
   const cookieStore = await cookies();
-  cookieStore.set(POS_SESSION_COOKIE, createSession({ role: user.role, userId: user.id, email: user.email, name: user.name }), {
+  cookieStore.set(SESSION_COOKIE, createSession({ role: user.role, userId: user.id, email: user.email, name: user.name }), {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",

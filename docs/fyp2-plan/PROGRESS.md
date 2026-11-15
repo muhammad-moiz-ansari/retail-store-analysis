@@ -6,6 +6,8 @@ The [combined team plan](RetailPulse_FYP2_Implementation_Plan.md) governs curren
 
 ## Latest reconciliation / next handoff
 
+- **Scope cleanup (15 Nov 2026):** Removed the accidental sales module, import fixtures, manager page, and service endpoints. Current analytics cover camera and store operations.
+
 - **Ruhab, after the local handoff (12 Nov 2026):** `docs/extra-docs/` (locally nested as `docs/extra-docs/extra-docs/`) was read. Added golden-question evaluation (`42aca07`), cited page summaries and a narrative number check (`5924cef`), and 10–20 s review clips with track boxes (`9227e21`). [SECURITY_REVIEW.md](SECURITY_REVIEW.md) and [DEMO_SCRIPT.md](DEMO_SCRIPT.md) were added with the final commit. Commits follow the handoff's `git add .` / single `-m` workflow; the local root report PDF is ignored so it is never swept in.
 - **Checks (fixture and generated data only):** `.venv/Scripts/python.exe -m pytest backend/agents backend/events/test_events.py -q -p no:cacheprovider` gives **125 passed, 85 skipped**: 84 PostgreSQL skips, plus the OpenCV clip test, which skips without cv2. With `.venv-interaction`, `pytest backend/agents/business/test_clip_render.py` gives **2 passed** on a generated video. Golden set: routing and answers 16/17 (EA1 is a router gap), refusals 4/4, grounded runs 1.0. No real footage, store data, provider or dispatch was used.
 
