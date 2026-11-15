@@ -111,7 +111,7 @@ def test_real_readers_map_hand_calculated_values_and_preserve_provenance_read_on
     assert 'outside' not in response.text
     assert data['metrics']['exits']['evidence'][0]['source'] == 'pipeline_health'
     assert data['metrics']['unattendedEpisodes']['status'] == 'partial'
-    assert 'does not filter' in json.dumps(data['metrics']['unattendedEpisodes']['limitations']).lower()
+    assert 'may predate verdict filtering' in json.dumps(data['metrics']['unattendedEpisodes']['limitations']).lower()
     assert fingerprint(database, (*TABLES, 'users')) == before
 
 

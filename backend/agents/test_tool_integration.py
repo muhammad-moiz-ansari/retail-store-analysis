@@ -28,13 +28,18 @@ def test_registry_rejects_identity_override_sql_dispatch_and_employee(database):
                      {'contexts':[]}, {'query':'DELETE FROM footfall'}):
         with pytest.raises(ValidationError):
             registry.invoke('get_footfall', args | injected)
-    for name in ('run_readonly_sql', 'dispatch', 'get_queue', '__dict__'):
+    for name in ('run_readonly_sql', 'dispatch', '__dict__'):
         with pytest.raises(ValueError):
             registry.invoke(name, args)
     with pytest.raises(ValueError):
         registry.invoke('get_footfall', args | {'filters': {'zone_id':'z2'}})
     with pytest.raises(PermissionError):
         ScopedToolRegistry(make_tools(database), TrustedAccessScope(actor_id='e1', store_id='store-1', role='employee'))
+    queue = registry.invoke('get_queue', args)
+    assert queue.scope == registry.scope
+    with pytest.raises(ValueError):
+        registry.invoke('get_queue', args | {'filters': {'zone_id': 'z2'}})
+    assert 'get_queue' in registry.input_schemas(include_operations=True)
     assert len(registry.input_schemas()) == 5
 
 
