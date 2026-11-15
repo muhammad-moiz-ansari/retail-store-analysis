@@ -7,3 +7,4 @@ pydantic>=2.7,<3
 psycopg[binary]>=3.2,<4
 langgraph>=1.2.20,<2
 numpy
+langsmith  # imported by backend/agents/graph.py at load; do not rely on it arriving transitively

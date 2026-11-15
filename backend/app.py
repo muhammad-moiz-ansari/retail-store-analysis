@@ -668,6 +668,24 @@ def task_events() -> StreamingResponse:
     return StreamingResponse(stream(), media_type="text/event-stream")
 
 
+WORKER_RECENT_S = 900  # a worker counts as active when it wrote something in the last 15 minutes
+
+
+def worker_states(conn) -> dict:
+    """Derived from what the workers last wrote, not from a heartbeat: dispatch events for the orchestrator, pipeline
+    health rows for CV. 'not_configured' means nothing has ever been written, 'idle' means nothing recently."""
+    now = datetime.now().astimezone()
+    recent = lambda stamp: stamp is not None and (now - stamp).total_seconds() <= WORKER_RECENT_S
+    state = lambda stamp, seen: "not_configured" if not seen else "active" if recent(stamp) else "idle"
+    event = conn.execute("SELECT max(created_at) AS last, count(*) AS n FROM orchestration_events").fetchone()
+    last_event = datetime.fromisoformat(event["last"]) if event["last"] else None
+    health = None
+    if conn.execute("SELECT to_regclass('pipeline_health') AS t").fetchone()["t"]:
+        health = conn.execute("SELECT max(ts_end) AS last, count(*) AS n FROM pipeline_health").fetchone()
+    return {"orchestrator": state(last_event, event["n"]),
+            "cv": state(health["last"] if health else None, health["n"] if health else 0)}
+
+
 @app.get("/system-status", dependencies=[Depends(require_manager)])
 def system_status() -> dict:
     with connect() as conn:
@@ -686,7 +704,7 @@ def system_status() -> dict:
             "dispatchOutcomes": {row["decision"]: row["total"] for row in decisions},
             "acknowledgement": {"tasks": ack["n"], "meanSeconds": ack["mean"], "medianSeconds": ack["median"]},
             "ok": True,
-            "workers": {"orchestrator": "idle", "cv": "not_configured"},
+            "workers": worker_states(conn),
             "activeAlerts": active_alerts,
             "activeTasks": active_tasks,
             "cameras": {"total": cameras["total"], "online": cameras["online"] or 0},

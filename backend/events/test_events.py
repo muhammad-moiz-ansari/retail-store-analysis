@@ -197,3 +197,18 @@ def test_judge_rejected_pair_does_not_end_an_unattended_wait(tmp_path, postgres_
     assert ingest_run(conn, prefix, "v", "c2", "z2", START, unattended_after_s=180.0)["unattended_episodes"] == 1
     episode = conn.execute("SELECT customer_track_id, waited_s, helped FROM unattended_episodes").fetchone()
     assert episode == {"customer_track_id": 2, "waited_s": 300.0, "helped": 0}
+
+
+def test_footfall_eval_matches_per_direction_within_tolerance(tmp_path) -> None:
+    from .footfall_eval import load_labels, match
+
+    labels = tmp_path / "labels.csv"
+    labels.write_text("seconds,direction\n10.0,in\n20.0,in\n30.0,out\n")
+    recorded = [(10.6, "in"), (10.9, "in"), (31.5, "out"), (40.0, "out")]  # second "in" is extra; out is 1.5 s off; one extra out
+    report = match(load_labels(labels), recorded, 1.0)
+    assert (report["in"]["matched"], report["in"]["missed"], report["in"]["extra"]) == (1, 1, 1)
+    assert (report["out"]["matched"], report["out"]["missed"], report["out"]["extra"]) == (0, 1, 2)
+    assert report["in"]["precision"] == 0.5 and report["in"]["recall"] == 0.5 and report["out"]["precision"] == 0.0
+    (tmp_path / "bad.csv").write_text("5,sideways\n")
+    with pytest.raises(ValueError):
+        load_labels(tmp_path / "bad.csv")

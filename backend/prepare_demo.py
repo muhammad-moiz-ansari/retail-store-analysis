@@ -59,8 +59,27 @@ def describe_run(conn, run_id: str) -> dict:
     zones = sorted({r["zone_id"] for t in ("tracks", "zone_dwell", "footfall") for r in conn.execute(f"SELECT DISTINCT zone_id FROM {t} WHERE run_id = %s", (run_id,))})
     home = conn.execute("SELECT zone_id, COUNT(*) AS n FROM pipeline_health WHERE run_id = %s GROUP BY zone_id ORDER BY n DESC, zone_id LIMIT 1", (run_id,)).fetchone()
     span = conn.execute("SELECT MIN(ts_start) AS first, MAX(ts_end) AS last FROM tracks WHERE run_id = %s", (run_id,)).fetchone()
-    return {"store_id": stores[0], "camera_ids": cameras, "zone_ids": zones, "home_zone": home["zone_id"] if home else zones[0],
-            "start": span["first"], "end": span["last"], "counts": counts}
+    clip = conn.execute("SELECT MIN(ts_start) AS first, MAX(ts_end) AS last FROM pipeline_health WHERE run_id = %s", (run_id,)).fetchone()
+    home_zone = home["zone_id"] if home else zones[0]
+    if home_zone not in zones:
+        raise SystemExit(f"Run {run_id!r}: the camera's home zone {home_zone!r} has no track, dwell or footfall rows, so the dashboard "
+                         f"could not select it (zones with rows: {zones}). Check the camera's zone in Settings and re-ingest.")
+    return {"store_id": stores[0], "camera_ids": cameras, "zone_ids": zones, "home_zone": home_zone,
+            "start": span["first"], "end": span["last"], "counts": counts,
+            "clip_start": clip["first"] or span["first"], "clip_end": clip["last"] or span["last"]}
+
+
+def recording_source(run: dict, run_id: str, video_ref: str) -> dict:
+    """The RecordingSource JSON Clip Review reads (backend/agents/business/clip_review.py). The window is the span covered by
+    pipeline_health, i.e. the footage that exists, so offsets into the recording line up with event times."""
+    from .agents.business.clip_review import RecordingSource
+
+    source = {"run_id": run_id, "camera_id": run["camera_ids"][0], "store_id": run["store_id"], "video_ref": video_ref,
+              "started_at": iso(run["clip_start"]), "duration_s": (run["clip_end"] - run["clip_start"]).total_seconds()}
+    if len(run["camera_ids"]) != 1:
+        raise SystemExit("A recording source covers one camera; this run has several. Write one source per camera by hand.")
+    RecordingSource.model_validate(source)  # same validation Clip Review applies
+    return source
 
 
 def build_config(run: dict, run_id: str, manager_id: str, *, footfall_validated: bool, attest_fixed_derivation: bool) -> dict:
@@ -95,6 +114,8 @@ def main() -> None:
     parser.add_argument("--footfall-validated", action="store_true", help="Declare the footfall feed available (only after the labelled-clip check)")
     parser.add_argument("--attest-fixed-derivation", action="store_true",
                         help="Attest the run was ingested after the unattended-verdict fix (any run ingested from this branch was)")
+    parser.add_argument("--recording-map-out", type=Path, help="Also write the RecordingSource JSON Clip Review needs for this run")
+    parser.add_argument("--video-ref", help="Opaque server-side key for the recording (default: the run id); never a file path")
     parser.add_argument("--config-out", type=Path)
     parser.add_argument("--manifest-out", type=Path)
     args = parser.parse_args()
@@ -129,6 +150,10 @@ def main() -> None:
         "source": "real footage: state who recorded it, where, and that its use was approved",
     }
     manifest_out.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+    if args.recording_map_out:
+        args.recording_map_out.parent.mkdir(parents=True, exist_ok=True)
+        args.recording_map_out.write_text(json.dumps(recording_source(run, args.run_id, args.video_ref or args.run_id), indent=2), encoding="utf-8")
+        print(f"recording source (give to Ruhab; maps video_ref to a file on the server): {args.recording_map_out}")
     print(f"configuration (ignored by Git, names the manager): {config_out}")
     print(f"manifest (commit this):                            {manifest_out}")
     print("row counts:", json.dumps(run["counts"]))

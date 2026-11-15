@@ -13,3 +13,4 @@ docs
 **/.next
 backend/videos
 backend/output
+backend/models
