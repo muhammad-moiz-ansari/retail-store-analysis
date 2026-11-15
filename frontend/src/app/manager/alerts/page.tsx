@@ -86,12 +86,12 @@ type BackendAlert = {
 };
 
 const ALERTS: Alert[] = [
-  { id: '1', category: "Unstaffed Zones", severity: "high", timestamp: "2 minutes ago", title: "Aisle 2 — Beverages left unstaffed for 42 minutes", context: "No employee detected in this zone since 10:15 AM. Nearest staff: Staff 03, Checkout Counter.", href: "/employee-info", status: "active", order: 6 },
-  { id: '2', category: "Unattended Customers", severity: "high", timestamp: "8 minutes ago", title: "Customer waited 6m 03s unattended at Checkout Counter", context: "Customer activity was detected without a staff interaction during the service threshold.", href: "/customer-info", status: "active", order: 5 },
-  { id: '3', category: "High Idle Time", severity: "medium", timestamp: "10:42 AM", title: "Staff 04 idle time exceeds 2 hours this shift", context: "Idle duration is above the configured shift threshold. Current zone: Home Appliances.", href: "/employee-info", status: "active", order: 4 },
-  { id: '4', category: "Unusual Traffic", severity: "medium", timestamp: "10:15 AM", title: "Unusual traffic spike detected — Entrance, 2:00–2:15 PM", context: "Entrance footfall was 34% above the usual interval. Consider short-term coverage support.", href: "/spatial-analytics", status: "active", order: 3 },
-  { id: '5', category: "System", severity: "low", timestamp: "9:30 AM", title: "Weekly report generated and ready for review", context: "The latest store performance report is ready for review.", href: "/dashboard", status: "active", order: 2 },
-  { id: '6', category: "Unstaffed Zones", severity: "low", timestamp: "Yesterday, 4:22 PM", title: "Promo Display unstaffed for 28 minutes — resolved by Staff 01", context: "Coverage was restored and the zone has remained active since resolution.", href: "/employee-info", status: "resolved", resolvedBy: "Staff 01", order: 1 },
+  { id: '1', category: "Unstaffed Zones", severity: "high", timestamp: "2 minutes ago", title: "Aisle 2 — Beverages left unstaffed for 42 minutes", context: "No employee detected in this zone since 10:15 AM. Nearest staff: Staff 03, Checkout Counter.", href: "/manager/employees", status: "active", order: 6 },
+  { id: '2', category: "Unattended Customers", severity: "high", timestamp: "8 minutes ago", title: "Customer waited 6m 03s unattended at Checkout Counter", context: "Customer activity was detected without a staff interaction during the service threshold.", href: "/manager/customers", status: "active", order: 5 },
+  { id: '3', category: "High Idle Time", severity: "medium", timestamp: "10:42 AM", title: "Staff 04 idle time exceeds 2 hours this shift", context: "Idle duration is above the configured shift threshold. Current zone: Home Appliances.", href: "/manager/employees", status: "active", order: 4 },
+  { id: '4', category: "Unusual Traffic", severity: "medium", timestamp: "10:15 AM", title: "Unusual traffic spike detected — Entrance, 2:00–2:15 PM", context: "Entrance footfall was 34% above the usual interval. Consider short-term coverage support.", href: "/manager/spatial-analytics", status: "active", order: 3 },
+  { id: '5', category: "System", severity: "low", timestamp: "9:30 AM", title: "Weekly report generated and ready for review", context: "The latest store performance report is ready for review.", href: "/manager/home", status: "active", order: 2 },
+  { id: '6', category: "Unstaffed Zones", severity: "low", timestamp: "Yesterday, 4:22 PM", title: "Promo Display unstaffed for 28 minutes — resolved by Staff 01", context: "Coverage was restored and the zone has remained active since resolution.", href: "/manager/employees", status: "resolved", resolvedBy: "Staff 01", order: 1 },
 ];
 
 const CATEGORY_STYLES: Record<Category, string> = {
@@ -138,7 +138,7 @@ export default function AlertsPage() {
               timestamp: new Date(alert.created_at).toLocaleString(),
               title: alert.title,
               context: alert.context,
-              href: alert.href || "/alerts",
+              href: alert.href || "/manager/alerts",
               status: alert.status,
               resolvedBy: alert.resolvedBy,
               order: data.alerts.length - index,

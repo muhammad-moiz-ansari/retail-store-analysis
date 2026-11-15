@@ -37,21 +37,21 @@ const PUBLIC_NAV_LINKS: NavLink[] = [
 
 // Authenticated (dashboard) nav links
 const AUTHENTICATED_NAV_LINKS: NavLink[] = [
-  { label: "Home", href: "/dashboard" },
-  { label: "Customer Info", href: "/customer-info" },
-  { label: "Employee Info", href: "/employee-info" },
-  { label: "Spatial Analytics", href: "/spatial-analytics" },
-  { label: "Interactions", href: "/interactions" },
-  { label: "Camera Handoff", href: "/camera-handoff" },
-  { label: "Compare People", href: "/compare-people" },
-  { label: "Voice Agent", href: "/voice-agent" },
-  { label: "Store Settings", href: "/settings", managerOnly: true },
+  { label: "Home", href: "/manager/home" },
+  { label: "Customer Info", href: "/manager/customers" },
+  { label: "Employee Info", href: "/manager/employees" },
+  { label: "Spatial Analytics", href: "/manager/spatial-analytics" },
+  { label: "Interactions", href: "/manager/interactions" },
+  { label: "Camera Handoff", href: "/manager/camera-handoff" },
+  { label: "Compare People", href: "/manager/compare-people" },
+  { label: "Voice Agent", href: "/manager/voice-agent" },
+  { label: "Store Settings", href: "/manager/settings", managerOnly: true },
   { label: "About", href: "/about" },
 ];
 
 const EMPLOYEE_NAV_LINKS: NavLink[] = [
-  { label: "My Workspace", href: "/employee-home", employeeOnly: true },
-  { label: "My Performance", href: "/my-performance", employeeOnly: true },
+  { label: "My Workspace", href: "/employee/home", employeeOnly: true },
+  { label: "My Performance", href: "/employee/performance", employeeOnly: true },
   { label: "About", href: "/about" },
 ];
 
@@ -135,7 +135,7 @@ export function Navbar({ authenticated = false, role = "Manager" }: NavbarProps)
       <div className="h-[52px] px-4 md:px-6 flex items-center justify-between">
         {/* ── Left: Logo + Wordmark ── */}
         <Link
-          href={authenticated ? (role === "Employee" ? "/employee-home" : "/dashboard") : "/"}
+          href={authenticated ? (role === "Employee" ? "/employee/home" : "/manager/home") : "/"}
           className="flex items-center gap-2.5 xl:w-[180px] w-auto shrink-0"
         >
           <NavLogo />
@@ -297,7 +297,7 @@ export function Navbar({ authenticated = false, role = "Manager" }: NavbarProps)
 function AlertsBell() {
   return (
     <Link
-      href="/alerts"
+      href="/manager/alerts"
       aria-label="View 5 active alerts"
       className="relative flex h-9 w-9 items-center justify-center rounded-md border border-border bg-surface text-text transition-colors hover:bg-surface-alt"
     >

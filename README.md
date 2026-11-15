@@ -185,6 +185,8 @@ talks to FastAPI through the session-checked `/api/backend/*` proxy:
 
 `npm run dev:frontend` starts only Next.js.
 
+Manager pages live under `/manager` and employee pages under `/employee`. Sign-in opens `/manager/home` or `/employee/home` using the role stored on the signed session. Old page URLs redirect to the new paths. Profile remains shared by both roles.
+
 Manager and employee sign-in use backend accounts and a signed HttpOnly session cookie. Set a random `RETAILPULSE_SESSION_SECRET` in Next.js and a separate random `RETAILPULSE_INTERNAL_SECRET` shared by Next.js and the backend. Keep both values server-side. `npm run dev` opts both processes into local development defaults. A standalone `npm run dev:frontend` needs real secrets or an explicit local-only `RETAILPULSE_DEV_DEFAULTS=1`. Production-mode Next.js and dashboard analytics always require configured secrets.
 
 On a local PostgreSQL demo database, `--seed-demo` creates the default employee and manager accounts with password `000000`. For existing seeded accounts, set `DATABASE_URL` to the local database and run `python -m backend.database --reset-local-demo-passwords`. The reset updates only those two seeded accounts and checks that the database is on loopback.

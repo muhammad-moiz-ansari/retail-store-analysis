@@ -55,7 +55,7 @@ export default function SignupPage() {
       const data = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(data.error || "Signup failed");
       // Reload the auth provider so the protected route reads the new session cookie.
-      window.location.assign(data.role === "Manager" ? "/dashboard" : "/employee-home");
+      window.location.assign(data.role === "Manager" ? "/manager/home" : "/employee/home");
     } catch (error) {
       setSubmitError(error instanceof Error ? error.message : "Signup failed");
       setSubmitting(false);

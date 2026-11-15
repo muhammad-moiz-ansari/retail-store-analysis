@@ -238,7 +238,7 @@ export default function EmployeeHomePage() {
                     </div>
                   ))}
                 </div>
-                <Link href="/my-performance" className="mt-6 inline-block">
+                <Link href="/employee/performance" className="mt-6 inline-block">
                   <RetroButton variant="secondary">View Full History →</RetroButton>
                 </Link>
               </ManagerCard>

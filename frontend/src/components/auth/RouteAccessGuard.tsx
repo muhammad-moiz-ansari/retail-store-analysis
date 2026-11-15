@@ -4,19 +4,8 @@ import React, { useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "./AuthProvider";
 
-export const MANAGER_ROUTES = [
-  "/dashboard",
-  "/customer-info",
-  "/employee-info",
-  "/spatial-analytics",
-  "/settings",
-  "/alerts",
-  "/voice-agent",
-  "/interactions",
-  "/camera-handoff",
-  "/compare-people",
-];
-export const EMPLOYEE_ROUTES = ["/employee-home", "/my-performance", "/employee"];
+export const MANAGER_ROUTES = ["/manager"];
+export const EMPLOYEE_ROUTES = ["/employee"];
 const SHARED_AUTHENTICATED_ROUTES = ["/profile"];
 
 export function matchesRoute(pathname: string, routes: string[]) {
@@ -37,9 +26,9 @@ export function RouteAccessGuard({ children }: { children: React.ReactNode }) {
     if (!authenticated) {
       router.replace("/login");
     } else if (needsManager && role !== "Manager") {
-      router.replace("/employee-home");
+      router.replace("/employee/home");
     } else if (needsEmployeeSession && role !== "Employee") {
-      router.replace("/dashboard");
+      router.replace("/manager/home");
     }
   }, [authenticated, needsEmployeeSession, needsManager, protectedRoute, ready, role, router]);
 

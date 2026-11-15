@@ -12,18 +12,18 @@ import { EmployeeAccountMenu } from "./EmployeeAccountMenu";
 import { ManagerMobileMenu } from "./ManagerMobileMenu";
 
 const managerLinks = [
-  ["/dashboard", "Overview"], ["/customer-info", "Customers"],
-  ["/employee-info", "Employees"], ["/spatial-analytics", "Spatial analytics"],
-  ["/interactions", "Interactions"], ["/alerts", "Alerts"],
-  ["/camera-handoff", "Camera handoff"], ["/compare-people", "Compare people"],
-  ["/voice-agent", "Voice agent"], ["/settings", "Store settings"],
+  ["/manager/home", "Overview"], ["/manager/customers", "Customers"],
+  ["/manager/employees", "Employees"], ["/manager/spatial-analytics", "Spatial analytics"],
+  ["/manager/interactions", "Interactions"], ["/manager/alerts", "Alerts"],
+  ["/manager/camera-handoff", "Camera handoff"], ["/manager/compare-people", "Compare people"],
+  ["/manager/voice-agent", "Voice agent"], ["/manager/settings", "Store settings"],
 ];
-const employeeLinks = [["/employee-home", "My workspace"], ["/my-performance", "My performance"]];
+const employeeLinks = [["/employee/home", "My workspace"], ["/employee/performance", "My performance"]];
 
 function Navigation({ links, pathname, label }: { links: string[][]; pathname: string; label: string }) {
   return <nav aria-label={label} className="grid gap-1">
     {links.map(([href, title]) => {
-      const active = matchesRoute(pathname, [href]) || (href === "/employee-home" && pathname === "/employee");
+      const active = matchesRoute(pathname, [href]);
       return <Link key={href} href={href} aria-current={active ? "page" : undefined}
         className={`flex min-h-11 items-center rounded-lg px-3 text-sm font-medium ${active ? "bg-surface-alt text-text" : "text-on-sidebar hover:bg-white/15"}`}>
         {title}
@@ -39,7 +39,7 @@ export function NavbarShell({ children }: { children: React.ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
   const workspace = matchesRoute(pathname, [...MANAGER_ROUTES, ...EMPLOYEE_ROUTES, "/profile"]);
   const manager = role === "Manager";
-  const home = manager ? "/dashboard" : "/employee-home";
+  const home = manager ? "/manager/home" : "/employee/home";
   const links = [...managerLinks, ["/profile", "Profile"], ["/about", "About"]];
   const skip = <a href="#page-content" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-3 focus:z-[100] focus:rounded-lg focus:bg-surface focus:px-4 focus:py-3">Skip to content</a>;
   const content = <div id="page-content" tabIndex={-1} className="workspace-content flex-1">{children}</div>;
@@ -92,7 +92,7 @@ export function NavbarShell({ children }: { children: React.ReactNode }) {
         </Link>
         <nav aria-label="Employee shortcuts" className="col-span-2 row-start-2 flex flex-wrap justify-center gap-1 pb-1 md:col-span-1 md:col-start-2 md:row-start-1 md:pb-0">
           {employeeLinks.map(([href, title]) => <Link key={href} href={href}
-            aria-current={pathname === href || (href === "/employee-home" && pathname === "/employee") ? "page" : undefined}
+            aria-current={pathname === href ? "page" : undefined}
             className="flex min-h-9 items-center rounded-lg px-3 text-sm hover:bg-white/15 aria-[current=page]:bg-surface-alt aria-[current=page]:text-text">{title}</Link>)}
         </nav>
         <div className="col-start-2 row-start-1 flex items-center justify-self-end gap-2 py-1 md:col-start-3">

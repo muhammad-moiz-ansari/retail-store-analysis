@@ -88,7 +88,7 @@ export default function LandingPage() {
               <p>Managers can review and assign aisle tasks. Employees can open their workspace to see their assignments and update task status.</p>
             </article>
           </div>
-          <Link href="/compare-people" className={styles.textLink}>Process and compare people <span aria-hidden="true">↗</span></Link>
+          <Link href="/manager/compare-people" className={styles.textLink}>Process and compare people <span aria-hidden="true">↗</span></Link>
         </PublicReveal>
       </section>
 

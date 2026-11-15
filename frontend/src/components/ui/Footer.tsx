@@ -20,26 +20,15 @@ const PUBLIC_QUICK_LINKS: NavLink[] = [
 
 // Authenticated (dashboard) quick links
 const AUTHENTICATED_QUICK_LINKS: NavLink[] = [
-  { label: "Home", href: "/dashboard" },
-  { label: "Customer Info", href: "/customer-info" },
-  { label: "Employee Info", href: "/employee-info" },
-  { label: "Spatial Analytics", href: "/spatial-analytics" },
-  { label: "Store Settings", href: "/settings", managerOnly: true },
+  { label: "Home", href: "/manager/home" },
+  { label: "Customer Info", href: "/manager/customers" },
+  { label: "Employee Info", href: "/manager/employees" },
+  { label: "Spatial Analytics", href: "/manager/spatial-analytics" },
+  { label: "Store Settings", href: "/manager/settings", managerOnly: true },
   { label: "About", href: "/about" },
 ];
 
-/** Routes where the user is considered authenticated */
-const AUTHENTICATED_ROUTES = [
-  "/dashboard",
-  "/customer-info",
-  "/employee-info",
-  "/spatial-analytics",
-  "/settings",
-  "/alerts",
-  "/employee",
-  "/employee-home",
-  "/my-performance",
-];
+const AUTHENTICATED_ROUTES = ["/manager", "/employee", "/profile"];
 
 export function Footer() {
   const pathname = usePathname();
@@ -53,8 +42,8 @@ export function Footer() {
   const quickLinks = hasSession && protectedRoute
     ? role === "Employee"
       ? [
-          { label: "My Workspace", href: "/employee-home" },
-          { label: "My Performance", href: "/my-performance" },
+          { label: "My Workspace", href: "/employee/home" },
+          { label: "My Performance", href: "/employee/performance" },
           { label: "About", href: "/about" },
         ]
       : AUTHENTICATED_QUICK_LINKS

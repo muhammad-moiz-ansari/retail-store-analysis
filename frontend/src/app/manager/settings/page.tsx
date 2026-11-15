@@ -153,7 +153,7 @@ function AccessRestricted() {
           <p className="font-body text-sm text-text">
             Store Settings is available to Managers only.
           </p>
-          <Link href="/dashboard">
+          <Link href="/manager/home">
             <RetroButton variant="secondary">← Back to Dashboard</RetroButton>
           </Link>
         </div>

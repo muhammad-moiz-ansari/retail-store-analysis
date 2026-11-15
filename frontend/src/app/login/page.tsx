@@ -42,7 +42,7 @@ export default function LoginPage() {
     setSubmitting(true);
     try {
       const role = await signIn({ email, password });
-      router.push(role === "Manager" ? "/dashboard" : "/employee-home");
+      router.push(role === "Manager" ? "/manager/home" : "/employee/home");
     } catch (error) {
       setSubmitError(error instanceof Error ? error.message : "Sign-in failed");
     } finally {
