@@ -1,5 +1,7 @@
 "use client";
 
+import type { ReactNode } from "react";
+import { AskRetailPulse } from "./AskRetailPulse";
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { RetroButton } from "../ui/RetroButton";
 import { ManagerCard, ManagerPanel } from "../ui/ManagerLayout";
@@ -297,7 +299,7 @@ export function DashboardPreview() {
   );
 }
 
-function BackendDashboard() {
+function BackendDashboard({ children }: { children?: ReactNode }) {
   const [selection, setSelection] = useState<AnalyticsRequest | null>(null);
   const [failed, setFailed] = useState(false);
   const [attempt, setAttempt] = useState(0);
@@ -319,32 +321,40 @@ function BackendDashboard() {
 
   if (!selection) {
     return (
-      <ManagerPanel title="Backend analytics">
-        <p role="status" className="text-sm text-text-muted">
-          {failed
-            ? "Backend analytics unavailable. Check your manager membership, server source configuration and backend connection. No preview data has been substituted."
-            : "Loading authorized backend selection…"}
-        </p>
-        {failed && (
-          <RetroButton
-            variant="secondary"
-            className="mt-4"
-            onClick={() => {
-              setFailed(false);
-              setAttempt((value) => value + 1);
-            }}
-          >
-            Retry backend connection
-          </RetroButton>
-        )}
-      </ManagerPanel>
+      <>
+        <ManagerPanel title="Backend analytics">
+          <p role="status" className="text-sm text-text-muted">
+            {failed
+              ? "Backend analytics unavailable. Check your manager membership, server source configuration and backend connection. No preview data has been substituted."
+              : "Loading authorized backend selection…"}
+          </p>
+          {failed && (
+            <RetroButton
+              variant="secondary"
+              className="mt-4"
+              onClick={() => {
+                setFailed(false);
+                setAttempt((value) => value + 1);
+              }}
+            >
+              Retry backend connection
+            </RetroButton>
+          )}
+        </ManagerPanel>
+        {children}
+        <AskRetailPulse unavailable="Ask requires an authorized backend selection." />
+      </>
     );
   }
 
-  return <DashboardAnalytics provider={provider} request={selection} />;
+  return <>
+    <DashboardAnalytics provider={provider} request={selection} />
+    {children}
+    <AskRetailPulse selection={selection} />
+  </>;
 }
 
-export function DashboardDataSource() {
+export function DashboardDataSource({ children }: { children?: ReactNode }) {
   const [mode, setMode] = useState<"backend" | "fixture">("backend");
 
   return (
@@ -366,7 +376,11 @@ export function DashboardDataSource() {
           Backend mode uses your server-authorized selection. Preview mode is an explicit synthetic demonstration.
         </p>
       </ManagerCard>
-      {mode === "backend" ? <BackendDashboard /> : <DashboardPreview />}
+      {mode === "backend" ? <BackendDashboard>{children}</BackendDashboard> : <>
+        <DashboardPreview />
+        {children}
+        <AskRetailPulse unavailable="Switch to Configured backend to ask questions." />
+      </>}
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { askDashboard } from "./ask";
 import { createBackendProvider, loadBackendSelection } from "./backend";
 import { fixtureRequest, createFixtureProvider } from "./fixture";
 import { loadDashboard, parseSnapshot } from "./provider";
@@ -69,4 +70,35 @@ test("proxy strips injected identity even when the signed session has no user ID
   assert.equal(headers.get("cookie"), null);
   assert.equal(headers.get("content-type"), "application/json");
   assert.equal(backendHeaders(incoming, { role: "Manager", email: "manager@test.invalid", userId: "actual-user" }, "test-secret").get("x-retailpulse-user-id"), "actual-user");
+});
+
+
+test("Ask posts only the authorized window, filters and question and presents provenance and evidence", async () => {
+  const signal = new AbortController().signal;
+  const selection = { ...fixtureRequest, filters: { runId: "r1", cameraId: "c1", zoneId: "z1" } };
+  const citation = { source: "footfall", ids: ["e1"], matched_count: 2, truncated: true };
+  const result = await askDashboard("  How many entries? ", selection, signal, async (url, init) => {
+    assert.equal(url, "/api/backend/agents/ask");
+    assert.equal(init?.credentials, "same-origin");
+    assert.equal(init?.signal, signal);
+    assert.deepEqual(JSON.parse(String(init?.body)), {
+      question: "How many entries?",
+      window: selection.window,
+      filters: { run_id: "r1", camera_id: "c1", zone_id: "z1" },
+    });
+    return Response.json({ status: "partial", response: "Two recorded entries.", citations: [citation], limitations: ["Partial coverage."] },
+      { headers: { "X-RetailPulse-Analytics-Source": "synthetic" } });
+  });
+  assert.deepEqual(result, { status: "partial", response: "Two recorded entries.", citations: [citation],
+    limitations: ["Partial coverage."], synthetic: true });
+});
+
+test("Ask distinguishes rate limits and unavailable service and rejects missing provenance", async () => {
+  const ask = (response: Response) => askDashboard("How many entries?", fixtureRequest,
+    new AbortController().signal, async () => response);
+  await assert.rejects(ask(new Response(null, { status: 429 })), /Too many questions/);
+  await assert.rejects(ask(new Response(null, { status: 503 })), /unavailable/);
+  const body = { status: "refused", response: "Outside read-only analytics.", citations: [], limitations: [] };
+  await assert.rejects(ask(Response.json(body)), /invalid answer/);
+  assert.equal((await ask(Response.json(body, { headers: { "X-RetailPulse-Analytics-Source": "recorded" } }))).status, "refused");
 });

@@ -15,6 +15,7 @@ Set these variables in the appropriate server environments, then restart both se
 | RETAILPULSE_SERVICE_URL | Next.js | Reachable Python backend URL; localhost only works when the backend runs on the same host |
 | DATABASE_URL | Python | Shared PostgreSQL database for application, event and identity records |
 | RETAILPULSE_ANALYTICS_CONFIG | Python | Path to the operator-owned JSON configuration below |
+| RETAILPULSE_ASK_ENABLED | Python | Set to `1` to enable the read-only Ask panel. The panel uses the manager’s configured window and filters and is disabled in fixture preview. |
 
 Next.js reads its normal environment configuration; the standalone Python backend needs exported variables too. No NEXT_PUBLIC secret or database path is needed. Sign-in, sign-up, session reads and the backend proxy return 503 if authentication credentials are missing or use known defaults outside explicitly opted-in local development. The analytics proxy requires configured credentials in all modes. Dashboard reads never initialize either database. Keep machine-specific runtime configuration out of Git (local demo files can live under ignored data/outputs/).
 

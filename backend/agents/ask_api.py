@@ -51,4 +51,5 @@ def ask(request: AskRequest, response: Response, authorized=Depends(access)):
     tools = PostgresAnalyticsTools(synthetic=config.synthetic, contexts=config.contexts)
     registry = ScopedToolRegistry(tools, membership.scope())
     response.headers["Cache-Control"] = "no-store"
+    response.headers["X-RetailPulse-Analytics-Source"] = "synthetic" if config.synthetic else "recorded"
     return run_analytics(request, registry, specialists=business_specialists())

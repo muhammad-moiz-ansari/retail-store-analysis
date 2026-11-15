@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { CRTFrame, RetroButton, RetroInput } from "@/components/ui";
+import { CRTFrame } from "@/components/ui";
 import { ManagerHeader, ManagerPage, ManagerPanel } from "@/components/ui/ManagerLayout";
 import { DashboardDataSource } from "@/components/dashboard/DashboardAnalytics";
 
@@ -65,29 +65,20 @@ export default function DashboardPage() {
             </div>
           </div>
         </ManagerPanel>
-        <DashboardDataSource />
-        <ManagerPanel title="Backend system status">
-          <p className="mb-4 text-sm text-text-muted">Application status reported by the backend, separate from event analytics and camera-feed verification.</p>
-          <SystemStatusStrip />
-        </ManagerPanel>
-        <section aria-label="Additional analytics" className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <ManagerPanel title="Recent interactions">
-            <p className="text-sm text-text-muted">Interaction details unavailable. This provider currently supplies aggregate counts, not employee/customer event rows.</p>
+        <DashboardDataSource>
+          <ManagerPanel title="Backend system status">
+            <p className="mb-4 text-sm text-text-muted">Application status reported by the backend, separate from event analytics and camera-feed verification.</p>
+            <SystemStatusStrip />
           </ManagerPanel>
-          <ManagerPanel title="Trajectory & heatmaps">
-            <p className="text-sm text-text-muted">Map analytics unavailable. A registered store map and role/interaction layers have not been connected.</p>
-          </ManagerPanel>
-        </section>
-        <section aria-label="Ask RetailPulse" className="sticky bottom-0 z-20 rounded-xl border border-border-soft bg-surface px-3 py-2 shadow-lg">
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-            <h2 className="text-sm font-semibold">Ask RetailPulse</h2>
-            <p className="text-xs text-text-muted">Unavailable until the Query service is connected.</p>
-          </div>
-          <div className="mt-1.5 flex items-center gap-2">
-            <RetroInput aria-label="Ask RetailPulse (unavailable)" placeholder="Ask about store performance" disabled className="flex-1" />
-            <RetroButton disabled>Ask</RetroButton>
-          </div>
-        </section>
+          <section aria-label="Additional analytics" className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <ManagerPanel title="Recent interactions">
+              <p className="text-sm text-text-muted">Interaction details unavailable. This provider currently supplies aggregate counts, not employee/customer event rows.</p>
+            </ManagerPanel>
+            <ManagerPanel title="Trajectory & heatmaps">
+              <p className="text-sm text-text-muted">Map analytics unavailable. A registered store map and role/interaction layers have not been connected.</p>
+            </ManagerPanel>
+          </section>
+        </DashboardDataSource>
     </ManagerPage>
   );
 }

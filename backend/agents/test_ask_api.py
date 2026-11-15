@@ -30,6 +30,7 @@ def test_ask_uses_only_authorized_selection_and_scope(monkeypatch):
     for _ in range(10):
         assert ask_api.ask(request, response, authorized) == "scoped"
     assert response.headers["cache-control"] == "no-store"
+    assert response.headers["x-retailpulse-analytics-source"] == "synthetic"
     with pytest.raises(HTTPException) as throttled:
         ask_api.ask(request, response, authorized)
     assert throttled.value.status_code == 429
