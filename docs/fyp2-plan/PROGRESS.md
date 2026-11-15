@@ -6,6 +6,8 @@ The [combined team plan](RetailPulse_FYP2_Implementation_Plan.md) governs curren
 
 ## Latest reconciliation / next handoff
 
+- **Moiz, optional provider routing:** Ask can use the existing Hugging Face configuration for route selection. The provider receives the question only and cannot choose tools or supply answer text. Offline routing remains the default. No provider request was made.
+
 - **Moiz, next-day staffing reasoning:** Added a scoped, approval-required proposal for cited forecasts, historical coverage and roster counts. No roster changes are made. Trusted source and approval wiring remain open.
 
 - **Moiz, anomaly reasoning:** Added evidence-ranked pipeline, coverage and queue signals for one trusted alert scope. Alert lookup and HTTP registration await a store-owned alert source.

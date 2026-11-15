@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends, HTTPException, Response
 from psycopg import Error
 
 from ..database import DatabaseNotConfigured
+from ..voice_agent import call_hugging_face
 from .ask_budget import take_shared_request
 from .business.employee_activity import business_specialists
 from .dashboard_api import access
@@ -15,6 +16,7 @@ from .graph import run_analytics
 from .contracts import Identifier
 from .graph_contracts import AskRequest, GraphRun
 from .postgres_traces import PostgresTraceStore
+from .routing import JsonRouter
 from .service import AnalyticsService
 from .specialists import operations_registration
 from .tools.contextual import PostgresAnalyticsTools
@@ -66,9 +68,12 @@ def ask(request: AskRequest, response: Response, authorized=Depends(access)):
     response.headers["Cache-Control"] = "no-store"
     response.headers["X-RetailPulse-Analytics-Source"] = "synthetic" if config.synthetic else "recorded"
     specialists = business_specialists() | {"operations": operations_registration()}
+    options = {"specialists": specialists}
+    if os.getenv("RETAILPULSE_ASK_PROVIDER_ROUTING") == "1":
+        options["router"] = JsonRouter(lambda messages: call_hugging_face(messages, max_tokens=64, timeout_seconds=8))
     if os.getenv("RETAILPULSE_ASK_TRACE_ENABLED") == "1":
-        return AnalyticsService(tools, specialists=specialists, traces=PostgresTraceStore()).ask(request, scope=scope)
-    return run_analytics(request, ScopedToolRegistry(tools, scope), specialists=specialists)
+        return AnalyticsService(tools, traces=PostgresTraceStore(), **options).ask(request, scope=scope)
+    return run_analytics(request, ScopedToolRegistry(tools, scope), **options)
 
 
 @router.get("/runs/{run_id}", response_model=GraphRun, dependencies=[Depends(ask_enabled)])

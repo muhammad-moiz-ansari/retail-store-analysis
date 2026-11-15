@@ -15,6 +15,7 @@ def test_ask_uses_only_authorized_selection_and_scope(monkeypatch):
     membership = SimpleNamespace(user_id="manager-1", scope=lambda: scope, default_request=SimpleNamespace(
         window=request.window, filters=SimpleNamespace(event_filters=lambda: request.filters)))
     authorized = SimpleNamespace(synthetic=True, contexts=(), verified_unattended_runs=()), membership
+    monkeypatch.delenv("RETAILPULSE_ASK_PROVIDER_ROUTING", raising=False)
     monkeypatch.delenv("RETAILPULSE_ASK_TRACE_ENABLED", raising=False)
     monkeypatch.delenv("RETAILPULSE_ASK_SHARED_BUDGET", raising=False)
     monkeypatch.setattr(ask_api, "_requests", {})

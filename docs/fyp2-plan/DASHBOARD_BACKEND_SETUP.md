@@ -81,3 +81,7 @@ Traces contain manager questions, responses and supporting event references. Ena
 ### Optional shared Ask budget
 
 For multiple workers, apply `backend/agents/ask_budget_schema.sql` once to the common backend database and set `RETAILPULSE_ASK_SHARED_BUDGET=1` on every worker. The counter uses fixed one-minute windows shared across workers. A store outage returns 503 in shared mode. It has no dependency on trace retention.
+
+### Optional Ask provider routing
+
+Ask uses offline routing by default. Set `RETAILPULSE_ASK_PROVIDER_ROUTING=1` and configure the existing backend `HF_TOKEN` only in an approved evaluation environment. The provider receives the manager's question and fixed routing instructions. Keep questions free of personal or confidential information in this mode. The request uses an eight-second socket timeout and a 64-token output limit. Store membership, tool results, traces and database credentials stay on the server. The graph still controls tools and derives answers from verified evidence.
