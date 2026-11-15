@@ -6,6 +6,8 @@ The [combined team plan](RetailPulse_FYP2_Implementation_Plan.md) governs curren
 
 ## Latest reconciliation / next handoff
 
+- **Moiz, dispatch dashboard:** System Status displays recorded dispatch outcomes and task acknowledgement counts, mean and median. The manager can refresh manually. Functional and end-to-end verification is deferred to the final testing pass.
+
 - **Moiz, dashboard Ask panel:** Configured backend mode now uses the authorized window and filters for Ask. Preview mode disables Ask. The panel labels synthetic backend answers and presents refusal, partial evidence, citations and service errors.
 
 - **Moiz, authenticated Ask pilot:** The read-only graph is available behind opt-in, verified Manager identity, current store membership, and the server-selected dashboard window and filters. It reuses both business specialists and limits Ask calls per manager per process. No traces are retained by this HTTP route.

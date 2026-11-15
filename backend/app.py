@@ -679,7 +679,11 @@ def system_status() -> dict:
         ack = conn.execute(
             "SELECT count(ack_seconds) AS n, avg(ack_seconds) AS mean, percentile_cont(0.5) WITHIN GROUP (ORDER BY ack_seconds) AS median FROM tasks"
         ).fetchone()
+        decisions = conn.execute(
+            "SELECT decision, count(*) AS total FROM dispatch_decisions GROUP BY decision ORDER BY decision"
+        ).fetchall()
         return {
+            "dispatchOutcomes": {row["decision"]: row["total"] for row in decisions},
             "acknowledgement": {"tasks": ack["n"], "meanSeconds": ack["mean"], "medianSeconds": ack["median"]},
             "ok": True,
             "workers": {"orchestrator": "idle", "cv": "not_configured"},
