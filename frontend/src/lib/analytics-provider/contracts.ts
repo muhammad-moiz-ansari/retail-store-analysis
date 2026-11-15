@@ -37,6 +37,7 @@ export type AnalyticsSnapshot = {
   generatedAt: string;
   validUntil: string;
   metrics: Record<MetricKey, DashboardMetric>;
+  spatial?: unknown;
   limitations: string[];
 };
 

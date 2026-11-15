@@ -602,3 +602,7 @@ Rules: unmapped or less than 80% observed cells are masked. A role is present at
 ### Dashboard interaction rows
 
 `GET /analytics/dashboard/interactions` uses the authenticated membership's default selection. It returns up to ten recent overlapping confirmed or unverified recorded events, newest first, with source provenance and truncation. No track or account identities are included. An empty event list does not establish an observed zero or a healthy feed.
+
+### Dashboard map presentation binding
+
+The dashboard snapshot may carry `spatial` with `version`, the exact dashboard `window`, and up to 500 `cells`. Each cell contains `id`, a normalized `polygon` of 3–64 [x,y] points, `category`, `quality`, and a `values` map keyed by the four agreed layer IDs. Numeric layer values are nonnegative; counts are integers. Missing/null values remain unavailable. Unmapped cells may not carry numeric values. Use the same registered map version for geometry, occupancy and heatmaps. The existing snapshot omits the field until backend assembly and projection exist.

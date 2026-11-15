@@ -145,9 +145,6 @@ export default function DashboardPage() {
             <p className="mb-4 text-sm text-text-muted">Application status reported by the backend, separate from event analytics and camera-feed verification.</p>
             <SystemStatusStrip />
           </ManagerPanel>
-          <ManagerPanel title="Trajectory & heatmaps">
-            <p className="text-sm text-text-muted">Map analytics unavailable. A registered store map and role/interaction layers have not been connected.</p>
-          </ManagerPanel>
         </DashboardDataSource>
     </ManagerPage>
   );

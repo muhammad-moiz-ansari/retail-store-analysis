@@ -6,6 +6,8 @@ The [combined team plan](RetailPulse_FYP2_Implementation_Plan.md) governs curren
 
 ## Latest reconciliation / next handoff
 
+- **Moiz, map presentation:** The dashboard can render a validated optional map snapshot with the four occupancy categories and separate role/interaction layers. Real map registration, projection, result assembly and validation remain pending.
+
 - **Moiz, recent interaction rows:** The manager dashboard can show up to ten scoped confirmed or unverified recorded events. The endpoint reuses the authorized dashboard selection and omits track identities. Final verification is deferred.
 
 - **Moiz, wider Query binding:** Ask can route explicit queue and camera-health questions through the grounded graph. It shows dated samples, with queue waits marked estimated. Alert analysis, causal investigation and schedule planning remain open.

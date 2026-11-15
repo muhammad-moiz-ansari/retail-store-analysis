@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 import { AskRetailPulse } from "./AskRetailPulse";
 import { RecentInteractions } from "./RecentInteractions";
+import { StoreMap } from "./StoreMap";
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { RetroButton } from "../ui/RetroButton";
 import { ManagerCard, ManagerPanel } from "../ui/ManagerLayout";
@@ -235,9 +236,11 @@ function MetricGrid({
 export function DashboardAnalytics({
   provider,
   request,
+  showStoreMap = false,
 }: {
   provider: AnalyticsProvider;
   request: AnalyticsRequest;
+  showStoreMap?: boolean;
 }) {
   const controller = useMemo(() => new DashboardController(provider, request), [provider, request]);
   const state = useSyncExternalStore(
@@ -266,6 +269,7 @@ export function DashboardAnalytics({
         </div>
         <AnalyticsView state={state} />
       </ManagerCard>
+      {showStoreMap && <StoreMap snapshot={state.status === "loading" || state.status === "unavailable" ? undefined : state.snapshot} stale={state.status === "stale"} />}
     </section>
   );
 }
@@ -342,6 +346,7 @@ function BackendDashboard({ children }: { children?: ReactNode }) {
             </RetroButton>
           )}
         </ManagerPanel>
+        <StoreMap />
         <RecentInteractions />
         {children}
         <AskRetailPulse unavailable="Ask requires an authorized backend selection." />
@@ -350,7 +355,7 @@ function BackendDashboard({ children }: { children?: ReactNode }) {
   }
 
   return <>
-    <DashboardAnalytics provider={provider} request={selection} />
+    <DashboardAnalytics provider={provider} request={selection} showStoreMap />
     <RecentInteractions selection={selection} />
     {children}
     <AskRetailPulse selection={selection} />
@@ -381,6 +386,7 @@ export function DashboardDataSource({ children }: { children?: ReactNode }) {
       </ManagerCard>
       {mode === "backend" ? <BackendDashboard>{children}</BackendDashboard> : <>
         <DashboardPreview />
+        <StoreMap />
         <RecentInteractions />
         {children}
         <AskRetailPulse unavailable="Switch to Configured backend to ask questions." />
