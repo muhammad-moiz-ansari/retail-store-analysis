@@ -19,7 +19,7 @@ Reviewed 12 November 2026 on `fyp2-ruhab` (based on `fyp2-moiz` at `5f2c77c`). S
 
 ### Fix status (backend, Saqib, 13 Nov 2026)
 Tests: `backend/tests/test_security.py`.
-- **S1 backend fixed.** `backend/runtime_secrets.py`: the backend refuses to start when the internal secret is missing or equals the development default, unless `RETAILPULSE_DEV_DEFAULTS=1` (set by `npm run dev`, `npm run backend:api` and the tests). **Frontend half (Next routes, `session-auth.ts`) is still open (Moiz).**
+- **S1 backend fixed.** `backend/runtime_secrets.py`: the backend refuses to start when the internal secret is missing or equals the development default, unless `RETAILPULSE_DEV_DEFAULTS=1` (set by `npm run dev`, `npm run backend:api` and the tests).
 - **S2 fixed.** Both secret checks use `hmac.compare_digest`.
 - **S3 login part fixed.** 5 failed sign-ins per account in 15 minutes lock that account (429), in memory per process. Per-IP limits belong in the Next proxy; the `/agents/ask` budget is Moiz's.
 - **S4** unchanged: keep the secret server-side and rotate it per deployment (deployment checklist).
@@ -27,6 +27,11 @@ Tests: `backend/tests/test_security.py`.
 - **S6 fixed.** Invitation sign-up needs 8+ characters.
 - **S7 fixed.** Invitation tokens are stored as SHA-256 hashes. Invites made before the change still work until they expire (7 days).
 - **S8 fixed.** At most 2 CV jobs run at once (429 otherwise); only the last 50 finished jobs are kept.
+
+### Fix status (frontend, Moiz, 15 Nov 2026)
+
+- **S1 implemented locally.** Session signing and verification refuse missing credentials and known demo values. Next.js guards session reads, login, signup and every backend proxy verb before reading a cookie or forwarding a request. Defaults require both Next.js development mode and `RETAILPULSE_DEV_DEFAULTS=1`; analytics requires explicitly configured secrets in every mode. Logout can still clear an old cookie during misconfiguration.
+- **Still open.** Verify deployment settings and connectivity. The per-user Ask request budget belongs with the authenticated Ask endpoint. Per-IP login limits need a trusted deployment client address. Service credentials remain server-side and should be rotated per deployment.
 
 ## Privacy notes for the report and demo
 

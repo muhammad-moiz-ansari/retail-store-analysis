@@ -38,7 +38,7 @@ The reported failed project selected `frontend` and the old `main` branch. In th
 
 ## Backend connection is separate
 
-This configuration builds the Next.js app; it does not deploy the Python/CV service. Existing proxy routes require a reachable `RETAILPULSE_SERVICE_URL` and the matching server-side internal secret for a separately running backend. A deployed Vercel function cannot reach a developer laptop through `127.0.0.1`. Backend authentication, durable data and production integration remain separate work. Never put server credentials in `NEXT_PUBLIC_*` variables.
+This configuration builds the Next.js app; it does not deploy the Python/CV service. Existing proxy routes require a reachable `RETAILPULSE_SERVICE_URL` and the matching server-side `RETAILPULSE_INTERNAL_SECRET` for a separately running backend. Set a separate random `RETAILPULSE_SESSION_SECRET` in Vercel. Set both values in the relevant deployment environment (Preview or Production). Missing credentials and known demo values return 503 on session, signup and proxy requests. Local development defaults cannot enable authentication in a production-mode Next.js process. A deployed Vercel function cannot reach a developer laptop through `127.0.0.1`. Backend authentication, durable data and production integration remain separate work. Never put server credentials in `NEXT_PUBLIC_*` variables.
 
 References: [Vercel monorepo/root settings](https://vercel.com/docs/monorepos), [project configuration](https://vercel.com/docs/project-configuration).
 

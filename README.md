@@ -185,13 +185,7 @@ talks to FastAPI through the session-checked `/api/backend/*` proxy:
 
 `npm run dev:frontend` starts only Next.js.
 
-Manager routes require a signed HttpOnly session cookie. In the local FYP demo, choosing Manager with any valid email and a 6+ character password creates that cookie. Configure these secrets before running:
-
-```bash
-export RETAILPULSE_SESSION_SECRET="change-me"
-```
-
-Employee and Manager use the same demo credential rule. Manager still receives a server-signed session so manager APIs are not unlocked by changing localStorage alone.
+Manager and employee sign-in use backend accounts and a signed HttpOnly session cookie. Set a random `RETAILPULSE_SESSION_SECRET` in Next.js and a separate random `RETAILPULSE_INTERNAL_SECRET` shared by Next.js and the backend. Keep both values server-side. `npm run dev` opts both processes into local development defaults. A standalone `npm run dev:frontend` needs real secrets or an explicit local-only `RETAILPULSE_DEV_DEFAULTS=1`. Production-mode Next.js and dashboard analytics always require configured secrets.
 
 ### Build for production
 

@@ -6,6 +6,8 @@ The [combined team plan](RetailPulse_FYP2_Implementation_Plan.md) governs curren
 
 ## Latest reconciliation / next handoff
 
+- **Frontend S1 (Moiz, 15 Nov 2026):** Session, signup and backend proxy routes reject missing or default credentials outside explicitly opted-in Next.js development. Dashboard analytics always requires configured secrets. Build, lint, TypeScript and 36 frontend tests passed. A production-mode HTTP smoke test with a loopback mock confirmed 503 and no upstream calls with default credentials, working logout, and successful configured login and proxy calls. Deployment verification and rate limiting for the future authenticated Ask route remain open. See [SECURITY_REVIEW.md](SECURITY_REVIEW.md).
+
 - **Scope cleanup (15 Nov 2026):** Removed the accidental sales module, import fixtures, manager page, and service endpoints. Current analytics cover camera and store operations.
 
 - **Ruhab, after the local handoff (12 Nov 2026):** `docs/extra-docs/` (locally nested as `docs/extra-docs/extra-docs/`) was read. Added golden-question evaluation (`42aca07`), cited page summaries and a narrative number check (`5924cef`), and 10–20 s review clips with track boxes (`9227e21`). [SECURITY_REVIEW.md](SECURITY_REVIEW.md) and [DEMO_SCRIPT.md](DEMO_SCRIPT.md) were added with the final commit. Commits follow the handoff's `git add .` / single `-m` workflow; the local root report PDF is ignored so it is never swept in.

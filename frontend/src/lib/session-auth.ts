@@ -1,4 +1,5 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
+import { sessionSigningSecret } from "./auth-config";
 
 // Keep the cookie name compatible with sessions issued before the auth module rename.
 export const SESSION_COOKIE = "retailpulse-pos-session";
@@ -11,32 +12,29 @@ type SessionPayload = {
   exp: number;
 };
 
-export const DEV_SESSION_SECRET = "local-dev-pos-session-secret";
-
-export function configuredSessionSecret() {
-  return process.env.RETAILPULSE_SESSION_SECRET || process.env.POS_SESSION_SECRET || process.env.NEXTAUTH_SECRET;
-}
-
 function base64url(input: string) {
   return Buffer.from(input).toString("base64url");
 }
 
-function signPayload(payload: string) {
-  return createHmac("sha256", (configuredSessionSecret() || DEV_SESSION_SECRET)).update(payload).digest("base64url");
+function signPayload(payload: string, secret: string) {
+  return createHmac("sha256", secret).update(payload).digest("base64url");
 }
 
 export function createSession(session: Omit<SessionPayload, "exp">, ttlSeconds = 60 * 60 * 8) {
+  const secret = sessionSigningSecret();
+  if (!secret) throw new Error("RetailPulse session authentication is not configured");
   const payload = base64url(JSON.stringify({ ...session, exp: Math.floor(Date.now() / 1000) + ttlSeconds } satisfies SessionPayload));
-  return `${payload}.${signPayload(payload)}`;
+  return `${payload}.${signPayload(payload, secret)}`;
 }
 
 export function verifySession(token?: string | null): SessionPayload | null {
-  if (!token) return null;
+  const secret = sessionSigningSecret();
+  if (!token || !secret) return null;
   const parts = token.split(".");
   if (parts.length !== 2) return null;
   const [payload, signature] = parts;
   if (!payload || !signature) return null;
-  const expected = signPayload(payload);
+  const expected = signPayload(payload, secret);
   const expectedBuffer = Buffer.from(expected);
   const actualBuffer = Buffer.from(signature);
   if (expectedBuffer.length !== actualBuffer.length || !timingSafeEqual(expectedBuffer, actualBuffer)) return null;

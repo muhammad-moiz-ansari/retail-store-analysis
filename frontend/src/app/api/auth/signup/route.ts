@@ -1,17 +1,21 @@
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 import { createSession, SESSION_COOKIE } from "@/lib/session-auth";
+import { resolveAuthConfig } from "@/lib/auth-config";
 
 const SERVICE_URL = process.env.RETAILPULSE_SERVICE_URL || "http://127.0.0.1:8011";
-const INTERNAL_SECRET = process.env.RETAILPULSE_INTERNAL_SECRET || process.env.POS_INTERNAL_SECRET || "local-dev-pos-secret";
 
 export async function POST(request: NextRequest) {
+  const auth = resolveAuthConfig();
+  if (!auth) {
+    return NextResponse.json({ error: "RetailPulse authentication is not configured" }, { status: 503 });
+  }
   const body = await request.json().catch(() => ({}));
   const response = await fetch(`${SERVICE_URL.replace(/\/$/, "")}/auth/invitations/accept`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "x-retailpulse-internal-secret": INTERNAL_SECRET,
+      "x-retailpulse-internal-secret": auth.internalSecret,
     },
     body: JSON.stringify(body),
     cache: "no-store",
