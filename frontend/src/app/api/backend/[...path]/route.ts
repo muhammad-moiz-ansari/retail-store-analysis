@@ -12,8 +12,8 @@ type Ctx = {
 
 async function proxy(request: NextRequest, ctx: Ctx) {
   const { path } = await ctx.params;
-  const analytics = path[0] === "analytics";
-  const auth = resolveAuthConfig(process.env, analytics);
+  const protectedAnalytics = path[0] === "analytics" || path[0] === "agents";
+  const auth = resolveAuthConfig(process.env, protectedAnalytics);
   if (!auth) {
     return NextResponse.json({ error: "RetailPulse authentication is not configured" }, { status: 503 });
   }
@@ -23,7 +23,7 @@ async function proxy(request: NextRequest, ctx: Ctx) {
     return NextResponse.json({ error: "RetailPulse session required" }, { status: 401 });
   }
 
-  if (analytics && (session.role !== "Manager" || !session.userId)) {
+  if (protectedAnalytics && (session.role !== "Manager" || !session.userId)) {
     return NextResponse.json({ error: "Manager account identity required" }, { status: 403 });
   }
   const targetUrl = new URL(`${SERVICE_URL.replace(/\/$/, "")}/${path.join("/")}`);
@@ -37,7 +37,7 @@ async function proxy(request: NextRequest, ctx: Ctx) {
       headers,
       body: request.method === "GET" || request.method === "HEAD" ? undefined : await request.arrayBuffer(),
       cache: "no-store",
-      signal: analytics ? AbortSignal.any([request.signal, AbortSignal.timeout(30000)]) : undefined,
+      signal: protectedAnalytics ? AbortSignal.any([request.signal, AbortSignal.timeout(30000)]) : undefined,
     });
     const responseHeaders = new Headers(response.headers);
     responseHeaders.delete("content-encoding");

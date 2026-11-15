@@ -17,6 +17,7 @@ from typing import Annotated, Any
 from fastapi import Depends, FastAPI, Header, HTTPException, Query
 from fastapi.responses import StreamingResponse
 
+from .agents.ask_api import router as ask_router
 from .agents.dashboard_api import router as dashboard_router
 
 from .camera_service import REPO_ROOT, resolve_video
@@ -41,6 +42,7 @@ app.mount("/camera", camera_app)
 
 # Read-only analytics remain unavailable until explicit server membership/source configuration.
 app.include_router(dashboard_router)
+app.include_router(ask_router)
 
 INTERNAL_SECRET = internal_secret("RETAILPULSE_INTERNAL_SECRET", "POS_INTERNAL_SECRET")
 

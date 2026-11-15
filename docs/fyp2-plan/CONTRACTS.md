@@ -348,7 +348,7 @@ Retention failure does not fabricate a saved run: `trace_retained=false`, error 
 
 | Proposed HTTP contract (not exposed yet) | Validated input / result | Required server integration |
 |---|---|---|
-| `POST /agents/ask` | Body `AskRequest`, response `GraphRun`; malformed inputs become validation errors | Resolve current authenticated actor and authorized store/filters from authoritative server records before `service.ask`. Never accept scope/node/dispatch in the body or treat arbitrary role headers as store authorization. |
+| `POST /agents/ask` | Body `AskRequest`, response `GraphRun`; malformed inputs become validation errors | Opt-in with `RETAILPULSE_ASK_ENABLED=1`. The existing dashboard identity and membership checks establish scope. Only the member’s default dashboard window and filters are accepted. Scope, node and dispatch are server-owned. The read-only graph uses the two business specialists, with ten requests per minute per manager per worker and no HTTP trace retention. |
 | `GET /agents/runs/{id}` | Server-generated run ID, response the retained `GraphRun`; not-found for unknown/expired/unauthorized | Resolve the same current trusted actor/store/permission scope and call `get_run`. Do not expose another actor's or a broader historical trace. |
 
 These routes are deliberately absent from `backend/app.py` pending the real account/store binding. The existing internal-secret dependency and session-to-header proxy are integration building blocks, not a completed multi-store identity policy.

@@ -6,6 +6,8 @@ The [combined team plan](RetailPulse_FYP2_Implementation_Plan.md) governs curren
 
 ## Latest reconciliation / next handoff
 
+- **Moiz, authenticated Ask pilot:** The read-only graph is available behind opt-in, verified Manager identity, current store membership, and the server-selected dashboard window and filters. It reuses both business specialists and limits Ask calls per manager per process. No traces are retained by this HTTP route.
+
 - **Frontend S1 (Moiz, 15 Nov 2026):** Session, signup and backend proxy routes reject missing or default credentials outside explicitly opted-in Next.js development. Dashboard analytics always requires configured secrets. Build, lint, TypeScript and 36 frontend tests passed. A production-mode HTTP smoke test with a loopback mock confirmed 503 and no upstream calls with default credentials, working logout, and successful configured login and proxy calls. Deployment verification and rate limiting for the future authenticated Ask route remain open. See [SECURITY_REVIEW.md](SECURITY_REVIEW.md).
 
 - **Scope cleanup (15 Nov 2026):** Removed the accidental sales module, import fixtures, manager page, and service endpoints. Current analytics cover camera and store operations.

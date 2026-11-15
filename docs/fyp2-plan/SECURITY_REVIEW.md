@@ -31,7 +31,7 @@ Tests: `backend/tests/test_security.py`.
 ### Fix status (frontend, Moiz, 15 Nov 2026)
 
 - **S1 implemented locally.** Session signing and verification refuse missing credentials and known demo values. Next.js guards session reads, login, signup and every backend proxy verb before reading a cookie or forwarding a request. Defaults require both Next.js development mode and `RETAILPULSE_DEV_DEFAULTS=1`; analytics requires explicitly configured secrets in every mode. Logout can still clear an old cookie during misconfiguration.
-- **Still open.** Verify deployment settings and connectivity. The per-user Ask request budget belongs with the authenticated Ask endpoint. Per-IP login limits need a trusted deployment client address. Service credentials remain server-side and should be rotated per deployment.
+- **Still open.** Verify deployment settings and connectivity. The authenticated Ask endpoint limits each manager to ten requests per minute per process. A shared limit remains open for multi-worker deployment. Per-IP login limits need a trusted deployment client address. Service credentials remain server-side and should be rotated per deployment.
 
 ## Privacy notes for the report and demo
 
