@@ -33,6 +33,9 @@ backend/*.sqlite3-*
 *.log
 !frontend/public/favicon-dark.png
 !frontend/public/favicon-light.png
+!frontend/public/pwa-maskable-512.png
+!frontend/public/pwa-512.png
+!frontend/public/pwa-192.png
 
 # Environment files
 .env
