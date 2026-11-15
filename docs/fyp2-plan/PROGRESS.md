@@ -6,6 +6,8 @@ The [combined team plan](RetailPulse_FYP2_Implementation_Plan.md) governs curren
 
 ## Latest reconciliation / next handoff
 
+- **Moiz, unattended provenance:** Dashboard and Ask readers recognize server-attested store/camera/run tuples produced by the fixed derivation. Historical and mixed selections keep the warning. No event rows were changed.
+
 - **Moiz, directional footfall:** The per-track entrance counter in `backend/events/footfall.py` uses hysteresis, stable-side confirmation and a gap reset. It returns each confirmed entry or exit for Saqib’s ingestion integration. Validation is deferred.
 
 - **Moiz, dispatch dashboard:** System Status displays recorded dispatch outcomes and task acknowledgement counts, mean and median. The manager can refresh manually. Functional and end-to-end verification is deferred to the final testing pass.

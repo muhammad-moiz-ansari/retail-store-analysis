@@ -261,7 +261,7 @@ class UnattendedEpisode(Contract):
     window: TimeWindow  # Clipped interval; zero-length overlaps are excluded.
     waited: SecondsMetric
     helped: bool
-    provenance: Literal["stored_derivation_verdict_unfiltered"] = "stored_derivation_verdict_unfiltered"
+    provenance: Literal["stored_derivation_verdict_unfiltered", "stored_derivation_verdict_filtered"] = "stored_derivation_verdict_unfiltered"
 
 
 class UnattendedResult(ResultContext):

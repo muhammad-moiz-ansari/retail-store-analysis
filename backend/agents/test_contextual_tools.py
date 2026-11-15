@@ -29,7 +29,7 @@ def test_unattended_threshold_uses_stored_wait_and_clips_output(database):
     assert episode.provenance == 'stored_derivation_verdict_unfiltered'
     assert episode.waited.evidence[0].ids == ('u1',)
     assert result.episode_count.evidence[0].ids == ('u1', 'u2')
-    assert 'does not filter interaction verdict' in result.limitations[0]
+    assert 'may predate verdict filtering' in result.limitations[0]
 
 
 def test_coverage_merges_overlapping_staff_and_clips_to_trusted_open_window(database):

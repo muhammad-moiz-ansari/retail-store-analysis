@@ -19,6 +19,8 @@ Set these variables in the appropriate server environments, then restart both se
 
 Next.js reads its normal environment configuration; the standalone Python backend needs exported variables too. No NEXT_PUBLIC secret or database path is needed. Sign-in, sign-up, session reads and the backend proxy return 503 if authentication credentials are missing or use known defaults outside explicitly opted-in local development. The analytics proxy requires configured credentials in all modes. Dashboard reads never initialize either database. Keep machine-specific runtime configuration out of Git (local demo files can live under ignored data/outputs/).
 
+Optional `verified_unattended_runs` entries contain `store_id`, `camera_id`, and `run_id`. List a tuple only after confirming all its stored unattended rows were derived by the fixed verdict-filtering logic. Clips recorded after a calendar date alone do not establish derivation version.
+
 Example **template**, requiring real identifiers/window/context from Saqib and the actual manager account ID. It is not installed or enabled automatically:
 
 ```json

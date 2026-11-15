@@ -7,7 +7,7 @@ from pydantic import Field, model_validator
 from .contracts import (Contract, CountMetric, EventFilters, Evidence, Identifier, Metric,
                         TimeWindow, TrustedAccessScope)
 from .tools.common import ObservationContext
-from .tools.contextual import PostgresAnalyticsTools
+from .tools.contextual import PostgresAnalyticsTools, VerifiedUnattendedRun
 from .tools.registry import ScopedToolRegistry
 
 
@@ -60,6 +60,7 @@ class DashboardConfig(Contract):
     synthetic: bool = Field(strict=True)  # Operator attests provenance of every allowed run.
     memberships: tuple[DashboardMembership, ...] = Field(min_length=1, max_length=1000)
     contexts: tuple[ObservationContext, ...] = Field(default=(), max_length=1000)
+    verified_unattended_runs: tuple[VerifiedUnattendedRun, ...] = Field(default=(), max_length=1000)
 
     @model_validator(mode='after')
     def unambiguous(self):
@@ -120,7 +121,9 @@ def footfall_total(result, field):
 
 def dashboard_snapshot(config, membership, request, *, now=None):
     membership.authorize(request)
-    registry = ScopedToolRegistry(PostgresAnalyticsTools(synthetic=config.synthetic, contexts=config.contexts), membership.scope())
+    tools = PostgresAnalyticsTools(synthetic=config.synthetic, contexts=config.contexts,
+                                  verified_unattended_runs=config.verified_unattended_runs)
+    registry = ScopedToolRegistry(tools, membership.scope())
     args = dict(window=request.window.model_dump(mode='json'), filters=request.filters.event_filters().model_dump(exclude_none=True), limit=1000)
     footfall = registry.invoke('get_footfall', args | {'granularity': 'day'})
     interactions = registry.invoke('get_interactions', args)

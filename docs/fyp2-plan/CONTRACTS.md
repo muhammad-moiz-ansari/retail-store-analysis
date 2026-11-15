@@ -20,7 +20,7 @@ Snapshot v1 echoes the exact store/window/filter selection, provenance (`mode`, 
 | confirmedInteractions / unverifiedInteractions | count | get_interactions confirmed_count / unverified_count, kept separate |
 | meanConfirmedDuration | seconds | get_interactions mean_confirmed_duration, not a fabricated response/approach time |
 | customerDwellP50 | seconds | get_zone_dwell customer p50; explicit zone required by backend |
-| unattendedEpisodes | count | get_unattended episode_count; preserve stored_derivation_verdict_unfiltered limitation |
+| unattendedEpisodes | count | get_unattended episode_count; show legacy verdict warning when the derivation is unattested |
 | staffedOpenRatio | ratio | get_coverage selected zone staffed_open_ratio; null without trusted operating denominator |
 
 Each metric has nullable numeric `value`, `unit`, `status: ok | empty | partial | unavailable`, nullable `reason`, `estimated`, `limitations` and evidence entries (`query`, `source`, `ids`, `matchedCount`, `truncated`). The adapter must retain metric-specific unavailable reasons/estimates and source-result limitations, not upgrade partial tool outputs. Positive values require evidence; observed zero may have no row IDs, but needs the backend's actual observation/health justification. Undefined averages/ratios remain null even in an observed-empty window. Unavailable metrics cannot contain numbers. Non-finite/negative values, fractional counts, ratios outside 0–1, missing explanations and invalid evidence are rejected. No occupancy/net-inside claim is derived by subtracting crossings; initial occupancy is not established.

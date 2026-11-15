@@ -48,7 +48,8 @@ def ask(request: AskRequest, response: Response, authorized=Depends(access)):
         raise HTTPException(403, "Ask selection must match the configured dashboard selection")
     if not take_request(membership.user_id):
         raise HTTPException(429, "Ask request budget exhausted", headers={"Retry-After": "60"})
-    tools = PostgresAnalyticsTools(synthetic=config.synthetic, contexts=config.contexts)
+    tools = PostgresAnalyticsTools(synthetic=config.synthetic, contexts=config.contexts,
+                                  verified_unattended_runs=config.verified_unattended_runs)
     registry = ScopedToolRegistry(tools, membership.scope())
     response.headers["Cache-Control"] = "no-store"
     response.headers["X-RetailPulse-Analytics-Source"] = "synthetic" if config.synthetic else "recorded"
