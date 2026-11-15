@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AuthField, AuthPageShell } from "@/components/auth/AuthPageShell";
 import { RetroButton } from "@/components/ui/RetroButton";
-import { useAuth, type UserRole } from "@/components/auth/AuthProvider";
+import { useAuth } from "@/components/auth/AuthProvider";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -16,7 +16,6 @@ export default function LoginPage() {
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
   const [submitError, setSubmitError] = useState<string>();
   const [submitting, setSubmitting] = useState(false);
-  const [role, setRole] = useState<UserRole>("Employee");
 
   function validate() {
     const next: typeof errors = {};
@@ -42,7 +41,7 @@ export default function LoginPage() {
 
     setSubmitting(true);
     try {
-      await signIn(role, { email, password });
+      const role = await signIn({ email, password });
       router.push(role === "Manager" ? "/dashboard" : "/employee-home");
     } catch (error) {
       setSubmitError(error instanceof Error ? error.message : "Sign-in failed");
@@ -52,7 +51,7 @@ export default function LoginPage() {
   }
 
   return (
-    <AuthPageShell title="Sign in" description="Choose your access level to open your workspace.">
+    <AuthPageShell title="Sign in" description="Sign in to open your workspace.">
       <form onSubmit={handleSubmit} className="space-y-4" noValidate aria-busy={submitting}>
         <AuthField
           label="Email"
@@ -79,27 +78,6 @@ export default function LoginPage() {
           autoComplete="current-password"
         />
 
-        <fieldset>
-          <legend className="mb-1.5 text-sm font-semibold">Access level</legend>
-          <div className="grid grid-cols-2 gap-2">
-            {(["Employee", "Manager"] as UserRole[]).map((option) => (
-              <label key={option} className="cursor-pointer">
-                <input
-                  className="peer sr-only"
-                  type="radio"
-                  name="role"
-                  value={option}
-                  checked={role === option}
-                  onChange={() => setRole(option)}
-                />
-                <span className="flex min-h-11 items-center justify-center rounded-lg border border-border-soft px-2 text-sm font-semibold hover:bg-surface-alt peer-checked:border-accent peer-checked:bg-surface-alt peer-checked:text-accent peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-accent">
-                  {option}
-                </span>
-              </label>
-            ))}
-          </div>
-        </fieldset>
-
         {submitError && <p role="alert" className="text-sm text-danger">{submitError}</p>}
         <RetroButton
           type="submit"
@@ -119,10 +97,10 @@ export default function LoginPage() {
             Sign up
           </Link>
         </p>
-        <details className="text-sm text-text-muted">
+        {process.env.NODE_ENV === "development" && <details className="text-sm text-text-muted">
           <summary className="w-fit cursor-pointer">Local demo credentials</summary>
-          <p className="mt-2 break-words">Use manager@retailpulse.local or employee@retailpulse.local with password123.</p>
-        </details>
+          <p className="mt-2 break-words">Use manager@retailpulse.local or employee@retailpulse.local with 000000 on a local demo database.</p>
+        </details>}
       </form>
     </AuthPageShell>
   );

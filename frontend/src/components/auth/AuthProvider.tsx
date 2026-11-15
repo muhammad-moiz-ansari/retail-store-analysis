@@ -8,7 +8,7 @@ type AuthContextValue = {
   ready: boolean;
   authenticated: boolean;
   role: UserRole | null;
-  signIn: (role: UserRole, credentials?: { email: string; password: string }) => Promise<void>;
+  signIn: (credentials: { email: string; password: string }) => Promise<UserRole>;
   signOut: () => Promise<void>;
 };
 
@@ -50,33 +50,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       ready,
       authenticated,
       role,
-      async signIn(nextRole, credentials) {
-        if (nextRole === "Manager") {
-          const response = await fetch("/api/auth/session", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ ...(credentials || {}), role: nextRole }),
-          });
-          if (!response.ok) {
-            const data = await response.json().catch(() => ({}));
-            throw new Error(data.error || "Manager sign-in failed");
-          }
-        } else {
-          const response = await fetch("/api/auth/session", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ ...(credentials || {}), role: nextRole }),
-          });
-          if (!response.ok) {
-            const data = await response.json().catch(() => ({}));
-            throw new Error(data.error || "Employee sign-in failed");
-          }
+      async signIn(credentials) {
+        const response = await fetch("/api/auth/session", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(credentials),
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.error || "Sign-in failed");
+        const nextRole = data.role;
+        if (nextRole !== "Manager" && nextRole !== "Employee") {
+          throw new Error("The account has no valid access level");
         }
         sessionCheck.current?.abort();
         setReady(true);
         window.localStorage.setItem(SESSION_KEY, nextRole);
         setRole(nextRole);
         setAuthenticated(true);
+        return nextRole;
       },
       async signOut() {
         sessionCheck.current?.abort();

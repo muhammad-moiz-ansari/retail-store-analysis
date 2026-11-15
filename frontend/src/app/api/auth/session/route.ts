@@ -29,14 +29,13 @@ export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => ({}));
   const email = String(body.email || "").trim();
   const password = String(body.password || "");
-  const role = body.role === "Employee" ? "Employee" : "Manager";
   const response = await fetch(`${SERVICE_URL.replace(/\/$/, "")}/auth/login`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       "x-retailpulse-internal-secret": auth.internalSecret,
     },
-    body: JSON.stringify({ email, password, role }),
+    body: JSON.stringify({ email, password }),
     cache: "no-store",
   }).catch((error: Error) => error);
   if (response instanceof Error) {

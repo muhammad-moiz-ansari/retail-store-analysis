@@ -61,12 +61,19 @@ def main():
     mode = parser.add_mutually_exclusive_group()
     mode.add_argument("--seed-demo", action="store_true", help="Add the existing demo accounts and settings.")
     mode.add_argument("--bootstrap-manager", action="store_true", help="Create a manager from the bootstrap environment variables.")
+    mode.add_argument("--reset-local-demo-passwords", action="store_true", help="Reset only the two seeded local demo passwords.")
     args = parser.parse_args()
     email = os.getenv("RETAILPULSE_BOOTSTRAP_MANAGER_EMAIL", "").strip()
     password = os.getenv("RETAILPULSE_BOOTSTRAP_MANAGER_PASSWORD", "")
     if args.bootstrap_manager and (not email or not password):
         parser.error("Set RETAILPULSE_BOOTSTRAP_MANAGER_EMAIL and RETAILPULSE_BOOTSTRAP_MANAGER_PASSWORD.")
     with connect() as conn:
+        if args.reset_local_demo_passwords:
+            from .store_core import reset_local_demo_passwords
+
+            reset_local_demo_passwords(conn)
+            print("Local demo passwords reset.")
+            return
         initialize(conn)
         if args.seed_demo:
             from .store_core import seed_defaults

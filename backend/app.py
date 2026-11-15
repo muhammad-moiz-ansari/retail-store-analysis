@@ -289,9 +289,6 @@ _failed_logins: dict[str, list[float]] = {}
 def login(body: dict) -> dict:
     email = str(body.get("email") or "").strip()
     password = str(body.get("password") or "")
-    role = str(body.get("role") or "").strip() or None
-    if role not in {None, "Manager", "Employee"}:
-        raise HTTPException(status_code=400, detail="role must be Manager or Employee")
     key = email.lower()
     now = time.monotonic()
     recent = [t for t in _failed_logins.get(key, []) if now - t < LOGIN_WINDOW_S]
@@ -299,7 +296,7 @@ def login(body: dict) -> dict:
         raise HTTPException(status_code=429, detail="Too many failed sign-ins for this account; try again in 15 minutes")
     with connect() as conn:
         try:
-            user = authenticate(conn, email, password, role)
+            user = authenticate(conn, email, password)
         except ValueError as exc:
             _failed_logins[key] = recent + [now]
             raise HTTPException(status_code=401, detail=str(exc)) from None

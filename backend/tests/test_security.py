@@ -66,13 +66,17 @@ def test_invitation_token_is_stored_hashed(db):
 
 def test_login_locks_an_account_after_repeated_failures(db, monkeypatch):
     monkeypatch.setattr(app_module, "_failed_logins", {})
+    db.execute("UPDATE users SET password_hash = %s WHERE id = 'u_employee'", (hash_password("test-login-password"),))
+    db.commit()
     client = TestClient(app_module.app)
     body = {"email": "employee@retailpulse.local", "password": "wrong-password"}
     assert [client.post("/auth/login", json=body, headers=INTERNAL).status_code for _ in range(5)] == [401] * 5
-    good = {**body, "password": "password123"}
+    good = {**body, "password": "test-login-password"}
     assert client.post("/auth/login", json=good, headers=INTERNAL).status_code == 429  # locked even with the right password
     monkeypatch.setattr(app_module, "_failed_logins", {})
-    assert client.post("/auth/login", json=good, headers=INTERNAL).status_code == 200
+    reply = client.post("/auth/login", json={**good, "role": "Manager"}, headers=INTERNAL)
+    assert reply.status_code == 200
+    assert reply.json()["user"]["role"] == "Employee"
 
 
 def test_signup_needs_eight_characters(db):
