@@ -6,6 +6,8 @@ The [combined team plan](RetailPulse_FYP2_Implementation_Plan.md) governs curren
 
 ## Latest reconciliation / next handoff
 
+- **Moiz, wider analytics readers:** Added typed, read-only queue and pipeline-health samples with evidence and scope checks. The existing Ask graph still exposes its original five tools. Alert reads need a trusted store-ownership source.
+
 - **Moiz, shared Ask budget:** Added an opt-in PostgreSQL counter shared by workers. It enforces ten authorized questions per manager and store per clock minute. Deployment schema and acceptance are pending.
 
 - **Moiz, durable Ask traces:** Added opt-in PostgreSQL persistence and scoped run retrieval. The schema has not been applied to any environment. Verification is deferred to the final pass.

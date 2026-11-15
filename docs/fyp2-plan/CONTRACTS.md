@@ -257,7 +257,7 @@ New-Item -ItemType Directory -Force data/outputs/moiz-phase1 | Out-Null
 
 This reuses Saqib's seeded `fixture-2026-11-03` / `store-1`, 09:00–21:00 UTC (rush 17:00–19:00, under-covered z3, blocked c2 14:00–14:40). Every consumer result must set `synthetic=true` for this store file; the schema itself has no synthetic column. A second-store collision case exists only in the new tests and does not replace his generator. Heatmaps remain image-grid counts; queue waits remain heuristics (length × mean interaction duration). No metric floor calibration, new CV models, account linkage, operating-hours policy or dispatch capability is introduced here.
 
-Follow-on interfaces (`get_queue`, `get_alerts`, `get_pipeline_health`) are not part of this five-tool Phase 1 publication; their signatures/readers remain pending scope/data decisions. Arbitrary `run_readonly_sql` is deferred. No production migrations or writing connection are introduced; Phase 2 must use SQLite `mode=ro`, parameterized queries, fixed source names, and must not call `backend.events.ingest.connect`, which executes DDL.
+Follow-on readers `get_queue` and `get_pipeline_health` accept a trusted manager scope and typed `ToolRequest` in `OperationsAnalytics`. Their row evidence identifies the stored sample. They are not on the existing Ask tool list. App alert readership awaits trusted store ownership. Arbitrary `run_readonly_sql` is deferred. No production migrations or writing connection are introduced; Phase 2 must use SQLite `mode=ro`, parameterized queries, fixed source names, and must not call `backend.events.ingest.connect`, which executes DDL.
 
 ## Executable event readers (Moiz Phase 2)
 

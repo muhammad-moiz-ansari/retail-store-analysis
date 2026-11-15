@@ -14,7 +14,8 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 Identifier = Annotated[str, Field(strict=True, min_length=1, max_length=200, pattern=r"^\S(?:.*\S)?$")]
 TableName = Literal["tracks", "role_decisions", "interactions", "zone_dwell", "footfall",
                     "queue_samples", "unattended_episodes", "pipeline_health", "heatmaps"]
-ToolName = Literal["get_footfall", "get_zone_dwell", "get_interactions", "get_unattended", "get_coverage"]
+ToolName = Literal["get_footfall", "get_zone_dwell", "get_interactions", "get_unattended", "get_coverage",
+                   "get_queue", "get_pipeline_health"]
 MAX_WINDOW = timedelta(days=31)
 MAX_RESULTS = 1000
 MAX_EVIDENCE_IDS = 200

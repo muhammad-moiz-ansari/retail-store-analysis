@@ -13,7 +13,8 @@ TABLE_COLUMNS = {
     "zone_dwell": ("track_id", "role", "dwell_s"),
     "interactions": ("employee_track_id", "customer_track_id", "duration_s", "verdict"),
     "tracks": ("track_id", "role"),
-    "pipeline_health": ("fps", "frozen_or_dark"),
+    "pipeline_health": ("fps", "frozen_or_dark", "mean_confidence", "unknown_role_share", "id_churn"),
+    "queue_samples": ("queue_length", "est_wait_s"),
     "unattended_episodes": ("customer_track_id", "waited_s", "helped"),
 }
 COMMON = ("event_id", "run_id", "store_id", "camera_id", "zone_id", "ts_start", "ts_end")
