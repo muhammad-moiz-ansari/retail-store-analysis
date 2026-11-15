@@ -598,3 +598,7 @@ Rules: unmapped or less than 80% observed cells are masked. A role is present at
 ### Manager System Status dispatch summary
 
 `GET /system-status` returns `dispatchOutcomes`, a map of persisted dispatch-decision codes to counts, and `acknowledgement`, with `tasks`, `meanSeconds` and `medianSeconds`. The manager dashboard shows these as all-time operational totals, separate from the selected event analytics window. An empty map means no decisions were recorded. Timing is null when there are no acknowledgement samples. Same-event retries reuse the original record without adding a second count.
+
+### Dashboard interaction rows
+
+`GET /analytics/dashboard/interactions` uses the authenticated membership's default selection. It returns up to ten recent overlapping confirmed or unverified recorded events, newest first, with source provenance and truncation. No track or account identities are included. An empty event list does not establish an observed zero or a healthy feed.

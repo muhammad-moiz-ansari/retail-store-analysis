@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import { AskRetailPulse } from "./AskRetailPulse";
+import { RecentInteractions } from "./RecentInteractions";
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { RetroButton } from "../ui/RetroButton";
 import { ManagerCard, ManagerPanel } from "../ui/ManagerLayout";
@@ -341,6 +342,7 @@ function BackendDashboard({ children }: { children?: ReactNode }) {
             </RetroButton>
           )}
         </ManagerPanel>
+        <RecentInteractions />
         {children}
         <AskRetailPulse unavailable="Ask requires an authorized backend selection." />
       </>
@@ -349,6 +351,7 @@ function BackendDashboard({ children }: { children?: ReactNode }) {
 
   return <>
     <DashboardAnalytics provider={provider} request={selection} />
+    <RecentInteractions selection={selection} />
     {children}
     <AskRetailPulse selection={selection} />
   </>;
@@ -378,6 +381,7 @@ export function DashboardDataSource({ children }: { children?: ReactNode }) {
       </ManagerCard>
       {mode === "backend" ? <BackendDashboard>{children}</BackendDashboard> : <>
         <DashboardPreview />
+        <RecentInteractions />
         {children}
         <AskRetailPulse unavailable="Switch to Configured backend to ask questions." />
       </>}

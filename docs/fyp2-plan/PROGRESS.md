@@ -6,6 +6,8 @@ The [combined team plan](RetailPulse_FYP2_Implementation_Plan.md) governs curren
 
 ## Latest reconciliation / next handoff
 
+- **Moiz, recent interaction rows:** The manager dashboard can show up to ten scoped confirmed or unverified recorded events. The endpoint reuses the authorized dashboard selection and omits track identities. Final verification is deferred.
+
 - **Moiz, wider Query binding:** Ask can route explicit queue and camera-health questions through the grounded graph. It shows dated samples, with queue waits marked estimated. Alert analysis, causal investigation and schedule planning remain open.
 
 - **Moiz, wider analytics readers:** Added typed, read-only queue and pipeline-health samples with evidence and scope checks. The existing Ask graph still exposes its original five tools. Alert reads need a trusted store-ownership source.

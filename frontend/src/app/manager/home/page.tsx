@@ -145,14 +145,9 @@ export default function DashboardPage() {
             <p className="mb-4 text-sm text-text-muted">Application status reported by the backend, separate from event analytics and camera-feed verification.</p>
             <SystemStatusStrip />
           </ManagerPanel>
-          <section aria-label="Additional analytics" className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <ManagerPanel title="Recent interactions">
-              <p className="text-sm text-text-muted">Interaction details unavailable. This provider currently supplies aggregate counts, not employee/customer event rows.</p>
-            </ManagerPanel>
-            <ManagerPanel title="Trajectory & heatmaps">
-              <p className="text-sm text-text-muted">Map analytics unavailable. A registered store map and role/interaction layers have not been connected.</p>
-            </ManagerPanel>
-          </section>
+          <ManagerPanel title="Trajectory & heatmaps">
+            <p className="text-sm text-text-muted">Map analytics unavailable. A registered store map and role/interaction layers have not been connected.</p>
+          </ManagerPanel>
         </DashboardDataSource>
     </ManagerPage>
   );

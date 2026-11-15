@@ -7,8 +7,9 @@ from psycopg import Error
 from fastapi import APIRouter, Depends, Header, HTTPException, Response
 from pydantic import ValidationError
 
-from .dashboard import DashboardConfig, DashboardRequest, dashboard_snapshot, public_request
+from .dashboard import DashboardConfig, DashboardRequest, dashboard_snapshot, public_request, utc
 from ..database import DatabaseNotConfigured, read_only
+from .tools.store import SourceUnavailable, read_session
 
 router = APIRouter(prefix='/analytics/dashboard', tags=['dashboard analytics'])
 
@@ -65,3 +66,26 @@ def snapshot(request: DashboardRequest, response: Response, authorized=Depends(a
         raise HTTPException(403, 'Selection outside dashboard membership') from None
     response.headers['Cache-Control'] = 'no-store'
     return result
+
+@router.get('/interactions')
+def recent_interactions(response: Response, authorized=Depends(access)):
+    config, membership = authorized
+    selection = membership.default_request
+    try:
+        with read_session() as session:
+            records = session.rows('interactions', membership.scope(), selection.filters.event_filters(),
+                                   selection.window)
+    except SourceUnavailable:
+        raise HTTPException(503, 'Recorded interactions unavailable') from None
+    supported = [row for row in records if row['verdict'] in {'interaction', 'unverified'}]
+    response.headers['Cache-Control'] = 'no-store'
+    return {
+        'request': public_request(selection),
+        'synthetic': config.synthetic,
+        'truncated': len(supported) > 10,
+        'events': [
+            {'id': row['event_id'], 'cameraId': row['camera_id'], 'zoneId': row['zone_id'],
+             'startedAt': utc(row['_start']), 'endedAt': utc(row['_end']), 'verdict': row['verdict']}
+            for row in reversed(supported[-10:])
+        ],
+    }
