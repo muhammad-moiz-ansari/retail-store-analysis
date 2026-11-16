@@ -180,6 +180,20 @@ export default function AlertsPage() {
     setNotice(response.ok ? `Staff dispatched for "${alert.title}".` : data.detail || data.error || "Dispatch failed.");
   }
 
+  async function investigate(alert: Alert) {
+    const response = await fetch(`/api/backend/agents/alerts/${encodeURIComponent(alert.id)}/investigate`, { method: "POST" });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || !Array.isArray(data.candidates)) {
+      setNotice(response.status === 404 ? "No scoped analytics evidence is linked to this alert." : data.detail || "Investigation unavailable.");
+      return;
+    }
+    const labels: Record<string, string> = { pipeline_issue: "camera problem", low_staffed_coverage: "low staffed coverage", long_queue: "long queue" };
+    const found = (data.candidates as { signal: string; evidence: { matched_count: number }[] }[])
+      .map((candidate) => `${labels[candidate.signal] ?? candidate.signal} (${candidate.evidence.reduce((total, item) => total + item.matched_count, 0)} cited rows)`);
+    const missing = Array.isArray(data.unavailable_sources) && data.unavailable_sources.length ? ` Not available: ${data.unavailable_sources.join(", ")}.` : "";
+    setNotice(`${data.synthetic ? "Synthetic data. " : ""}Possible factors for "${alert.title}": ${found.length ? found.join("; ") : "none found in the selected window"}.${missing} These are co-occurring signals, not a confirmed cause.`);
+  }
+
   function clearFilters() {
     setSelectedCategories(CATEGORIES);
     setStatus("active");
@@ -277,7 +291,7 @@ export default function AlertsPage() {
               </ManagerCard>
             ) : filteredAlerts.length > 0 ? (
               filteredAlerts.map((alert) => (
-                <AlertFeedCard key={alert.id} alert={alert} onResolve={markResolved} onDispatch={dispatchStaff} />
+                <AlertFeedCard key={alert.id} alert={alert} onResolve={markResolved} onDispatch={dispatchStaff} onInvestigate={investigate} />
               ))
             ) : (
               <ManagerCard className="flex flex-col items-center justify-center gap-4 py-12 text-center">
@@ -290,11 +304,12 @@ export default function AlertsPage() {
           </div>
         </section>
         <DispatchStatus />
+        <StaffingProposal />
       </ManagerPage>
   );
 }
 
-function AlertFeedCard({ alert, onResolve, onDispatch }: { alert: Alert; onResolve: (id: string) => void; onDispatch: (alert: Alert) => void }) {
+function AlertFeedCard({ alert, onResolve, onDispatch, onInvestigate }: { alert: Alert; onResolve: (id: string) => void; onDispatch: (alert: Alert) => void; onInvestigate: (alert: Alert) => void }) {
   const isResolved = alert.status === "resolved";
   const severityLabel = alert.severity === "high" ? "HIGH" : alert.severity === "medium" ? "MEDIUM" : "LOW";
 
@@ -325,6 +340,7 @@ function AlertFeedCard({ alert, onResolve, onDispatch }: { alert: Alert; onResol
           <div className="flex flex-wrap items-center gap-4">
             <RetroButton type="button" variant="secondary" className="!px-3 !py-1.5 !text-xs" aria-label={`Mark ${alert.title} as resolved`} onClick={() => onResolve(alert.id)}>Mark Resolved</RetroButton>
             <RetroButton type="button" variant="secondary" className="!px-3 !py-1.5 !text-xs" aria-label={`Dispatch staff for ${alert.title}`} onClick={() => onDispatch(alert)}>Dispatch Staff</RetroButton>
+            <RetroButton type="button" variant="secondary" className="!px-3 !py-1.5 !text-xs" aria-label={`Investigate ${alert.title}`} onClick={() => onInvestigate(alert)}>Investigate</RetroButton>
             <Link href={alert.href} className="text-sm font-semibold text-accent underline underline-offset-2 transition-colors hover:text-accent-hover">
               View Details →
             </Link>
@@ -332,6 +348,44 @@ function AlertFeedCard({ alert, onResolve, onDispatch }: { alert: Alert; onResol
         )}
       </div>
     </ManagerCard>
+  );
+}
+
+type StaffingZone = { zone_id: string; suggested_staff: number | null; additional_staff: number | null; missing_inputs: string[] };
+
+/** Advisory only: the backend never schedules anyone, and every answer requires a manager's approval. */
+function StaffingProposal() {
+  const [zones, setZones] = useState<StaffingZone[] | null>(null);
+  const [message, setMessage] = useState("");
+
+  async function load() {
+    const response = await fetch("/api/backend/agents/staffing/next-day", { cache: "no-store" });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || !Array.isArray(data.zones)) {
+      setZones(null);
+      setMessage(data.detail || "Staffing proposal unavailable.");
+      return;
+    }
+    setZones(data.zones);
+    setMessage(`${data.synthetic ? "Synthetic data. " : ""}Partial feature: assumes tomorrow repeats the selected window and ${data.customers_per_employee} customers per employee. Requires manager approval; nothing is scheduled.`);
+  }
+
+  return (
+    <ManagerPanel title="Next-day staffing proposal (partial)">
+      <RetroButton type="button" variant="secondary" className="mb-3 min-h-11" onClick={load}>Load proposal</RetroButton>
+      {message && <p role="status" className="mb-3 text-sm text-text-muted">{message}</p>}
+      {zones && (
+        <ul className="space-y-1 text-sm text-text">
+          {zones.map((zone) => (
+            <li key={zone.zone_id}>
+              {zone.zone_id}: {zone.suggested_staff === null
+                ? `no suggestion (missing ${zone.missing_inputs.join(", ")})`
+                : `${zone.suggested_staff} staff suggested, ${zone.additional_staff ?? 0} more than rostered`}
+            </li>
+          ))}
+        </ul>
+      )}
+    </ManagerPanel>
   );
 }
 
