@@ -46,7 +46,7 @@ The logic behind A3–A9 has been run on labelled fixtures only, by `backend/age
 | A6 | pass | z3, 10:00–11:00 with every roster unavailable | `no_eligible_employee`, no task, alert raised |
 | A7 | pass | Replay of A5's window | Same `idempotencyKey`, `duplicate`, still one task |
 | A8 | pass | z3, 13:00–14:40 (c2 blind 40 of 100 min) | Suppressed `unknown_observation_too_high`, no task |
-| A9 | fail | Digest from A4 runs + z3 decisions | Provenance `synthetic` (correct for fixtures); figures verified. **Gap:** the caveat says observation was blocked but not *when* (14:00–14:40) |
+| A9 | fail (passes since 16 Nov: the coverage caveat now names the blind interval, `agents/tools/common.py::blind_note`; rerun locally, report not replaced) | Digest from A4 runs + z3 decisions | Provenance `synthetic` (correct for fixtures); figures verified. **Gap:** the caveat says observation was blocked but not *when* (14:00–14:40) |
 | A10 | blocked | Blind sampling of 30 stored interactions | Precision/kappa need two human reviewers and the run→recording map |
 
 Found and fixed by this rehearsal: the offline router refused A4's own question "Where are the staffing gaps?" (`routing.py` did not route *staffing*/*gaps*), and `verify_narrative` counted the digits in zone IDs such as `z3` as figures (`narration.py`). Both have regression tests. Open: the coverage caveat should name the blind interval (`agents/tools/common.py` `health`), so A9's "digest caveat names the blind time" can pass.

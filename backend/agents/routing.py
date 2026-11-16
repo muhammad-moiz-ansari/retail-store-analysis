@@ -5,7 +5,12 @@ from .graph_contracts import RouteDecision
 
 
 def prohibited_question(question):
-    return bool(re.search(r'\b(dispatch|assign|reassign|send|notify|fire|hire|theft|steal|identify|identity|rank)\b', question, re.I))
+    # A question opening with "who" and best/worst-performer questions ask about an individual; refused like explicit ranking.
+    if re.match(r'\s*(who|whose|whom)\b', question, re.I):
+        return True
+    return bool(re.search(r'\b(dispatch|assign|reassign|send|notify|fire|hire|theft|steal|identify|identity|rank|'
+                          r'perform(?:s|ed|ing|ance|er|ers)?|(?:best|worst|laziest|slowest|fastest)\s+(?:\w+\s+)?(?:employee|staff|worker|person))\b',
+                          question, re.I))
 
 
 def queue_question(text):
@@ -21,7 +26,7 @@ class OfflineRouter:
             return RouteDecision(target='operations')
         if re.search(r'\b(coverage|staffed|staffing|understaffed|employee|employees|staff|gaps?)\b', text):
             return RouteDecision(target='employee_activity')
-        if re.search(r'\b(footfall|entries|exits|dwell|customers?|traffic|unattended|interactions?)\b', text):
+        if re.search(r'\b(footfall|entries|exits|dwell|customers?|shoppers?|visitors?|people|traffic|unattended|interactions?)\b', text):
             return RouteDecision(target='customer_behavior')
         return RouteDecision(target='unsupported')
 

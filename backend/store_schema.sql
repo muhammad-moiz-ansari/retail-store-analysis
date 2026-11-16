@@ -84,6 +84,18 @@ CREATE TABLE IF NOT EXISTS alerts (
   FOREIGN KEY(resolved_by) REFERENCES users(id)
 );
 
+-- A manager's approve/reject record for an advisory next-day staffing proposal. It schedules nothing.
+CREATE TABLE IF NOT EXISTS staffing_decisions (
+  id TEXT PRIMARY KEY,
+  store_id TEXT NOT NULL,
+  for_date TEXT NOT NULL,
+  decision TEXT NOT NULL CHECK (decision IN ('approved', 'rejected')),
+  proposal_json TEXT NOT NULL,
+  decided_by TEXT NOT NULL,
+  decided_at TEXT NOT NULL,
+  FOREIGN KEY(decided_by) REFERENCES users(id)
+);
+
 CREATE TABLE IF NOT EXISTS orchestration_events (
   id TEXT PRIMARY KEY,
   event_type TEXT NOT NULL,

@@ -78,3 +78,36 @@ def test_next_day_staffing_is_advisory_and_names_missing_inputs(advisory):
     put(dsn, 'pipeline_health', [event('dark', 60, 120, fps=10, id_churn=0, frozen_or_dark=1)])
     zone, = client.get('/agents/staffing/next-day', headers=headers).json()['zones']
     assert zone['suggested_staff'] is None and zone['missing_inputs']  # a blind minute: no number is invented
+
+
+def test_staffing_decision_is_recorded_against_the_server_proposal_and_changes_no_roster(advisory):
+    client, headers, dsn = advisory
+    assert client.get('/agents/staffing/next-day', headers=headers).json()['decision'] is None
+    before = fingerprint(dsn, ('rosters', 'tasks'))
+    assert client.post('/agents/staffing/next-day/decision', headers=headers, json={'decision': 'maybe'}).status_code == 422
+    decided = client.post('/agents/staffing/next-day/decision', headers=headers, json={'decision': 'approved', 'zones': 'ignored'})
+    assert decided.status_code == 200 and decided.json()['decision']['decision'] == 'approved'
+    client.post('/agents/staffing/next-day/decision', headers=headers, json={'decision': 'rejected'})
+    latest = client.get('/agents/staffing/next-day', headers=headers).json()
+    assert latest['decision']['decision'] == 'rejected' and latest['approval_required'] is True
+    with connect(dsn) as conn:
+        rows = conn.execute("SELECT decided_by, proposal_json FROM staffing_decisions ORDER BY decided_at").fetchall()
+    assert [r['decided_by'] for r in rows] == ['manager-1', 'manager-1'] and json.loads(rows[0]['proposal_json'])['store_id'] == 'store-1'
+    assert fingerprint(dsn, ('rosters', 'tasks')) == before
+    employee = headers | {'x-retailpulse-role': 'Employee'}
+    assert client.post('/agents/staffing/next-day/decision', headers=employee, json={'decision': 'approved'}).status_code == 403
+
+
+def test_digest_is_built_from_grounded_runs_and_names_the_blind_interval(advisory):
+    client, headers, dsn = advisory
+    put(dsn, 'interactions', [event('i1', 10, 30, employee_track_id=1, customer_track_id=2, duration_s=20, verdict='interaction')])
+    put(dsn, 'zone_dwell', [event('d1', 0, 300, role='employee', track_id=1, dwell_s=300)])
+    put(dsn, 'pipeline_health', [event('dark', 120, 180, fps=10, id_churn=0, frozen_or_dark=1)])
+    before = fingerprint(dsn, ('tasks', 'alerts', 'orchestration_events'))
+    response = client.get('/agents/digest', headers=headers)
+    assert response.status_code == 200
+    data = response.json()
+    assert data['provenance'] == 'synthetic' and data['sections'] and data['citation_count'] > 0
+    assert 'NOTE: built from synthetic data' in data['text']
+    assert any('09:02-09:03 UTC' in caveat for caveat in data['caveats'])  # A9: the caveat says when the camera was blind
+    assert fingerprint(dsn, ('tasks', 'alerts', 'orchestration_events')) == before  # evaluating the policy dispatches nothing

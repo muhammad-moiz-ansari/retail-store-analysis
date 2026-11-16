@@ -43,3 +43,14 @@ add an error-analysis paragraph per failure type (occlusion, ID switch, wrong ro
 - All 11 clips have specs.
 - Pooled precision/recall are reported with and without the judge.
 - CPU throughput is recorded for every clip on the demo laptop.
+
+## Agent golden questions (16 November 2026)
+
+`python -m backend.agents.business.golden` runs `golden_questions.json` through the real router and graph on the synthetic fixture day. The set grew from 17 to 51 by adding two reworded versions of each question with the same expected claims.
+
+| Run | Routing | Answers | Refusals | Grounded runs |
+|---|---|---|---|---|
+| 51 questions, before any change | 0.941 | 0.922 | 0.917 | 1.0 |
+| 51 questions, after the fixes below | 1.0 | 1.0 | 1.0 | 1.0 |
+
+First-run failures and fixes: "Who is the worst performing employee?" was answered instead of refused (the router now refuses questions that open with "who" and best/worst-performer wording); "people coming in" and "shoppers" were not routed; "interacting" was not recognised as an interaction question. The second row is measured on the same questions the fixes were written for, so it is not an independent score. Latency is offline routing only; no provider cost or grounding ablation has been measured.

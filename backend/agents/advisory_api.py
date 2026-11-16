@@ -1,5 +1,6 @@
-"""Read-only advisory routes over the manager's dashboard selection: anomaly evidence for one alert, and a next-day
-staffing proposal. Both are partial by design and say what they lack; neither dispatches, edits a roster or approves anything.
+"""Advisory routes over the manager's dashboard selection: anomaly evidence for one alert, a next-day staffing
+proposal with a recorded manager decision, and the store digest. All are partial by design and say what they lack.
+Nothing here dispatches or edits a roster; the only write is the manager's approve/reject record.
 
 Alert ownership: app alerts carry no store column. An alert is investigated only when it came from an orchestration
 event of this single-store backend (RETAILPULSE_STORE_ID equals the manager's store) whose zone is inside the
@@ -9,15 +10,23 @@ import json
 import os
 from datetime import datetime, timedelta, timezone
 
+from typing import Literal
+from uuid import uuid4
+
 from fastapi import APIRouter, Depends, HTTPException, Response
 from psycopg import Error
+from pydantic import BaseModel
 
-from ..database import DatabaseNotConfigured, read_only
+from ..database import DatabaseNotConfigured, connect, read_only
 from .anomaly import InvestigationContext, investigate
-from .business.signal_policy import SignalPolicy
+from .business.employee_activity import business_specialists
+from .business.narration import build_digest
+from .business.signal_policy import SignalPolicy, evaluate_zone
 from .contracts import Identifier
 from .dashboard import footfall_total
 from .dashboard_api import access
+from .graph import run_analytics
+from .graph_contracts import AskRequest
 from .staffing_plan import ShiftInputs, propose_next_day
 from .tools.contextual import PostgresAnalyticsTools
 from .tools.registry import ScopedToolRegistry
@@ -25,6 +34,7 @@ from .tools.registry import ScopedToolRegistry
 router = APIRouter(prefix="/agents", tags=["analytics agents"])
 # Demo defaults, not tuned on store data; they are returned with every answer so the reader can see them.
 MIN_FPS, MAX_QUEUE_LENGTH, CUSTOMERS_PER_EMPLOYEE = 0.5, 3, 10
+DIGEST_QUESTIONS = ("Summarise customers today", "Where are the staffing gaps?")  # the two A4 acceptance questions
 
 
 def _registry(config, membership):
@@ -77,11 +87,8 @@ def investigate_alert(alert_id: Identifier, response: Response, authorized=Depen
                             "Thresholds are demonstration defaults, not agreed store policy."]}
 
 
-@router.get("/staffing/next-day")
-def staffing_next_day(response: Response, authorized=Depends(access)):
-    """Advisory staff counts per zone for tomorrow (UTC day). Always approval_required; changes no roster."""
-    config, membership = authorized
-    _own_store(membership)
+def _proposal(config, membership):
+    """Tomorrow's (UTC day) advisory staff counts per zone, built from the selected window. Reads only."""
     try:
         with read_only() as conn:
             minimum = {r["id"]: r["min_staff"] for r in conn.execute("SELECT id, min_staff FROM zones")}
@@ -108,10 +115,70 @@ def staffing_next_day(response: Response, authorized=Depends(access)):
             rostered_staff=rostered.get(zone_id, 0) if zone_id in minimum else None, minimum_staff=minimum.get(zone_id, 0)))
     proposal = propose_next_day(membership.scope(), tuple(shifts), as_of=now, timezone_name="UTC",
                                 customers_per_employee=CUSTOMERS_PER_EMPLOYEE)
-    response.headers["Cache-Control"] = "no-store"
-    return {**proposal.model_dump(mode="json"), "synthetic": config.synthetic, "customers_per_employee": CUSTOMERS_PER_EMPLOYEE,
+    return {**proposal.model_dump(mode="json"), "for_date": tomorrow.date().isoformat(), "synthetic": config.synthetic,
+            "customers_per_employee": CUSTOMERS_PER_EMPLOYEE,
             "forecast_basis": "entries observed in the dashboard's selected window, repeated unchanged",
             "limitations": ["No demand forecast model exists: tomorrow is assumed to repeat the selected window's entrance count.",
                             "Roster counts are staff marked available per zone; shift times are free text and are not checked.",
                             "Customers per employee is a demonstration default, not agreed store policy.",
-                            "A proposal is advice for a manager to approve; nothing is scheduled."]}
+                            "A proposal is advice for a manager to approve; approving records the decision and schedules nothing."]}
+
+
+def _decision(conn, store_id, for_date):
+    row = conn.execute("""SELECT staffing_decisions.id, decision, decided_at, users.name AS decided_by FROM staffing_decisions
+                          LEFT JOIN users ON users.id = staffing_decisions.decided_by
+                          WHERE store_id = %s AND for_date = %s ORDER BY decided_at DESC LIMIT 1""", (store_id, for_date)).fetchone()
+    return dict(row) if row else None
+
+
+@router.get("/staffing/next-day")
+def staffing_next_day(response: Response, authorized=Depends(access)):
+    """Advisory staff counts per zone for tomorrow, with the manager's latest decision on it, if any."""
+    config, membership = authorized
+    _own_store(membership)
+    proposal = _proposal(config, membership)
+    try:
+        with read_only() as conn:
+            proposal["decision"] = _decision(conn, membership.store_id, proposal["for_date"])
+    except (Error, DatabaseNotConfigured):
+        raise HTTPException(503, "Decision store unavailable") from None
+    response.headers["Cache-Control"] = "no-store"
+    return proposal
+
+
+class StaffingDecision(BaseModel):
+    decision: Literal["approved", "rejected"]
+
+
+@router.post("/staffing/next-day/decision")
+def decide_staffing(body: StaffingDecision, response: Response, authorized=Depends(access)):
+    """Record the manager's decision against the proposal as the server computes it now. No roster or task changes."""
+    config, membership = authorized
+    _own_store(membership)
+    proposal = _proposal(config, membership)
+    try:
+        with connect() as conn:
+            conn.execute("""INSERT INTO staffing_decisions(id, store_id, for_date, decision, proposal_json, decided_by, decided_at)
+                            VALUES (%s, %s, %s, %s, %s, %s, %s)""",
+                         (uuid4().hex, membership.store_id, proposal["for_date"], body.decision, json.dumps(proposal),
+                          membership.user_id, datetime.now(timezone.utc).isoformat()))
+            recorded = _decision(conn, membership.store_id, proposal["for_date"])
+    except (Error, DatabaseNotConfigured):
+        raise HTTPException(503, "Decision store unavailable") from None
+    response.headers["Cache-Control"] = "no-store"
+    return {**proposal, "decision": recorded}
+
+
+@router.get("/digest")
+def store_digest(response: Response, authorized=Depends(access)):
+    """The store digest for the selected window: the two standard questions through the business agents, plus the
+    signal policy's decisions per zone (evaluated only; nothing is dispatched)."""
+    config, membership = authorized
+    registry, selection = _registry(config, membership), membership.default_request
+    runs = [run_analytics(AskRequest(question=question, window=selection.window, filters=selection.filters.event_filters()),
+                          registry, specialists=business_specialists()) for question in DIGEST_QUESTIONS]
+    now = datetime.now(timezone.utc)
+    decisions = tuple(d for zone_id in membership.zone_ids for d in evaluate_zone(registry, zone_id, selection.window, now))
+    digest = build_digest(runs, decisions=decisions)
+    response.headers["Cache-Control"] = "no-store"
+    return {**digest.model_dump(mode="json"), "text": digest.text()}

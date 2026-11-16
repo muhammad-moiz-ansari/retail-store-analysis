@@ -21,7 +21,7 @@ Reviewed 12 November 2026 on `fyp2-ruhab` (based on `fyp2-moiz` at `5f2c77c`). S
 Tests: `backend/tests/test_security.py`.
 - **S1 backend fixed.** `backend/runtime_secrets.py`: the backend refuses to start when the internal secret is missing or equals the development default, unless `RETAILPULSE_DEV_DEFAULTS=1` (set by `npm run dev`, `npm run backend:api` and the tests).
 - **S2 fixed.** Both secret checks use `hmac.compare_digest`.
-- **S3 login part fixed.** 5 failed sign-ins per account in 15 minutes lock that account (429), in memory per process. Per-IP limits belong in the Next proxy; the `/agents/ask` budget is Moiz's.
+- **S3 login part fixed.** 5 failed sign-ins per account in 15 minutes lock that account (429), in memory per process. Per-IP limits belong in the Next proxy; the `/agents/ask` budget is Moiz's. **16 Nov:** the Next sign-in route now refuses an address after 20 failed sign-ins in 15 minutes (`frontend/src/app/api/auth/session/route.ts`). It is kept in one server instance's memory and trusts the platform's `x-forwarded-for`, so it is a brake, not a global limit.
 - **S4** unchanged: keep the secret server-side and rotate it per deployment (deployment checklist).
 - **S5 fixed.** New hashes use 600 000 iterations and store the count; old 120 000 hashes still verify and are rehashed at the next successful login.
 - **S6 fixed.** Invitation sign-up needs 8+ characters.

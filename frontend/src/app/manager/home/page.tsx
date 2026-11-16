@@ -145,7 +145,30 @@ export default function DashboardPage() {
             <p className="mb-4 text-sm text-text-muted">Application status reported by the backend, separate from event analytics and camera-feed verification.</p>
             <SystemStatusStrip />
           </ManagerPanel>
+          <StoreDigest />
         </DashboardDataSource>
     </ManagerPage>
   );
 }
+
+/** Template digest from the backend's grounded runs; the text already carries its provenance note and caveats. */
+function StoreDigest() {
+  const [text, setText] = useState("");
+  const [failed, setFailed] = useState(false);
+
+  async function load() {
+    const response = await fetch("/api/backend/agents/digest", { cache: "no-store" });
+    const data = await response.json().catch(() => ({}));
+    setFailed(!response.ok || typeof data.text !== "string");
+    setText(response.ok && typeof data.text === "string" ? data.text : "");
+  }
+
+  return (
+    <ManagerPanel title="Store digest">
+      <RetroButton type="button" variant="secondary" className="mb-3 min-h-11" onClick={load}>Build digest for the selected window</RetroButton>
+      {failed && <p role="status" className="text-sm text-text-muted">Digest unavailable. No summary has been substituted.</p>}
+      {text && <pre className="whitespace-pre-wrap rounded-lg bg-surface-alt p-3 text-sm text-text">{text}</pre>}
+    </ManagerPanel>
+  );
+}
+

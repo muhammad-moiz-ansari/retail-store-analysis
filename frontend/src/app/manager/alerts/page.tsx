@@ -357,9 +357,12 @@ type StaffingZone = { zone_id: string; suggested_staff: number | null; additiona
 function StaffingProposal() {
   const [zones, setZones] = useState<StaffingZone[] | null>(null);
   const [message, setMessage] = useState("");
+  const [decision, setDecision] = useState("");
 
-  async function load() {
-    const response = await fetch("/api/backend/agents/staffing/next-day", { cache: "no-store" });
+  async function load(decide?: "approved" | "rejected") {
+    const response = decide
+      ? await fetch("/api/backend/agents/staffing/next-day/decision", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ decision: decide }) })
+      : await fetch("/api/backend/agents/staffing/next-day", { cache: "no-store" });
     const data = await response.json().catch(() => ({}));
     if (!response.ok || !Array.isArray(data.zones)) {
       setZones(null);
@@ -367,12 +370,13 @@ function StaffingProposal() {
       return;
     }
     setZones(data.zones);
+    setDecision(data.decision ? `${data.decision.decision} by ${data.decision.decided_by || "a manager"}` : "no decision recorded");
     setMessage(`${data.synthetic ? "Synthetic data. " : ""}Partial feature: assumes tomorrow repeats the selected window and ${data.customers_per_employee} customers per employee. Requires manager approval; nothing is scheduled.`);
   }
 
   return (
     <ManagerPanel title="Next-day staffing proposal (partial)">
-      <RetroButton type="button" variant="secondary" className="mb-3 min-h-11" onClick={load}>Load proposal</RetroButton>
+      <RetroButton type="button" variant="secondary" className="mb-3 min-h-11" onClick={() => load()}>Load proposal</RetroButton>
       {message && <p role="status" className="mb-3 text-sm text-text-muted">{message}</p>}
       {zones && (
         <ul className="space-y-1 text-sm text-text">
@@ -384,6 +388,13 @@ function StaffingProposal() {
             </li>
           ))}
         </ul>
+      )}
+      {zones && (
+        <div className="mt-3 flex flex-wrap items-center gap-3">
+          <RetroButton type="button" variant="secondary" className="!px-3 !py-1.5 !text-xs" onClick={() => load("approved")}>Approve</RetroButton>
+          <RetroButton type="button" variant="secondary" className="!px-3 !py-1.5 !text-xs" onClick={() => load("rejected")}>Reject</RetroButton>
+          <span className="font-mono text-xs text-text-muted">Decision for tomorrow: {decision}</span>
+        </div>
       )}
     </ManagerPanel>
   );

@@ -4,6 +4,18 @@
 
 The [combined team plan](RetailPulse_FYP2_Implementation_Plan.md) governs current work and ownership. Implement camera/CV first, then register the supplied map, then render live role occupancy and confirmed-interaction layers. Exactly four dynamic occupancy categories are allowed: **Customer, Employee, Customer–employee both, No one**. They are not fixed permitted-role polygons. Invalid/missing/unknown observation is separate quality metadata, never a fifth category or a false No one. Historical z1–z6, staff zones, queue/counter geometries and hot/gray terminology below are legacy technical references, not additional category requirements. No existing runtime/schema/fixture has been migrated by this documentation update.
 
+## 15 to 16 November 2026 (Saqib)
+
+| Commit | Change | Evidence |
+|---|---|---|
+| `d25ea55`, `9c91440` | Directional footfall in ingestion, footfall evaluator, operations command, `prepare_demo`, API image | CI green on `9c91440` |
+| `df88abc` | `--min-wait-s` / `--max-unknown-share` on the operations command; footfall sampling check | CI green |
+| `1364810` | Map registration (`backend/events/spatial.py`), `cell_dwell`, dashboard `spatial` payload | CI green incl. CV suite; synthetic geometry only |
+| `b8b872f` | Alert investigation and next-day staffing routes, alerts-page UI | CI green |
+| this commit | Digest route, staffing approval record, blind interval named in the coverage caveat (A9), 51 golden questions with a refusal fix, per-address login limit, maskable icon | 254 backend tests; synthetic rehearsal A1 and A3 to A9 pass, A2 and A10 not runnable |
+
+None of this has run on real footage or a deployed backend.
+
 ## Latest reconciliation / next handoff
 
 - **Moiz, narrated Ask summaries:** Added an authenticated endpoint for page-specific cited summaries of retained Ask runs. Retrieval keeps the same manager, store, selection and expiry checks. The Ask panel offers the summary for retained runs. Final testing remains open.

@@ -91,7 +91,7 @@ Separate Moiz UI sequence (not tool/graph phase numbering):
 M-UI-P1/P2/P3 connection does not complete legacy A2/B6 real-data acceptance, real business agents, map registration or the following camera/map acceptance items. The graph's HTTP authority/durable traces and actual dispatch remain separate.
 
 - [ ] MAP-1 (Saqib): real camera/CV/event/health verification.
-- [ ] MAP-2 (Saqib spatial/backend, Moiz binding, Ruhab QA): supplied-map registration and visibility metadata.
+- [~] MAP-2 (code and dashboard binding done 16 Nov on synthetic geometry, `1364810`; real floor plan, calibration and QA pending) (Saqib spatial/backend, Moiz binding, Ruhab QA): supplied-map registration and visibility metadata.
 - [~] MAP-3 (Ruhab semantics, Saqib feeds, Moiz readers/rendering): exactly four dynamic categories and separate customer/employee/confirmed-interaction layers. Ruhab's classifier/hysteresis/layers are implemented and fixture-tested; real projected feeds and rendering remain.
 - [ ] TEAM-ACCEPTANCE: observe category transitions and genuine empty space without turning blocked/unknown observations into No one; complete actual dispatch/employee/manager workflow.
 

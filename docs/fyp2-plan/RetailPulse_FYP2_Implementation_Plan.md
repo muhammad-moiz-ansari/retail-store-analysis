@@ -4,6 +4,23 @@
 
 Updated 11 November 2026. This is the current team plan, reconciling Saqib's 10 November status snapshot, the agreed member allocation, the current checkout and the user's four live-category decision. Its tracked copy lives in docs/fyp2-plan/; local extra-docs copies are ignored and must not be the only teammate reference.
 
+## Status on 16 November 2026 (supersedes the dated lines below)
+
+The sections below are kept as written on 11 November. Checked against the code at `feature/fyp2-saqib-deploy-footfall-ops` on 16 November:
+
+| Line below | Now |
+|---|---|
+| B1: 9 vs 10 set-B pass-bys to audit | Audited; 9 is correct |
+| B3: refit commit and artifacts absent, adoption open | In the branch; fitted weights adopted (Ruhab, 14 Nov). Benchmark rerun with them still pending |
+| B4: no map registration | `backend/events/spatial.py` registers a map and writes per-cell dwell; tested on synthetic geometry only |
+| B6: CV chapter is a skeleton with TODOs | `CV_EVAL_CHAPTER.md` is filled from the committed reports |
+| Moiz foundation: 139 tests | The fast CI job runs 254 |
+| Four categories "planned, not implemented" | Implemented: classifier, per-cell feed, dashboard payload |
+| TEAM-CI needs verification | All three jobs run in GitHub. Branch protection is still off |
+| M-WIDER-EVAL: 50+ golden questions | 51 questions; anomaly, next-day staffing with an approval record, and the digest are reachable as routes. No grounding ablation or provider cost measurement yet |
+
+Still open from this plan: every real-footage acceptance step, a deployed backend, the real floor plan, camera handoff labels, GPU and track-every 1/3 speed, a second annotator, the model freeze.
+
 ## Priority and source reconciliation
 
 1. Current direct user decisions govern workflow and the four live occupancy categories.
