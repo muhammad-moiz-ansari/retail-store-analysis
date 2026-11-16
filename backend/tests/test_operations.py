@@ -68,3 +68,30 @@ def test_prepare_demo_writes_a_valid_configuration_for_an_ingested_run(postgres_
     assert parsed.synthetic is False and parsed.memberships[0].default_request.filters.runId == RUN_ID
     assert all("footfall" not in c.available_sources for c in parsed.contexts)  # not declared until validated
     assert {v.run_id for v in parsed.verified_unattended_runs} == {RUN_ID}
+
+
+def test_demo_thresholds_reach_the_policy_and_default_to_the_agreed_values(monkeypatch):
+    from datetime import datetime, timezone
+
+    import backend.operations as operations
+    from backend.agents.business.signal_policy import SignalPolicy
+
+    seen = []
+    monkeypatch.setattr(operations, "STORE_ID", "store-1")
+    monkeypatch.setattr(operations, "evaluate_zone", lambda registry, zone, window, now, policy=SignalPolicy(): seen.append(policy) or [])
+    now = datetime(2026, 11, 3, 11, tzinfo=timezone.utc)
+    cycle = lambda **kw: operations.cycle_from_config(_config(), "u1", ["z2"], None, now, allow_synthetic=False, **kw)
+    assert cycle(dry_run=True) == {"decisions": []} and cycle(dry_run=False, policy=SignalPolicy(min_wait_s=20)) == {"receipts": [], "suppressed": []}
+    assert [p.min_wait_s for p in seen] == [180, 20]
+
+
+def test_prepare_demo_refuses_a_run_sampled_too_sparsely_for_the_entrance_line():
+    from backend.prepare_demo import sample_spacing_problem
+
+    frames = lambda step: [{"timestamp": i * step} for i in range(10)]
+    line = {"entrance_line": 0.5}
+    assert sample_spacing_problem(frames(0.5), line) is None
+    assert "every crossing is discarded" in sample_spacing_problem(frames(2.0), line)
+    assert sample_spacing_problem(frames(2.0), {**line, "entrance_max_gap_seconds": 3}) is None
+    assert sample_spacing_problem(frames(2.0), {}) is None  # no entrance line: nothing to count
+    assert "fewer than two" in sample_spacing_problem(frames(1.0)[:1], line)

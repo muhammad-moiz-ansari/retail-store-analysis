@@ -40,7 +40,7 @@ test("ready view renders supported metrics with units, provenance, window and ev
   assert.match(html, /24 s/);
   assert.match(html, /get_interactions \/ interactions/);
   assert.match(html, /not confirmed unattended assistance/);
-  assert.match(html, /not complete entrance counts/);
+  assert.match(html, /unvalidated until scored against a labelled clip/);
   assert.doesNotMatch(html, /Peak Hour|Density|Employee A|Net inside|avgResponse/);
 });
 

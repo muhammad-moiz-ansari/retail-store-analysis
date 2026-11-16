@@ -69,6 +69,23 @@ def describe_run(conn, run_id: str) -> dict:
             "clip_start": clip["first"] or span["first"], "clip_end": clip["last"] or span["last"]}
 
 
+def sample_spacing_problem(detections: list[dict], camera_config: dict) -> str | None:
+    """Why this run cannot have counted footfall, or None. The directional counter resets a track whenever two samples
+    are further apart than entrance_max_gap_seconds, so a sparsely sampled run records no crossings and no error."""
+    if camera_config.get("entrance_line") is None:
+        return None
+    limit = float(camera_config.get("entrance_max_gap_seconds", 1.0))
+    stamps = [frame["timestamp"] for frame in detections]
+    gaps = sorted(b - a for a, b in zip(stamps, stamps[1:]))
+    if not gaps:
+        return "The run has fewer than two processed frames, so no entrance crossing can be confirmed."
+    median = gaps[len(gaps) // 2]
+    if median > limit:
+        return (f"Processed frames are {median:.2f} s apart but entrance_max_gap_seconds is {limit:.2f}: every crossing is discarded. "
+                "Re-run the CV with a smaller --every / --track-every, or raise entrance_max_gap_seconds, then re-ingest.")
+    return None
+
+
 def recording_source(run: dict, run_id: str, video_ref: str) -> dict:
     """The RecordingSource JSON Clip Review reads (backend/agents/business/clip_review.py). The window is the span covered by
     pipeline_health, i.e. the footage that exists, so offsets into the recording line up with event times."""
@@ -110,6 +127,8 @@ def main() -> None:
     parser.add_argument("--manager-email", required=True, help="Email of an existing active Manager account")
     parser.add_argument("--video", type=Path, help="The clip that was analysed (hashed into the manifest)")
     parser.add_argument("--camera-config", type=Path, help="The camera --config JSON used for the run (hashed)")
+    parser.add_argument("--detections", type=Path, help="The run's .detections.json; with --camera-config, checks that frames are "
+                        "close enough together for the entrance line to count anything")
     parser.add_argument("--weights", type=Path, nargs="*", default=[], help="Model and role-weight files used (hashed)")
     parser.add_argument("--footfall-validated", action="store_true", help="Declare the footfall feed available (only after the labelled-clip check)")
     parser.add_argument("--attest-fixed-derivation", action="store_true",
@@ -121,6 +140,12 @@ def main() -> None:
     args = parser.parse_args()
 
     from .agents.dashboard import DashboardConfig  # validates the file exactly as the backend will
+
+    if args.detections and args.camera_config:
+        problem = sample_spacing_problem(json.loads(args.detections.read_text(encoding="utf-8")),
+                                         json.loads(args.camera_config.read_text(encoding="utf-8")))
+        if problem:
+            raise SystemExit(problem)
 
     with connect() as conn:
         manager = conn.execute("SELECT id FROM users WHERE lower(email) = lower(%s) AND role = 'Manager' AND active = 1",
