@@ -19,6 +19,7 @@ from pathlib import Path
 
 from ..interaction.types import CONFIRMED
 from .footfall import entrance_crossings, validate_entrance_config
+from .spatial import NO_CELL, cell_of, load_map
 from .zones import foot_point, heatmap, queue_lengths, zone_of, zone_segments
 
 TABLES = ("tracks", "role_decisions", "interactions", "zone_dwell", "footfall", "queue_samples",
@@ -27,7 +28,8 @@ COMMON = ("event_id", "run_id", "store_id", "camera_id", "zone_id", "ts_start", 
 DEFAULT_UNATTENDED_S = 180.0  # store_core's default thresholds.unattendedWaitMinutes (3)
 # Camera layout keys of a camera's --config file (InteractionConfig fields) that ingestion uses.
 LAYOUT = {"floor_zones": {}, "zone_hold_seconds": 1.0, "heatmap_grid": (32, 18), "entrance_line": None, "entrance_in_direction": "right",
-          "entrance_half_band": 0.02, "entrance_hold_seconds": 0.25, "entrance_max_gap_seconds": 1.0, "queue_zone": None, "queue_sample_seconds": 5.0}
+          "entrance_half_band": 0.02, "entrance_hold_seconds": 0.25, "entrance_max_gap_seconds": 1.0, "queue_zone": None, "queue_sample_seconds": 5.0,
+          "map_file": None}  # registered map (events.spatial): a path, or the parsed map
 
 
 def insert(conn: Connection, table: str, rows: list[dict]) -> None:
@@ -41,6 +43,9 @@ def delete_run(conn: Connection, run_id: str) -> None:
     conn.execute("SELECT pg_advisory_xact_lock(hashtextextended(%s, 0))", (run_id,))
     for table in TABLES:
         conn.execute(f"DELETE FROM {table} WHERE run_id = %s", (run_id,))
+    # cell_dwell is additive (MAP-2) and kept out of TABLES; a database initialised before it existed has no such table.
+    if conn.execute("SELECT to_regclass('cell_dwell') AS found").fetchone()["found"]:
+        conn.execute("DELETE FROM cell_dwell WHERE run_id = %s", (run_id,))
 
 
 def derive_unattended(conn: Connection, run_id: str, min_seconds: float) -> int:
@@ -102,9 +107,13 @@ def ingest_run(conn: Connection, prefix: Path | str, run_id: str, camera_id: str
     at = lambda seconds: (started_at + timedelta(seconds=seconds)).isoformat()
     base = {"run_id": run_id, "store_id": store_id, "camera_id": camera_id, "zone_id": zone_id}
     key = f"{run_id}:{{}}:{camera_id}:{{}}"
+    game_map = load_map(layout["map_file"]) if layout["map_file"] else None
+    if game_map and (game_map["store_id"] != store_id or camera_id not in game_map["cameras"]):
+        raise ValueError(f"Map {game_map['map_version']!r} is not registered for store {store_id!r} camera {camera_id!r}")
 
     samples: dict[int, list[tuple[float, str]]] = {}
     xs: dict[int, list[tuple[float, float]]] = {}  # normalised foot x over time, for the entrance line
+    on_cell: dict[int, list[tuple[float, str]]] = {}  # map cell under the feet over time (NO_CELL when off the map)
     for frame in detections:
         for person in frame["people"]:
             foot = foot_point(person["bbox"], frame_size) if frame_size else None
@@ -112,12 +121,18 @@ def ingest_run(conn: Connection, prefix: Path | str, run_id: str, camera_id: str
             samples.setdefault(person["track_id"], []).append((frame["timestamp"], zone))
             if foot:
                 xs.setdefault(person["track_id"], []).append((frame["timestamp"], foot[0]))
+                if game_map:
+                    on_cell.setdefault(person["track_id"], []).append((frame["timestamp"], cell_of(game_map, camera_id, foot) or NO_CELL))
     segments = {p["track_id"]: zone_segments(samples.get(p["track_id"]) or [(p["first_seen"], zone_id), (p["last_seen"], zone_id)],
                                              layout["zone_hold_seconds"]) for p in people}
     role_of = {p["track_id"]: p["role"] for p in people}
     dwell = [{**base, "event_id": key.format("dwell", f"{track_id}:{i}"), "zone_id": zone, "ts_start": at(t0), "ts_end": at(t1),
               "track_id": track_id, "role": role_of[track_id], "dwell_s": round(t1 - t0, 3)}
              for track_id, runs in segments.items() for i, (zone, t0, t1) in enumerate(runs)]
+    cells = [{**base, "event_id": key.format("cell", f"{track_id}:{i}"), "ts_start": at(t0), "ts_end": at(t1), "cell_id": cell,
+              "map_version": game_map["map_version"], "track_id": track_id, "role": role_of[track_id], "dwell_s": round(t1 - t0, 3)}
+             for track_id in role_of
+             for i, (cell, t0, t1) in enumerate(zone_segments(on_cell.get(track_id, []), layout["zone_hold_seconds"])) if cell != NO_CELL]
     main_zone = {track_id: max({z for z, _, _ in runs}, key=lambda z: sum(t1 - t0 for zz, t0, t1 in runs if zz == z))
                  for track_id, runs in segments.items()}
     zone_at = lambda track_id, t: next((z for z, t0, t1 in segments.get(track_id, []) if t0 <= t <= t1), main_zone.get(track_id, zone_id))
@@ -164,9 +179,11 @@ def ingest_run(conn: Connection, prefix: Path | str, run_id: str, camera_id: str
         for table, table_rows in (("tracks", tracks), ("role_decisions", roles), ("interactions", interactions), ("zone_dwell", dwell), ("footfall", footfall), ("queue_samples", queue),
                                   ("pipeline_health", health_rows(detections, at, base)), ("heatmaps", heatmaps)):
             insert(conn, table, table_rows)
+        insert(conn, "cell_dwell", cells)
         unattended = derive_unattended(conn, run_id, unattended_after_s)
     return {"tracks": len(tracks), "role_decisions": len(roles), "interactions": len(interactions), "zone_dwell": len(dwell),
-            "footfall": len(footfall), "queue_samples": len(queue), "heatmaps": len(heatmaps), "unattended_episodes": unattended}
+            "footfall": len(footfall), "queue_samples": len(queue), "heatmaps": len(heatmaps), "unattended_episodes": unattended,
+            **({"cell_dwell": len(cells)} if game_map else {})}
 
 
 def validate(conn: Connection) -> list[str]:

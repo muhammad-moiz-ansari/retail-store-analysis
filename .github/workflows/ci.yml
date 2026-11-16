@@ -44,7 +44,7 @@ jobs:
       - run: pip install -r backend/requirements-ci.txt
       - name: pytest (fast)
         run: >-
-          python -m pytest backend/agents backend/events/test_events.py backend/test_postgres_migration.py
+          python -m pytest backend/agents backend/events/test_events.py backend/events/test_spatial.py backend/test_postgres_migration.py
           backend/test_handoff_eval.py backend/tests/test_dispatch.py backend/tests/test_operations.py backend/tests/test_ack_time.py backend/tests/test_security.py -q -ra -p no:cacheprovider --basetemp "$RUNNER_TEMP/pytest"
 
   frontend:

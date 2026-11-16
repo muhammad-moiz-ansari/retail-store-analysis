@@ -1,4 +1,5 @@
 """Read-only dashboard adapter over the existing five tools; no ingestion/business policy."""
+import os
 from datetime import datetime, timedelta, timezone
 from typing import Literal
 
@@ -119,6 +120,31 @@ def footfall_total(result, field):
     return CountMetric(value=float(sum(part.value for part in parts)), evidence=tuple(combined))
 
 
+def spatial_layer(membership, request):
+    """(map payload, limitation) for the registered map named by RETAILPULSE_MAP_CONFIG (MAP-2, events.spatial).
+    Read-only. A map that is missing, invalid or for another store yields no payload and says so; nothing is substituted."""
+    path = os.getenv('RETAILPULSE_MAP_CONFIG')
+    if not path:
+        return None, 'No registered map is configured.'
+    if not request.filters.runId:
+        return None, 'The registered map needs a selected run.'
+    try:
+        from ..database import read_only
+        from ..events.spatial import load_map, spatial_payload
+
+        game_map = load_map(path)
+        if game_map['store_id'] != membership.store_id:
+            raise ValueError('Map belongs to another store')
+        with read_only() as conn:
+            payload = spatial_payload(conn, game_map, request.filters.runId, request.window.start, request.window.end,
+                                      store_id=membership.store_id, camera_ids=membership.camera_ids)
+    except Exception:  # the map is an optional layer: the metrics stay available without it
+        return None, 'The registered map could not be read; no map is shown.'
+    payload['window'] = public_request(request)['window']  # the client matches this against the snapshot's request
+    return payload, ('Map cells show position on the supplied map from one calibration per camera; no physical distance, '
+                     'and co-presence on a cell is not an interaction.')
+
+
 def dashboard_snapshot(config, membership, request, *, now=None):
     membership.authorize(request)
     tools = PostgresAnalyticsTools(synthetic=config.synthetic, contexts=config.contexts,
@@ -143,10 +169,13 @@ def dashboard_snapshot(config, membership, request, *, now=None):
         'staffedOpenRatio': present(ratio, coverage),
     }
     stamp = now or datetime.now(timezone.utc)
+    spatial, map_note = spatial_layer(membership, request)
     return dict(version=1, request=public_request(request),
         provenance=dict(mode='backend', synthetic=config.synthetic,
             label='Backend event analytics — synthetic source' if config.synthetic else 'Backend event analytics'),
         generatedAt=utc(stamp), validUntil=utc(stamp+timedelta(seconds=60)), metrics=metrics,
         limitations=['Database results describe the selected observation window, not a guarantee of a live camera feed.',
                      'The five tools use separate read snapshots; a concurrently updated database may change between tool calls.',
-                     'No registered map, account-to-track linkage, business-agent output or operational delivery is inferred.'])
+                     map_note,
+                     'No account-to-track linkage, business-agent output or operational delivery is inferred.'],
+        **({'spatial': spatial} if spatial else {}))

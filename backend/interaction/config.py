@@ -49,6 +49,8 @@ class InteractionConfig:
     entrance_max_gap_seconds: float = 1.0
     # Counter camera only: normalised polygon where customers queue; sampled every queue_sample_seconds.
     queue_zone: list[list[float]] | None = None
+    # Registered store map for this camera (events.spatial): path of the map JSON. Ingestion then writes cell_dwell.
+    map_file: str | None = None
     queue_sample_seconds: float = 5.0
     # Pipeline health frame check: mean grey (0-255) below this is a dark/covered lens; a picture changing less than
     # frozen_change (mean, 64x36 grey thumbnail) for frozen_seconds is a frozen stream (cam1.mp4 ends with one).
