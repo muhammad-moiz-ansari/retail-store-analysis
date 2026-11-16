@@ -85,3 +85,13 @@ For multiple workers, apply `backend/agents/ask_budget_schema.sql` once to the c
 ### Optional Ask provider routing
 
 Ask uses offline routing by default. Set `RETAILPULSE_ASK_PROVIDER_ROUTING=1` and configure the existing backend `HF_TOKEN` only in an approved evaluation environment. The provider receives the manager's question and fixed routing instructions. Keep questions free of personal or confidential information in this mode. The request uses an eight-second socket timeout and a 64-token output limit. Store membership, tool results, traces and database credentials stay on the server. The graph still controls tools and derives answers from verified evidence.
+
+### Optional registered map (MAP-2)
+
+The dashboard snapshot carries a `spatial` payload only when `RETAILPULSE_MAP_CONFIG` names a map file for the manager's store and the request selects a run. On a host without files, pass the file's contents as `RETAILPULSE_MAP_CONFIG_JSON`; `deploy/entrypoint.sh` writes it out. A missing, invalid or other-store map shows no map and adds a limitation; fixture cells are never substituted.
+
+1. Write the map JSON described at the top of `backend/events/spatial.py`: cells on the floor plan, and for each camera four or more matching frame-to-map points plus the area it sees. All coordinates are 0 to 1.
+2. Check the points: `python -m backend.events.spatial fit <map.json>` prints the largest reprojection error per camera.
+3. Add `"map_file": "<path>"` to the camera's `--config` JSON, run `python -m backend.database` once (it creates `cell_dwell`), and ingest or re-ingest the run.
+
+Cell state is the category at the end of the selected window after Ruhab's two-window hold, on one-minute windows; presence and interaction layers are totals over the window. Position only: no physical distance, and two people on one cell are not an interaction. Tested on synthetic geometry; no real map is registered yet.
