@@ -11,6 +11,7 @@ export default function LoginPage() {
   const router = useRouter();
   const { signIn } = useAuth();
 
+  const [role, setRole] = useState<"Manager" | "Employee">("Manager");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
@@ -41,8 +42,8 @@ export default function LoginPage() {
 
     setSubmitting(true);
     try {
-      const role = await signIn({ email, password });
-      router.push(role === "Manager" ? "/manager/home" : "/employee/home");
+      const signedInAs = await signIn({ email, password, role });
+      router.push(signedInAs === "Manager" ? "/manager/home" : "/employee/home");
     } catch (error) {
       setSubmitError(error instanceof Error ? error.message : "Sign-in failed");
     } finally {
@@ -53,6 +54,18 @@ export default function LoginPage() {
   return (
     <AuthPageShell title="Sign in" description="Sign in to open your workspace.">
       <form onSubmit={handleSubmit} className="space-y-4" noValidate aria-busy={submitting}>
+        <fieldset disabled={submitting}>
+          <legend className="mb-2 text-xs font-semibold uppercase tracking-wider text-text-muted">Sign in as</legend>
+          <div className="grid grid-cols-2 gap-2">
+            {(["Manager", "Employee"] as const).map((option) => (
+              <label key={option}>
+                <input type="radio" name="sign-in-role" value={option} checked={role === option}
+                  onChange={() => { setRole(option); setSubmitError(undefined); }} className="peer sr-only" />
+                <span className="flex min-h-11 cursor-pointer items-center justify-center rounded-lg border border-border-soft px-3 text-sm font-semibold text-text peer-checked:border-accent peer-checked:bg-surface-alt peer-checked:text-accent peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-accent peer-disabled:cursor-not-allowed peer-disabled:opacity-60">{option}</span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
         <AuthField
           label="Email"
           type="email"
@@ -99,7 +112,7 @@ export default function LoginPage() {
         </p>
         {process.env.NODE_ENV === "development" && <details className="text-sm text-text-muted">
           <summary className="w-fit cursor-pointer">Local demo credentials</summary>
-          <p className="mt-2 break-words">Use manager@retailpulse.local or employee@retailpulse.local with 000000 on a local demo database.</p>
+          <p className="mt-2 break-words">The accounts are manager@retailpulse.local and employee@retailpulse.local. The password 000000 only works on a local database created with <code>--seed-demo</code>. On the shared demo database, use the manager and employee passwords written in <code>.env.demo</code>.</p>
         </details>}
       </form>
     </AuthPageShell>

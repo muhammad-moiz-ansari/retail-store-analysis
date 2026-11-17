@@ -70,6 +70,12 @@ export async function POST(request: NextRequest) {
   }
   failedLogins.delete(address);
   const user = data.user;
+  // The sign-in page asks which workspace to open. The account's stored role still decides access; a different
+  // choice is refused before any session exists, so nobody lands in a workspace they did not pick.
+  const chosen = body.role === "Manager" || body.role === "Employee" ? body.role : null;
+  if (chosen && user.role !== chosen) {
+    return NextResponse.json({ error: `This is ${user.role === "Employee" ? "an Employee" : "a Manager"} account. Choose ${user.role} to sign in.` }, { status: 403 });
+  }
   const cookieStore = await cookies();
   cookieStore.set(SESSION_COOKIE, createSession({ role: user.role, userId: user.id, email: user.email, name: user.name }), {
     httpOnly: true,

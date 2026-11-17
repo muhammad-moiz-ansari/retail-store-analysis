@@ -8,7 +8,7 @@ type AuthContextValue = {
   ready: boolean;
   authenticated: boolean;
   role: UserRole | null;
-  signIn: (credentials: { email: string; password: string }) => Promise<UserRole>;
+  signIn: (credentials: { email: string; password: string; role?: UserRole }) => Promise<UserRole>;
   signOut: () => Promise<void>;
 };
 
