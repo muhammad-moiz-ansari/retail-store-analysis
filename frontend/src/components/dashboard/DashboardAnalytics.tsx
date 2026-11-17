@@ -32,7 +32,7 @@ const labels: Record<MetricKey, string> = {
   entries: "Recorded entries",
   exits: "Recorded exits",
   confirmedInteractions: "Confirmed interactions",
-  unverifiedInteractions: "Unverified interactions",
+  unverifiedInteractions: "Unverified interactions (not counted)",
   meanConfirmedDuration: "Mean confirmed interaction duration",
   customerDwellP50: "Customer median dwell",
   unattendedEpisodes: "Derived unattended episodes",
@@ -65,14 +65,29 @@ const scenarios: { value: FixtureScenario; label: string }[] = [
   { value: "stale", label: "Stale data" },
 ];
 
+const EVIDENCE_IDS_SHOWN = 5;
+
+const number = (value: number, digits = 2) =>
+  value.toLocaleString("en-US", { maximumFractionDigits: digits });
+
+// Seconds on the digest's scale: s under 2 min, min under 2 h, then h. Raw seconds stay in the evidence details.
+export function durationText(seconds: number): string {
+  if (Math.abs(seconds) < 120) return `${number(seconds, 1)} s`;
+  if (Math.abs(seconds) < 7200) return `${number(seconds / 60, 1)} min`;
+  return `${number(seconds / 3600, 1)} h`;
+}
+
+// "2026-11-03T09:00:00Z" -> "2026-11-03 09:00 UTC"; anything unparsable is shown as given.
+export function utcText(iso: string): string {
+  const time = new Date(iso);
+  if (Number.isNaN(time.getTime())) return iso;
+  return `${time.toISOString().slice(0, 16).replace("T", " ")} UTC`;
+}
+
 function metricValue(metric: DashboardMetric): string {
   if (metric.value === null) return "Unavailable";
   if (metric.unit === "ratio") return `${(metric.value * 100).toFixed(1)}%`;
-
-  const value = metric.value.toLocaleString("en-US", {
-    maximumFractionDigits: 2,
-  });
-  return metric.unit === "seconds" ? `${value} s` : value;
+  return metric.unit === "seconds" ? durationText(metric.value) : number(metric.value);
 }
 
 export function AnalyticsView({ state }: { state: DashboardState }) {
@@ -122,9 +137,9 @@ export function AnalyticsView({ state }: { state: DashboardState }) {
         <div>
           <dt className="font-semibold">Observation window (UTC, end excluded)</dt>
           <dd className="flex flex-wrap gap-x-1">
-            <time dateTime={request.window.start}>{request.window.start}</time>
+            <time dateTime={request.window.start}>{utcText(request.window.start)}</time>
             <span>→</span>
-            <time dateTime={request.window.end}>{request.window.end}</time>
+            <time dateTime={request.window.end}>{utcText(request.window.end)}</time>
           </dd>
         </div>
         <div>
@@ -204,6 +219,9 @@ function MetricGrid({
                 {metric.estimated ? " · Estimated" : ""}
               </p>
               {metric.reason && <p className="mt-2 text-sm text-text-muted">{metric.reason}</p>}
+              {key === "unverifiedInteractions" && (
+                <p className="mt-2 text-xs text-text-muted">Not added to confirmed interactions.</p>
+              )}
 
               <details className="mt-3 break-words text-xs text-text-muted">
                 <summary className="w-fit cursor-pointer font-semibold text-accent">
@@ -213,9 +231,13 @@ function MetricGrid({
                   {metric.limitations.map((limitation, index) => (
                     <li key={`limitation-${index}`}>{limitation}</li>
                   ))}
+                  {metric.unit === "seconds" && metric.value !== null && (
+                    <li>Exact value: {number(metric.value)} s.</li>
+                  )}
                   {metric.evidence.map((item, index) => (
                     <li key={`evidence-${index}`}>
-                      {item.query} / {item.source}: {item.ids.join(", ")}.{" "}
+                      {item.query} / {item.source}: {item.ids.slice(0, EVIDENCE_IDS_SHOWN).join(", ")}
+                      {item.ids.length > EVIDENCE_IDS_SHOWN ? ` and ${item.ids.length - EVIDENCE_IDS_SHOWN} more` : ""}.{" "}
                       {item.ids.length} cited / {item.matchedCount} matched
                       {item.truncated ? " (sample truncated)" : ""}.
                     </li>
