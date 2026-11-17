@@ -69,6 +69,24 @@ These are Ruhab's proposed defaults. They are **not tuned on real store data**. 
 
 Decision log (fill in at review):
 
+Rows dated 17 Nov 2026 are **proposed, pending Ruhab's sign-off**. Each value is the current code default, checked against the code on that date. None is tuned on real store data. Ruhab adds her name to *Agreed by* or replaces the value; a changed value goes in a new row, so the history stays.
+
 | Date | Setting | Agreed value | Agreed by | Evidence |
 |---|---|---|---|---|
-| | | | | |
+| 17 Nov 2026 | `min_wait_s` | 180 s | Saqib (proposed); Ruhab pending | Proposed default (`signal_policy.py`). No store service standard or A5 footage yet. A8 rehearsal suppresses as expected. Demo clips may use `python -m backend.operations --min-wait-s`; that override is for short clips only, not the store value |
+| 17 Nov 2026 | `high_wait_s` | 360 s | Saqib (proposed); Ruhab pending | Proposed default, twice `min_wait_s`. No manager input yet |
+| 17 Nov 2026 | `high_episode_count` | 3 | Saqib (proposed); Ruhab pending | Proposed default. No manager input yet |
+| 17 Nov 2026 | `min_staffed_ratio` | 0.25 | Saqib (proposed); Ruhab pending | Proposed default. The fixture's understaffed z3 falls below it in the rehearsal. No roster or floor plan check |
+| 17 Nov 2026 | `max_unknown_share` | 0.2 | Saqib (proposed); Ruhab pending | Proposed default. A8 rehearsal: c2 blind 40 of 100 min (0.4) suppresses. Not checked on real footage |
+| 17 Nov 2026 | `min_coverage` | 0.8 | Saqib (proposed); Ruhab pending | Proposed default (`occupancy.py`). A3 rehearsal: blackout gives `insufficient_coverage`, never `no_one`. No real occlusion test |
+| 17 Nov 2026 | `min_presence_s` | 5 s | Saqib (proposed); Ruhab pending | Proposed default. No walk-through footage yet |
+| 17 Nov 2026 | `hold_windows` | 2 | Saqib (proposed); Ruhab pending | Proposed default. A3 rehearsal: customer → no_one only after the 2-window hold. No real flicker check |
+| 17 Nov 2026 | Clip padding | 3 s | Saqib (proposed); Ruhab pending | Default `review_items(pad_s=3.0)`, clips 10–20 s. No reviewer feedback yet |
+
+Live camera view state (FR-07, Interactions page only; not one of the four categories, see CONTRACTS.md "Live camera view state"). These do not affect the agents or dispatch:
+
+| Date | Setting | Agreed value | Agreed by | Evidence |
+|---|---|---|---|---|
+| 17 Nov 2026 | `zone_hot_ratio` | 1.0 customer per employee | Saqib (proposed); Ruhab, Moiz pending | Default in `interaction/config.py`; unit tests in `test_live_zones.py` only |
+| 17 Nov 2026 | `zone_served_seconds` | 30 s | Saqib (proposed); Ruhab, Moiz pending | Default; unit tests only |
+| 17 Nov 2026 | `view_hold_seconds` | 1.5 s | Saqib (proposed); Ruhab, Moiz pending | Default; unit tests only |
