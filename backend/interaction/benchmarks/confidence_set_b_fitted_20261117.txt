@@ -1,0 +1,8 @@
+proximity_only  (14 clips, tp 9 fp 17 fn 8; 10000 clip resamples, seed 0)
+  precision 0.346  95% CI [0.208, 0.480]  (undefined resamples: 0)
+  recall    0.529  95% CI [0.273, 0.846]  (undefined resamples: 0)
+  f1        0.419  95% CI [0.240, 0.591]  (undefined resamples: 0)
+with_judge  (14 clips, tp 9 fp 14 fn 8; 10000 clip resamples, seed 0)
+  precision 0.391  95% CI [0.250, 0.526]  (undefined resamples: 0)
+  recall    0.529  95% CI [0.273, 0.846]  (undefined resamples: 0)
+  f1        0.450  95% CI [0.261, 0.634]  (undefined resamples: 0)

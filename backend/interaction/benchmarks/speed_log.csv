@@ -1,2 +1,4 @@
 label,videos,worst_video,realtime_factor,frame_ms_p50,frame_ms_p95,decode_s,track_ms,judge_ms,track_ids,with_judge_f1
 baseline,11,Copy of IMG_8881_part1_sq640.MOV,1.251,128,361,25.7,156,369,55,1.0
+11_fitted_20261117,11,IMG_8829_part1_sq640.MOV,1.617,65,273,18.2,79,254,48,0.8666666666666666
+set_b_fitted_20261117,14,IMG_8836_part1_sq640.MOV,1.59,84,345,17.5,71,204,60,0.45

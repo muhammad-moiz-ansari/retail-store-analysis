@@ -1,0 +1,1034 @@
+{
+  "judge": "pose",
+  "device": "cpu",
+  "interactions": {
+    "proximity_only": {
+      "tp": 13,
+      "fp": 8,
+      "fn": 0,
+      "precision": 0.6190476190476191,
+      "recall": 1.0,
+      "f1": 0.7647058823529412,
+      "start_error_s": 0.8717948717948713,
+      "end_error_s": 1.910256410256411,
+      "per_second": {
+        "overlap_s": 169.5,
+        "predicted_s": 259.6666666666667,
+        "labelled_s": 182.5,
+        "precision": 0.6527599486521181,
+        "recall": 0.9287671232876712,
+        "f1": 0.7666792310591783
+      }
+    },
+    "with_judge": {
+      "tp": 13,
+      "fp": 4,
+      "fn": 0,
+      "precision": 0.7647058823529411,
+      "recall": 1.0,
+      "f1": 0.8666666666666666,
+      "start_error_s": 0.8717948717948713,
+      "end_error_s": 1.910256410256411,
+      "per_second": {
+        "overlap_s": 169.16666666666666,
+        "predicted_s": 236.33333333333334,
+        "labelled_s": 182.5,
+        "precision": 0.7157968970380817,
+        "recall": 0.9269406392694063,
+        "f1": 0.8077994428969358
+      }
+    }
+  },
+  "tracking": {
+    "role_flips_per_min": 0.5944798301486199,
+    "id_switches_per_min": 2.038216560509554
+  },
+  "roles": {
+    "employee": {
+      "tp": 9,
+      "fp": 2,
+      "fn": 9,
+      "precision": 0.8181818181818182,
+      "recall": 0.5,
+      "f1": 0.6206896551724137
+    },
+    "customer": {
+      "tp": 18,
+      "fp": 2,
+      "fn": 14,
+      "precision": 0.9,
+      "recall": 0.5625,
+      "f1": 0.6923076923076923
+    },
+    "accuracy": 0.54,
+    "unknown_rate": 0.0,
+    "tracks": 50
+  },
+  "speed": {
+    "realtime_factor": 1.6167159496391579
+  },
+  "videos": [
+    {
+      "path": "dummydataset/IMG_8829_part1_sq640.MOV",
+      "duration_s": 67.73333333333333,
+      "proximity_only": {
+        "tp": 1,
+        "fp": 1,
+        "fn": 0,
+        "start_error_s": 2.6666666666666643,
+        "end_error_s": 0.3333333333333357,
+        "per_second": {
+          "overlap_s": 8.0,
+          "predicted_s": 21.666666666666668,
+          "labelled_s": 11.0,
+          "precision": 0.3692307692307692,
+          "recall": 0.7272727272727273,
+          "f1": 0.4897959183673469
+        }
+      },
+      "with_judge": {
+        "tp": 1,
+        "fp": 0,
+        "fn": 0,
+        "start_error_s": 2.6666666666666643,
+        "end_error_s": 0.3333333333333357,
+        "per_second": {
+          "overlap_s": 8.0,
+          "predicted_s": 8.0,
+          "labelled_s": 11.0,
+          "precision": 1.0,
+          "recall": 0.7272727272727273,
+          "f1": 0.8421052631578948
+        }
+      },
+      "roles": {
+        "employee": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0
+        },
+        "customer": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 2
+        },
+        "tracks": 4,
+        "correct": 2,
+        "unknown": 0
+      },
+      "tracking": {
+        "tracks": 4,
+        "minutes": 1.1288888888888888,
+        "people": 2,
+        "role_flips_per_min": 0.0,
+        "id_switches_per_min": 1.7716535433070868
+      },
+      "candidates": [
+        {
+          "start": 1.7,
+          "end": 15.3,
+          "verdict": "no_interaction",
+          "pair": [
+            1,
+            2
+          ]
+        },
+        {
+          "start": 35.7,
+          "end": 43.7,
+          "verdict": "interaction",
+          "pair": [
+            1,
+            10
+          ]
+        }
+      ],
+      "speed": {
+        "realtime_factor": 1.6167159496391579,
+        "frame_ms_p50": 64.86347700001716,
+        "frame_ms_p95": 272.9331620002995,
+        "judge_calls": 15,
+        "judge_ms_mean": 253.72256293333822,
+        "track_ms_mean": 78.91098493628394,
+        "classify_ms_mean": 13.329919078285366,
+        "decode_s": 18.246243424999648,
+        "people_per_frame_mean": 1.3774509803921569
+      },
+      "track_ids": 4
+    },
+    {
+      "path": "dummydataset/Copy of IMG_8878_part1_sq640.MOV",
+      "duration_s": 71.33333333333333,
+      "proximity_only": {
+        "tp": 1,
+        "fp": 0,
+        "fn": 0,
+        "start_error_s": 0.33333333333333215,
+        "end_error_s": 3.5,
+        "per_second": {
+          "overlap_s": 12.166666666666668,
+          "predicted_s": 15.666666666666668,
+          "labelled_s": 12.5,
+          "precision": 0.7765957446808511,
+          "recall": 0.9733333333333334,
+          "f1": 0.8639053254437871
+        }
+      },
+      "with_judge": {
+        "tp": 1,
+        "fp": 0,
+        "fn": 0,
+        "start_error_s": 0.33333333333333215,
+        "end_error_s": 3.5,
+        "per_second": {
+          "overlap_s": 12.166666666666668,
+          "predicted_s": 15.666666666666668,
+          "labelled_s": 12.5,
+          "precision": 0.7765957446808511,
+          "recall": 0.9733333333333334,
+          "f1": 0.8639053254437871
+        }
+      },
+      "roles": {
+        "employee": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0
+        },
+        "customer": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 1
+        },
+        "tracks": 3,
+        "correct": 2,
+        "unknown": 0
+      },
+      "tracking": {
+        "tracks": 3,
+        "minutes": 1.1888888888888889,
+        "people": 2,
+        "role_flips_per_min": 0.0,
+        "id_switches_per_min": 0.8411214953271028
+      },
+      "candidates": [
+        {
+          "start": 21.3,
+          "end": 37.0,
+          "verdict": "interaction",
+          "pair": [
+            1,
+            2
+          ]
+        }
+      ],
+      "speed": {
+        "realtime_factor": 1.972374254733018,
+        "frame_ms_p50": 60.12029400017127,
+        "frame_ms_p95": 141.20820700009062,
+        "judge_calls": 1,
+        "judge_ms_mean": 327.83272799997576,
+        "track_ms_mean": 65.05037560748937,
+        "classify_ms_mean": 12.922570099999575,
+        "decode_s": 19.074647611997534,
+        "people_per_frame_mean": 1.02803738317757
+      },
+      "track_ids": 3
+    },
+    {
+      "path": "dummydataset/Copy of IMG_8880_part1_sq640.MOV",
+      "duration_s": 49.06666666666667,
+      "proximity_only": {
+        "tp": 1,
+        "fp": 0,
+        "fn": 0,
+        "start_error_s": 0.6666666666666679,
+        "end_error_s": 1.3333333333333357,
+        "per_second": {
+          "overlap_s": 23.0,
+          "predicted_s": 25.000000000000004,
+          "labelled_s": 23.0,
+          "precision": 0.9199999999999998,
+          "recall": 1.0,
+          "f1": 0.9583333333333331
+        }
+      },
+      "with_judge": {
+        "tp": 1,
+        "fp": 0,
+        "fn": 0,
+        "start_error_s": 0.6666666666666679,
+        "end_error_s": 1.3333333333333357,
+        "per_second": {
+          "overlap_s": 23.0,
+          "predicted_s": 25.000000000000004,
+          "labelled_s": 23.0,
+          "precision": 0.9199999999999998,
+          "recall": 1.0,
+          "f1": 0.9583333333333331
+        }
+      },
+      "roles": {
+        "employee": {
+          "tp": 1,
+          "fp": 1,
+          "fn": 1
+        },
+        "customer": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 1
+        },
+        "tracks": 3,
+        "correct": 1,
+        "unknown": 0
+      },
+      "tracking": {
+        "tracks": 2,
+        "minutes": 0.8177777777777778,
+        "people": 2,
+        "role_flips_per_min": 4.891304347826087,
+        "id_switches_per_min": 0.0
+      },
+      "candidates": [
+        {
+          "start": 17.3,
+          "end": 42.3,
+          "verdict": "interaction",
+          "pair": [
+            2,
+            1
+          ]
+        }
+      ],
+      "speed": {
+        "realtime_factor": 2.339341485381741,
+        "frame_ms_p50": 52.61154199979501,
+        "frame_ms_p95": 115.00569199961319,
+        "judge_calls": 2,
+        "judge_ms_mean": 204.2827350001062,
+        "track_ms_mean": 51.423492020274814,
+        "classify_ms_mean": 8.75004738222641,
+        "decode_s": 10.98656060699841,
+        "people_per_frame_mean": 1.5202702702702702
+      },
+      "track_ids": 2
+    },
+    {
+      "path": "dummydataset/Copy of IMG_8881_part1_sq640.MOV",
+      "duration_s": 82.26666666666667,
+      "proximity_only": {
+        "tp": 2,
+        "fp": 1,
+        "fn": 0,
+        "start_error_s": 0.8333333333333321,
+        "end_error_s": 3.8333333333333357,
+        "per_second": {
+          "overlap_s": 17.666666666666664,
+          "predicted_s": 36.0,
+          "labelled_s": 19.0,
+          "precision": 0.4907407407407407,
+          "recall": 0.9298245614035087,
+          "f1": 0.6424242424242423
+        }
+      },
+      "with_judge": {
+        "tp": 2,
+        "fp": 1,
+        "fn": 0,
+        "start_error_s": 0.8333333333333321,
+        "end_error_s": 3.8333333333333357,
+        "per_second": {
+          "overlap_s": 17.666666666666664,
+          "predicted_s": 36.0,
+          "labelled_s": 19.0,
+          "precision": 0.4907407407407407,
+          "recall": 0.9298245614035087,
+          "f1": 0.6424242424242423
+        }
+      },
+      "roles": {
+        "employee": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 2
+        },
+        "customer": {
+          "tp": 3,
+          "fp": 0,
+          "fn": 1
+        },
+        "tracks": 7,
+        "correct": 4,
+        "unknown": 0
+      },
+      "tracking": {
+        "tracks": 5,
+        "minutes": 1.3711111111111112,
+        "people": 2,
+        "role_flips_per_min": 0.0,
+        "id_switches_per_min": 2.1880064829821717
+      },
+      "candidates": [
+        {
+          "start": 15.0,
+          "end": 25.3,
+          "verdict": "interaction",
+          "pair": [
+            2,
+            3
+          ]
+        },
+        {
+          "start": 37.3,
+          "end": 55.0,
+          "verdict": "interaction",
+          "pair": [
+            2,
+            7
+          ]
+        },
+        {
+          "start": 72.7,
+          "end": 80.7,
+          "verdict": "interaction",
+          "pair": [
+            2,
+            17
+          ]
+        }
+      ],
+      "speed": {
+        "realtime_factor": 2.2383716333802424,
+        "frame_ms_p50": 57.17953899966233,
+        "frame_ms_p95": 132.41120699967723,
+        "judge_calls": 3,
+        "judge_ms_mean": 189.80659100028183,
+        "track_ms_mean": 54.68429453035813,
+        "classify_ms_mean": 11.235257162614506,
+        "decode_s": 18.53065756499609,
+        "people_per_frame_mean": 1.4939271255060729
+      },
+      "track_ids": 5
+    },
+    {
+      "path": "dummydataset/Copy of IMG_8885_part1_sq640.MOV",
+      "duration_s": 65.63333333333334,
+      "proximity_only": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "start_error_s": null,
+        "end_error_s": null,
+        "per_second": {
+          "overlap_s": 0,
+          "predicted_s": 0,
+          "labelled_s": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null
+        }
+      },
+      "with_judge": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "start_error_s": null,
+        "end_error_s": null,
+        "per_second": {
+          "overlap_s": 0,
+          "predicted_s": 0,
+          "labelled_s": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null
+        }
+      },
+      "roles": {
+        "employee": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0
+        },
+        "customer": {
+          "tp": 3,
+          "fp": 0,
+          "fn": 1
+        },
+        "tracks": 4,
+        "correct": 3,
+        "unknown": 0
+      },
+      "tracking": {
+        "tracks": 4,
+        "minutes": 1.093888888888889,
+        "people": 2,
+        "role_flips_per_min": 0.0,
+        "id_switches_per_min": 1.8283392585068563
+      },
+      "candidates": [],
+      "speed": {
+        "realtime_factor": 2.2430057373462997,
+        "frame_ms_p50": 58.54018600030031,
+        "frame_ms_p95": 125.81757100042523,
+        "judge_calls": 0,
+        "judge_ms_mean": null,
+        "track_ms_mean": 58.9984289796527,
+        "classify_ms_mean": 11.488463330038186,
+        "decode_s": 15.306482443010736,
+        "people_per_frame_mean": 1.0304568527918783
+      },
+      "track_ids": 4
+    },
+    {
+      "path": "dummydataset/Copy of IMG_8886_part1_sq640.MOV",
+      "duration_s": 59.86666666666667,
+      "proximity_only": {
+        "tp": 1,
+        "fp": 2,
+        "fn": 0,
+        "start_error_s": 2.0,
+        "end_error_s": 1.0,
+        "per_second": {
+          "overlap_s": 14.0,
+          "predicted_s": 23.0,
+          "labelled_s": 17.0,
+          "precision": 0.6086956521739131,
+          "recall": 0.8235294117647058,
+          "f1": 0.7
+        }
+      },
+      "with_judge": {
+        "tp": 1,
+        "fp": 1,
+        "fn": 0,
+        "start_error_s": 2.0,
+        "end_error_s": 1.0,
+        "per_second": {
+          "overlap_s": 14.0,
+          "predicted_s": 20.333333333333336,
+          "labelled_s": 17.0,
+          "precision": 0.6885245901639343,
+          "recall": 0.8235294117647058,
+          "f1": 0.75
+        }
+      },
+      "roles": {
+        "employee": {
+          "tp": 1,
+          "fp": 1,
+          "fn": 1
+        },
+        "customer": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 3
+        },
+        "tracks": 6,
+        "correct": 2,
+        "unknown": 0
+      },
+      "tracking": {
+        "tracks": 6,
+        "minutes": 0.9977777777777778,
+        "people": 2,
+        "role_flips_per_min": 1.0022271714922049,
+        "id_switches_per_min": 4.008908685968819
+      },
+      "candidates": [
+        {
+          "start": 11.7,
+          "end": 18.0,
+          "verdict": "interaction",
+          "pair": [
+            1,
+            2
+          ]
+        },
+        {
+          "start": 36.0,
+          "end": 50.0,
+          "verdict": "interaction",
+          "pair": [
+            11,
+            1
+          ]
+        },
+        {
+          "start": 51.3,
+          "end": 54.0,
+          "verdict": "no_interaction",
+          "pair": [
+            11,
+            12
+          ]
+        }
+      ],
+      "speed": {
+        "realtime_factor": 1.9477019554595143,
+        "frame_ms_p50": 68.37912700029847,
+        "frame_ms_p95": 167.5454749997698,
+        "judge_calls": 5,
+        "judge_ms_mean": 182.18204820004757,
+        "track_ms_mean": 65.09350745000373,
+        "classify_ms_mean": 12.209364111513162,
+        "decode_s": 14.71513306199813,
+        "people_per_frame_mean": 1.5444444444444445
+      },
+      "track_ids": 6
+    },
+    {
+      "path": "dummydataset/Copy of IMG_8890_part2_sq640.MOV",
+      "duration_s": 63.36666666666667,
+      "proximity_only": {
+        "tp": 2,
+        "fp": 0,
+        "fn": 0,
+        "start_error_s": 0.6666666666666667,
+        "end_error_s": 0.6666666666666679,
+        "per_second": {
+          "overlap_s": 22.666666666666664,
+          "predicted_s": 24.0,
+          "labelled_s": 24.0,
+          "precision": 0.9444444444444443,
+          "recall": 0.9444444444444443,
+          "f1": 0.9444444444444443
+        }
+      },
+      "with_judge": {
+        "tp": 2,
+        "fp": 0,
+        "fn": 0,
+        "start_error_s": 0.6666666666666667,
+        "end_error_s": 0.6666666666666679,
+        "per_second": {
+          "overlap_s": 22.666666666666664,
+          "predicted_s": 24.0,
+          "labelled_s": 24.0,
+          "precision": 0.9444444444444443,
+          "recall": 0.9444444444444443,
+          "f1": 0.9444444444444443
+        }
+      },
+      "roles": {
+        "employee": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 1
+        },
+        "customer": {
+          "tp": 2,
+          "fp": 1,
+          "fn": 2
+        },
+        "tracks": 6,
+        "correct": 3,
+        "unknown": 0
+      },
+      "tracking": {
+        "tracks": 6,
+        "minutes": 1.0561111111111112,
+        "people": 2,
+        "role_flips_per_min": 0.9468700683850604,
+        "id_switches_per_min": 3.7874802735402415
+      },
+      "candidates": [
+        {
+          "start": 3.7,
+          "end": 15.0,
+          "verdict": "interaction",
+          "pair": [
+            1,
+            2
+          ]
+        },
+        {
+          "start": 43.0,
+          "end": 55.7,
+          "verdict": "interaction",
+          "pair": [
+            14,
+            15
+          ]
+        }
+      ],
+      "speed": {
+        "realtime_factor": 1.9564243511380577,
+        "frame_ms_p50": 68.73539699972753,
+        "frame_ms_p95": 149.87719700002344,
+        "judge_calls": 2,
+        "judge_ms_mean": 265.9253350000199,
+        "track_ms_mean": 68.36980361255611,
+        "classify_ms_mean": 12.459404028458435,
+        "decode_s": 15.733523055001115,
+        "people_per_frame_mean": 1.287958115183246
+      },
+      "track_ids": 6
+    },
+    {
+      "path": "dummydataset/Copy of IMG_8893_part1_sq640.MOV",
+      "duration_s": 74.46666666666667,
+      "proximity_only": {
+        "tp": 1,
+        "fp": 3,
+        "fn": 0,
+        "start_error_s": 1.0,
+        "end_error_s": 3.6666666666666643,
+        "per_second": {
+          "overlap_s": 11.666666666666671,
+          "predicted_s": 39.66666666666668,
+          "labelled_s": 15.0,
+          "precision": 0.29411764705882354,
+          "recall": 0.7777777777777781,
+          "f1": 0.426829268292683
+        }
+      },
+      "with_judge": {
+        "tp": 1,
+        "fp": 1,
+        "fn": 0,
+        "start_error_s": 1.0,
+        "end_error_s": 3.6666666666666643,
+        "per_second": {
+          "overlap_s": 11.333333333333336,
+          "predicted_s": 32.66666666666667,
+          "labelled_s": 15.0,
+          "precision": 0.3469387755102041,
+          "recall": 0.7555555555555558,
+          "f1": 0.47552447552447563
+        }
+      },
+      "roles": {
+        "employee": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 1
+        },
+        "customer": {
+          "tp": 2,
+          "fp": 0,
+          "fn": 1
+        },
+        "tracks": 5,
+        "correct": 3,
+        "unknown": 0
+      },
+      "tracking": {
+        "tracks": 6,
+        "minutes": 1.241111111111111,
+        "people": 2,
+        "role_flips_per_min": 0.8057296329453895,
+        "id_switches_per_min": 3.222918531781558
+      },
+      "candidates": [
+        {
+          "start": 5.0,
+          "end": 8.0,
+          "verdict": "no_interaction",
+          "pair": [
+            1,
+            2
+          ]
+        },
+        {
+          "start": 12.7,
+          "end": 33.0,
+          "verdict": "interaction",
+          "pair": [
+            1,
+            2
+          ]
+        },
+        {
+          "start": 48.0,
+          "end": 60.3,
+          "verdict": "interaction",
+          "pair": [
+            1,
+            8
+          ]
+        },
+        {
+          "start": 63.7,
+          "end": 67.7,
+          "verdict": "no_interaction",
+          "pair": [
+            8,
+            12
+          ]
+        }
+      ],
+      "speed": {
+        "realtime_factor": 1.7880786683662295,
+        "frame_ms_p50": 72.39803300035419,
+        "frame_ms_p95": 274.24680099920806,
+        "judge_calls": 18,
+        "judge_ms_mean": 194.8558285555969,
+        "track_ms_mean": 68.75735958483631,
+        "classify_ms_mean": 11.241259876056354,
+        "decode_s": 18.65656071898775,
+        "people_per_frame_mean": 1.6205357142857142
+      },
+      "track_ids": 6
+    },
+    {
+      "path": "dummydataset/Copy of IMG_8894_part1_sq640.MOV",
+      "duration_s": 60.0,
+      "proximity_only": {
+        "tp": 1,
+        "fp": 0,
+        "fn": 0,
+        "start_error_s": 1.0,
+        "end_error_s": 2.0,
+        "per_second": {
+          "overlap_s": 31.0,
+          "predicted_s": 34.0,
+          "labelled_s": 31.0,
+          "precision": 0.9117647058823529,
+          "recall": 1.0,
+          "f1": 0.9538461538461539
+        }
+      },
+      "with_judge": {
+        "tp": 1,
+        "fp": 0,
+        "fn": 0,
+        "start_error_s": 1.0,
+        "end_error_s": 2.0,
+        "per_second": {
+          "overlap_s": 31.0,
+          "predicted_s": 34.0,
+          "labelled_s": 31.0,
+          "precision": 0.9117647058823529,
+          "recall": 1.0,
+          "f1": 0.9538461538461539
+        }
+      },
+      "roles": {
+        "employee": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 1
+        },
+        "customer": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0
+        },
+        "tracks": 3,
+        "correct": 2,
+        "unknown": 0
+      },
+      "tracking": {
+        "tracks": 3,
+        "minutes": 1.0,
+        "people": 2,
+        "role_flips_per_min": 0.0,
+        "id_switches_per_min": 1.0
+      },
+      "candidates": [
+        {
+          "start": 6.0,
+          "end": 40.0,
+          "verdict": "interaction",
+          "pair": [
+            6,
+            3
+          ]
+        }
+      ],
+      "speed": {
+        "realtime_factor": 1.9460552309377617,
+        "frame_ms_p50": 67.34857699939312,
+        "frame_ms_p95": 160.93203800028277,
+        "judge_calls": 2,
+        "judge_ms_mean": 242.02316399987467,
+        "track_ms_mean": 67.91833775551925,
+        "classify_ms_mean": 12.642748521339549,
+        "decode_s": 15.454634758003522,
+        "people_per_frame_mean": 1.1722222222222223
+      },
+      "track_ids": 3
+    },
+    {
+      "path": "dummydataset/Copy of IMG_8895_part2_sq640.MOV",
+      "duration_s": 52.766666666666666,
+      "proximity_only": {
+        "tp": 2,
+        "fp": 1,
+        "fn": 0,
+        "start_error_s": 0.16666666666666607,
+        "end_error_s": 0.3333333333333326,
+        "per_second": {
+          "overlap_s": 10.666666666666668,
+          "predicted_s": 18.66666666666666,
+          "labelled_s": 11.0,
+          "precision": 0.5714285714285716,
+          "recall": 0.9696969696969698,
+          "f1": 0.7191011235955058
+        }
+      },
+      "with_judge": {
+        "tp": 2,
+        "fp": 1,
+        "fn": 0,
+        "start_error_s": 0.16666666666666607,
+        "end_error_s": 0.3333333333333326,
+        "per_second": {
+          "overlap_s": 10.666666666666668,
+          "predicted_s": 18.66666666666666,
+          "labelled_s": 11.0,
+          "precision": 0.5714285714285716,
+          "recall": 0.9696969696969698,
+          "f1": 0.7191011235955058
+        }
+      },
+      "roles": {
+        "employee": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 1
+        },
+        "customer": {
+          "tp": 2,
+          "fp": 1,
+          "fn": 1
+        },
+        "tracks": 5,
+        "correct": 3,
+        "unknown": 0
+      },
+      "tracking": {
+        "tracks": 5,
+        "minutes": 0.8794444444444445,
+        "people": 3,
+        "role_flips_per_min": 0.0,
+        "id_switches_per_min": 2.2741629816803535
+      },
+      "candidates": [
+        {
+          "start": 0.0,
+          "end": 4.7,
+          "verdict": "interaction",
+          "pair": [
+            1,
+            2
+          ]
+        },
+        {
+          "start": 22.7,
+          "end": 29.3,
+          "verdict": "interaction",
+          "pair": [
+            1,
+            13
+          ]
+        },
+        {
+          "start": 44.3,
+          "end": 51.7,
+          "verdict": "interaction",
+          "pair": [
+            1,
+            30
+          ]
+        }
+      ],
+      "speed": {
+        "realtime_factor": 1.9385757802487191,
+        "frame_ms_p50": 68.35432000025321,
+        "frame_ms_p95": 162.8455150002992,
+        "judge_calls": 4,
+        "judge_ms_mean": 212.40354099973047,
+        "track_ms_mean": 65.94492452202746,
+        "classify_ms_mean": 11.283480973377463,
+        "decode_s": 13.34565493998889,
+        "people_per_frame_mean": 1.4150943396226414
+      },
+      "track_ids": 5
+    },
+    {
+      "path": "dummydataset/Copy of IMG_8897_part1_sq640.MOV",
+      "duration_s": 60.0,
+      "proximity_only": {
+        "tp": 1,
+        "fp": 0,
+        "fn": 0,
+        "start_error_s": 0.33333333333333215,
+        "end_error_s": 3.3333333333333357,
+        "per_second": {
+          "overlap_s": 18.666666666666668,
+          "predicted_s": 22.000000000000004,
+          "labelled_s": 19.0,
+          "precision": 0.8484848484848484,
+          "recall": 0.9824561403508772,
+          "f1": 0.9105691056910568
+        }
+      },
+      "with_judge": {
+        "tp": 1,
+        "fp": 0,
+        "fn": 0,
+        "start_error_s": 0.33333333333333215,
+        "end_error_s": 3.3333333333333357,
+        "per_second": {
+          "overlap_s": 18.666666666666668,
+          "predicted_s": 22.000000000000004,
+          "labelled_s": 19.0,
+          "precision": 0.8484848484848484,
+          "recall": 0.9824561403508772,
+          "f1": 0.9105691056910568
+        }
+      },
+      "roles": {
+        "employee": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 1
+        },
+        "customer": {
+          "tp": 2,
+          "fp": 0,
+          "fn": 1
+        },
+        "tracks": 4,
+        "correct": 2,
+        "unknown": 0
+      },
+      "tracking": {
+        "tracks": 4,
+        "minutes": 1.0,
+        "people": 3,
+        "role_flips_per_min": 0.0,
+        "id_switches_per_min": 1.0
+      },
+      "candidates": [
+        {
+          "start": 31.3,
+          "end": 53.3,
+          "verdict": "interaction",
+          "pair": [
+            15,
+            4
+          ]
+        }
+      ],
+      "speed": {
+        "realtime_factor": 1.9690445087842003,
+        "frame_ms_p50": 67.9230510004345,
+        "frame_ms_p95": 153.84528400045383,
+        "judge_calls": 2,
+        "judge_ms_mean": 259.1212904999338,
+        "track_ms_mean": 66.76509428340171,
+        "classify_ms_mean": 12.03194625000217,
+        "decode_s": 14.951749948987526,
+        "people_per_frame_mean": 1.3777777777777778
+      },
+      "track_ids": 4
+    }
+  ],
+  "target_failures": [
+    "detector.map50: not measured",
+    "interactions.with_judge.precision: 0.765 < 0.9"
+  ]
+}
