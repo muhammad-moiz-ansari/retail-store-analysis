@@ -270,6 +270,7 @@ def settings_snapshot(conn: Connection) -> dict[str, Any]:
         "cameras": cameras,
         "staff": staff,
         "accounts": accounts,
-        "thresholds": get_setting(conn, "thresholds"),
-        "privacy": get_setting(conn, "privacy"),
+        # A database that was never seeded has no settings rows; the page fills in its defaults from an empty object.
+        "thresholds": get_setting(conn, "thresholds") or {},
+        "privacy": get_setting(conn, "privacy") or {},
     }

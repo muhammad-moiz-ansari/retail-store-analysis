@@ -56,7 +56,7 @@ function Playback({ runId, view }: { runId: string; view: ViewState | null | und
   return <ManagerPanel title="Processed Video">
     {current && <ViewBadge state={{ view: current.view }} />}
     <video controls preload="metadata" src={`/api/backend/interaction/runs/${runId}/video`}
-      onTimeUpdate={(event) => setTime(event.currentTarget.currentTime)} className="w-full border border-border-soft" />
+      onTimeUpdate={(event) => setTime(event.currentTarget.currentTime)} className="mx-auto block max-h-[70vh] w-full max-w-2xl border border-border-soft bg-black" />
     {end > 0 && <>
       <div className="mt-3 flex h-3 w-full overflow-hidden rounded border border-border-soft" role="img"
         aria-label={`Zone over the video: ${timeline.map((span) => `${viewLabels[span.view].title} from ${span.from.toFixed(0)} to ${span.to.toFixed(0)} seconds`).join(", ")}`}>
@@ -233,7 +233,7 @@ export default function InteractionsPage() {
     {liveId && <ManagerPanel title={source === "live" ? "Live Preview" : "Processing Live"}>
       <ViewBadge state={view} />
       {/* eslint-disable-next-line @next/next/no-img-element -- live MJPEG stream from the backend, not a static asset */}
-      <img src={`/api/backend/interaction/live/${liveId}/stream`} alt={source === "live" ? "Live annotated DroidCam feed" : "The recording as it is being analysed"} onLoad={() => setPreviewReady(true)} className="w-full border border-border-soft" />
+      <img src={`/api/backend/interaction/live/${liveId}/stream`} alt={source === "live" ? "Live annotated DroidCam feed" : "The recording as it is being analysed"} onLoad={() => setPreviewReady(true)} className="mx-auto block max-h-[70vh] w-auto max-w-full border border-border-soft" />
       {!previewReady && <p className="text-sm text-text-muted">{source === "live" ? "Connecting to the phone and loading models..." : "Loading models..."}</p>}
       <p className="mt-2 text-xs text-text-muted">{source === "live" ? "Results (people and interactions) appear after you press Stop." : "Results and the playable video appear when the recording has been processed."}</p>
     </ManagerPanel>}

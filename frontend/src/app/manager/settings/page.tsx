@@ -191,7 +191,7 @@ function SettingsContent() {
     if (!response.ok) {
       throw new Error(data.error || data.detail || "Unable to load settings");
     }
-    setSnapshot(data);
+    setSnapshot({ ...data, thresholds: data.thresholds ?? {}, privacy: data.privacy ?? {} });
   }
 
   async function saveSettings(
@@ -208,7 +208,7 @@ function SettingsContent() {
     if (!response.ok) {
       throw new Error(data.error || data.detail || fallbackMessage);
     }
-    setSnapshot(data);
+    setSnapshot({ ...data, thresholds: data.thresholds ?? {}, privacy: data.privacy ?? {} });
     return data;
   }
 
