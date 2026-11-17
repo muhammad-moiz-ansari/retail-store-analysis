@@ -20,13 +20,15 @@ Commands: `python -m backend.interaction.benchmark <spec> --output <report>`; in
 | --- | --- | --- | --- | --- |
 | Detector (best_320 OpenVINO, 455 test images) | mAP50 / mAP50-95 / P / R | 0.969 / 0.896 / 0.963 / 0.953 | same | `report_set_b_merged.json` |
 | Interactions, proximity only | P / R / F1 | 0.360 / 0.529 / 0.429 (tp 9 fp 16 fn 8) | 0.619 / 1.000 / 0.765 | `report_set_b_merged.json`, `report_11_merged.json` |
-| Interactions, with pose judge | P / R / F1 | **0.409 / 0.529 / 0.462** (tp 9 fp 13 fn 8) | 0.765 / 1.000 / 0.867 (tp 13 fp 4 fn 0) | same |
-| F1 95 % CI, with judge | | [0.267, 0.645] | [0.788, 0.960] | `confidence` |
+| Interactions, with pose judge, fitted role weights (headline, 17 Nov) | P / R / F1 | **0.391 / 0.529 / 0.450** (tp 9 fp 14 fn 8) | 0.765 / 1.000 / 0.867 (tp 13 fp 4 fn 0) | `report_set_b_fitted_20261117.json`, `report_11_fitted_20261117.json` |
+| Interactions, with pose judge, hand-set role weights | P / R / F1 | 0.409 / 0.529 / 0.462 (tp 9 fp 13 fn 8) | 0.765 / 1.000 / 0.867 (tp 13 fp 4 fn 0) | `report_set_b_merged.json`, `report_11_merged.json` |
+| F1 95 % CI, with judge, fitted | | [0.261, 0.634] | [0.788, 0.960] | `confidence_*_fitted_20261117.txt` |
+| F1 95 % CI, with judge, hand-set | | [0.267, 0.645] | [0.788, 0.960] | `confidence` |
 | F1 95 % CI, proximity only | | [0.245, 0.600] | [0.625, 0.917] | `confidence` |
 | Per-second overlap, with judge | P / R / F1 | 0.521 / 0.943 / 0.671 | 0.711 / 0.904 / 0.796 | `benchmark.overlap_seconds` on the reports' saved spans |
 | Timing, with judge | start / end error (s) | 1.16 / 2.93 | 1.15 / 1.96 | reports above |
-| Roles | accuracy per track | 1.000 (59 tracks, fitted roles) | | `report_set_b_roles_hand.json` |
-| Tracking | ID switches per minute | 1.82 | 2.29 | reports above |
+| Roles, fitted weights | accuracy per track | 1.000 (56 tracks) | 0.957 (47 tracks; employee P/R 0.929) | fitted reports above. Truth is each reviewed person in `persons.json` matched to the run's own tracks (IoU ≥ 0.3 in ≥ 50 % of frames), so it no longer depends on one machine's track IDs. The earlier 59-track figure used a stored track-ID map and cannot be reproduced on another machine |
+| Tracking | ID switches per minute | 1.68 fitted run (1.82 hand-set run) | 2.04 fitted run (2.29 hand-set run) | reports above |
 | Speed | CPU realtime factor | **0.60×** (idle machine, 13 Nov, current pipeline; per clip up to ~1.5×, frame p50 ~95 ms, judge 240–320 ms per call). 0.87× on 7 Nov was the pre-merge code | | `report_set_b_speed_idle.json` (CVAT stopped, nothing else running). Other runs (0.09–0.48×) shared the CPU and are not valid |
 
 Per-second scores credit one long predicted span that covers several short labelled ones, which strict matching counts as a miss plus a false alarm (see section 6). Report both. GPU throughput: not measured (no GPU laptop run).
@@ -39,7 +41,7 @@ Leave-one-clip-out logistic fit vs the hand-set weights (reference 0.55, bib col
 | 11 clips (50 tracks) | 0.960 | 0.889 | 1.000 | `refit_benchmark/refit.json` |
 | Set B (59 tracks) | 0.915 | 0.815 (misses 5 of 27) | 1.000 | `refit_benchmark_set_b/refit.json` |
 
-Fitted on the 11 clips and scored on set B: 59/59. Fitted weights ≈ yolo 0.61, bib colour 0.36, stationary 0.02–0.03, reference 0, staff zone 0, threshold 0.07–0.09 (`benchmarks/store_roles_fitted.json`). Reference and staff-zone are absent from every clip, so a weight of 0 means "not observed", not "useless". Threshold sweep: `refit_benchmark/sweep.png`, `refit_benchmark_set_b/sweep.png`. **Decision (Ruhab, B3, 14 Nov 2026): ship the fitted weights.** On held-out set B the hand-set weights miss 5 of 27 employees and the fitted ones miss none; the fitted recall stays at 1.0 over thresholds 0.1–0.55 (`refit_benchmark_set_b/sweep.png`), where the hand-set recall drops from about 0.2. Both benchmark specs now name `benchmarks/store_roles_fitted.json` as each video's `config`, so the pre-freeze rerun (B6, week 14) uses them; the reports above predate that and must be regenerated. Caveat: two cameras, few clips, so 100 % is not a general claim; a store with calibrated references or staff zones must refit, because those factors were never observed here.
+Fitted on the 11 clips and scored on set B: 59/59. Fitted weights ≈ yolo 0.61, bib colour 0.36, stationary 0.02–0.03, reference 0, staff zone 0, threshold 0.07–0.09 (`benchmarks/store_roles_fitted.json`). Reference and staff-zone are absent from every clip, so a weight of 0 means "not observed", not "useless". Threshold sweep: `refit_benchmark/sweep.png`, `refit_benchmark_set_b/sweep.png`. **Decision (Ruhab, B3, 14 Nov 2026): ship the fitted weights.** On held-out set B the hand-set weights miss 5 of 27 employees and the fitted ones miss none; the fitted recall stays at 1.0 over thresholds 0.1–0.55 (`refit_benchmark_set_b/sweep.png`), where the hand-set recall drops from about 0.2. Both benchmark specs now name `benchmarks/store_roles_fitted.json` as each video's `config`, so the pre-freeze rerun (B6, week 14) uses them; rerun on 17 Nov: set B F1 0.450 (one more false alarm than the hand-set 0.462), tuning clips unchanged at 0.867. Speed in those runs is not valid: the machine was busy. Caveat: two cameras, few clips, so 100 % is not a general claim; a store with calibrated references or staff zones must refit, because those factors were never observed here.
 
 ## 4. Signals in the event store
 Every signal is written by `backend/events/ingest.py` (schema v1) and checked by the contract test (`backend/events/test_events.py`, `validate()`), which runs on the fixture day and on real CV runs.
@@ -60,6 +62,7 @@ Not evaluated: no labelled crossings. Code and tests exist (`backend/test_handof
 - Small labelled set (30 interactions, 25 clips, one store, two cameras); the CI on set B F1 spans 0.27–0.65.
 - Set B was seen once during tuning (the span merge).
 - Customer ID switches (1.8/min on set B) cause duplicate spans; no tracking fix was made, so it stays a limitation.
-- CPU only; the clean idle speed run is 0.60× realtime, so the demo runs on recorded footage. The 13 Nov idle rerun reproduced F1 0.462 exactly.
+- CPU only; the clean idle speed run is 0.60× realtime, so the demo runs on recorded footage. The 13 Nov idle rerun reproduced F1 0.462 exactly with the hand-set weights; with the fitted weights it is 0.450.
+- Detector scores were not rerun on 17 Nov (test images are not on this machine); the detector row is the earlier report.
 - No zone polygons yet: zone-level signals are fixture-only.
 - The 11-clip labels have no second annotator; pass-bys are judgement calls.

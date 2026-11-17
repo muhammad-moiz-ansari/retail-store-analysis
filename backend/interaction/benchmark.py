@@ -122,7 +122,18 @@ def detector_kpis(spec: dict, device: str) -> dict:
             "inference_ms_per_image": result.speed.get("inference")}
 
 
-def video_kpis(spec: dict, judge: str, device: str, min_iou: float) -> dict:
+def truth_roles(spec: dict, detections: list[dict], persons: dict | None) -> tuple[dict[str, str] | None, str | None]:
+    """Reviewed role per track of THIS run. Track IDs differ between machines and pipeline versions, so a stored
+    {track_id: role} map only fits the run it came from; reviewed per-person boxes (persons.json) are matched to this
+    run's own boxes instead. The spec's "roles" map is the fallback for a clip without reviewed persons."""
+    from .role_labels import track_roles
+
+    if persons and spec["path"] in persons:
+        return track_roles(detections, persons[spec["path"]]), "persons"
+    return (spec["roles"], "spec") if "roles" in spec else (None, None)
+
+
+def video_kpis(spec: dict, judge: str, device: str, min_iou: float, persons: dict | None = None) -> dict:
     import cv2
 
     from .cli import analyse
@@ -151,9 +162,11 @@ def video_kpis(spec: dict, judge: str, device: str, min_iou: float) -> dict:
     started = time.perf_counter()
     role_frames: dict[int, dict[str, int]] = {}
     track_roles: dict[int, list[str]] = {}  # role sequence per track, for flips
+    detections: list[dict] = []  # this run's boxes, matched to reviewed persons for role truth
 
-    def tally(_frame_number, _frame, result):
-        seen(_frame_number, _frame, result)
+    def tally(frame_number, _frame, result):
+        seen(frame_number, _frame, result)
+        detections.append({"frame": frame_number, "people": [{"track_id": p["track_id"], "bbox": p["bbox"]} for p in result["people"]]})
         for person in result["people"]:
             frames = role_frames.setdefault(person["track_id"], {})
             frames[person["role"]] = frames.get(person["role"], 0) + 1
@@ -166,13 +179,15 @@ def video_kpis(spec: dict, judge: str, device: str, min_iou: float) -> dict:
     latencies = sorted(run["latencies"])
     # A video without reviewed "interactions" is not labelled yet: speed only, no accuracy.
     truth = [(t["start"], t["end"]) for t in spec["interactions"]] if "interactions" in spec else None
+    roles, role_source = truth_roles(spec, detections, persons)
     return {
         "path": spec["path"], "duration_s": run["frames"] / fps,
         # Proximity alone = every candidate the judge saw; with judge = the ones it kept.
         "proximity_only": None if truth is None else event_kpis([interval(e) for e in events], truth, min_iou),
         "with_judge": None if truth is None else event_kpis([interval(e) for e in merge_spans([e for e in run["interactions"].values() if e["verdict"] in CONFIRMED], config.max_missing_seconds)], truth, min_iou),
-        # "roles": {"<track_id>": "employee" | "customer"} from a reviewed run with the same settings.
-        "roles": role_counts({t: max(f, key=f.get) for t, f in role_frames.items()}, spec["roles"]) if "roles" in spec else None,
+        # Truth from reviewed persons matched to this run's boxes, else the spec's "roles" map (same-run IDs only).
+        "roles": role_counts({t: max(f, key=f.get) for t, f in role_frames.items()}, roles) if roles is not None else None,
+        "role_truth": role_source,
         # "people": distinct people a reviewer counted in the clip; extra track IDs are fragments.
         "tracking": tracking_kpis(track_roles, run["frames"] / fps / 60, spec.get("people")),
         "candidates": [{"start": round(e["started_at"], 1), "end": round(e["last_seen_at"], 1), "verdict": e["verdict"],
@@ -238,7 +253,10 @@ def main() -> None:
     parser.add_argument("--skip-detector", action="store_true")
     parser.add_argument("--only", help="Run only the videos whose path contains this text")
     parser.add_argument("--label", help="Append a row under this label to benchmarks/speed_log.csv")
+    parser.add_argument("--persons", type=Path, default=Path(__file__).parent / "benchmarks" / "persons.json",
+                        help="Reviewed per-person boxes and roles; role truth is matched to each run's own tracks")
     args = parser.parse_args()
+    persons = json.loads(args.persons.read_text(encoding="utf-8")) if args.persons.exists() else None
     spec = json.loads(args.spec.read_text())
     if args.only:
         spec["videos"] = [video for video in spec["videos"] if args.only in video["path"]]
@@ -246,7 +264,7 @@ def main() -> None:
     report: dict = {"judge": args.judge, "device": args.device}
     if not args.skip_detector:
         report["detector"] = detector_kpis(spec["detector"], args.device)
-    videos = [video_kpis(video, args.judge, args.device, min_iou) for video in spec["videos"]]
+    videos = [video_kpis(video, args.judge, args.device, min_iou, persons) for video in spec["videos"]]
     total = lambda key: {k: sum(v[key][k] for v in videos if v[key]) for k in ("tp", "fp", "fn")}
     seconds = lambda key: {k: sum(v[key]["per_second"][k] for v in videos if v[key])
                            for k in ("overlap_s", "predicted_s", "labelled_s")}

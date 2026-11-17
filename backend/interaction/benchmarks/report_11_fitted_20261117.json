@@ -45,27 +45,27 @@
   },
   "roles": {
     "employee": {
-      "tp": 9,
-      "fp": 2,
-      "fn": 9,
-      "precision": 0.8181818181818182,
-      "recall": 0.5,
-      "f1": 0.6206896551724137
+      "tp": 13,
+      "fp": 1,
+      "fn": 1,
+      "precision": 0.9285714285714286,
+      "recall": 0.9285714285714286,
+      "f1": 0.9285714285714286
     },
     "customer": {
-      "tp": 18,
-      "fp": 2,
-      "fn": 14,
-      "precision": 0.9,
-      "recall": 0.5625,
-      "f1": 0.6923076923076923
+      "tp": 32,
+      "fp": 1,
+      "fn": 1,
+      "precision": 0.9696969696969697,
+      "recall": 0.9696969696969697,
+      "f1": 0.9696969696969697
     },
-    "accuracy": 0.54,
+    "accuracy": 0.9574468085106383,
     "unknown_rate": 0.0,
-    "tracks": 50
+    "tracks": 47
   },
   "speed": {
-    "realtime_factor": 1.6167159496391579
+    "realtime_factor": 1.1766694266678535
   },
   "videos": [
     {
@@ -108,14 +108,15 @@
           "fn": 0
         },
         "customer": {
-          "tp": 1,
+          "tp": 3,
           "fp": 0,
-          "fn": 2
+          "fn": 0
         },
         "tracks": 4,
-        "correct": 2,
+        "correct": 4,
         "unknown": 0
       },
+      "role_truth": "persons",
       "tracking": {
         "tracks": 4,
         "minutes": 1.1288888888888888,
@@ -144,14 +145,14 @@
         }
       ],
       "speed": {
-        "realtime_factor": 1.6167159496391579,
-        "frame_ms_p50": 64.86347700001716,
-        "frame_ms_p95": 272.9331620002995,
+        "realtime_factor": 1.1766694266678535,
+        "frame_ms_p50": 106.64684800030955,
+        "frame_ms_p95": 483.44362099851423,
         "judge_calls": 15,
-        "judge_ms_mean": 253.72256293333822,
-        "track_ms_mean": 78.91098493628394,
-        "classify_ms_mean": 13.329919078285366,
-        "decode_s": 18.246243424999648,
+        "judge_ms_mean": 298.5702443333139,
+        "track_ms_mean": 121.63995991662816,
+        "classify_ms_mean": 16.71262540564459,
+        "decode_s": 23.574251128022297,
         "people_per_frame_mean": 1.3774509803921569
       },
       "track_ids": 4
@@ -196,14 +197,15 @@
           "fn": 0
         },
         "customer": {
-          "tp": 1,
+          "tp": 2,
           "fp": 0,
-          "fn": 1
+          "fn": 0
         },
         "tracks": 3,
-        "correct": 2,
+        "correct": 3,
         "unknown": 0
       },
+      "role_truth": "persons",
       "tracking": {
         "tracks": 3,
         "minutes": 1.1888888888888889,
@@ -223,14 +225,14 @@
         }
       ],
       "speed": {
-        "realtime_factor": 1.972374254733018,
-        "frame_ms_p50": 60.12029400017127,
-        "frame_ms_p95": 141.20820700009062,
+        "realtime_factor": 1.3620128615561604,
+        "frame_ms_p50": 94.74199400028738,
+        "frame_ms_p95": 242.22574300074484,
         "judge_calls": 1,
-        "judge_ms_mean": 327.83272799997576,
-        "track_ms_mean": 65.05037560748937,
-        "classify_ms_mean": 12.922570099999575,
-        "decode_s": 19.074647611997534,
+        "judge_ms_mean": 1133.1355290003557,
+        "track_ms_mean": 102.19957717753944,
+        "classify_ms_mean": 17.452145359046966,
+        "decode_s": 25.530148269017445,
         "people_per_frame_mean": 1.02803738317757
       },
       "track_ids": 3
@@ -272,17 +274,18 @@
         "employee": {
           "tp": 1,
           "fp": 1,
-          "fn": 1
+          "fn": 0
         },
         "customer": {
           "tp": 0,
           "fp": 0,
           "fn": 1
         },
-        "tracks": 3,
+        "tracks": 2,
         "correct": 1,
         "unknown": 0
       },
+      "role_truth": "persons",
       "tracking": {
         "tracks": 2,
         "minutes": 0.8177777777777778,
@@ -302,14 +305,14 @@
         }
       ],
       "speed": {
-        "realtime_factor": 2.339341485381741,
-        "frame_ms_p50": 52.61154199979501,
-        "frame_ms_p95": 115.00569199961319,
+        "realtime_factor": 1.469371009515367,
+        "frame_ms_p50": 87.81758400073159,
+        "frame_ms_p95": 188.97119800021756,
         "judge_calls": 2,
-        "judge_ms_mean": 204.2827350001062,
-        "track_ms_mean": 51.423492020274814,
-        "classify_ms_mean": 8.75004738222641,
-        "decode_s": 10.98656060699841,
+        "judge_ms_mean": 328.19284700053686,
+        "track_ms_mean": 87.51977789864435,
+        "classify_ms_mean": 12.948547706594885,
+        "decode_s": 16.870237092016396,
         "people_per_frame_mean": 1.5202702702702702
       },
       "track_ids": 2
@@ -351,17 +354,18 @@
         "employee": {
           "tp": 1,
           "fp": 0,
-          "fn": 2
+          "fn": 0
         },
         "customer": {
-          "tp": 3,
+          "tp": 4,
           "fp": 0,
-          "fn": 1
+          "fn": 0
         },
-        "tracks": 7,
-        "correct": 4,
+        "tracks": 5,
+        "correct": 5,
         "unknown": 0
       },
+      "role_truth": "persons",
       "tracking": {
         "tracks": 5,
         "minutes": 1.3711111111111112,
@@ -399,14 +403,14 @@
         }
       ],
       "speed": {
-        "realtime_factor": 2.2383716333802424,
-        "frame_ms_p50": 57.17953899966233,
-        "frame_ms_p95": 132.41120699967723,
+        "realtime_factor": 1.362266762463841,
+        "frame_ms_p50": 102.9881190006563,
+        "frame_ms_p95": 267.5190739992104,
         "judge_calls": 3,
-        "judge_ms_mean": 189.80659100028183,
-        "track_ms_mean": 54.68429453035813,
-        "classify_ms_mean": 11.235257162614506,
-        "decode_s": 18.53065756499609,
+        "judge_ms_mean": 307.2805616666301,
+        "track_ms_mean": 99.83534166803652,
+        "classify_ms_mean": 17.22103164499722,
+        "decode_s": 28.45381083299253,
         "people_per_frame_mean": 1.4939271255060729
       },
       "track_ids": 5
@@ -451,14 +455,15 @@
           "fn": 0
         },
         "customer": {
-          "tp": 3,
+          "tp": 4,
           "fp": 0,
-          "fn": 1
+          "fn": 0
         },
         "tracks": 4,
-        "correct": 3,
+        "correct": 4,
         "unknown": 0
       },
+      "role_truth": "persons",
       "tracking": {
         "tracks": 4,
         "minutes": 1.093888888888889,
@@ -468,14 +473,14 @@
       },
       "candidates": [],
       "speed": {
-        "realtime_factor": 2.2430057373462997,
-        "frame_ms_p50": 58.54018600030031,
-        "frame_ms_p95": 125.81757100042523,
+        "realtime_factor": 1.5198465833383343,
+        "frame_ms_p50": 88.27880999888293,
+        "frame_ms_p95": 178.66112099909515,
         "judge_calls": 0,
         "judge_ms_mean": null,
-        "track_ms_mean": 58.9984289796527,
-        "classify_ms_mean": 11.488463330038186,
-        "decode_s": 15.306482443010736,
+        "track_ms_mean": 89.15486106595525,
+        "classify_ms_mean": 16.786506157640463,
+        "decode_s": 22.213014848006424,
         "people_per_frame_mean": 1.0304568527918783
       },
       "track_ids": 4
@@ -515,19 +520,20 @@
       },
       "roles": {
         "employee": {
-          "tp": 1,
-          "fp": 1,
-          "fn": 1
+          "tp": 2,
+          "fp": 0,
+          "fn": 0
         },
         "customer": {
-          "tp": 1,
+          "tp": 4,
           "fp": 0,
-          "fn": 3
+          "fn": 0
         },
         "tracks": 6,
-        "correct": 2,
+        "correct": 6,
         "unknown": 0
       },
+      "role_truth": "persons",
       "tracking": {
         "tracks": 6,
         "minutes": 0.9977777777777778,
@@ -565,14 +571,14 @@
         }
       ],
       "speed": {
-        "realtime_factor": 1.9477019554595143,
-        "frame_ms_p50": 68.37912700029847,
-        "frame_ms_p95": 167.5454749997698,
+        "realtime_factor": 1.2791700238641586,
+        "frame_ms_p50": 102.1657569999661,
+        "frame_ms_p95": 278.61632900021505,
         "judge_calls": 5,
-        "judge_ms_mean": 182.18204820004757,
-        "track_ms_mean": 65.09350745000373,
-        "classify_ms_mean": 12.209364111513162,
-        "decode_s": 14.71513306199813,
+        "judge_ms_mean": 351.8474027994671,
+        "track_ms_mean": 103.3976036832529,
+        "classify_ms_mean": 17.604001910055015,
+        "decode_s": 21.536461893021624,
         "people_per_frame_mean": 1.5444444444444445
       },
       "track_ids": 6
@@ -612,19 +618,20 @@
       },
       "roles": {
         "employee": {
-          "tp": 1,
+          "tp": 2,
           "fp": 0,
-          "fn": 1
+          "fn": 0
         },
         "customer": {
-          "tp": 2,
-          "fp": 1,
-          "fn": 2
+          "tp": 4,
+          "fp": 0,
+          "fn": 0
         },
         "tracks": 6,
-        "correct": 3,
+        "correct": 6,
         "unknown": 0
       },
+      "role_truth": "persons",
       "tracking": {
         "tracks": 6,
         "minutes": 1.0561111111111112,
@@ -653,14 +660,14 @@
         }
       ],
       "speed": {
-        "realtime_factor": 1.9564243511380577,
-        "frame_ms_p50": 68.73539699972753,
-        "frame_ms_p95": 149.87719700002344,
+        "realtime_factor": 1.2889247352060889,
+        "frame_ms_p50": 100.77915900001244,
+        "frame_ms_p95": 243.25553700145974,
         "judge_calls": 2,
-        "judge_ms_mean": 265.9253350000199,
-        "track_ms_mean": 68.36980361255611,
-        "classify_ms_mean": 12.459404028458435,
-        "decode_s": 15.733523055001115,
+        "judge_ms_mean": 455.81477350060595,
+        "track_ms_mean": 107.7183781518782,
+        "classify_ms_mean": 17.040270349590298,
+        "decode_s": 23.48467952799183,
         "people_per_frame_mean": 1.287958115183246
       },
       "track_ids": 6
@@ -705,14 +712,15 @@
           "fn": 1
         },
         "customer": {
-          "tp": 2,
-          "fp": 0,
-          "fn": 1
+          "tp": 3,
+          "fp": 1,
+          "fn": 0
         },
         "tracks": 5,
-        "correct": 3,
+        "correct": 4,
         "unknown": 0
       },
+      "role_truth": "persons",
       "tracking": {
         "tracks": 6,
         "minutes": 1.241111111111111,
@@ -759,14 +767,14 @@
         }
       ],
       "speed": {
-        "realtime_factor": 1.7880786683662295,
-        "frame_ms_p50": 72.39803300035419,
-        "frame_ms_p95": 274.24680099920806,
+        "realtime_factor": 1.4003224529231455,
+        "frame_ms_p50": 88.23588200175436,
+        "frame_ms_p95": 328.06783500018355,
         "judge_calls": 18,
-        "judge_ms_mean": 194.8558285555969,
-        "track_ms_mean": 68.75735958483631,
-        "classify_ms_mean": 11.241259876056354,
-        "decode_s": 18.65656071898775,
+        "judge_ms_mean": 261.40054011122834,
+        "track_ms_mean": 87.55341064741222,
+        "classify_ms_mean": 13.491425966938891,
+        "decode_s": 23.96366666098038,
         "people_per_frame_mean": 1.6205357142857142
       },
       "track_ids": 6
@@ -806,9 +814,9 @@
       },
       "roles": {
         "employee": {
-          "tp": 1,
+          "tp": 2,
           "fp": 0,
-          "fn": 1
+          "fn": 0
         },
         "customer": {
           "tp": 1,
@@ -816,9 +824,10 @@
           "fn": 0
         },
         "tracks": 3,
-        "correct": 2,
+        "correct": 3,
         "unknown": 0
       },
+      "role_truth": "persons",
       "tracking": {
         "tracks": 3,
         "minutes": 1.0,
@@ -838,14 +847,14 @@
         }
       ],
       "speed": {
-        "realtime_factor": 1.9460552309377617,
-        "frame_ms_p50": 67.34857699939312,
-        "frame_ms_p95": 160.93203800028277,
+        "realtime_factor": 1.8724955007540829,
+        "frame_ms_p50": 65.70925299820374,
+        "frame_ms_p95": 149.60796400191612,
         "judge_calls": 2,
-        "judge_ms_mean": 242.02316399987467,
-        "track_ms_mean": 67.91833775551925,
-        "classify_ms_mean": 12.642748521339549,
-        "decode_s": 15.454634758003522,
+        "judge_ms_mean": 237.46446399854904,
+        "track_ms_mean": 64.53627204454178,
+        "classify_ms_mean": 13.893995374613976,
+        "decode_s": 17.01970970394177,
         "people_per_frame_mean": 1.1722222222222223
       },
       "track_ids": 3
@@ -887,17 +896,18 @@
         "employee": {
           "tp": 1,
           "fp": 0,
-          "fn": 1
+          "fn": 0
         },
         "customer": {
-          "tp": 2,
-          "fp": 1,
-          "fn": 1
+          "tp": 4,
+          "fp": 0,
+          "fn": 0
         },
         "tracks": 5,
-        "correct": 3,
+        "correct": 5,
         "unknown": 0
       },
+      "role_truth": "persons",
       "tracking": {
         "tracks": 5,
         "minutes": 0.8794444444444445,
@@ -935,14 +945,14 @@
         }
       ],
       "speed": {
-        "realtime_factor": 1.9385757802487191,
-        "frame_ms_p50": 68.35432000025321,
-        "frame_ms_p95": 162.8455150002992,
+        "realtime_factor": 1.8559395773343326,
+        "frame_ms_p50": 65.15460800073924,
+        "frame_ms_p95": 146.52591000049142,
         "judge_calls": 4,
-        "judge_ms_mean": 212.40354099973047,
-        "track_ms_mean": 65.94492452202746,
-        "classify_ms_mean": 11.283480973377463,
-        "decode_s": 13.34565493998889,
+        "judge_ms_mean": 207.34515024923894,
+        "track_ms_mean": 64.94970028921075,
+        "classify_ms_mean": 11.634681791280551,
+        "decode_s": 14.657055329978903,
         "people_per_frame_mean": 1.4150943396226414
       },
       "track_ids": 5
@@ -982,19 +992,20 @@
       },
       "roles": {
         "employee": {
-          "tp": 0,
+          "tp": 1,
           "fp": 0,
-          "fn": 1
+          "fn": 0
         },
         "customer": {
-          "tp": 2,
+          "tp": 3,
           "fp": 0,
-          "fn": 1
+          "fn": 0
         },
         "tracks": 4,
-        "correct": 2,
+        "correct": 4,
         "unknown": 0
       },
+      "role_truth": "persons",
       "tracking": {
         "tracks": 4,
         "minutes": 1.0,
@@ -1014,14 +1025,14 @@
         }
       ],
       "speed": {
-        "realtime_factor": 1.9690445087842003,
-        "frame_ms_p50": 67.9230510004345,
-        "frame_ms_p95": 153.84528400045383,
+        "realtime_factor": 1.8785320832392267,
+        "frame_ms_p50": 65.92043199998443,
+        "frame_ms_p95": 151.96422699955292,
         "judge_calls": 2,
-        "judge_ms_mean": 259.1212904999338,
-        "track_ms_mean": 66.76509428340171,
-        "classify_ms_mean": 12.03194625000217,
-        "decode_s": 14.951749948987526,
+        "judge_ms_mean": 412.86933700030204,
+        "track_ms_mean": 63.60732779438776,
+        "classify_ms_mean": 13.371244984037116,
+        "decode_s": 16.34870602196679,
         "people_per_frame_mean": 1.3777777777777778
       },
       "track_ids": 4
