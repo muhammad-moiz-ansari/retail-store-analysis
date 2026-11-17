@@ -37,6 +37,10 @@ class InteractionConfig:
     floor_zones: dict[str, list[list[float]]] = field(default_factory=dict)
     zone_hold_seconds: float = 1.0  # a track must stay this long in a new zone before it counts as a move
     heatmap_grid: tuple[int, int] = (32, 18)  # cols, rows
+    # What kind of zone the whole view is right now (events.live_zones), shown on the running video and never stored:
+    # hot = customers only, gray = customers and employees, green = employees only, inactive = nobody.
+    live_zones: bool = True
+    view_hold_seconds: float = 1.5  # a new state must last this long before it shows
     # Entrance camera only: a vertical line at this normalised x; a track ending on the other side of it from where it
     # started is one footfall, "in" when it moved toward entrance_in_direction ("right" or "left").
     entrance_line: float | None = None

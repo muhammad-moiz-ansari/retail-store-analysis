@@ -126,6 +126,15 @@ def frame_check(frame, timestamp: float, reference: dict, config: InteractionCon
     return bool(small.mean() < config.dark_brightness or timestamp - reference["since"] >= config.frozen_seconds)
 
 
+def live_zones(config: InteractionConfig):
+    """The whole-view zone tracker for one run, or None when the camera config turns live_zones off."""
+    if not config.live_zones:
+        return None
+    from ..events.live_zones import LiveZone
+
+    return LiveZone(config.view_hold_seconds)
+
+
 def analyse(cap, fps: float, pipeline: InteractionPipeline, every: int = 1, track_every: int = 1, on_result=None, clock=None) -> dict:
     """Run the pipeline over a video; returns one record per interaction (its last snapshot) and per-frame latencies.
     Live feeds pass a wall-clock `clock`, since a camera's nominal FPS is not its delivered rate."""
@@ -174,6 +183,9 @@ def main() -> None:
     parser.add_argument("--stop-file", type=Path,
                         help="Live without a preview window (for the web UI): stop when this file appears; "
                              "the newest camera frame, with the latest detections drawn, is kept at <output>.preview.jpg")
+    parser.add_argument("--preview", action="store_true",
+                        help="Recorded video: keep the newest annotated frame at <output>.preview.jpg while it is processed "
+                             "(the web page plays it as the run goes)")
     parser.add_argument("--camera", help="Write the run into the event store (schema v1) as this camera, e.g. c2; "
                                           "its zone comes from the camera settings")
     parser.add_argument("--zone", help="zone_id override for --camera")
@@ -220,10 +232,14 @@ def main() -> None:
     fps, width, height = cap.get(cv2.CAP_PROP_FPS), int(cap.get(3)), int(cap.get(4))
     if args.live and args.square:  # the camera reports its stream size, not the cropped one
         width = height = min(width, height)
-    writer = cv2.VideoWriter(str(args.output), cv2.VideoWriter_fourcc(*"mp4v"), fps or 25, (width, height))
+    # A recording writes only every Nth frame, so the output runs at 1/N of the source rate and plays at real speed.
+    writer = cv2.VideoWriter(str(args.output), cv2.VideoWriter_fourcc(*"mp4v"),
+                             (fps or 25) / (1 if args.live else max(1, args.every)), (width, height))
     pipeline = InteractionPipeline(InteractionConfig.from_json(args.config, **({"role_model": args.roles} if args.roles else {}),
                                                                device=args.device, interaction_judge=args.judge, judge_device=args.judge_device))
     tracks, detections, reference = {}, [], {}
+    zones, view_file = live_zones(pipeline.config), args.output.with_suffix(".view.json")
+    timeline: list[dict] = []  # the view state over the run, as {"view", "from", "to"} spans in video seconds
 
     def record(frame_number, frame, result):
         bad = frame_check(frame, result["timestamp"], reference, pipeline.config)
@@ -239,8 +255,23 @@ def main() -> None:
                 segments[-1]["frames"] += 1
             else:
                 segments.append({"role": person["role"], "from": result["timestamp"], "to": result["timestamp"], "frames": 1})
+        if zones:  # live only: drawn on the output and the preview, not written to any file or the event store
+            result["zones"] = zones.update(result["people"], result["timestamp"], not bad)
+            now = round(result["timestamp"], 2)
+            if timeline and timeline[-1]["view"] == result["zones"]["view"]:
+                timeline[-1]["to"] = now
+            else:
+                if timeline:
+                    timeline[-1]["to"] = now
+                timeline.append({"view": result["zones"]["view"], "from": now, "to": now})
+            # The current view state for the web page: one small file, overwritten every frame (write, then rename).
+            view_file.with_suffix(".tmp").write_text(json.dumps({**result["zones"], "timestamp": now, "timeline": timeline}), encoding="utf-8")
+            os.replace(view_file.with_suffix(".tmp"), view_file)
         latest_result["result"] = result
         annotated = draw_result(frame, result)
+        if args.preview and not args.live:
+            cv2.imwrite(str(preview.with_suffix(".tmp.jpg")), annotated)
+            os.replace(preview.with_suffix(".tmp.jpg"), preview)
         if args.live:
             if not headless:
                 cv2.imshow("interaction (s: switch camera, q: quit)", annotated)

@@ -12,10 +12,11 @@ import sys
 import time
 import uuid
 from datetime import datetime
+from fractions import Fraction
 from typing import Annotated, Any
 
 from fastapi import Depends, FastAPI, Header, HTTPException, Query
-from fastapi.responses import StreamingResponse
+from fastapi.responses import FileResponse, StreamingResponse
 
 from .agents.ask_api import router as ask_router
 from .agents.advisory_api import router as advisory_router
@@ -166,8 +167,10 @@ async def start_interaction_run(body: dict) -> dict[str, str]:
     output = OUTPUT_DIR / "interaction-runs" / uuid.uuid4().hex / f"{video.stem}.mp4"
     output.parent.mkdir(parents=True, exist_ok=True)
     args = ["-m", "backend.interaction.cli", str(video), "--output", str(output), "--judge", judge,
-            "--every", str(every), "--track-every", str(track_every)] + event_args(body)
-    return start_job(args, lambda: interaction_result(output, str(video.relative_to(REPO_ROOT))))
+            "--every", str(every), "--track-every", str(track_every), "--preview"] + event_args(body)
+    started = start_job(args, lambda: interaction_result(output, str(video.relative_to(REPO_ROOT))))
+    _live_runs[started["id"]] = output  # so the page can watch it being processed and play it back afterwards
+    return started
 
 
 def event_args(body: dict) -> list[str]:
@@ -185,6 +188,8 @@ def event_args(body: dict) -> list[str]:
 def interaction_result(output, source: str) -> dict[str, Any]:
     people = json.loads(output.with_suffix(".people.json").read_text(encoding="utf-8"))
     return {
+        "view": view_state(output),
+        "playback": web_video(output) is not None,
         "video": source,
         "output": str(output.relative_to(REPO_ROOT)),
         "interactions": json.loads(output.with_suffix(".interactions.json").read_text(encoding="utf-8")),
@@ -192,7 +197,43 @@ def interaction_result(output, source: str) -> dict[str, Any]:
     }
 
 
-_live_runs: dict[str, Any] = {}  # job id -> output path of a live DroidCam run
+def view_state(output) -> dict[str, Any] | None:
+    """What kind of zone the camera view is right now: hot, gray, green or inactive (events.live_zones), from the run's view file.
+    None before the first processed frame or when the camera config turns live zones off."""
+    try:
+        zones = json.loads(output.with_suffix(".view.json").read_text(encoding="utf-8"))
+    except (FileNotFoundError, json.JSONDecodeError):  # no frame yet, or replaced mid-read
+        return None
+    return {"view": zones["view"], "employees": zones["employees"], "customers": zones["customers"],
+            "view_seconds": zones["view_seconds"], "timestamp": zones["timestamp"], "timeline": zones.get("timeline", [])}
+
+
+def web_video(output):
+    """An H.264 copy of the annotated video (<output>.web.mp4) for the page's player, or None when it cannot be made.
+    OpenCV writes MPEG-4 Part 2, which browsers do not play."""
+    target = output.with_suffix(".web.mp4")
+    try:
+        import av  # lazy: part of the CV requirements, absent from the API-only image
+
+        with av.open(str(output)) as source, av.open(str(target), "w", options={"movflags": "faststart"}) as copy:
+            video = source.streams.video[0]
+            rate = Fraction(video.average_rate).limit_denominator(1000)
+            stream = copy.add_stream("libx264", rate=rate)
+            stream.width, stream.height, stream.pix_fmt = video.width // 2 * 2, video.height // 2 * 2, "yuv420p"
+            stream.options = {"crf": "23", "preset": "veryfast"}
+            stream.codec_context.time_base = 1 / rate
+            for index, frame in enumerate(source.decode(video)):
+                frame = frame.reformat(width=stream.width, height=stream.height, format="yuv420p")
+                frame.pts, frame.time_base = index, 1 / rate  # one frame per tick, whatever the source container said
+                copy.mux(stream.encode(frame))
+            copy.mux(stream.encode())
+    except Exception:  # playback is a convenience; the run's results must not fail with it
+        target.unlink(missing_ok=True)
+        return None
+    return target
+
+
+_live_runs: dict[str, Any] = {}  # job id -> output path of a run the page can watch: live DroidCam or a recording
 
 
 @app.post("/interaction/live", dependencies=[Depends(require_manager)])
@@ -234,6 +275,21 @@ def live_output(job_id: str):
 def stop_live_run(job_id: str) -> dict[str, str]:
     live_output(job_id).with_suffix(".stop").touch()
     return {"id": job_id, "status": "stopping"}
+
+
+@app.get("/interaction/runs/{job_id}/video", dependencies=[Depends(require_manager)])
+def run_video(job_id: str) -> FileResponse:
+    """The finished run's annotated video in a browser-playable encoding (supports seeking by range)."""
+    video = live_output(job_id).with_suffix(".web.mp4")
+    if not video.exists():
+        raise HTTPException(status_code=404, detail="No playable video for this run")
+    return FileResponse(video, media_type="video/mp4", headers={"Cache-Control": "private, no-store"})
+
+
+@app.get("/interaction/live/{job_id}/view", dependencies=[Depends(require_manager)])
+def live_view(job_id: str) -> dict[str, Any]:
+    """The live run's current view state: {"view": "hot" | "gray" | "green" | "inactive" | "starting", ...} or {"view": None}."""
+    return view_state(live_output(job_id)) or {"view": None}
 
 
 @app.get("/interaction/live/{job_id}/stream", dependencies=[Depends(require_manager)])
