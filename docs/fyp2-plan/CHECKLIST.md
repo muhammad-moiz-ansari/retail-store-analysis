@@ -7,6 +7,10 @@ The [combined team plan](RetailPulse_FYP2_Implementation_Plan.md) governs curren
 Integration branch: `fyp-2` (cut from `stage`). Each item gets its own branch off `fyp-2`
 and merges back into `fyp-2` when its "Done when" in [FUTURE_WORK.md](FUTURE_WORK.md) holds.
 
+## Phase A–D (original October plan, superseded)
+
+The unchecked A1–A4, B1–B6 and C items below are the October branch plan. Their work moved to the Plan B, Moiz M-P/M-UI and MAP keys further down and to [PENDING.md](PENDING.md); the branches were never cut. Read the boxes as the old plan, not as open work.
+
 ## Phase A: FYP-2 core
 
 - [x] **A0** Model consolidation (COCO tracks, best.pt labels): `feature/fyp2-a0-model-consolidation`
@@ -60,7 +64,7 @@ Branch `feature/fyp2-b0-event-store` (B0 to B5 code). Contract details in [CONTR
 - [x] **B3** `python -m backend.interaction.refit`: leave-one-clip-out role accuracy hand-set 0.960 / 0.915 (11 clips / set B),
       fitted 1.000 / 1.000; fitted on the 11 clips scores set B 59/59. Fitted weights as a store config:
       `benchmarks/store_roles_fitted.json` (uncalibrated cameras only; reference factor absent from all clips).
-      Decision (Ruhab, 14 Nov): fitted weights ship; both benchmark specs name them per video. To do: rerun before the B6 freeze.
+      Decision (Ruhab, 14 Nov): fitted weights ship; both benchmark specs name them per video. Rerun with them on 17 Nov (see CV_EVAL_CHAPTER.md).
 - [x] **B4** CLI `--camera` writes runs to the store; `floor_zones` dwell/transitions/heatmaps, `entrance_line` footfall,
       `queue_zone` queue length/wait, frozen-or-dark frame check. Zone polygons not drawn by decision: interactions use
       person-to-person distance, so zone signals stay off until a camera has a `--config` with polygons.

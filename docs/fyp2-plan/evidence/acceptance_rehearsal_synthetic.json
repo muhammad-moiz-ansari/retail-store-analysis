@@ -2,7 +2,7 @@
   "kind": "acceptance_rehearsal",
   "synthetic": true,
   "not_acceptance": true,
-  "generated_at": "2026-11-14T08:54:04+00:00",
+  "generated_at": "2026-11-17T08:25:25+00:00",
   "fixture_run": "fixture-2026-11-03",
   "database_schema": "acceptance_synthetic",
   "policy": {
@@ -22,7 +22,7 @@
     "A6": "rehearsal_pass",
     "A7": "rehearsal_pass",
     "A8": "rehearsal_pass",
-    "A9": "rehearsal_fail",
+    "A9": "rehearsal_pass",
     "A10": "not_runnable"
   },
   "scenarios": [
@@ -114,7 +114,7 @@
         }
       ],
       "evidence": {},
-      "note": "Blocked: no map registration (MAP-2) exists to project events onto the supplied map; only the CellObservation contract is checked."
+      "note": "Blocked: the registration code exists (backend/events/spatial.py) but no store floor plan or camera calibration points are configured; only the CellObservation contract is checked."
     },
     {
       "id": "A3",
@@ -193,7 +193,7 @@
         {
           "check": "\"Summarise customers today\": caveats shown",
           "passed": true,
-          "detail": "4 limitations"
+          "detail": "5 limitations"
         },
         {
           "check": "\"Where are the staffing gaps?\": development_stub=false",
@@ -228,9 +228,10 @@
           ],
           "limitations": [
             "Footfall is stored net per-track crossing, not every entrance crossing; runs are not person-deduplicated",
-            "Observation has blocked, missing, or unknown-health intervals",
+            "Observation has blocked, missing, or unknown-health intervals: 14:00-14:40 UTC",
             "Approach reference is camera_first_seen, not store or zone entry",
-            "Stored unattended derivation does not filter interaction verdict; helped is not confirmed assistance"
+            "Stored unattended derivation may predate verdict filtering",
+            "Helped may include unverified interactions"
           ]
         },
         "Where are the staffing gaps?": {
@@ -242,9 +243,9 @@
           ],
           "limitations": [
             "Coverage is healthy observed employee-presence union, not roster availability or employee-seconds",
-            "z2: Observation has blocked, missing, or unknown-health intervals",
-            "z3: Observation has blocked, missing, or unknown-health intervals",
-            "z4: Observation has blocked, missing, or unknown-health intervals"
+            "z2: Observation has blocked, missing, or unknown-health intervals: 14:00-14:40 UTC",
+            "z3: Observation has blocked, missing, or unknown-health intervals: 14:00-14:40 UTC",
+            "z4: Observation has blocked, missing, or unknown-health intervals: 14:00-14:40 UTC"
           ]
         }
       },
@@ -269,7 +270,7 @@
               "event": "evt-159d6482cac1",
               "key": "key-159d6482cac1",
               "decision": "dispatched",
-              "task": "bd49586a40d7460b8e315829b09ea50f",
+              "task": "1311f154eb7742b0acaa50750de1661c",
               "employee": "u_rehearsal_floater",
               "reason_code": "handler_reported"
             },
@@ -277,7 +278,7 @@
               "event": "evt-004cfdbc80d4",
               "key": "key-004cfdbc80d4",
               "decision": "duplicate",
-              "task": "bd49586a40d7460b8e315829b09ea50f",
+              "task": "1311f154eb7742b0acaa50750de1661c",
               "employee": "u_rehearsal_floater",
               "reason_code": "handler_reported"
             }
@@ -296,7 +297,7 @@
           "passed": true,
           "detail": [
             {
-              "id": "bd49586a40d7460b8e315829b09ea50f",
+              "id": "1311f154eb7742b0acaa50750de1661c",
               "employee_id": "u_rehearsal_floater",
               "target_zone_id": "z3",
               "state": "delivered",
@@ -399,7 +400,7 @@
               "event": "evt-159d6482cac1",
               "key": "key-159d6482cac1",
               "decision": "duplicate",
-              "task": "bd49586a40d7460b8e315829b09ea50f",
+              "task": "1311f154eb7742b0acaa50750de1661c",
               "employee": "u_rehearsal_floater",
               "reason_code": "handler_reported"
             },
@@ -473,7 +474,7 @@
     {
       "id": "A9",
       "scenario": "Digest",
-      "status": "rehearsal_fail",
+      "status": "rehearsal_pass",
       "synthetic": true,
       "checks": [
         {
@@ -501,14 +502,14 @@
           "check": "a caveat says the camera was blocked",
           "passed": true,
           "detail": [
-            "Observation has blocked, missing, or unknown-health intervals",
-            "z2: Observation has blocked, missing, or unknown-health intervals",
-            "z3: Observation has blocked, missing, or unknown-health intervals"
+            "Observation has blocked, missing, or unknown-health intervals: 14:00-14:40 UTC",
+            "z2: Observation has blocked, missing, or unknown-health intervals: 14:00-14:40 UTC",
+            "z3: Observation has blocked, missing, or unknown-health intervals: 14:00-14:40 UTC"
           ]
         },
         {
           "check": "the caveat names the blind time (14:00-14:40 UTC)",
-          "passed": false,
+          "passed": true,
           "detail": "the coverage caveat is generic: it does not say when the camera was blind"
         }
       ],
@@ -554,7 +555,7 @@
           "",
           "Caveats",
           "- Footfall is stored net per-track crossing, not every entrance crossing; runs are not person-deduplicated",
-          "- Observation has blocked, missing, or unknown-health intervals",
+          "- Observation has blocked, missing, or unknown-health intervals: 14:00-14:40 UTC",
           "- Approach reference is camera_first_seen, not store or zone entry"
         ]
       },

@@ -576,6 +576,19 @@ Rules: unmapped or less than 80% observed cells are masked. A role is present at
 - Keep layers on separate toggles, each showing its unit and window.
 - Never sum layers into a density, and show the confirmed and unverified layers separately.
 
+### Live camera view state (FR-07; Saqib, 17 Nov 2026)
+
+`backend/events/live_zones.py` gives the whole view of one camera a live state on the Interactions page and in the annotated video. It is an **attention indicator per camera, not one of the four occupancy categories and not a fifth zone type**. It has no floor plan, is never written to the event store and is not read by the dashboard map, the agents or dispatch.
+
+| State | Rule | Nearest occupancy category (not equal) |
+|---|---|---|
+| hot | customers > `zone_hot_ratio` × employees (default 1.0), and not every customer attended | customer, or customer_employee when employees are outnumbered |
+| gray | customers with at least as many employees, **or** every customer in view had a confirmed or unverified interaction within `zone_served_seconds` (default 30) | customer_employee, or customer when all were attended |
+| green | employees only | employee |
+| inactive | nobody, on an observed frame | no_one |
+
+It differs from the four categories on purpose: hot and gray rank attention, so they use the ratio and confirmed interactions, while the categories record presence only and say nothing about help. Unknown roles settle nothing and frozen or dark frames are skipped, so a blind camera never reads as inactive, which matches the rule that unobserved is not No one. A state shows after it has held `hold_s` (1.5 s). Do not quote hot/gray as occupancy categories, and do not feed them to `OccupancyTracker`.
+
 ### Insight Narration digest (Moiz UI, Ruhab wording)
 
 `narration.build_digest(runs, title=..., decisions=()) -> Digest`. `Digest` has `title`, `window`, `provenance` (`synthetic` | `real` | `mixed` | `unknown`), `status` (`ok` | `partial` | `no_evidence`), `sections[{heading, lines[]}]`, `caveats[]` and `citation_count`. `Digest.text()` gives plain text. All runs must share one window. Every printed figure is a verified claim value, worded from fixed templates. Sections are Traffic, Dwell, Assistance, Waiting customers, Staff coverage, and Raised for staff follow-up (from emitted signal decisions).

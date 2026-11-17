@@ -121,8 +121,8 @@ def a2():
     unmapped = CellObservation(cell_id="outside", window=window(0, 1), mapped=False, observed_s=60, map_version="v0")
     checks.append(check("an unmapped cell is masked as 'unmapped'", classify(unmapped) == (None, "unmapped"), classify(unmapped)))
     return scenario("A2", "Events to map", checks, runnable=False,
-                    note="Blocked: no map registration (MAP-2) exists to project events onto the supplied map; only the "
-                         "CellObservation contract is checked.")
+                    note="Blocked: the registration code exists (backend/events/spatial.py) but no store floor plan or "
+                         "camera calibration points are configured; only the CellObservation contract is checked.")
 
 
 def a3(dsn):

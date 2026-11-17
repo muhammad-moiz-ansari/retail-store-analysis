@@ -11,11 +11,11 @@ The sections below are kept as written on 11 November. Checked against the code 
 | Line below | Now |
 |---|---|
 | B1: 9 vs 10 set-B pass-bys to audit | Audited; 9 is correct |
-| B3: refit commit and artifacts absent, adoption open | In the branch; fitted weights adopted (Ruhab, 14 Nov). Benchmark rerun with them still pending |
+| B3: refit commit and artifacts absent, adoption open | In the branch; fitted weights adopted (Ruhab, 14 Nov). Benchmarks rerun with them on 17 Nov (CV_EVAL_CHAPTER.md) |
 | B4: no map registration | `backend/events/spatial.py` registers a map and writes per-cell dwell; tested on synthetic geometry only |
 | B6: CV chapter is a skeleton with TODOs | `CV_EVAL_CHAPTER.md` is filled from the committed reports |
-| Moiz foundation: 139 tests | The fast CI job runs 254 |
-| Four categories "planned, not implemented" | Implemented: classifier, per-cell feed, dashboard payload |
+| Moiz foundation: 139 tests | The fast CI job runs 276 (17 Nov) |
+| Four categories "planned, not implemented" | Implemented: classifier, per-cell feed, dashboard payload. Separately, the Interactions page shows a per-camera hot/gray/green/inactive attention state (FR-07, 17 Nov); it is not a fifth category (CONTRACTS.md, "Live camera view state") |
 | TEAM-CI needs verification | All three jobs run in GitHub. Branch protection is still off |
 | M-WIDER-EVAL: 50+ golden questions | 51 questions; anomaly, next-day staffing with an approval record, and the digest are reachable as routes. No grounding ablation or provider cost measurement yet |
 

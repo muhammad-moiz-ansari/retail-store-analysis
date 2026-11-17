@@ -4,6 +4,16 @@
 
 The [combined team plan](RetailPulse_FYP2_Implementation_Plan.md) governs current work and ownership. Implement camera/CV first, then register the supplied map, then render live role occupancy and confirmed-interaction layers. Exactly four dynamic occupancy categories are allowed: **Customer, Employee, Customer–employee both, No one**. They are not fixed permitted-role polygons. Invalid/missing/unknown observation is separate quality metadata, never a fifth category or a false No one. Historical z1–z6, staff zones, queue/counter geometries and hot/gray terminology below are legacy technical references, not additional category requirements. No existing runtime/schema/fixture has been migrated by this documentation update.
 
+## 17 November 2026 (Saqib)
+
+| Commit | Change | Evidence |
+|---|---|---|
+| `257a83c`, `5f895f1` | Live view state of a camera on the Interactions page (`backend/events/live_zones.py`): hot, gray, green or inactive from the customer-to-employee ratio and whether every customer had a confirmed interaction in the last 30 s. A per-camera attention indicator, not an occupancy category (see CONTRACTS.md, "Live camera view state") | `test_live_zones.py`, `test_live_view.py` in the fast CI job |
+| `9ffd40f` | Sign-in page asks for Manager or Employee; a choice that does not match the stored role is refused | Frontend checks green |
+| `00023c4` | Benchmarks rerun with the fitted role weights | Reports `report_{11,set_b}_fitted_20261117.json` |
+| `7800e8f` | Settings page opens on an unseeded database | |
+| this commit | Benchmark role truth is matched to each run's own tracks through `persons.json`, so role accuracy no longer depends on the track IDs of one machine's run; both benchmarks rerun; dashboard QA Q1–Q4; acceptance rehearsal regenerated (A9 passes); doc corrections | 276 fast backend tests on local PostgreSQL; 40 frontend tests, typecheck and lint |
+
 ## 15 to 16 November 2026 (Saqib)
 
 | Commit | Change | Evidence |
@@ -87,7 +97,7 @@ None of this has run on real footage or a deployed backend.
 - **DOC-CONSOLIDATION (Moiz, docs only):** combined Saqib's Nov-10 snapshot with unchanged member/agent ownership and inspected local artifacts. Tracked/local combined plans match. No camera/map/category implementation, refit adoption, evaluation rerun or runtime migration is claimed.
 - **CV-LOCAL (Saqib):** existing event producers and local merged reports support 11 tuning clips/13 interactions (F1 0.867), 14 set-B clips/17 interactions (F1 0.462). Snapshot says 10 pass-bys; local set-B lists contain 9. Keep that discrepancy open.
 - **CV-REPORTED (Saqib evidence, Ruhab tuning ownership):** role/refit completion at d6783b2, 109/113 matched role tracks, candidate weights/random-six reports and clean speed are reported from Saqib's separate branch. The commit/module are absent here; no integration/adoption/reproduction is asserted.
-- **MAP-1 / MAP-2 / MAP-3:** planned and pending. Existing generic grids/polygons do not implement supplied-map registration, role-separated heatmaps or the four live category state machine.
+- **MAP-1 / MAP-2 / MAP-3 (11 Nov, superseded):** at the time planned and pending. Since then MAP-2 code (`1364810`) and Ruhab's four-category classifier exist; see CHECKLIST.md for current status.
 - **M-P1–M-P4:** implemented/offline verified foundation retained (last recorded 139 passed / 1 missing-real-output skip); do not infer real agents, durable operational delivery or full Query/UI completion.
 - **M-UI-VERCEL:** user confirmed cloud frontend deployment works after the local configuration fix. This is user-confirmed frontend success, not independent live backend/login or real-data verification.
 - Continue at camera/CV verification with Saqib, supplied-map alignment jointly, and dynamic semantics with Ruhab. Moiz can continue fixture-backed UI binding, wider tools and Query/golden-set evaluation in parallel. No member waits for all other work to finish.
