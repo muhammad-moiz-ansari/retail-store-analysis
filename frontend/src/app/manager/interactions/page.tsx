@@ -17,12 +17,13 @@ type Interaction = {
 
 type Person = { track_id: number; role: "employee" | "customer" | "unknown"; first_seen: number; last_seen: number; frames_observed: number; employee_score: number };
 
-// What kind of zone the whole camera view is, by who is in it (backend/events/live_zones.py).
+// What kind of zone the whole camera view is, by the ratio of customers to employees in it (backend/events/live_zones.py).
 type ZoneKind = "hot" | "gray" | "green" | "inactive" | "starting";
 type ViewState = {
   view: ZoneKind | null;
   employees?: number;
   customers?: number;
+  all_customers_attended?: boolean;
   view_seconds?: { hot: number; gray: number; green: number; inactive: number };
   timeline?: { view: ZoneKind; from: number; to: number }[];
 };
@@ -30,8 +31,8 @@ type ViewState = {
 type Result = { video: string; output: string; interactions: Interaction[]; people: Person[]; view?: ViewState | null; playback?: boolean };
 
 const viewLabels = {
-  hot: { title: "Hot zone", tone: "border-danger text-danger", bar: "bg-danger", detail: "Customers are here and no employee is with them." },
-  gray: { title: "Gray zone", tone: "border-text-muted text-text-muted", bar: "bg-text-muted", detail: "Customers and employees are here together." },
+  hot: { title: "Hot zone", tone: "border-danger text-danger", bar: "bg-danger", detail: "There are more customers than employees here, and not all of them have been attended." },
+  gray: { title: "Gray zone", tone: "border-text-muted text-text-muted", bar: "bg-text-muted", detail: "Customers are here with at least as many employees, or an employee has attended every customer in view." },
   green: { title: "Green zone", tone: "border-success text-success", bar: "bg-success", detail: "An employee is here and no customer." },
   inactive: { title: "Not active", tone: "border-border-soft text-text", bar: "bg-surface-alt", detail: "Nobody is in view." },
   starting: { title: "Starting", tone: "border-border-soft text-text-muted", bar: "bg-border-soft", detail: "Waiting for the first steady reading." },
@@ -43,7 +44,7 @@ function ViewBadge({ state }: { state: ViewState | null }) {
   return <div role="status" aria-live="polite" className={`mb-3 rounded-lg border-2 bg-surface p-3 ${label.tone}`}>
     <p className="font-heading text-lg font-bold">Zone: {label.title}</p>
     <p className="text-sm text-text">{label.detail}</p>
-    {state.employees !== undefined && <p className="mt-1 font-mono text-xs text-text-muted">{state.employees} employees and {state.customers ?? 0} customers in view.</p>}
+    {state.employees !== undefined && <p className="mt-1 font-mono text-xs text-text-muted">{state.employees} employees and {state.customers ?? 0} customers in view{state.all_customers_attended ? "; every customer has been attended" : ""}.</p>}
   </div>;
 }
 

@@ -13,7 +13,7 @@ ROLE_COLORS = {"employee": (0, 180, 255), "customer": (255, 180, 0), "unknown": 
 
 
 # BGR colour and caption of each whole-view zone state (events.live_zones).
-ZONE_STYLES = {"hot": ((0, 0, 255), "HOT ZONE: customers only"), "gray": ((150, 150, 150), "GRAY ZONE: customers and staff"),
+ZONE_STYLES = {"hot": ((0, 0, 255), "HOT ZONE: more customers than staff"), "gray": ((150, 150, 150), "GRAY ZONE: customers covered by staff"),
                "green": ((0, 170, 0), "GREEN ZONE: staff only"), "inactive": ((60, 60, 60), "NOT ACTIVE: nobody in view"),
                "starting": ((60, 60, 60), "STARTING")}
 

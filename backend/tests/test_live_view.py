@@ -17,7 +17,7 @@ def test_view_state_reads_the_runs_view_file_and_tolerates_its_absence(tmp_path,
     for t in range(4):
         state = zone.update([{"role": "customer"}, {"role": "employee"}], float(t))
     output.with_suffix(".view.json").write_text(json.dumps({**state, "timestamp": 3.0, "timeline": [{"view": "gray", "from": 1.0, "to": 3.0}]}), encoding="utf-8")
-    assert app_module.live_view("job1") == {"view": "gray", "employees": 1, "customers": 1, "timestamp": 3.0,
+    assert app_module.live_view("job1") == {"view": "gray", "hot_ratio": 1.0, "served_seconds": 30.0, "all_customers_attended": False, "employees": 1, "customers": 1, "timestamp": 3.0,
                                             "view_seconds": {"hot": 0.0, "gray": 3.0, "green": 0.0, "inactive": 0.0},
                                             "timeline": [{"view": "gray", "from": 1.0, "to": 3.0}]}
     output.with_suffix(".view.json").write_text("{", encoding="utf-8")  # caught mid-replace

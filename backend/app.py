@@ -204,7 +204,8 @@ def view_state(output) -> dict[str, Any] | None:
         zones = json.loads(output.with_suffix(".view.json").read_text(encoding="utf-8"))
     except (FileNotFoundError, json.JSONDecodeError):  # no frame yet, or replaced mid-read
         return None
-    return {"view": zones["view"], "employees": zones["employees"], "customers": zones["customers"],
+    return {"view": zones["view"], "hot_ratio": zones.get("hot_ratio", 1.0), "served_seconds": zones.get("served_seconds"),
+            "all_customers_attended": zones.get("all_customers_attended", False), "employees": zones["employees"], "customers": zones["customers"],
             "view_seconds": zones["view_seconds"], "timestamp": zones["timestamp"], "timeline": zones.get("timeline", [])}
 
 

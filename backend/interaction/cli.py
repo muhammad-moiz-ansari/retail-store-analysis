@@ -132,7 +132,7 @@ def live_zones(config: InteractionConfig):
         return None
     from ..events.live_zones import LiveZone
 
-    return LiveZone(config.view_hold_seconds)
+    return LiveZone(config.view_hold_seconds, hot_ratio=config.zone_hot_ratio, served_s=config.zone_served_seconds)
 
 
 def analyse(cap, fps: float, pipeline: InteractionPipeline, every: int = 1, track_every: int = 1, on_result=None, clock=None) -> dict:
@@ -256,7 +256,7 @@ def main() -> None:
             else:
                 segments.append({"role": person["role"], "from": result["timestamp"], "to": result["timestamp"], "frames": 1})
         if zones:  # live only: drawn on the output and the preview, not written to any file or the event store
-            result["zones"] = zones.update(result["people"], result["timestamp"], not bad)
+            result["zones"] = zones.update(result["people"], result["timestamp"], not bad, result["interactions"])
             now = round(result["timestamp"], 2)
             if timeline and timeline[-1]["view"] == result["zones"]["view"]:
                 timeline[-1]["to"] = now

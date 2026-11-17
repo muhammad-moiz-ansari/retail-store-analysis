@@ -38,9 +38,13 @@ class InteractionConfig:
     zone_hold_seconds: float = 1.0  # a track must stay this long in a new zone before it counts as a move
     heatmap_grid: tuple[int, int] = (32, 18)  # cols, rows
     # What kind of zone the whole view is right now (events.live_zones), shown on the running video and never stored:
-    # hot = customers only, gray = customers and employees, green = employees only, inactive = nobody.
+    # hot = more customers than employees, gray = customers with at least as many employees, green = employees only,
+    # inactive = nobody.
     live_zones: bool = True
     view_hold_seconds: float = 1.5  # a new state must last this long before it shows
+    zone_hot_ratio: float = 1.0  # customers one employee covers; the zone is hot when customers exceed this x employees
+    # When an employee has interacted with every customer in view within this many seconds, the zone is gray whatever the ratio.
+    zone_served_seconds: float = 30.0
     # Entrance camera only: a vertical line at this normalised x; a track ending on the other side of it from where it
     # started is one footfall, "in" when it moved toward entrance_in_direction ("right" or "left").
     entrance_line: float | None = None
