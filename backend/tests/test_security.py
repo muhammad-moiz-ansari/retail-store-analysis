@@ -95,3 +95,40 @@ def test_cv_jobs_are_capped_and_old_ones_expire(monkeypatch):
     monkeypatch.setattr(app_module.asyncio, "get_running_loop", lambda: type("L", (), {"run_in_executor": lambda *a: None})())
     app_module.start_job(["-c", "pass"], lambda: None)
     assert sum(j["status"] == "done" for j in jobs.values()) == app_module.MAX_KEPT_JOBS
+
+
+def test_camera_routes_need_the_secret_and_a_manager():
+    client = TestClient(app_module.app)
+    employee = INTERNAL | {"x-retailpulse-role": "Employee"}
+    manager = INTERNAL | {"x-retailpulse-role": "Manager"}
+    assert client.put("/camera/people/p1/role", json={"role": "employee"}).status_code == 401
+    assert client.put("/camera/people/p1/role", headers=employee, json={"role": "employee"}).status_code == 403
+    assert client.post("/camera/handoff", headers=employee, json={}).status_code == 403
+    assert client.get("/camera/people", headers=employee).status_code == 403
+    # The manager passes the guard; the request then fails validation, not authorization.
+    assert client.post("/camera/handoff", headers=manager, json={}).status_code == 400
+
+
+def test_camera_handoff_jobs_are_capped(monkeypatch):
+    from backend import camera_service
+    from backend.job_limits import admit_job
+
+    jobs = {"r1": {"status": "running"}, "r2": {"status": "queued"}}
+    monkeypatch.setattr(camera_service, "_jobs", jobs)
+    with pytest.raises(HTTPException) as busy:
+        admit_job(camera_service._jobs)
+    assert busy.value.status_code == 429
+    finished = {f"d{i}": {"status": "completed"} for i in range(5)}
+    admit_job(finished, max_kept=2)
+    assert list(finished) == ["d3", "d4"]
+
+
+def test_health_reports_an_unreachable_database(monkeypatch):
+    monkeypatch.setenv("DATABASE_URL", "postgresql://nobody@127.0.0.1:1/none")
+    response = TestClient(app_module.app).get("/health")
+    assert response.status_code == 503 and response.json() == {"ok": False, "database": False}
+
+
+def test_health_reaches_the_database(db):
+    response = TestClient(app_module.app).get("/health")
+    assert response.status_code == 200 and response.json() == {"ok": True, "database": True}

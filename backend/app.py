@@ -4,8 +4,10 @@ from __future__ import annotations
 
 import asyncio
 import json
+import logging
 import os
 import re
+import psycopg
 from psycopg import IntegrityError
 import subprocess
 import sys
@@ -16,7 +18,7 @@ from fractions import Fraction
 from typing import Annotated, Any
 
 from fastapi import Depends, FastAPI, Header, HTTPException, Query
-from fastapi.responses import FileResponse, StreamingResponse
+from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 
 from .agents.ask_api import router as ask_router
 from .agents.advisory_api import router as advisory_router
@@ -24,7 +26,9 @@ from .agents.dashboard_api import router as dashboard_router
 
 from .camera_service import REPO_ROOT, resolve_video
 from .camera_service import app as camera_app
+from .database import DatabaseNotConfigured
 from .dispatch import create_task_for_employee, handle_event, select_dispatch_employee
+from .job_limits import MAX_KEPT_JOBS, MAX_RUNNING_JOBS, admit_job  # noqa: F401 (constants re-exported for tests)
 from .runtime_secrets import internal_secret, matches
 from .store_core import (
     accept_invitation,
@@ -121,14 +125,8 @@ def run_script(job_id: str, args: list[str], read_result) -> None:
         job.update(status="failed", error=str(exc))
 
 
-MAX_RUNNING_JOBS, MAX_KEPT_JOBS = 2, 50  # S8
-
-
 def start_job(args: list[str], read_result) -> dict[str, str]:
-    if sum(job["status"] in {"queued", "running"} for job in _jobs.values()) >= MAX_RUNNING_JOBS:
-        raise HTTPException(status_code=429, detail=f"{MAX_RUNNING_JOBS} CV jobs are already running; wait for one to finish")
-    for old in [k for k, job in _jobs.items() if job["status"] not in {"queued", "running"}][:-MAX_KEPT_JOBS or None]:
-        del _jobs[old]  # dicts keep insertion order, so this drops the oldest finished jobs
+    admit_job(_jobs)  # S8
     job_id = uuid.uuid4().hex
     _jobs[job_id] = {"id": job_id, "status": "queued", "logs": [], "result": None}
     asyncio.get_running_loop().run_in_executor(None, run_script, job_id, args, read_result)
@@ -336,8 +334,15 @@ def job_status(job_id: str) -> dict[str, Any]:
 
 
 @app.get("/health")
-def health() -> dict[str, bool]:
-    return {"ok": True}
+def health() -> JSONResponse:
+    """Liveness plus a database round trip; the error text stays in the server log, not the response."""
+    try:
+        with connect() as conn:
+            conn.execute("SELECT 1").fetchone()
+    except (psycopg.Error, DatabaseNotConfigured):
+        logging.getLogger(__name__).exception("health check: database unreachable")
+        return JSONResponse({"ok": False, "database": False}, status_code=503)
+    return JSONResponse({"ok": True, "database": True})
 
 
 MIN_PASSWORD_LENGTH = 8  # S6

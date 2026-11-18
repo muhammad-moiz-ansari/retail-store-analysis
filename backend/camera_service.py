@@ -2,7 +2,8 @@
 
 The service deliberately keeps video/model work out of module import time so
 health checks and API discovery work on machines without OpenCV installed.
-It is intended for localhost use behind the Next.js manager session.
+Every route except /health needs the internal secret and a Manager role header,
+which the Next.js proxy sets from the verified session.
 """
 
 from __future__ import annotations
@@ -22,15 +23,19 @@ try:  # package invocation: python -m backend.camera_handoff
     from .interaction.identity import IdentityRegistry
     from .interaction.schemas import CustomerEntryRule, RoleAssignmentRequest
     from .interaction.storage import Store
+    from .job_limits import admit_job
+    from .runtime_secrets import internal_secret, matches
 except ImportError:  # script/test invocation from backend/
     from camera_handoff import run_pipeline
     from interaction.identity import IdentityRegistry
     from interaction.schemas import CustomerEntryRule, RoleAssignmentRequest
     from interaction.storage import Store
+    from job_limits import admit_job
+    from runtime_secrets import internal_secret, matches
 
 
 # Same secret the Next.js /api/backend proxy sends to the unified backend that mounts this app.
-INTERNAL_SECRET = os.getenv("RETAILPULSE_INTERNAL_SECRET", os.getenv("POS_INTERNAL_SECRET", "local-dev-pos-secret"))
+INTERNAL_SECRET = internal_secret("RETAILPULSE_INTERNAL_SECRET", "POS_INTERNAL_SECRET")
 REPO_ROOT = Path(__file__).resolve().parent.parent
 MODEL_PATH = Path(os.getenv("CAMERA_MODEL_PATH", str(REPO_ROOT / "backend" / "yolov8n.pt")))
 app = FastAPI(title="RetailPulse Camera Analytics", version="0.1.0")
@@ -45,8 +50,17 @@ def validated_store_id(value: Any) -> str:
 
 
 def require_internal(x_retailpulse_internal_secret: str | None = Header(default=None)) -> None:
-    if x_retailpulse_internal_secret != INTERNAL_SECRET:
+    if not matches(x_retailpulse_internal_secret, INTERNAL_SECRET):
         raise HTTPException(status_code=401, detail="Unauthorized camera service request")
+
+
+def require_manager(
+    _: None = Depends(require_internal),
+    x_retailpulse_role: str | None = Header(default=None),
+) -> None:
+    """Mirrors app.require_manager; it can't be imported from app.py because app.py imports this module."""
+    if x_retailpulse_role != "Manager":
+        raise HTTPException(status_code=403, detail="Manager role required")
 
 
 def resolve_video(value: Any, label: str) -> Path:
@@ -108,7 +122,7 @@ async def execute(
         _jobs[job_id].update(status="failed", error=str(exc))
 
 
-@app.post("/handoff", dependencies=[Depends(require_internal)])
+@app.post("/handoff", dependencies=[Depends(require_manager)])
 async def start_handoff(body: dict[str, Any]) -> dict[str, Any]:
     cam1 = resolve_video(body.get("cam1"), "cam1")
     cam2 = resolve_video(body.get("cam2"), "cam2")
@@ -137,25 +151,26 @@ async def start_handoff(body: dict[str, Any]) -> dict[str, Any]:
         ]
     except (TypeError, ValidationError) as exc:
         raise HTTPException(status_code=400, detail=f"Invalid customer_entry_rules: {exc}") from exc
+    admit_job(_jobs)  # S8
     job_id = str(uuid.uuid4())
     _jobs[job_id] = {"id": job_id, "store_id": store_id, "status": "queued", "logs": [], "result": None}
     asyncio.create_task(execute(job_id, body, cam1, cam2, store_id, customer_entry_rules))
     return {"id": job_id, "status": "queued"}
 
 
-@app.get("/jobs/{job_id}", dependencies=[Depends(require_internal)])
+@app.get("/jobs/{job_id}", dependencies=[Depends(require_manager)])
 def job(job_id: str) -> dict[str, Any]:
     if job_id not in _jobs:
         raise HTTPException(status_code=404, detail="Camera job not found")
     return _jobs[job_id]
 
 
-@app.get("/people", dependencies=[Depends(require_internal)])
+@app.get("/people", dependencies=[Depends(require_manager)])
 def people(store_id: str = "default") -> list[dict[str, Any]]:
     return _identity_registry.list_people(validated_store_id(store_id))
 
 
-@app.get("/people/{global_person_id}", dependencies=[Depends(require_internal)])
+@app.get("/people/{global_person_id}", dependencies=[Depends(require_manager)])
 def person(global_person_id: str, store_id: str = "default") -> dict[str, Any]:
     try:
         return _identity_registry.get_person(validated_store_id(store_id), global_person_id)
@@ -163,7 +178,7 @@ def person(global_person_id: str, store_id: str = "default") -> dict[str, Any]:
         raise HTTPException(status_code=404, detail="Global person not found") from exc
 
 
-@app.put("/people/{global_person_id}/role", dependencies=[Depends(require_internal)])
+@app.put("/people/{global_person_id}/role", dependencies=[Depends(require_manager)])
 def assign_person_role(
     global_person_id: str,
     body: RoleAssignmentRequest,

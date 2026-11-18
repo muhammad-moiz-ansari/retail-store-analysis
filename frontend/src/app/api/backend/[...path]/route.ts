@@ -2,7 +2,7 @@ import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 import { SESSION_COOKIE, verifySession } from "@/lib/session-auth";
 import { resolveAuthConfig } from "@/lib/auth-config";
-import { backendHeaders } from "@/lib/backend-identity";
+import { backendHeaders, checkForwardablePath } from "@/lib/backend-identity";
 
 const SERVICE_URL = process.env.RETAILPULSE_SERVICE_URL || "http://127.0.0.1:8011";
 
@@ -12,6 +12,10 @@ type Ctx = {
 
 async function proxy(request: NextRequest, ctx: Ctx) {
   const { path } = await ctx.params;
+  const pathCheck = checkForwardablePath(path);
+  if (pathCheck !== "ok") {
+    return NextResponse.json({ error: "Unknown backend route" }, { status: pathCheck === "bad" ? 400 : 404 });
+  }
   const protectedAnalytics = path[0] === "analytics" || path[0] === "agents";
   const auth = resolveAuthConfig(process.env, protectedAnalytics);
   if (!auth) {

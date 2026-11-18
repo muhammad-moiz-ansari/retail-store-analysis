@@ -33,6 +33,15 @@ Tests: `backend/tests/test_security.py`.
 - **S1 implemented locally.** Session signing and verification refuse missing credentials and known demo values. Next.js guards session reads, login, signup and every backend proxy verb before reading a cookie or forwarding a request. Defaults require both Next.js development mode and `RETAILPULSE_DEV_DEFAULTS=1`; analytics requires explicitly configured secrets in every mode. Logout can still clear an old cookie during misconfiguration.
 - **Still open.** Verify deployment settings and connectivity. The authenticated Ask endpoint limits each manager to ten requests per minute per process. Multi-worker deployments may enable the optional shared PostgreSQL budget after applying its schema. Per-IP login limits need a trusted deployment client address. Service credentials remain server-side and should be rotated per deployment.
 
+### Fix status (production audit, Saqib, 17 Nov 2026)
+
+Tests: `backend/tests/test_security.py`, `frontend/src/lib/backend-identity.test.ts`.
+- **Camera service (new finding).** The `/camera` sub-app checked only the internal secret, and the proxy adds that secret for every session. An Employee could therefore relabel people and start handoff jobs. Every camera route except `/health` now needs the Manager role (403 otherwise).
+- **S1/S2 extended to the camera service.** It reads the secret through `runtime_secrets.internal_secret` and compares it in constant time.
+- **S8 extended to handoff jobs.** `backend/job_limits.admit_job` is shared by `app.start_job` and `/camera/handoff`. Each process has its own in-memory limit of 2 running jobs and keeps the last 50 finished jobs.
+- **Health check.** `/health` now runs `SELECT 1` and returns 503 `{"ok": false, "database": false}` when the database can't be reached. The error itself only goes to the server log.
+- **Proxy path allow-list (Moiz's file).** `/api/backend/[...path]` returns 400 for empty, `.`, `..` or separator segments, and 404 for a first segment the backend doesn't serve.
+
 ## Privacy notes for the report and demo
 
 - No agent names or ranks individual employees; the router refuses `rank`, `identify` and `identity` questions (`routing.py`).
