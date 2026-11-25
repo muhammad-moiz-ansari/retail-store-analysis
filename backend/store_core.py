@@ -54,7 +54,8 @@ DEMO_ACCOUNTS = (
 
 
 def is_local_database(conn: Connection) -> bool:
-    return conn.info.host in {"localhost", "127.0.0.1", "::1"}
+    host = conn.info.host
+    return host in {"localhost", "127.0.0.1", "::1"} or host.startswith("/")  # a Unix socket is on this machine
 
 
 def reset_local_demo_passwords(conn: Connection) -> None:

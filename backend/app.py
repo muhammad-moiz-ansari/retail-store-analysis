@@ -24,6 +24,7 @@ from .agents.ask_api import router as ask_router
 from .agents.advisory_api import router as advisory_router
 from .agents.dashboard_api import router as dashboard_router
 
+from .aisle_relay import build_router
 from .camera_service import REPO_ROOT, resolve_video
 from .camera_service import app as camera_app
 from .database import DatabaseNotConfigured
@@ -100,6 +101,10 @@ def store_context(conn) -> dict[str, Any]:
 
 OUTPUT_DIR = REPO_ROOT / "backend" / "output"
 _jobs: dict[str, dict[str, Any]] = {}
+
+# Aisle relay (two aisle cameras in one split-screen video -> one YOLO pass -> real dispatch); manager-only routes
+# under /aisle-relay. A live run takes a CV job slot while it analyses.
+app.include_router(build_router(require_manager, connect, _jobs, OUTPUT_DIR))
 
 
 def run_script(job_id: str, args: list[str], read_result) -> None:
@@ -724,12 +729,47 @@ def task_voice(task_id: str, current: Annotated[dict[str, str | None], Depends(a
     return {"script": script, "audio": synthesize_voice(script["script"])}
 
 
-@app.get("/tasks/events", dependencies=[Depends(require_employee_or_manager)])
-def task_events() -> StreamingResponse:
-    async def stream():
-        yield "event: ready\ndata: {\"ok\": true}\n\n"
+TASK_STREAM_POLL_S = 1.0
+TASK_STREAM_MAX_S = 300  # the browser's EventSource reconnects by itself; a bounded stream frees its connection
 
-    return StreamingResponse(stream(), media_type="text/event-stream")
+
+def task_fingerprint(conn, current: dict[str, str | None]) -> str:
+    """Changes whenever a task this user can see is created or changes state."""
+    where, params = ("", ()) if current.get("role") == "Manager" else ("WHERE employee_id = %s", (current.get("user_id"),))
+    row = conn.execute(f"SELECT count(*) AS n, max(updated_at) AS last FROM tasks {where}", params).fetchone()
+    return f"{row['n']}:{row['last']}"
+
+
+@app.get("/tasks/events", dependencies=[Depends(require_employee_or_manager)])
+def task_events(current: Annotated[dict[str, str | None], Depends(actor)]) -> StreamingResponse:
+    """Server-sent events: `ready` once, then a `message` each time this user's tasks change (the pages reload on it).
+    One database connection per open stream, polled once a second, closed after TASK_STREAM_MAX_S."""
+    async def stream():
+        yield "retry: 1000\nevent: ready\ndata: {\"ok\": true}\n\n"
+        try:
+            conn = await asyncio.to_thread(connect)
+        except (psycopg.Error, DatabaseNotConfigured):
+            return
+        try:
+            await asyncio.to_thread(conn.set_autocommit, True)
+            last = await asyncio.to_thread(task_fingerprint, conn, current)
+            started = idle = time.monotonic()
+            while time.monotonic() - started < TASK_STREAM_MAX_S:
+                await asyncio.sleep(TASK_STREAM_POLL_S)
+                now = await asyncio.to_thread(task_fingerprint, conn, current)
+                if now != last:
+                    last, idle = now, time.monotonic()
+                    yield f"data: {json.dumps({'changed': True})}\n\n"
+                elif time.monotonic() - idle > 15:
+                    idle = time.monotonic()
+                    yield ": keepalive\n\n"
+        except psycopg.Error:
+            return
+        finally:
+            await asyncio.to_thread(conn.close)
+
+    return StreamingResponse(stream(), media_type="text/event-stream",
+                             headers={"Cache-Control": "no-store", "X-Accel-Buffering": "no"})
 
 
 WORKER_RECENT_S = 900  # a worker counts as active when it wrote something in the last 15 minutes

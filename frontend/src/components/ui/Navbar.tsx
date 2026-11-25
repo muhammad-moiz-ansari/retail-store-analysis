@@ -42,6 +42,7 @@ const AUTHENTICATED_NAV_LINKS: NavLink[] = [
   { label: "Employee Info", href: "/manager/employees" },
   { label: "Spatial Analytics", href: "/manager/spatial-analytics" },
   { label: "Interactions", href: "/manager/interactions" },
+  { label: "Aisle Relay", href: "/manager/aisle-relay" },
   { label: "Camera Handoff", href: "/manager/camera-handoff" },
   { label: "Compare People", href: "/manager/compare-people" },
   { label: "Voice Agent", href: "/manager/voice-agent" },

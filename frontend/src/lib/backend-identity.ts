@@ -13,9 +13,9 @@ export function backendHeaders(incoming: Headers, session: {
   return headers;
 }
 
-/** First path segments the FastAPI backend serves (app.py routes, the /agents and /analytics routers, the /camera mount). */
+/** First path segments the FastAPI backend serves (app.py routes, the /agents, /analytics and /aisle-relay routers, the /camera mount). */
 export const FORWARDABLE_ROOTS = new Set([
-  "accounts", "agents", "alerts", "analytics", "analyze-frame", "auth", "camera", "compare-people",
+  "accounts", "agents", "aisle-relay", "alerts", "analytics", "analyze-frame", "auth", "camera", "compare-people",
   "interaction", "jobs", "orchestrator", "settings", "system-status", "tasks", "voice-agent",
 ]);
 

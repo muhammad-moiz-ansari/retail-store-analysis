@@ -45,6 +45,7 @@ type Task = {
   instruction: string;
   state: "pending" | "delivered" | "acknowledged" | "in_progress" | "completed" | "declined" | "expired" | "cancelled";
   created_at: string;
+  updated_at?: string;
   target_zone_id?: string | null;
   evidence?: { zoneName?: string; reason?: string; alertTitle?: string } | null;
   due_at?: string;
@@ -59,6 +60,32 @@ export default function EmployeeHomePage() {
   const [notice, setNotice] = useState<{ text: string; error: boolean }>();
   const submitting = useRef(false);
   const revision = useRef({ revision: 0 });
+  const knownTasks = useRef<Set<string> | null>(null);
+  const [incoming, setIncoming] = useState<Task | null>(null);
+
+  // A task that appears after the first load is a new assignment pushed by dispatch: show it prominently.
+  const announceNew = useCallback((list: Task[]) => {
+    const seen = knownTasks.current;
+    knownTasks.current = new Set(list.map((task) => task.id));
+    if (!seen) return;
+    const fresh = list.find((task) => !seen.has(task.id) && task.state === "delivered");
+    if (!fresh) return;
+    setIncoming(fresh);
+    try {
+      navigator.vibrate?.([160, 80, 160]);
+      const audio = new AudioContext();
+      const tone = audio.createOscillator();
+      const gain = audio.createGain();
+      tone.frequency.value = 880;
+      gain.gain.setValueAtTime(0.15, audio.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audio.currentTime + 0.5);
+      tone.connect(gain).connect(audio.destination);
+      tone.start();
+      tone.stop(audio.currentTime + 0.5);
+    } catch {
+      // Sound and vibration are extras; the banner is the notification.
+    }
+  }, []);
 
   const load = useCallback(async () => {
     const request = ++revision.current.revision;
@@ -69,13 +96,14 @@ export default function EmployeeHomePage() {
       if (request === revision.current.revision) {
         setTasks(data.tasks);
         setLoadError(false);
+        announceNew(data.tasks);
       }
     } catch {
       if (request === revision.current.revision) setLoadError(true);
     } finally {
       if (request === revision.current.revision) setLoading(false);
     }
-  }, []);
+  }, [announceNew]);
 
   useEffect(() => {
     const requests = revision.current;
@@ -127,6 +155,11 @@ export default function EmployeeHomePage() {
   }
 
   const activeTasks = tasks.filter((task) => ["pending", "delivered", "acknowledged", "in_progress"].includes(task.state));
+  // The newest task, if it closed in the last 10 minutes: tells the employee the assignment is done (the camera may
+  // have closed it on arrival) instead of it silently disappearing from the list.
+  const [latest] = tasks;
+  const justCompleted = !activeTasks.length && latest?.state === "completed" && latest.updated_at
+    && Date.now() - new Date(latest.updated_at).getTime() < 10 * 60 * 1000 ? latest : null;
 
   return (
     <ManagerPage>
@@ -135,8 +168,27 @@ export default function EmployeeHomePage() {
         </ManagerHeader>
 
         <div>
+          {incoming && tasks.some((task) => task.id === incoming.id && task.state === "delivered") && (
+            <div role="alert" className="mb-4 rounded-2xl border-2 border-attention bg-attention/10 p-4">
+              <p className="font-mono text-[11px] font-semibold uppercase tracking-wider text-attention">New assignment</p>
+              <p className="mt-1 font-heading text-2xl font-bold">Go to {incoming.evidence?.zoneName || incoming.target_zone_id || "the requested aisle"}</p>
+              <p className="mt-1 text-sm">{incoming.instruction}</p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <RetroButton type="button" variant="primary" className="min-h-11" disabled={pendingTask !== null}
+                  onClick={() => { void transitionTask(incoming.id, "acknowledged"); setIncoming(null); }}>
+                  On my way
+                </RetroButton>
+                <RetroButton type="button" variant="secondary" className="min-h-11" onClick={() => playInstruction(incoming.id)}>Play</RetroButton>
+              </div>
+            </div>
+          )}
           <ManagerPanel title="Current assignments">
-            {notice && <p role={notice.error ? "alert" : "status"} className="mb-3 rounded-lg bg-surface-alt p-3 text-sm">{notice.text}</p>}
+            {justCompleted ? (
+              <p role="status" className="mb-3 rounded-lg border border-success/40 bg-success/15 p-3 text-sm text-success">
+                Done: {justCompleted.evidence?.zoneName || justCompleted.target_zone_id || "the requested aisle"} is covered. The assignment
+                closed at {new Date(justCompleted.updated_at!).toLocaleTimeString()}.
+              </p>
+            ) : notice && <p role={notice.error ? "alert" : "status"} className="mb-3 rounded-lg bg-surface-alt p-3 text-sm">{notice.text}</p>}
             {loadError && <div className="mb-3 flex flex-wrap items-center gap-3">
               <p role="status" className="text-sm text-danger">Assignments could not be refreshed.</p>
               <RetroButton type="button" variant="secondary" onClick={() => void load()}>Retry</RetroButton>

@@ -14,7 +14,7 @@ import { ManagerMobileMenu } from "./ManagerMobileMenu";
 const managerLinks = [
   ["/manager/home", "Overview"], ["/manager/customers", "Customers"],
   ["/manager/employees", "Employees"], ["/manager/spatial-analytics", "Spatial analytics"],
-  ["/manager/interactions", "Interactions"], ["/manager/alerts", "Alerts"],
+  ["/manager/interactions", "Interactions"], ["/manager/alerts", "Alerts"], ["/manager/aisle-relay", "Aisle relay"],
   ["/manager/camera-handoff", "Camera handoff"], ["/manager/compare-people", "Compare people"],
   ["/manager/voice-agent", "Voice agent"], ["/manager/settings", "Store settings"],
 ];
