@@ -23,13 +23,15 @@ class IdempotencyConflict(ValueError):
     """The same idempotency key arrived with a different event: reconcile, never dispatch twice."""
 
 
-def select_dispatch_employee(conn, target_zone_id: str | None, source_zone_id: str | None = None):
+def select_dispatch_employee(conn, target_zone_id: str | None, source_zone_id: str | None = None,
+                             in_interaction_ids: tuple[str, ...] = ()):
     """First eligible employee: active, rostered and available, no open task, and taking them does not drop
     their own rostered zone below its min_staff (unless that zone is the target). Ranked: staff of the target zone, then
     floaters, then the zone with the most spare staff above its minimum. A caller that saw where the spare staff are (the aisle
     relay's cameras) passes source_zone_id; employees rostered there come straight after the target zone's own staff.
-    Adjacency and "mid-interaction" are not inputs yet:
-    there is no store map (MAP-2) and no link from CV tracks to employee accounts.
+    A caller that knows which employee accounts are mid-interaction with a customer passes their account IDs as
+    in_interaction_ids; they are skipped. Adjacency is not an input yet (no store map, MAP-2), and nothing here links a
+    CV track to an account: the caller supplies real account IDs.
     shortcut: the roster's shift text ('9 AM - 1 PM') is not checked against the clock; parse it once shifts are structured."""
     return conn.execute(
         """
@@ -39,6 +41,7 @@ def select_dispatch_employee(conn, target_zone_id: str | None, source_zone_id: s
           FROM users JOIN rosters ON rosters.user_id = users.id
           WHERE users.role = 'Employee' AND users.active = 1 AND rosters.available = 1
             AND users.id NOT IN (SELECT employee_id FROM busy)
+            AND NOT (users.id = ANY(%(in_interaction)s))
         ),
         free_per_zone AS (SELECT zone_id, count(DISTINCT id) AS n FROM free GROUP BY zone_id)
         SELECT free.id, free.name, free.zone_id, free_per_zone.n - coalesce(zones.min_staff, 0) AS spare
@@ -51,7 +54,8 @@ def select_dispatch_employee(conn, target_zone_id: str | None, source_zone_id: s
                  free_per_zone.n - coalesce(zones.min_staff, 0) DESC, free.name
         LIMIT 1
         """,
-        {"active": list(ACTIVE_TASK_STATES), "zone": target_zone_id, "source": source_zone_id},
+        {"active": list(ACTIVE_TASK_STATES), "zone": target_zone_id, "source": source_zone_id,
+         "in_interaction": list(in_interaction_ids)},
     ).fetchone()
 
 
@@ -159,7 +163,8 @@ def handle_event(conn, body: dict) -> dict:
             decision, reason = "paused", "Automatic dispatch is paused in settings."
         elif not should_dispatch:
             decision, reason = "alert_only", "Dispatch was not requested for this event."
-        elif employee := select_dispatch_employee(conn, zone_id, body.get("sourceZoneId") or None):
+        elif employee := select_dispatch_employee(conn, zone_id, body.get("sourceZoneId") or None,
+                                                    tuple(body.get("inInteractionEmployeeIds") or ())):
             employee_id = employee["id"]
             task_id = create_task_for_employee(conn, employee_id, str(body.get("instruction") or DEFAULT_INSTRUCTION), zone_id,
                                                body.get("sourceZoneId") or None, alert_id, evidence)
