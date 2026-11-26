@@ -1,19 +1,33 @@
 """Stored unattended derivations and observation-aware union coverage."""
-from ..contracts import (CountMetric, CoverageRequest, CoverageResult, CoverageSummary, RatioMetric,
+from ..contracts import (Contract, CountMetric, Identifier, CoverageRequest, CoverageResult, CoverageSummary, RatioMetric,
                          SecondsMetric, TimeWindow, TrustedAccessScope, UnattendedEpisode,
                          UnattendedRequest, UnattendedResult)
-from .analytics import EventAnalytics
+from .operations import OperationsAnalytics
 from .common import clipped, count, evidence, health, intersect, merge, metric, seconds
 from .store import SourceUnavailable, read_session
 
 
-class PostgresAnalyticsTools(EventAnalytics):
+class VerifiedUnattendedRun(Contract):
+    store_id: Identifier
+    camera_id: Identifier
+    run_id: Identifier
+
+
+class PostgresAnalyticsTools(OperationsAnalytics):
     """All five analytics interfaces; DB path and observation context are server-injected."""
+
+    def __init__(self, dsn=None, *, synthetic: bool, contexts=(), verified_unattended_runs=()):
+        super().__init__(dsn, synthetic=synthetic, contexts=contexts)
+        self.verified_unattended_runs = {
+            (run.store_id, run.camera_id, run.run_id) for run in verified_unattended_runs
+        }
 
     def get_unattended(self, *, scope: TrustedAccessScope, request: UnattendedRequest) -> UnattendedResult:
         self._context(scope, request, status='empty')
         name = 'get_unattended'
-        provenance = ("Stored unattended derivation does not filter interaction verdict; helped is not confirmed assistance",)
+        unknown_derivation = "Stored unattended derivation may predate verdict filtering"
+        helped_caveat = "Helped may include unverified interactions"
+        provenance = (unknown_derivation, helped_caveat)
         try:
             with read_session(self.dsn) as session:
                 rows = session.rows('unattended_episodes', scope, request.filters, request.window)
@@ -22,8 +36,14 @@ class PostgresAnalyticsTools(EventAnalytics):
                     raise SourceUnavailable("Invalid stored unattended helped flag")
                 _, hrows, limits = health(session, scope, request, self.contexts, source='unattended_episodes',
                                           observed_cameras={r['camera_id'] for r in rows})
+                def is_verified(row):
+                    return (scope.store_id, row['camera_id'], row['run_id']) in self.verified_unattended_runs
+
+                if rows and all(is_verified(row) for row in rows):
+                    provenance = (helped_caveat,)
                 episodes = tuple(UnattendedEpisode(event_id=r['event_id'], run_id=r['run_id'], camera_id=r['camera_id'],
                     zone_id=r['zone_id'], customer_track_id=r['customer_track_id'], helped=bool(r['helped']),
+                    provenance='stored_derivation_verdict_filtered' if is_verified(r) else 'stored_derivation_verdict_unfiltered',
                     window=TimeWindow(start=max(r['_start'], request.window.start), end=min(r['_end'], request.window.end)),
                     waited=metric(SecondsMetric, seconds(clipped([r], request.window)), 'unattended_episodes', [r], name))
                     for r in rows[:request.limit])

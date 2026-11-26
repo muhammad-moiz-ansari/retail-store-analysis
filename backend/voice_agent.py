@@ -72,7 +72,7 @@ def build_voice_prompt(event: dict[str, Any], context: dict[str, Any] | None = N
     ]
 
 
-def call_hugging_face(messages: list[dict[str, str]], max_tokens: int = 180) -> str:
+def call_hugging_face(messages: list[dict[str, str]], max_tokens: int = 180, *, timeout_seconds: int | None = None) -> str:
     token = os.getenv("HF_TOKEN")
     if not token:
         raise RuntimeError("HF_TOKEN is not configured")
@@ -93,7 +93,7 @@ def call_hugging_face(messages: list[dict[str, str]], max_tokens: int = 180) -> 
         method="POST",
     )
     try:
-        with request.urlopen(req, timeout=HF_TIMEOUT_SECONDS) as response:
+        with request.urlopen(req, timeout=HF_TIMEOUT_SECONDS if timeout_seconds is None else timeout_seconds) as response:
             data = json.loads(response.read().decode("utf-8"))
     except error.HTTPError as exc:
         detail = exc.read().decode("utf-8", errors="replace")

@@ -124,7 +124,6 @@ retailpulse/
 │   │   ├── customer-info/
 │   │   ├── employee-info/
 │   │   ├── spatial-analytics/
-│   │   ├── sales-trends/
 │   │   ├── reports/
 │   │   ├── alerts/
 │   │   ├── system-status/
@@ -186,13 +185,11 @@ talks to FastAPI through the session-checked `/api/backend/*` proxy:
 
 `npm run dev:frontend` starts only Next.js.
 
-Manager routes require a signed HttpOnly session cookie. In the local FYP demo, choosing Manager with any valid email and a 6+ character password creates that cookie. Configure these secrets before running:
+Manager pages live under `/manager` and employee pages under `/employee`. Sign-in opens `/manager/home` or `/employee/home` using the role stored on the signed session. Old page URLs redirect to the new paths. Profile remains shared by both roles.
 
-```bash
-export POS_SESSION_SECRET="change-me"
-```
+Manager and employee sign-in use backend accounts and a signed HttpOnly session cookie. Set a random `RETAILPULSE_SESSION_SECRET` in Next.js and a separate random `RETAILPULSE_INTERNAL_SECRET` shared by Next.js and the backend. Keep both values server-side. `npm run dev` opts both processes into local development defaults. A standalone `npm run dev:frontend` needs real secrets or an explicit local-only `RETAILPULSE_DEV_DEFAULTS=1`. Production-mode Next.js and dashboard analytics always require configured secrets.
 
-Employee and Manager use the same demo credential rule. Manager still receives a server-signed session so manager APIs are not unlocked by changing localStorage alone.
+On a local PostgreSQL demo database, `--seed-demo` creates the default employee and manager accounts with password `000000`. For existing seeded accounts, set `DATABASE_URL` to the local database and run `python -m backend.database --reset-local-demo-passwords`. The reset updates only those two seeded accounts and checks that the database is on loopback.
 
 ### Build for production
 

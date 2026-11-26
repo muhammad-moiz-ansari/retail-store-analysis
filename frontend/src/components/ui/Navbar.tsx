@@ -1,5 +1,8 @@
 "use client";
 
+import { EffectLink } from "./PointerEffect";
+import publicStyles from "../../app/public-pages.module.css";
+
 import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
@@ -7,6 +10,10 @@ import { usePathname, useRouter } from "next/navigation";
 import { Badge } from "./Badge";
 import { RetroButton } from "./RetroButton";
 import { useAuth } from "@/components/auth/AuthProvider";
+
+const publicAction = "inline-flex min-h-10 items-center justify-center rounded-lg border px-3 text-sm font-semibold";
+const signInAction = `${publicAction} ${publicStyles.specular} border-accent text-accent hover:bg-surface`;
+const signUpAction = `${publicAction} ${publicStyles.signupGlow} border-transparent bg-accent text-on-accent hover:bg-accent-hover`;
 
 interface NavbarProps {
   /** Show role badge and Log Out button (for authenticated pages like /dashboard) */
@@ -30,22 +37,22 @@ const PUBLIC_NAV_LINKS: NavLink[] = [
 
 // Authenticated (dashboard) nav links
 const AUTHENTICATED_NAV_LINKS: NavLink[] = [
-  { label: "Home", href: "/dashboard" },
-  { label: "Customer Info", href: "/customer-info" },
-  { label: "POS Assistant", href: "/pos-info" },
-  { label: "Employee Info", href: "/employee-info" },
-  { label: "Spatial Analytics", href: "/spatial-analytics" },
-  { label: "Interactions", href: "/interactions" },
-  { label: "Camera Handoff", href: "/camera-handoff" },
-  { label: "Compare People", href: "/compare-people" },
-  { label: "Voice Agent", href: "/voice-agent" },
-  { label: "Store Settings", href: "/settings", managerOnly: true },
+  { label: "Home", href: "/manager/home" },
+  { label: "Customer Info", href: "/manager/customers" },
+  { label: "Employee Info", href: "/manager/employees" },
+  { label: "Spatial Analytics", href: "/manager/spatial-analytics" },
+  { label: "Interactions", href: "/manager/interactions" },
+  { label: "Aisle Relay", href: "/manager/aisle-relay" },
+  { label: "Camera Handoff", href: "/manager/camera-handoff" },
+  { label: "Compare People", href: "/manager/compare-people" },
+  { label: "Voice Agent", href: "/manager/voice-agent" },
+  { label: "Store Settings", href: "/manager/settings", managerOnly: true },
   { label: "About", href: "/about" },
 ];
 
 const EMPLOYEE_NAV_LINKS: NavLink[] = [
-  { label: "My Workspace", href: "/employee-home", employeeOnly: true },
-  { label: "My Performance", href: "/my-performance", employeeOnly: true },
+  { label: "My Workspace", href: "/employee/home", employeeOnly: true },
+  { label: "My Performance", href: "/employee/performance", employeeOnly: true },
   { label: "About", href: "/about" },
 ];
 
@@ -122,14 +129,14 @@ export function Navbar({ authenticated = false, role = "Manager" }: NavbarProps)
   return (
     <header
       ref={navbarRef}
-      className="sticky top-0 z-50 bg-surface-alt border-b border-border-soft select-none"
+      className="translucent-nav sticky top-0 z-50 border-b border-border-soft select-none"
       style={{ borderBottomWidth: "1.5px" }}
     >
       {/* ── Desktop & Mobile Container ── */}
       <div className="h-[52px] px-4 md:px-6 flex items-center justify-between">
         {/* ── Left: Logo + Wordmark ── */}
         <Link
-          href={authenticated ? (role === "Employee" ? "/employee-home" : "/dashboard") : "/"}
+          href={authenticated ? (role === "Employee" ? "/employee/home" : "/manager/home") : "/"}
           className="flex items-center gap-2.5 xl:w-[180px] w-auto shrink-0"
         >
           <NavLogo />
@@ -147,6 +154,7 @@ export function Navbar({ authenticated = false, role = "Manager" }: NavbarProps)
               return (
                 <Link
                   key={link.href}
+                  aria-current={isActive ? "page" : undefined}
                   href={link.href}
                   ref={(el) => {
                     linkRefs.current[index] = el;
@@ -165,6 +173,7 @@ export function Navbar({ authenticated = false, role = "Manager" }: NavbarProps)
 
             {/* Sliding Indicator Bar */}
             <div
+              hidden={!visibleLinks.some((link) => link.href === pathname)}
               className="absolute bottom-0 h-[2.5px] bg-accent rounded-sm"
               style={{
                 left: `${indicatorStyle.left}px`,
@@ -190,19 +199,12 @@ export function Navbar({ authenticated = false, role = "Manager" }: NavbarProps)
         ) : (
           // Not authenticated: Sign In + Get Started
           <div className="hidden min-[1090px]:flex items-center gap-3 xl:w-[200px] w-auto justify-end shrink-0">
-            <Link href="/login">
-              <RetroButton variant="secondary" className="!px-3 !py-1.5 !text-xs">
-                Sign In
-              </RetroButton>
-            </Link>
-            <Link href="/signup">
-              <RetroButton variant="primary" className="!px-3 !py-1.5 !text-xs">
-                Get Started
-              </RetroButton>
-            </Link>
+            <EffectLink href="/login" className={signInAction}>Sign in</EffectLink>
+            <Link href="/signup" className={signUpAction}>Sign up</Link>
           </div>
         )}
 
+        <div className="ml-3 flex shrink-0 items-center gap-2">
         {/* ── Right: Hamburger (mobile only) ── */}
         <button
           type="button"
@@ -210,6 +212,8 @@ export function Navbar({ authenticated = false, role = "Manager" }: NavbarProps)
           className="min-[1090px]:hidden w-[38px] h-[38px] flex flex-col items-center justify-center gap-[4px] border border-border bg-surface rounded"
           style={{ borderWidth: "1.5px" }}
           aria-label="Toggle menu"
+          aria-expanded={mobileMenuOpen}
+          aria-controls="public-mobile-navigation"
         >
           <span
             className={[
@@ -234,10 +238,13 @@ export function Navbar({ authenticated = false, role = "Manager" }: NavbarProps)
             ].join(" ")}
           />
         </button>
+        </div>
       </div>
 
       {/* ── Mobile Dropdown Menu ── */}
       <div
+        id="public-mobile-navigation"
+        inert={!mobileMenuOpen}
         className={[
           "min-[1090px]:hidden overflow-hidden transition-all duration-350 ease-in-out bg-surface-alt border-t border-border-soft",
           mobileMenuOpen ? "max-h-[500px]" : "max-h-0",
@@ -253,6 +260,7 @@ export function Navbar({ authenticated = false, role = "Manager" }: NavbarProps)
           return (
             <Link
               key={link.href}
+              aria-current={isActive ? "page" : undefined}
               href={link.href}
               onClick={() => setMobileMenuOpen(false)}
               className={[
@@ -278,16 +286,8 @@ export function Navbar({ authenticated = false, role = "Manager" }: NavbarProps)
           </div>
         ) : (
           <div className="py-3 px-5 border-t border-border-soft flex flex-col gap-2">
-            <Link href="/login" className="w-full">
-              <RetroButton variant="secondary" className="!w-full !text-xs">
-                Sign In
-              </RetroButton>
-            </Link>
-            <Link href="/signup" className="w-full">
-              <RetroButton variant="primary" className="!w-full !text-xs">
-                Get Started
-              </RetroButton>
-            </Link>
+            <EffectLink href="/login" className={signInAction}>Sign in</EffectLink>
+            <Link href="/signup" className={signUpAction}>Sign up</Link>
           </div>
         )}
       </div>
@@ -298,12 +298,12 @@ export function Navbar({ authenticated = false, role = "Manager" }: NavbarProps)
 function AlertsBell() {
   return (
     <Link
-      href="/alerts"
+      href="/manager/alerts"
       aria-label="View 5 active alerts"
       className="relative flex h-9 w-9 items-center justify-center rounded-md border border-border bg-surface text-text transition-colors hover:bg-surface-alt"
     >
       <BellIcon />
-      <span className="absolute -right-2 -top-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-danger px-1 font-mono text-[9px] font-bold leading-none text-white">
+      <span className="absolute -right-2 -top-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-danger px-1 font-mono text-[9px] font-bold leading-none text-on-danger">
         5
       </span>
     </Link>
@@ -359,7 +359,7 @@ function BellIcon() {
 }
 
 /** Logo image with graceful fallback to SVG icon */
-function NavLogo() {
+export function NavLogo({ surface = "light" }: { surface?: "light" | "dark" }) {
   const [imgError, setImgError] = React.useState(false);
 
   if (imgError) {
@@ -368,7 +368,7 @@ function NavLogo() {
 
   return (
     <Image
-      src="/logo.png"
+      src={`/favicon-${surface}.png`}
       alt="RetailPulse logo"
       width={34}
       height={34}

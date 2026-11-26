@@ -178,7 +178,7 @@ Write `backend/tests/` TestClient tests where the case can be automated and a da
 
 ### C2. Security and privacy (NFR-07–10, TC-47/48)
 1. **Route coverage test:** a pytest walks `app.routes` and asserts every route except `/health` and `/auth/*` has a `require_manager`/`require_employee_or_manager` dependency. A frontend test asserts that every `app/*/page.tsx` directory is listed in exactly one of the route lists in `RouteAccessGuard.tsx` (or in a small public allow-list).
-2. The default `INTERNAL_SECRET` (`"local-dev-pos-secret"`) → refuse to start when `RETAILPULSE_ENV=production` and the secret is the default.
+2. The default `INTERNAL_SECRET` → refuse to start when `RETAILPULSE_ENV=production` and the secret is the default.
 3. Path validation review: `resolve_video`, `/analytics/summary`, track crop images.
 4. **Privacy:** add a retention setting (days) and a `DELETE` sweep of `backend/output/interaction-runs/*` older than it, run at startup. Store no face crops; track thumbnails (B2) are deleted along with their run. TC-48: inspect the SQLite documents and confirm there are no embeddings or face templates.
 5. Run `/security-review` on the branch and fix the findings.
@@ -236,7 +236,7 @@ It was descoped because the footage came from a moving camera; real store CCTV i
 ### D6. Store layout and promotion effectiveness
 1. Persist daily aggregates: a new table `analytics_daily(store_id, date, camera_id, zone, footfall_in, dwell_s, interactions, unattended, reaches)`, filled by `import_run_events` from each run.
 2. New tables `layout_changes(id, date, description)` and `promotions(id, zone, start_date, end_date, description)`, with CRUD in Settings.
-3. Analysis endpoint `GET /analytics/effect?promotion=`: compares the zone's mean daily dwell, reaches and conversion during the promotion against the same weekdays in the previous 4 weeks. Bootstrap 95% CI with plain `numpy`. Conversion joins POS transactions (`dummydataset/transactions.csv` format) by date and zone.
+3. Analysis endpoint `GET /analytics/effect?promotion=`: compares the zone's mean daily dwell and reaches during the promotion against the same weekdays in the previous 4 weeks. Bootstrap 95% CI with plain `numpy`.
 4. UI: an "Effect" card per promotion with the before/after figures and the CI; "insufficient data" when there are fewer than 7 days on either side.
 5. Needs weeks of real footage, so it is only meaningful in the D9 pilot.
 

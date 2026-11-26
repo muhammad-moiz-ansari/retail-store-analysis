@@ -46,6 +46,31 @@ def token_hash(token: str) -> str:
     return hashlib.sha256(token.encode("utf-8")).hexdigest()
 
 
+DEMO_PASSWORD = "000000"
+DEMO_ACCOUNTS = (
+    ("u_manager", "manager@retailpulse.local", "Manager"),
+    ("u_employee", "employee@retailpulse.local", "Employee"),
+)
+
+
+def is_local_database(conn: Connection) -> bool:
+    host = conn.info.host
+    return host in {"localhost", "127.0.0.1", "::1"} or host.startswith("/")  # a Unix socket is on this machine
+
+
+def reset_local_demo_passwords(conn: Connection) -> None:
+    if not is_local_database(conn):
+        raise ValueError("Demo passwords can only be reset on a local database")
+    for user_id, email, role in DEMO_ACCOUNTS:
+        result = conn.execute(
+            """UPDATE users SET password_hash = %s, updated_at = %s
+               WHERE id = %s AND email = %s AND role = %s""",
+            (hash_password(DEMO_PASSWORD), now_iso(), user_id, email, role),
+        )
+        if result.rowcount != 1:
+            raise ValueError(f"Seeded demo account missing: {email}")
+
+
 def seed_defaults(conn: Connection) -> None:
     timestamp = now_iso()
     zones = [
@@ -75,15 +100,16 @@ def seed_defaults(conn: Connection) -> None:
         """,
         [(camera_id, name, zone_id, role, online, timestamp, timestamp) for camera_id, name, zone_id, role, online in cameras],
     )
+    demo_password = DEMO_PASSWORD if is_local_database(conn) else "password123"
     seed_users = [
         (
             "u_manager",
             os.getenv("RETAILPULSE_BOOTSTRAP_MANAGER_NAME", "Demo Manager"),
             os.getenv("RETAILPULSE_BOOTSTRAP_MANAGER_EMAIL", "manager@retailpulse.local"),
             "Manager",
-            os.getenv("RETAILPULSE_BOOTSTRAP_MANAGER_PASSWORD", "password123"),
+            os.getenv("RETAILPULSE_BOOTSTRAP_MANAGER_PASSWORD") or demo_password,
         ),
-        ("u_employee", "Demo Employee", "employee@retailpulse.local", "Employee", "password123"),
+        ("u_employee", "Demo Employee", "employee@retailpulse.local", "Employee", demo_password),
     ]
     conn.cursor().executemany(
         """
@@ -168,12 +194,10 @@ def public_user(row: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def authenticate(conn: Connection, email: str, password: str, role: str | None = None) -> dict[str, Any]:
+def authenticate(conn: Connection, email: str, password: str) -> dict[str, Any]:
     user = conn.execute("SELECT * FROM users WHERE lower(email) = lower(%s)", (email.strip(),)).fetchone()
     if not user or not user["active"] or not verify_password(password, user["password_hash"]):
         raise ValueError("Invalid email or password")
-    if role and user["role"] != role:
-        raise ValueError(f"Account is not a {role}")
     if needs_rehash(user["password_hash"]):
         conn.execute("UPDATE users SET password_hash = %s, updated_at = %s WHERE id = %s", (hash_password(password), now_iso(), user["id"]))
         conn.commit()
@@ -247,6 +271,7 @@ def settings_snapshot(conn: Connection) -> dict[str, Any]:
         "cameras": cameras,
         "staff": staff,
         "accounts": accounts,
-        "thresholds": get_setting(conn, "thresholds"),
-        "privacy": get_setting(conn, "privacy"),
+        # A database that was never seeded has no settings rows; the page fills in its defaults from an empty object.
+        "thresholds": get_setting(conn, "thresholds") or {},
+        "privacy": get_setting(conn, "privacy") or {},
     }

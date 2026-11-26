@@ -4,6 +4,23 @@
 
 Updated 11 November 2026. This is the current team plan, reconciling Saqib's 10 November status snapshot, the agreed member allocation, the current checkout and the user's four live-category decision. Its tracked copy lives in docs/fyp2-plan/; local extra-docs copies are ignored and must not be the only teammate reference.
 
+## Status on 16 November 2026 (supersedes the dated lines below)
+
+The sections below are kept as written on 11 November. Checked against the code at `feature/fyp2-saqib-deploy-footfall-ops` on 16 November:
+
+| Line below | Now |
+|---|---|
+| B1: 9 vs 10 set-B pass-bys to audit | Audited; 9 is correct |
+| B3: refit commit and artifacts absent, adoption open | In the branch; fitted weights adopted (Ruhab, 14 Nov). Benchmarks rerun with them on 17 Nov (CV_EVAL_CHAPTER.md) |
+| B4: no map registration | `backend/events/spatial.py` registers a map and writes per-cell dwell; tested on synthetic geometry only |
+| B6: CV chapter is a skeleton with TODOs | `CV_EVAL_CHAPTER.md` is filled from the committed reports |
+| Moiz foundation: 139 tests | The fast CI job runs 276 (17 Nov) |
+| Four categories "planned, not implemented" | Implemented: classifier, per-cell feed, dashboard payload. Separately, the Interactions page shows a per-camera hot/gray/green/inactive attention state (FR-07, 17 Nov); it is not a fifth category (CONTRACTS.md, "Live camera view state") |
+| TEAM-CI needs verification | All three jobs run in GitHub. Branch protection is still off |
+| M-WIDER-EVAL: 50+ golden questions | 51 questions; anomaly, next-day staffing with an approval record, and the digest are reachable as routes. No grounding ablation or provider cost measurement yet |
+
+Still open from this plan: every real-footage acceptance step, a deployed backend, the real floor plan, camera handoff labels, GPU and track-every 1/3 speed, a second annotator, the model freeze.
+
 ## Priority and source reconciliation
 
 1. Current direct user decisions govern workflow and the four live occupancy categories.
@@ -86,7 +103,7 @@ Saqib's refit/random-6/100% role figures are reported branch results, not newly 
 | MAP-2: map registration | Saqib CV/backend; Moiz data/UI binding; Ruhab refinement/QA | Accept supplied map, version camera-to-map alignment/coverage and map-cell conventions; handle unmapped/overlapping views. Demonstrate one static camera before multi-camera expansion; no implied metric accuracy |
 | MAP-3: dynamic categories/layers | Ruhab business semantics; Saqib spatial/event feeds; Moiz typed readers and rendering | Implement exactly the four live categories plus separate validity metadata. Customer/employee occupancy-time or counts and confirmed-interaction layers need units/window/evidence. Test transitions, co-presence without interaction, occlusion, unknown role, blocked feed and empty observed space |
 | M-REAL-BINDING | Moiz with Saqib backend/auth | Bind authoritative actor/store/configuration; expose graph routes only after auth. Wire dashboard, Ask panel, citations/traces and stale/partial states; keep fixture mode labelled and replaceable |
-| M-WIDER-EVAL | Moiz | Queue/health/alerts tools, complete Query/supporting Anomaly/next-day planning, 50+ golden questions and grounding ablation, routing/refusals/latency/cost. POS and arbitrary SQL remain excluded/deferred |
+| M-WIDER-EVAL | Moiz | Queue/health/alerts tools, complete Query/supporting Anomaly/next-day planning, 50+ golden questions and grounding ablation, routing/refusals/latency/cost. Arbitrary SQL remains deferred |
 | R-AGENTS | Ruhab | Actual Customer Behavior / Employee Activity logic and event emission policy using four-category map layers; no new zone classes. Insight Narration/Digest/Clip Review and interface refinement retain ownership |
 | S-OPERATIONS | Saqib; Moiz adapter support | Plug real handler into operational.py; stable event/store/key, atomic dedup/key conflicts, employee/account/roster/source-zone safety, persistence, voice/acknowledgement. Direct aisle dispatch has no manager approval/auto-mode requirement |
 | CV-REVIEW | Saqib evidence; Ruhab tuning/validation/docs | Publish missing role artifacts; decide fitted adoption with user/team; blind recheck IMG_8838 p2 and IMG_8830; define 4–6s gap convention; second annotator for tuning set; fix ID switches without tuning set B again; collect clean speed and provenance |
@@ -97,7 +114,7 @@ Saqib's refit/random-6/100% role figures are reported branch results, not newly 
 
 The original week-1 date is 3 November 2026. Retain the team's 16-week schedule as a plan, not proof of delivery. Week 2: schema and signatures exist on the inspected foundation branch; integrated CI still needs verification. Week 6: label/benchmark artifacts exist and fixture tools run, but real map pages remain pending. Week 10: gate is real CV/map/agent flow and direct eligible assignment, NOT an approval inbox for aisle dispatch. Week 13: measured CV/golden-agent/dispatch-scenario results and real-data pages. Week 15: rehearsed demo, version freeze and no open P1 defects.
 
-Zone-dwell annotations were deferred/dropped in Saqib's old snapshot because geometry was absent; do not pretend they are complete. With map analytics now central, the team must collect appropriate map/category/dwell/interaction ground truth for the configured camera and selected time windows. Loss prevention and POS analytics remain out of scope. Broader research/stretch tasks remain in FUTURE_WORK.md; they cannot silently add product zone categories or agents.
+Zone-dwell annotations were deferred/dropped in Saqib's old snapshot because geometry was absent; do not pretend they are complete. With map analytics now central, the team must collect appropriate map/category/dwell/interaction ground truth for the configured camera and selected time windows. Loss prevention remains out of scope. Broader research/stretch tasks remain in FUTURE_WORK.md; they cannot silently add product zone categories or agents.
 
 ## Resume instructions
 

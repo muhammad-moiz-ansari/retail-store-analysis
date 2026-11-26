@@ -31,6 +31,11 @@ backend/*.sqlite3-*
 *.png
 *.webp
 *.log
+!frontend/public/favicon-dark.png
+!frontend/public/favicon-light.png
+!frontend/public/pwa-maskable-512.png
+!frontend/public/pwa-512.png
+!frontend/public/pwa-192.png
 
 # Environment files
 .env
@@ -81,3 +86,9 @@ dummydataset/creds.txt
 # Local assistant handoffs and working notes
 /docs/extra-docs/
 .neon
+
+# Local report copy kept outside version control
+/F26_168_i230523_i230559_i230769.pdf
+
+# Windows download metadata created when copying files into WSL
+*:Zone.Identifier

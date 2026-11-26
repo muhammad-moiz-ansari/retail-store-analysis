@@ -17,7 +17,7 @@ class AnalyticsService:
             self._traces.put(retained)
         except Exception:
             return run.model_copy(update={'errors':run.errors+('trace_not_retained',),
-                'limitations':(run.limitations+('Development trace could not be retained; retrieval is unavailable',))[-50:]})
+                'limitations':(run.limitations+('Analytics trace could not be retained; retrieval is unavailable',))[-50:]})
         return retained.model_copy(deep=True)
 
     def get_run(self, run_id, *, scope):

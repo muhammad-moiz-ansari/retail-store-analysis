@@ -1,0 +1,329 @@
+.hero,
+.section {
+  width: min(100% - 2 * clamp(1.25rem, 4vw, 3rem), 76rem);
+  margin-inline: auto;
+}
+
+.hero {
+  display: grid;
+  gap: clamp(2rem, 5vw, 5rem);
+  align-items: center;
+  padding-block: clamp(3.5rem, 9vw, 8rem);
+}
+
+.heroCopy { min-width: 0; }
+
+.heroBackdrop { position: relative; isolation: isolate; }
+
+.heroAurora {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.3;
+  background: radial-gradient(ellipse at 74% 0%, var(--color-accent-soft), transparent 64%);
+  mask-image: linear-gradient(110deg, transparent 8%, rgb(0 0 0 / 25%) 33%, black 73%);
+}
+
+:global([data-theme="dark"]) .heroAurora { opacity: 0.38; }
+
+.heroTitle,
+.sectionTitle {
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.055em;
+  text-wrap: balance;
+}
+
+.heroTitle {
+  max-width: 14ch;
+  font-size: clamp(2.65rem, 6vw, 5.5rem);
+  line-height: 1.01;
+}
+
+.heroTitle span { color: var(--color-accent); }
+
+.lede {
+  max-width: 53ch;
+  margin-block: 1.3rem;
+  color: var(--color-text-muted);
+  font-size: clamp(1rem, 2vw, 1.2rem);
+  line-height: 1.65;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1.75rem;
+}
+
+.primary,
+.secondary {
+  display: inline-flex;
+  width: fit-content;
+  min-height: 2.85rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border: 1px solid transparent;
+  border-radius: 0.65rem;
+  padding: 0.65rem 1.1rem;
+  font-weight: 650;
+  transition: background-color 150ms, color 150ms;
+}
+
+.primary {
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+}
+
+.primary:hover { background: var(--color-accent-hover); }
+
+.secondary {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+.secondary:hover { background: var(--color-surface-alt); }
+
+.preview {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--color-border-soft);
+  border-radius: 1.25rem;
+  background: var(--color-surface);
+  box-shadow: 0 24px 54px -19px rgb(5 10 28 / 44%), 0 8px 20px -10px rgb(5 10 28 / 25%);
+}
+
+.previewCaption {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid var(--color-border-soft);
+}
+
+.sample {
+  padding: 0.25rem 0.6rem;
+  border-radius: 100vmax;
+  background: var(--color-surface-alt);
+  color: var(--color-accent);
+  font-size: 0.75rem;
+  font-weight: 650;
+}
+
+.previewContent {
+  display: grid;
+  grid-template-columns: clamp(2.4rem, 5vw, 3.5rem) minmax(0, 1fr);
+}
+
+.previewRail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.8rem;
+  padding-top: 0.9rem;
+  background: var(--color-sidebar);
+  color: var(--color-on-sidebar);
+}
+
+.railMark {
+  margin-bottom: 0.45rem;
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  font-weight: 700;
+}
+
+.previewRail span:not(.railMark) {
+  width: 44%;
+  height: 0.3rem;
+  border-radius: 100vmax;
+  background: var(--color-accent-soft);
+}
+
+.previewRail span:nth-child(2) { background: var(--color-on-sidebar); }
+
+.previewBody {
+  display: grid;
+  gap: 0.75rem;
+  padding: clamp(0.6rem, 2vw, 1.35rem);
+  background: var(--color-surface-alt);
+}
+
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+
+.metrics div,
+.chart {
+  padding: clamp(0.55rem, 2vw, 1rem);
+  border-radius: 0.7rem;
+  background: var(--color-surface);
+}
+
+.metrics dt {
+  color: var(--color-text-muted);
+  font-size: 0.78rem;
+}
+
+.metrics dd {
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  font-size: clamp(1.32rem, 3vw, 2.4rem);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.055em;
+}
+
+.chart > p { font-size: 0.9rem; }
+
+.bars {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 0.22rem;
+  margin-top: 0.7rem;
+  color: var(--color-text-muted);
+  font-size: clamp(0.61rem, 1.4vw, 0.75rem);
+  text-align: center;
+}
+
+.barTrack {
+  display: flex;
+  height: clamp(4rem, 12vw, 8rem);
+  align-items: flex-end;
+  justify-content: center;
+  margin-bottom: 0.3rem;
+  border-bottom: 1px solid var(--color-border-soft);
+}
+
+.barTrack span {
+  width: min(62%, 2.5rem);
+  border-radius: 0.3rem 0.3rem 0 0;
+  background: var(--color-accent-soft);
+}
+
+.bars li:nth-child(3) .barTrack span { background: var(--color-coral); }
+.bars li:first-child .barTrack span { background: var(--color-cyan); }
+
+.section { padding-bottom: clamp(3rem, 7vw, 6rem); }
+
+.section:focus { outline-offset: 0.25rem; }
+
+.sectionTitle {
+  max-width: 24ch;
+  font-size: clamp(1.95rem, 4vw, 3.35rem);
+  line-height: 1.08;
+}
+
+.cardGrid {
+  display: grid;
+  gap: 1rem;
+  margin-block: 1.5rem;
+}
+
+.card,
+.callout {
+  border-radius: 1rem;
+  padding: clamp(1.15rem, 3vw, 2rem);
+}
+
+.card {
+  border: 1px solid var(--color-border-soft);
+  background: var(--color-surface);
+}
+
+.card h3 {
+  margin-bottom: 0.45rem;
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  font-size: 1.22rem;
+  font-weight: 700;
+}
+
+.card p,
+.callout p {
+  color: var(--color-text-muted);
+  line-height: 1.6;
+}
+
+.callout {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  background: var(--color-surface-alt);
+}
+
+.callout p { margin-top: 0.5rem; }
+
+.textLink {
+  color: var(--color-accent);
+  font-weight: 650;
+  text-decoration: underline;
+  text-underline-offset: 0.22em;
+}
+
+.textLink:hover { color: var(--color-accent-hover); }
+
+.aboutIntro { padding-top: clamp(3.5rem, 8vw, 6rem); }
+
+@media (min-width: 42rem) {
+  .cardGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (min-width: 60rem) {
+  .hero { grid-template-columns: 1fr minmax(0, 1fr); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .primary,
+  .secondary { transition: none; }
+}
+
+/* Pointer-driven foil and specular highlights keep the underlying content readable. */
+.holo, .specular { position: relative; isolation: isolate; }
+.specular { overflow: hidden; }
+.holo::after, .specular::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 180ms ease-out;
+}
+.holo::after {
+  background: radial-gradient(ellipse at calc(50% + var(--pointer-x, 0) * 100%) calc(50% + var(--pointer-y, 0) * 100%), var(--color-cyan), transparent 65%),
+    linear-gradient(115deg, transparent 25%, var(--color-accent-soft), var(--color-coral), transparent 75%);
+}
+.specular::after {
+  border: 1px solid color-mix(in srgb, currentColor 65%, transparent);
+  background: radial-gradient(ellipse at calc(50% + var(--pointer-x, 0) * 100%) calc(50% + var(--pointer-y, 0) * 100%), color-mix(in srgb, currentColor 30%, transparent), transparent 75%);
+}
+.featureCard, .invite {
+  box-shadow: 0 14px 32px -21px var(--color-sidebar);
+}
+@media (hover: hover) and (pointer: fine) {
+  .holo:hover::after { opacity: 0.12; }
+  .specular:hover::after { opacity: 0.65; }
+  .specular:hover, .magnetic:hover { box-shadow: 0 5px 14px color-mix(in srgb, var(--color-accent) 25%, transparent); }
+  .signupGlow:hover { box-shadow: 0 4px 14px color-mix(in srgb, var(--color-accent) 36%, transparent); }
+  .featureCard:hover { box-shadow: 0 20px 38px -18px var(--color-sidebar); }
+}
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .specular, .signupGlow { transition: transform 160ms ease-out, box-shadow 160ms ease-out, background-color 150ms; }
+  .specular:hover, .signupGlow:hover { transform: translateY(-2px); }
+  .holo, .featureCard, .magnetic { transition: transform 180ms ease-out, box-shadow 180ms ease-out, background-color 150ms; }
+  .holo:hover {
+    transform: perspective(1000px) rotateX(calc(var(--pointer-y, 0) * -5deg)) rotateY(calc(var(--pointer-x, 0) * 5deg));
+  }
+  .featureCard:hover { transform: translateY(-3px); }
+  .magnetic:hover { transform: translate(calc(var(--pointer-x, 0) * 8px), calc(var(--pointer-y, 0) * 6px)); }
+  .specular:active, .signupGlow:active, .magnetic:active { transform: translateY(1px); box-shadow: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .holo::after, .specular::after { transition: none; }
+}

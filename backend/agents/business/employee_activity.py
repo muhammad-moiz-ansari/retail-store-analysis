@@ -18,7 +18,7 @@ from .customer_behavior import unattended_paths
 MAX_CLAIMS = 30
 INTENT_WORDS = {
     'coverage': ('coverage', 'covered', 'staffed', 'understaffed', 'availability', 'available', 'gap', 'gaps', 'presence'),
-    'interactions': ('interaction', 'interactions', 'engage', 'engagement', 'engaged', 'help', 'helped', 'assist',
+    'interactions': ('interaction', 'interactions', 'engage', 'engagement', 'engaged', 'interacting', 'interact', 'help', 'helped', 'assist',
                      'assisted', 'assistance', 'served'),
     'unattended': ('unattended', 'miss', 'missed', 'waiting', 'waited', 'ignored', 'unserved'),
 }

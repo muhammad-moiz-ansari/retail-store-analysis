@@ -10,13 +10,16 @@ Set these variables in the appropriate server environments, then restart both se
 
 | Variable | Where | Meaning |
 |---|---|---|
-| POS_SESSION_SECRET (or NEXTAUTH_SECRET) | Next.js only | Explicit signed-cookie secret; the built-in local fallback is not accepted for analytics |
+| RETAILPULSE_SESSION_SECRET (or NEXTAUTH_SECRET) | Next.js only | Explicit signed-cookie secret; the built-in local fallback is not accepted for analytics |
 | RETAILPULSE_INTERNAL_SECRET | Both servers | Same explicit service credential; the built-in local fallback is not accepted for analytics |
 | RETAILPULSE_SERVICE_URL | Next.js | Reachable Python backend URL; localhost only works when the backend runs on the same host |
 | DATABASE_URL | Python | Shared PostgreSQL database for application, event and identity records |
 | RETAILPULSE_ANALYTICS_CONFIG | Python | Path to the operator-owned JSON configuration below |
+| RETAILPULSE_ASK_ENABLED | Python | Set to `1` to enable the read-only Ask panel. The panel uses the manager’s configured window and filters and is disabled in fixture preview. |
 
-Use the actual session variable name above; POS_AUTH_SECRET is not read by the current session implementation. Next.js reads its normal environment configuration; the standalone Python backend needs exported variables too. No NEXT_PUBLIC secret or database path is needed. Existing application login/bootstrap behavior is unchanged. Dashboard reads never initialize either database. Keep machine-specific runtime configuration out of Git (local demo files can live under ignored data/outputs/).
+Next.js reads its normal environment configuration; the standalone Python backend needs exported variables too. No NEXT_PUBLIC secret or database path is needed. Sign-in, sign-up, session reads and the backend proxy return 503 if authentication credentials are missing or use known defaults outside explicitly opted-in local development. The analytics proxy requires configured credentials in all modes. Dashboard reads never initialize either database. Keep machine-specific runtime configuration out of Git (local demo files can live under ignored data/outputs/).
+
+Optional `verified_unattended_runs` entries contain `store_id`, `camera_id`, and `run_id`. List a tuple only after confirming all its stored unattended rows were derived by the fixed verdict-filtering logic. Clips recorded after a calendar date alone do not establish derivation version.
 
 Example **template**, requiring real identifiers/window/context from Saqib and the actual manager account ID. It is not installed or enabled automatically:
 
@@ -70,3 +73,25 @@ Moiz's provider/API integration is implemented and tested with disposable accoun
 Start the existing backend with the variables above and `python -m uvicorn backend.app:app --host 127.0.0.1 --port 8011`, then the frontend with `npm run dev:frontend` from the repository root. Sign in with an existing Manager account and open `/dashboard`. Configured backend should display that manager's configured store/region/run/window and evidence. With no configuration, verify the unavailable message; choose Synthetic fixture preview only when intentionally demonstrating fixture states. Verify denied employee/unbound/cross-store requests and confirm real outputs against known event rows before claiming live acceptance.
 
 Reproducible automated commands and measured outcomes are in PROGRESS.md. With DATABASE_URL pointed at a disposable test database, use `python -m backend.events.fixtures`; do not replace it or present its generated events as a real video run.
+
+### Optional Ask trace retention
+
+Traces contain manager questions, responses and supporting event references. Enable only on an approved database after applying `backend/agents/ask_trace_schema.sql`. Set `RETAILPULSE_ASK_TRACE_ENABLED=1` in the backend environment. Runs expire after 24 hours and are pruned on subsequent writes. Configure periodic deletion of expired rows if physical deletion must occur during idle periods. The existing manager proxy protects `GET /api/backend/agents/runs/{run_id}`. Retrieval requires the same actor, store, allowed scope and dashboard selection. Until enabled, Ask answers without saving traces.
+
+### Optional shared Ask budget
+
+For multiple workers, apply `backend/agents/ask_budget_schema.sql` once to the common backend database and set `RETAILPULSE_ASK_SHARED_BUDGET=1` on every worker. The counter uses fixed one-minute windows shared across workers. A store outage returns 503 in shared mode. It has no dependency on trace retention.
+
+### Optional Ask provider routing
+
+Ask uses offline routing by default. Set `RETAILPULSE_ASK_PROVIDER_ROUTING=1` and configure the existing backend `HF_TOKEN` only in an approved evaluation environment. The provider receives the manager's question and fixed routing instructions. Keep questions free of personal or confidential information in this mode. The request uses an eight-second socket timeout and a 64-token output limit. Store membership, tool results, traces and database credentials stay on the server. The graph still controls tools and derives answers from verified evidence.
+
+### Optional registered map (MAP-2)
+
+The dashboard snapshot carries a `spatial` payload only when `RETAILPULSE_MAP_CONFIG` names a map file for the manager's store and the request selects a run. On a host without files, pass the file's contents as `RETAILPULSE_MAP_CONFIG_JSON`; `deploy/entrypoint.sh` writes it out. A missing, invalid or other-store map shows no map and adds a limitation; fixture cells are never substituted.
+
+1. Write the map JSON described at the top of `backend/events/spatial.py`: cells on the floor plan, and for each camera four or more matching frame-to-map points plus the area it sees. All coordinates are 0 to 1.
+2. Check the points: `python -m backend.events.spatial fit <map.json>` prints the largest reprojection error per camera.
+3. Add `"map_file": "<path>"` to the camera's `--config` JSON, run `python -m backend.database` once (it creates `cell_dwell`), and ingest or re-ingest the run.
+
+Cell state is the category at the end of the selected window after Ruhab's two-window hold, on one-minute windows; presence and interaction layers are totals over the window. Position only: no physical distance, and two people on one cell are not an interaction. Tested on synthetic geometry; no real map is registered yet.

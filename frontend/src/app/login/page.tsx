@@ -1,20 +1,22 @@
 "use client";
 
-import React, { useState, FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { RetroWindow, RetroInput, RetroButton, Logo } from "@/components/ui";
-import { useAuth, type UserRole } from "@/components/auth/AuthProvider";
+import { AuthField, AuthPageShell } from "@/components/auth/AuthPageShell";
+import { RetroButton } from "@/components/ui/RetroButton";
+import { useAuth } from "@/components/auth/AuthProvider";
 
 export default function LoginPage() {
   const router = useRouter();
   const { signIn } = useAuth();
 
+  const [role, setRole] = useState<"Manager" | "Employee">("Manager");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+  const [submitError, setSubmitError] = useState<string>();
   const [submitting, setSubmitting] = useState(false);
-  const [role, setRole] = useState<UserRole>("Employee");
 
   function validate() {
     const next: typeof errors = {};
@@ -28,125 +30,91 @@ export default function LoginPage() {
     return Object.keys(next).length === 0;
   }
 
-  async function handleSubmit(e: FormEvent) {
+  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (!validate()) return;
+    if (submitting) return;
+    setSubmitError(undefined);
+    if (!validate()) {
+      const form = e.currentTarget;
+      requestAnimationFrame(() => form.querySelector<HTMLInputElement>('input[aria-invalid="true"]')?.focus());
+      return;
+    }
 
     setSubmitting(true);
     try {
-      await signIn(role, { email, password });
-      router.push(role === "Manager" ? "/dashboard" : "/employee-home");
+      const signedInAs = await signIn({ email, password, role });
+      router.push(signedInAs === "Manager" ? "/manager/home" : "/employee/home");
     } catch (error) {
-      setErrors((current) => ({
-        ...current,
-        password: error instanceof Error ? error.message : "Sign-in failed",
-      }));
+      setSubmitError(error instanceof Error ? error.message : "Sign-in failed");
     } finally {
       setSubmitting(false);
     }
   }
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center bg-bg px-4 py-12 overflow-hidden">
-      {/* ── Decorative background shapes ── */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute -top-32 -right-32 w-[500px] h-[500px] rounded-full opacity-[0.04]"
-        style={{
-          background:
-            "repeating-radial-gradient(circle, var(--color-border) 0px, var(--color-border) 1px, transparent 1px, transparent 28px)",
-        }}
-      />
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute -bottom-24 -left-24 w-[400px] h-[400px] rounded-full opacity-[0.04]"
-        style={{
-          background:
-            "repeating-radial-gradient(circle, var(--color-accent) 0px, var(--color-accent) 1px, transparent 1px, transparent 32px)",
-        }}
-      />
-
-      {/* ── Sign-in window ── */}
-      <RetroWindow title="RetailPulse - Sign In" className="w-full max-w-md relative z-10">
-        <form onSubmit={handleSubmit} className="space-y-5" noValidate>
-          {/* Logo */}
-          <div className="flex justify-center pb-2">
-            <Logo size={36} />
+    <AuthPageShell title="Sign in" description="Sign in to open your workspace.">
+      <form onSubmit={handleSubmit} className="space-y-4" noValidate aria-busy={submitting}>
+        <fieldset disabled={submitting}>
+          <legend className="mb-2 text-xs font-semibold uppercase tracking-wider text-text-muted">Sign in as</legend>
+          <div className="grid grid-cols-2 gap-2">
+            {(["Manager", "Employee"] as const).map((option) => (
+              <label key={option}>
+                <input type="radio" name="sign-in-role" value={option} checked={role === option}
+                  onChange={() => { setRole(option); setSubmitError(undefined); }} className="peer sr-only" />
+                <span className="flex min-h-11 cursor-pointer items-center justify-center rounded-lg border border-border-soft px-3 text-sm font-semibold text-text peer-checked:border-accent peer-checked:bg-surface-alt peer-checked:text-accent peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-accent peer-disabled:cursor-not-allowed peer-disabled:opacity-60">{option}</span>
+              </label>
+            ))}
           </div>
+        </fieldset>
+        <AuthField
+          label="Email"
+          type="email"
+          placeholder="you@company.com"
+          value={email}
+          onChange={(e) => {
+            setEmail(e.target.value);
+            if (errors.email) setErrors((p) => ({ ...p, email: undefined }));
+          }}
+          error={errors.email}
+          autoComplete="email"
+        />
 
-          {/* Email */}
-          <RetroInput
-            label="Email"
-            type="email"
-            placeholder="you@company.com"
-            value={email}
-            onChange={(e) => {
-              setEmail(e.target.value);
-              if (errors.email) setErrors((p) => ({ ...p, email: undefined }));
-            }}
-            error={!!errors.email}
-            helperText={errors.email}
-            autoComplete="email"
-          />
+        <AuthField
+          label="Password"
+          type="password"
+          value={password}
+          onChange={(e) => {
+            setPassword(e.target.value);
+            if (errors.password) setErrors((p) => ({ ...p, password: undefined }));
+          }}
+          error={errors.password}
+          autoComplete="current-password"
+        />
 
-          {/* Password */}
-          <RetroInput
-            label="Password"
-            type="password"
-            placeholder="••••••••"
-            value={password}
-            onChange={(e) => {
-              setPassword(e.target.value);
-              if (errors.password) setErrors((p) => ({ ...p, password: undefined }));
-            }}
-            error={!!errors.password}
-            helperText={errors.password}
-            autoComplete="current-password"
-          />
+        {submitError && <p role="alert" className="text-sm text-danger">{submitError}</p>}
+        <RetroButton
+          type="submit"
+          variant="primary"
+          disabled={submitting}
+          className="min-h-11 w-full"
+        >
+          {submitting ? "Signing in…" : "Sign in"}
+        </RetroButton>
 
-          <div>
-            <span className="block mb-1.5 font-heading text-xs font-semibold tracking-wide text-text-muted uppercase">
-              Access level
-            </span>
-            <div className="flex overflow-hidden rounded-md border-2 border-border">
-              {(["Employee", "Manager"] as UserRole[]).map((option) => (
-                <button
-                  key={option}
-                  type="button"
-                  onClick={() => setRole(option)}
-                  className={`flex-1 px-4 py-2 font-heading text-sm font-semibold transition-colors ${role === option ? "bg-accent text-surface" : "bg-surface text-text hover:bg-surface-alt"}`}
-                >
-                  {option}
-                </button>
-              ))}
-            </div>
-            <p className="mt-1.5 text-xs text-text-muted">
-              Local demo: manager@retailpulse.local or employee@retailpulse.local with password123.
-            </p>
-          </div>
-
-          {/* Submit */}
-          <RetroButton
-            type="submit"
-            variant="primary"
-            disabled={submitting}
-            className="w-full"
+        <p className="text-center text-sm text-text-muted">
+          Don&apos;t have an account?{" "}
+          <Link
+            href="/signup"
+            className="font-semibold text-accent hover:text-accent-hover underline underline-offset-2 transition-colors"
           >
-            {submitting ? "Signing in…" : "Sign In"}
-          </RetroButton>
-
-          {/* Link to signup */}
-          <p className="text-center text-sm text-text-muted">
-            Don&apos;t have an account?{" "}
-            <Link
-              href="/signup"
-              className="font-semibold text-accent hover:text-accent-hover underline underline-offset-2 transition-colors"
-            >
-              Sign up
-            </Link>
-          </p>
-        </form>
-      </RetroWindow>
-    </div>
+            Sign up
+          </Link>
+        </p>
+        {process.env.NODE_ENV === "development" && <details className="text-sm text-text-muted">
+          <summary className="w-fit cursor-pointer">Local demo credentials</summary>
+          <p className="mt-2 break-words">The accounts are manager@retailpulse.local and employee@retailpulse.local. The password 000000 only works on a local database created with <code>--seed-demo</code>. On the shared demo database, use the manager and employee passwords written in <code>.env.demo</code>.</p>
+        </details>}
+      </form>
+    </AuthPageShell>
   );
 }

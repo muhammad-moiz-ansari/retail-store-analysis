@@ -14,7 +14,8 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 Identifier = Annotated[str, Field(strict=True, min_length=1, max_length=200, pattern=r"^\S(?:.*\S)?$")]
 TableName = Literal["tracks", "role_decisions", "interactions", "zone_dwell", "footfall",
                     "queue_samples", "unattended_episodes", "pipeline_health", "heatmaps"]
-ToolName = Literal["get_footfall", "get_zone_dwell", "get_interactions", "get_unattended", "get_coverage"]
+ToolName = Literal["get_footfall", "get_zone_dwell", "get_interactions", "get_unattended", "get_coverage",
+                   "get_queue", "get_pipeline_health"]
 MAX_WINDOW = timedelta(days=31)
 MAX_RESULTS = 1000
 MAX_EVIDENCE_IDS = 200
@@ -141,7 +142,7 @@ class Evidence(Contract):
 
 class Metric(Contract):
     value: float | None = Field(strict=True)
-    unit: Literal["count", "seconds", "ratio", "percent"]
+    unit: Literal["count", "seconds", "ratio", "percent", "fps"]
     evidence: tuple[Evidence, ...] = Field(default=(), max_length=20)
     unavailable_reason: str | None = Field(default=None, min_length=1, max_length=1000)
     estimated: bool = False
@@ -261,7 +262,7 @@ class UnattendedEpisode(Contract):
     window: TimeWindow  # Clipped interval; zero-length overlaps are excluded.
     waited: SecondsMetric
     helped: bool
-    provenance: Literal["stored_derivation_verdict_unfiltered"] = "stored_derivation_verdict_unfiltered"
+    provenance: Literal["stored_derivation_verdict_unfiltered", "stored_derivation_verdict_filtered"] = "stored_derivation_verdict_unfiltered"
 
 
 class UnattendedResult(ResultContext):

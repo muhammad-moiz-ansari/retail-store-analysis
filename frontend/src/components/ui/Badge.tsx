@@ -1,6 +1,6 @@
 import React from "react";
 
-type BadgeVariant = "accent" | "success" | "danger" | "neutral";
+type BadgeVariant = "accent" | "success" | "danger" | "attention" | "neutral";
 
 interface BadgeProps {
   variant?: BadgeVariant;
@@ -9,9 +9,10 @@ interface BadgeProps {
 }
 
 const variantStyles: Record<BadgeVariant, string> = {
-  accent: "bg-accent-soft/80 text-text border-accent-soft",
+  accent: "bg-surface-alt text-accent border-accent-soft",
   success: "bg-success/15 text-success border-success/40",
   danger: "bg-danger/15 text-danger border-danger/40",
+  attention: "bg-attention/10 text-attention border-attention/40",
   neutral: "bg-surface-alt text-text-muted border-border-soft",
 };
 

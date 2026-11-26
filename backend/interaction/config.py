@@ -37,12 +37,28 @@ class InteractionConfig:
     floor_zones: dict[str, list[list[float]]] = field(default_factory=dict)
     zone_hold_seconds: float = 1.0  # a track must stay this long in a new zone before it counts as a move
     heatmap_grid: tuple[int, int] = (32, 18)  # cols, rows
+    # What kind of zone the whole view is right now (events.live_zones), shown on the running video and never stored:
+    # hot = more customers than employees, gray = customers with at least as many employees, green = employees only,
+    # inactive = nobody.
+    live_zones: bool = True
+    view_hold_seconds: float = 1.5  # a new state must last this long before it shows
+    zone_hot_ratio: float = 1.0  # customers one employee covers; the zone is hot when customers exceed this x employees
+    # When an employee has interacted with every customer in view within this many seconds, the zone is gray whatever the ratio.
+    zone_served_seconds: float = 30.0
     # Entrance camera only: a vertical line at this normalised x; a track ending on the other side of it from where it
     # started is one footfall, "in" when it moved toward entrance_in_direction ("right" or "left").
     entrance_line: float | None = None
     entrance_in_direction: Literal["right", "left"] = "right"
+    # Directional counter (events.footfall.entrance_crossings): a track must stay entrance_hold_seconds beyond the
+    # +-entrance_half_band neutral band to confirm a side; a gap over entrance_max_gap_seconds between samples resets it.
+    # Keep --every / --track-every so recorded samples stay closer together than entrance_max_gap_seconds.
+    entrance_half_band: float = 0.02
+    entrance_hold_seconds: float = 0.25
+    entrance_max_gap_seconds: float = 1.0
     # Counter camera only: normalised polygon where customers queue; sampled every queue_sample_seconds.
     queue_zone: list[list[float]] | None = None
+    # Registered store map for this camera (events.spatial): path of the map JSON. Ingestion then writes cell_dwell.
+    map_file: str | None = None
     queue_sample_seconds: float = 5.0
     # Pipeline health frame check: mean grey (0-255) below this is a dark/covered lens; a picture changing less than
     # frozen_change (mean, 64x36 grey thumbnail) for frozen_seconds is a frozen stream (cam1.mp4 ends with one).
@@ -86,6 +102,15 @@ class InteractionConfig:
     judge_frames: int = 4  # frames sampled across the last min_interaction_seconds
     judge_recheck_seconds: float = 1.0  # a rejected pair is re-judged this often while still close
     device: str = DEVICE  # "cuda:0" runs YOLO on the GPU (the .pt model; OpenVINO is CPU-only)
+
+    def __post_init__(self) -> None:
+        if self.entrance_line is not None:
+            try:
+                from ..events.footfall import validate_entrance_config
+            except ImportError:  # run as a script, without the backend package
+                from events.footfall import validate_entrance_config
+            validate_entrance_config(self.entrance_line, self.entrance_in_direction, self.entrance_half_band,
+                                     self.entrance_hold_seconds, self.entrance_max_gap_seconds)
 
     @classmethod
     def from_json(cls, path: Path | None, **overrides) -> "InteractionConfig":

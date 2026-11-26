@@ -111,7 +111,7 @@ def test_real_readers_map_hand_calculated_values_and_preserve_provenance_read_on
     assert 'outside' not in response.text
     assert data['metrics']['exits']['evidence'][0]['source'] == 'pipeline_health'
     assert data['metrics']['unattendedEpisodes']['status'] == 'partial'
-    assert 'does not filter' in json.dumps(data['metrics']['unattendedEpisodes']['limitations']).lower()
+    assert 'may predate verdict filtering' in json.dumps(data['metrics']['unattendedEpisodes']['limitations']).lower()
     assert fingerprint(database, (*TABLES, 'users')) == before
 
 
@@ -145,3 +145,35 @@ def test_footfall_never_presents_a_truncated_sum_as_complete():
         limitations=('truncated',), buckets=(FootfallBucket(window=WINDOW,
             entries=observed, exits=observed),), occupancy=CountMetric(value=None, unavailable_reason='unknown'))
     assert footfall_total(result, 'entries').value is None
+
+
+def test_registered_map_is_attached_for_the_selected_run_and_never_substituted(setup, monkeypatch, tmp_path):
+    client, headers, request, database, *_ = setup
+    square = lambda x0, x1: [[x0, 0], [x1, 0], [x1, 1], [x0, 1]]
+    game_map = dict(map_version='store-1-v1', store_id='store-1',
+        cells=[dict(id='left', polygon=square(0, .5)), dict(id='right', polygon=square(.5, 1))],
+        cameras=dict(c1=dict(points=[[0, 0, 0, 0], [1, 0, 1, 0], [1, 1, 1, 1], [0, 1, 0, 1]], visible_polygon=square(0, .6))))
+    map_path = tmp_path/'map.json'
+    map_path.write_text(json.dumps(game_map), encoding='utf-8')
+    put(database, 'cell_dwell', [event('c1', 0, 600, cell_id='left', map_version='store-1-v1', track_id=2, role='customer', dwell_s=600),
+                                 event('other', 0, 600, store_id='store-2', cell_id='left', map_version='store-1-v1', track_id=3, role='employee', dwell_s=600)])
+    selected = request | dict(filters=dict(zoneId='z1', runId='r1'))
+    post = lambda body: client.post('/analytics/dashboard', headers=headers, json=body).json()
+
+    assert 'spatial' not in post(selected)  # no map configured: nothing is shown
+    monkeypatch.setenv('RETAILPULSE_MAP_CONFIG', str(map_path))
+    before = fingerprint(database, (*TABLES, 'cell_dwell'))
+    data = post(selected)
+    cells = {cell['id']: cell for cell in data['spatial']['cells']}
+    assert data['spatial']['version'] == 'store-1-v1' and data['spatial']['window'] == data['request']['window']
+    assert (cells['left']['category'], cells['left']['quality']) == ('customer', 'ok')  # the other store's employee is not read
+    assert cells['left']['values'] == dict(customer_presence=600, employee_presence=0, confirmed_interactions=0, unverified_interactions=0)
+    assert (cells['right']['category'], cells['right']['quality']) == (None, 'unmapped')
+    assert set(cells['right']['values'].values()) == {None}
+    assert fingerprint(database, (*TABLES, 'cell_dwell')) == before
+
+    assert 'spatial' not in post(request)  # no run selected
+    map_path.write_text(json.dumps(game_map | dict(store_id='store-2')), encoding='utf-8')
+    wrong_store = post(selected)
+    assert 'spatial' not in wrong_store and any('could not be read' in text for text in wrong_store['limitations'])
+    assert wrong_store['metrics']['entries']['status']  # the metrics are still served

@@ -41,7 +41,7 @@ export function createFixtureProvider(scenario: FixtureScenario = "ready", now: 
           limitations: ["Hand-authored synthetic display scenario; not measured analytics."],
         };
         if (key === "unattendedEpisodes") metric.limitations.push("Stored derivation does not filter interaction verdicts; not confirmed unattended assistance.");
-        if (definition.tool === "get_footfall") metric.limitations.push("Existing source writer records net crossings per track, not complete entrance counts.");
+        if (definition.tool === "get_footfall") metric.limitations.push("Entrance counts come from one vertical line on one camera and are unvalidated until scored against a labelled clip.");
         if (reason) metric.limitations.push(reason);
         return [key, metric];
       })) as AnalyticsSnapshot["metrics"];

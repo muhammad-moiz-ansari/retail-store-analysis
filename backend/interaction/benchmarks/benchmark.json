@@ -9,6 +9,7 @@
   "videos": [
     {
       "path": "dummydataset/IMG_8829_part1_sq640.MOV",
+      "config": "backend/interaction/benchmarks/store_roles_fitted.json",
       "every": 10,
       "track_every": 10,
       "interactions": [
@@ -30,6 +31,7 @@
     },
     {
       "path": "dummydataset/Copy of IMG_8878_part1_sq640.MOV",
+      "config": "backend/interaction/benchmarks/store_roles_fitted.json",
       "every": 10,
       "track_every": 10,
       "interactions": [
@@ -49,6 +51,7 @@
     },
     {
       "path": "dummydataset/Copy of IMG_8880_part1_sq640.MOV",
+      "config": "backend/interaction/benchmarks/store_roles_fitted.json",
       "every": 10,
       "track_every": 10,
       "interactions": [
@@ -68,6 +71,7 @@
     },
     {
       "path": "dummydataset/Copy of IMG_8881_part1_sq640.MOV",
+      "config": "backend/interaction/benchmarks/store_roles_fitted.json",
       "every": 10,
       "track_every": 10,
       "interactions": [
@@ -100,6 +104,7 @@
     },
     {
       "path": "dummydataset/Copy of IMG_8885_part1_sq640.MOV",
+      "config": "backend/interaction/benchmarks/store_roles_fitted.json",
       "every": 10,
       "track_every": 10,
       "interactions": [],
@@ -115,6 +120,7 @@
     },
     {
       "path": "dummydataset/Copy of IMG_8886_part1_sq640.MOV",
+      "config": "backend/interaction/benchmarks/store_roles_fitted.json",
       "every": 10,
       "track_every": 10,
       "interactions": [
@@ -142,6 +148,7 @@
     },
     {
       "path": "dummydataset/Copy of IMG_8890_part2_sq640.MOV",
+      "config": "backend/interaction/benchmarks/store_roles_fitted.json",
       "every": 10,
       "track_every": 10,
       "interactions": [
@@ -168,6 +175,7 @@
     },
     {
       "path": "dummydataset/Copy of IMG_8893_part1_sq640.MOV",
+      "config": "backend/interaction/benchmarks/store_roles_fitted.json",
       "every": 10,
       "track_every": 10,
       "interactions": [
@@ -194,6 +202,7 @@
     },
     {
       "path": "dummydataset/Copy of IMG_8894_part1_sq640.MOV",
+      "config": "backend/interaction/benchmarks/store_roles_fitted.json",
       "every": 10,
       "track_every": 10,
       "interactions": [
@@ -213,6 +222,7 @@
     },
     {
       "path": "dummydataset/Copy of IMG_8895_part2_sq640.MOV",
+      "config": "backend/interaction/benchmarks/store_roles_fitted.json",
       "every": 10,
       "track_every": 10,
       "interactions": [
@@ -243,6 +253,7 @@
     },
     {
       "path": "dummydataset/Copy of IMG_8897_part1_sq640.MOV",
+      "config": "backend/interaction/benchmarks/store_roles_fitted.json",
       "every": 10,
       "track_every": 10,
       "interactions": [

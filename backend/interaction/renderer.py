@@ -12,8 +12,25 @@ from .types import CONFIRMED
 ROLE_COLORS = {"employee": (0, 180, 255), "customer": (255, 180, 0), "unknown": (160, 160, 160)}
 
 
+# BGR colour and caption of each whole-view zone state (events.live_zones).
+ZONE_STYLES = {"hot": ((0, 0, 255), "HOT ZONE: more customers than staff"), "gray": ((150, 150, 150), "GRAY ZONE: customers covered by staff"),
+               "green": ((0, 170, 0), "GREEN ZONE: staff only"), "inactive": ((60, 60, 60), "NOT ACTIVE: nobody in view"),
+               "starting": ((60, 60, 60), "STARTING")}
+
+
+def draw_zones(frame: np.ndarray, zones: dict) -> np.ndarray:
+    """Frame the whole picture in the zone's colour and caption it; the view is one zone."""
+    framed = frame.copy()
+    height, width = framed.shape[:2]
+    color, caption = ZONE_STYLES[zones["view"]]
+    cv2.rectangle(framed, (3, 3), (width - 4, height - 4), color, 7)
+    cv2.rectangle(framed, (12, height - 40), (26 + 10 * len(caption), height - 12), color, -1)
+    cv2.putText(framed, caption, (19, height - 20), cv2.FONT_HERSHEY_SIMPLEX, 0.55, (255, 255, 255), 2)
+    return framed
+
+
 def draw_result(frame: np.ndarray, result: dict) -> np.ndarray:
-    annotated = frame.copy()
+    annotated = draw_zones(frame, result["zones"]) if result.get("zones") else frame.copy()
     centers: dict[int, tuple[int, int]] = {}
     for person in result["people"]:
         x1, y1, x2, y2 = person["bbox"]

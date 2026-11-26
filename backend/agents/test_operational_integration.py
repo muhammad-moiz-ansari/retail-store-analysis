@@ -114,6 +114,6 @@ def test_seeded_operational_replay(postgres_dsn):
     receipts = [adapter.handle(staged,scope=producer) for _ in range(2)]
     assert [r.decision for r in receipts] == ['dispatched','duplicate']
     assert all(r.synthetic and r.handler_invoked for r in receipts)
-    assert any('does not filter' in note for note in staged.evidence.demand.limitations)
+    assert any('may predate verdict filtering' in note for note in staged.evidence.demand.limitations)
     assert coverage.zones[0].unknown_observation.value == 2400
     assert fingerprint(path) == before

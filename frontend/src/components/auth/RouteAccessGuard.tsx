@@ -4,23 +4,11 @@ import React, { useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "./AuthProvider";
 
-const MANAGER_ROUTES = [
-  "/dashboard",
-  "/customer-info",
-  "/pos-info",
-  "/employee-info",
-  "/spatial-analytics",
-  "/settings",
-  "/alerts",
-  "/voice-agent",
-  "/interactions",
-  "/camera-handoff",
-  "/compare-people",
-];
-const EMPLOYEE_ROUTES = ["/employee-home", "/my-performance", "/employee"];
+export const MANAGER_ROUTES = ["/manager"];
+export const EMPLOYEE_ROUTES = ["/employee"];
 const SHARED_AUTHENTICATED_ROUTES = ["/profile"];
 
-function matchesRoute(pathname: string, routes: string[]) {
+export function matchesRoute(pathname: string, routes: string[]) {
   return routes.some((route) => pathname === route || pathname.startsWith(`${route}/`));
 }
 
@@ -38,9 +26,9 @@ export function RouteAccessGuard({ children }: { children: React.ReactNode }) {
     if (!authenticated) {
       router.replace("/login");
     } else if (needsManager && role !== "Manager") {
-      router.replace("/employee-home");
+      router.replace("/employee/home");
     } else if (needsEmployeeSession && role !== "Employee") {
-      router.replace("/dashboard");
+      router.replace("/manager/home");
     }
   }, [authenticated, needsEmployeeSession, needsManager, protectedRoute, ready, role, router]);
 
@@ -52,7 +40,7 @@ export function RouteAccessGuard({ children }: { children: React.ReactNode }) {
         (needsEmployeeSession && role === "Employee")));
 
   if (!mayView) {
-    return <div className="flex-1 bg-bg" aria-live="polite" aria-label="Checking access" />;
+    return <p className="mx-auto max-w-lg p-6 text-sm text-text-muted" role="status">Checking access…</p>;
   }
 
   return <>{children}</>;

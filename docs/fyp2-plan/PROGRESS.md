@@ -4,7 +4,79 @@
 
 The [combined team plan](RetailPulse_FYP2_Implementation_Plan.md) governs current work and ownership. Implement camera/CV first, then register the supplied map, then render live role occupancy and confirmed-interaction layers. Exactly four dynamic occupancy categories are allowed: **Customer, Employee, Customer–employee both, No one**. They are not fixed permitted-role polygons. Invalid/missing/unknown observation is separate quality metadata, never a fifth category or a false No one. Historical z1–z6, staff zones, queue/counter geometries and hot/gray terminology below are legacy technical references, not additional category requirements. No existing runtime/schema/fixture has been migrated by this documentation update.
 
+## 25 November 2026 (Saqib)
+
+| Commit | Change | Evidence |
+|---|---|---|
+| `567b85c` | Aisle relay: one split-screen clip (`backend/videos/multirow.mp4`, left = Aisle 1 / zone z2, right = Aisle 2 / z3) goes through one YOLO tracking pass, detections are split by the gutter, and an aisle with customers and no employee becomes a real alert, dispatch decision and employee task. When an employee is seen in that aisle the task completes and the alert resolves, with the camera named as the actor. New: `backend/aisle_relay.py` (watcher, store bridge, run threads, manager-only `/aisle-relay/*` routes), `backend/aisle_relay_cv.py` (live CV), manager page `/manager/aisle-relay`, employee home push. Existing code touched: `dispatch.select_dispatch_employee` / `choice_reason` take an optional `source_zone_id` (staff rostered where the cameras see spare staff rank right after the target zone's own staff), `/tasks/events` is now a real server-sent stream that fires when the user's tasks change, `is_local_database` accepts a Unix socket | `backend/tests/test_aisle_relay.py`. Local demo run only; no real store footage, no deployed backend |
+| `fe3c936` | Dropped a stray Windows `Zone.Identifier` file; `*:Zone.Identifier` is ignored | |
+
+How to run it from these docs alone (local PostgreSQL only; never point it at the shared Neon database, `python -m backend.aisle_relay setup` refuses a non-local host):
+
+1. Set `DATABASE_URL` to a local PostgreSQL database, then `python -m backend.aisle_relay setup`. It creates the schema, the seeded demo accounts, a second employee rostered in Aisle 1 (`employee2@retailpulse.local`) and a camera row for Aisle 2. Sign in with the seeded demo password as the manager and as an employee, on separate screens.
+2. Start the backend, open `/manager/aisle-relay`, choose "Live CV" and start. The page shows the annotated MJPEG stream (`/aisle-relay/stream`); an employee signed in on `/employee/home` receives the task through `/tasks/events`.
+3. Offline alternatives: `python scripts/aisle_relay_demo.py backend/videos/multirow.mp4 --out dummyoutputs/multirow` writes `trace.json` and `annotated.webm` (about 18 minutes on CPU for 74 s; add `--dispatch` to send signals to the database while it runs, `--realtime` to pace it like a camera, `--max-seconds` for a quick check). `python -m backend.aisle_relay replay --trace dummyoutputs/multirow/trace.json` replays a trace into the store without the web page, and the page's "Replay recorded pass" does the same.
+4. `imageio-ffmpeg` is needed for a browser-playable recording; without it the video is mp4v and will not play in the page. A new run cancels the open tasks of earlier relay runs.
+
+Limits: demonstration scope. The two aisles are two halves of one recording, not two independent cameras, so this is not the labelled two-camera handoff (S-B5-HANDOFF) and does not decide D2. There is no map calibration, no CV-track to employee-account link and no deployment. Timing defaults are `WatchPolicy(need_hold_s=2.0, arrive_hold_s=1.0)`; they are demo values, not Ruhab's signed-off thresholds (D5).
+
+## 17 November 2026 (Saqib)
+
+| Commit | Change | Evidence |
+|---|---|---|
+| `257a83c`, `5f895f1` | Live view state of a camera on the Interactions page (`backend/events/live_zones.py`): hot, gray, green or inactive from the customer-to-employee ratio and whether every customer had a confirmed interaction in the last 30 s. A per-camera attention indicator, not an occupancy category (see CONTRACTS.md, "Live camera view state") | `test_live_zones.py`, `test_live_view.py` in the fast CI job |
+| `9ffd40f` | Sign-in page asks for Manager or Employee; a choice that does not match the stored role is refused | Frontend checks green |
+| `00023c4` | Benchmarks rerun with the fitted role weights | Reports `report_{11,set_b}_fitted_20261117.json` |
+| `7800e8f` | Settings page opens on an unseeded database | |
+| this commit | Benchmark role truth is matched to each run's own tracks through `persons.json`, so role accuracy no longer depends on the track IDs of one machine's run; both benchmarks rerun; dashboard QA Q1–Q4; acceptance rehearsal regenerated (A9 passes); doc corrections | 276 fast backend tests on local PostgreSQL; 40 frontend tests, typecheck and lint |
+
+## 15 to 16 November 2026 (Saqib)
+
+| Commit | Change | Evidence |
+|---|---|---|
+| `d25ea55`, `9c91440` | Directional footfall in ingestion, footfall evaluator, operations command, `prepare_demo`, API image | CI green on `9c91440` |
+| `df88abc` | `--min-wait-s` / `--max-unknown-share` on the operations command; footfall sampling check | CI green |
+| `1364810` | Map registration (`backend/events/spatial.py`), `cell_dwell`, dashboard `spatial` payload | CI green incl. CV suite; synthetic geometry only |
+| `b8b872f` | Alert investigation and next-day staffing routes, alerts-page UI | CI green |
+| this commit | Digest route, staffing approval record, blind interval named in the coverage caveat (A9), 51 golden questions with a refusal fix, per-address login limit, maskable icon | 254 backend tests; synthetic rehearsal A1 and A3 to A9 pass, A2 and A10 not runnable |
+
+None of this has run on real footage or a deployed backend.
+
 ## Latest reconciliation / next handoff
+
+- **Moiz, narrated Ask summaries:** Added an authenticated endpoint for page-specific cited summaries of retained Ask runs. Retrieval keeps the same manager, store, selection and expiry checks. The Ask panel offers the summary for retained runs. Final testing remains open.
+
+- **Moiz, optional provider routing:** Ask can use the existing Hugging Face configuration for route selection. The provider receives the question only and cannot choose tools or supply answer text. Offline routing remains the default. No provider request was made.
+
+- **Moiz, next-day staffing reasoning:** Added a scoped, approval-required proposal for cited forecasts, historical coverage and roster counts. No roster changes are made. Trusted source and approval wiring remain open.
+
+- **Moiz, anomaly reasoning:** Added evidence-ranked pipeline, coverage and queue signals for one trusted alert scope. Alert lookup and HTTP registration await a store-owned alert source.
+
+- **Moiz, map presentation:** The dashboard can render a validated optional map snapshot with the four occupancy categories and separate role/interaction layers. Real map registration, projection, result assembly and validation remain pending.
+
+- **Moiz, recent interaction rows:** The manager dashboard can show up to ten scoped confirmed or unverified recorded events. The endpoint reuses the authorized dashboard selection and omits track identities. Final verification is deferred.
+
+- **Moiz, wider Query binding:** Ask can route explicit queue and camera-health questions through the grounded graph. It shows dated samples, with queue waits marked estimated. Alert analysis, causal investigation and schedule planning remain open.
+
+- **Moiz, wider analytics readers:** Added typed, read-only queue and pipeline-health samples with evidence and scope checks. The existing Ask graph still exposes its original five tools. Alert reads need a trusted store-ownership source.
+
+- **Moiz, shared Ask budget:** Added an opt-in PostgreSQL counter shared by workers. It enforces ten authorized questions per manager and store per clock minute. Deployment schema and acceptance are pending.
+
+- **Moiz, durable Ask traces:** Added opt-in PostgreSQL persistence and scoped run retrieval. The schema has not been applied to any environment. Verification is deferred to the final pass.
+
+- **Moiz, unattended provenance:** Dashboard and Ask readers recognize server-attested store/camera/run tuples produced by the fixed derivation. Historical and mixed selections keep the warning. No event rows were changed.
+
+- **Moiz, directional footfall:** The per-track entrance counter in `backend/events/footfall.py` uses hysteresis, stable-side confirmation and a gap reset. It returns each confirmed entry or exit for Saqib’s ingestion integration. Validation is deferred.
+
+- **Moiz, dispatch dashboard:** System Status displays recorded dispatch outcomes and task acknowledgement counts, mean and median. The manager can refresh manually. Functional and end-to-end verification is deferred to the final testing pass.
+
+- **Moiz, dashboard Ask panel:** Configured backend mode now uses the authorized window and filters for Ask. Preview mode disables Ask. The panel labels synthetic backend answers and presents refusal, partial evidence, citations and service errors.
+
+- **Moiz, authenticated Ask pilot:** The read-only graph is available behind opt-in, verified Manager identity, current store membership, and the server-selected dashboard window and filters. It reuses both business specialists and limits Ask calls per manager per process. No traces are retained by this HTTP route.
+
+- **Frontend S1 (Moiz, 15 Nov 2026):** Session, signup and backend proxy routes reject missing or default credentials outside explicitly opted-in Next.js development. Dashboard analytics always requires configured secrets. Build, lint, TypeScript and 36 frontend tests passed. A production-mode HTTP smoke test with a loopback mock confirmed 503 and no upstream calls with default credentials, working logout, and successful configured login and proxy calls. Deployment verification and rate limiting for the future authenticated Ask route remain open. See [SECURITY_REVIEW.md](SECURITY_REVIEW.md).
+
+- **Scope cleanup (15 Nov 2026):** Removed the accidental sales module, import fixtures, manager page, and service endpoints. Current analytics cover camera and store operations.
 
 - **Ruhab, after the local handoff (12 Nov 2026):** `docs/extra-docs/` (locally nested as `docs/extra-docs/extra-docs/`) was read. Added golden-question evaluation (`42aca07`), cited page summaries and a narrative number check (`5924cef`), and 10–20 s review clips with track boxes (`9227e21`). [SECURITY_REVIEW.md](SECURITY_REVIEW.md) and [DEMO_SCRIPT.md](DEMO_SCRIPT.md) were added with the final commit. Commits follow the handoff's `git add .` / single `-m` workflow; the local root report PDF is ignored so it is never swept in.
 - **Checks (fixture and generated data only):** `.venv/Scripts/python.exe -m pytest backend/agents backend/events/test_events.py -q -p no:cacheprovider` gives **125 passed, 85 skipped**: 84 PostgreSQL skips, plus the OpenCV clip test, which skips without cv2. With `.venv-interaction`, `pytest backend/agents/business/test_clip_render.py` gives **2 passed** on a generated video. Golden set: routing and answers 16/17 (EA1 is a router gap), refusals 4/4, grounded runs 1.0. No real footage, store data, provider or dispatch was used.
@@ -41,7 +113,7 @@ The [combined team plan](RetailPulse_FYP2_Implementation_Plan.md) governs curren
 - **DOC-CONSOLIDATION (Moiz, docs only):** combined Saqib's Nov-10 snapshot with unchanged member/agent ownership and inspected local artifacts. Tracked/local combined plans match. No camera/map/category implementation, refit adoption, evaluation rerun or runtime migration is claimed.
 - **CV-LOCAL (Saqib):** existing event producers and local merged reports support 11 tuning clips/13 interactions (F1 0.867), 14 set-B clips/17 interactions (F1 0.462). Snapshot says 10 pass-bys; local set-B lists contain 9. Keep that discrepancy open.
 - **CV-REPORTED (Saqib evidence, Ruhab tuning ownership):** role/refit completion at d6783b2, 109/113 matched role tracks, candidate weights/random-six reports and clean speed are reported from Saqib's separate branch. The commit/module are absent here; no integration/adoption/reproduction is asserted.
-- **MAP-1 / MAP-2 / MAP-3:** planned and pending. Existing generic grids/polygons do not implement supplied-map registration, role-separated heatmaps or the four live category state machine.
+- **MAP-1 / MAP-2 / MAP-3 (11 Nov, superseded):** at the time planned and pending. Since then MAP-2 code (`1364810`) and Ruhab's four-category classifier exist; see CHECKLIST.md for current status.
 - **M-P1–M-P4:** implemented/offline verified foundation retained (last recorded 139 passed / 1 missing-real-output skip); do not infer real agents, durable operational delivery or full Query/UI completion.
 - **M-UI-VERCEL:** user confirmed cloud frontend deployment works after the local configuration fix. This is user-confirmed frontend success, not independent live backend/login or real-data verification.
 - Continue at camera/CV verification with Saqib, supplied-map alignment jointly, and dynamic semantics with Ruhab. Moiz can continue fixture-backed UI binding, wider tools and Query/golden-set evaluation in parallel. No member waits for all other work to finish.
@@ -56,7 +128,7 @@ Updated 2026-11-11. Current task: **frontend Vercel build configuration (Moiz)**
 | M-P1-FIXTURE | Moiz consuming Saqib B0 | Existing `backend/events/fixtures.py` and `schema.sql`; test-only second store in `backend/agents/test_contracts.py` | Existing generator reused unchanged into ignored `data/outputs/moiz-phase1/fixture.sqlite3`; second store only in tests | CLI succeeded; `validate` returned `[]`. Seed 7: tracks/role_decisions/zone_dwell 5553 each, interactions 772, footfall 2216, queue_samples 1440, health 2160, heatmaps 36, unattended 381 | Synthetic only; no real-data performance or production multi-store query-isolation claim. |
 | M-P1-DOCS | Moiz | `AGENTS.md`, root ignore rule, tracked ownership/contracts/status | Local reusable instructions installed under ignored `docs/extra-docs/`; shared contracts/status published for teammates | Ignore check covers local handoffs and generated fixture DB; no already-tracked extra-docs files found | Teammate clones need only shared docs; missing local handoff should be requested, not invented. |
 | S-B0-EVENTS | Saqib | `backend/events/{schema.sql,ingest.py,fixtures.py,test_events.py}` | Existing code committed in baseline `44b0c00`; reused, not rebuilt | Existing event suite passed with the new contract suite; real-run parameter case skipped because no matching local outputs exist | Current unattended derivation reads first interaction without verdict filtering; source comment/design claim is stronger than current implementation. Saqib owns review/correction. |
-| S-B4-SIGNALS | Saqib (Moiz historical Footfall logic) | `backend/events/zones.py`, ingest/CLI camera integration | Code present for dwell/transitions, net footfall, queue estimates, health and heatmaps | Existing focused event tests verify toy zone/footfall/queue/health records; no camera inference executed here | Per-camera polygons, healthy entrance coverage and real-feed integration/validation pending. Net per-track crossing loses in-and-back-out within a track. |
+| S-B4-SIGNALS | Saqib (Moiz historical Footfall logic) | `backend/events/zones.py`, ingest/CLI camera integration | Code present for dwell/transitions, net footfall, queue estimates, health and heatmaps | Existing focused event tests verify toy zone/footfall/queue/health records; no camera inference executed here | Per-camera polygons, healthy entrance coverage and real-feed integration/validation pending. Superseded 15 Nov (`d25ea55`): ingestion now writes every confirmed entry and exit through `backend/events/footfall.py`; runs ingested earlier hold net per-track crossings. |
 | S-B1-LABELS | Saqib; Ruhab retraining | `EVALUATION.md`, `B1_LABEL_IMPORT.md`, benchmark records | Existing labels and split audit/benchmark history present; checklist labels are not a fresh audit | No labelling or CV benchmark rerun in this task | Remaining manual labels, people/role/zone ground truth and recording-level split evidence still require owner confirmation; do not infer a complete dataset from old checklist counts. |
 | S-B2-BENCHMARK | Saqib | Existing interaction benchmark and historical reports | Benchmark implementation and committed reports present | Not rerun (Phase 1 uses fixtures, no camera/model work) | GPU throughput and error analysis/remaining benchmark tasks retain independent status. |
 | R-B3-REFIT | Ruhab; Saqib supplies labels/factors | Existing `backend.interaction.refit` | Refit code present according to current shared checklist | No fit/training/model download in this task | Label completeness, clip-held-out refit comparison and acceptance pending. |

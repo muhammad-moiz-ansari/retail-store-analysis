@@ -70,6 +70,19 @@ CREATE TABLE IF NOT EXISTS pipeline_health (
   frozen_or_dark INTEGER          -- NULL until the frame check (B4.5) runs
 );
 
+-- Additive to v1 (MAP-2): time a track spent on one cell of the registered map. cell_id is a map location, not an
+-- authorisation scope; zone_id stays the camera's zone. Written only when the camera config names a map_file.
+CREATE TABLE IF NOT EXISTS cell_dwell (
+  event_id TEXT PRIMARY KEY, run_id TEXT NOT NULL, store_id TEXT NOT NULL, camera_id TEXT NOT NULL,
+  zone_id TEXT NOT NULL, ts_start TIMESTAMPTZ NOT NULL, ts_end TIMESTAMPTZ NOT NULL,
+  cell_id TEXT NOT NULL,
+  map_version TEXT NOT NULL,
+  track_id INTEGER NOT NULL,
+  role TEXT NOT NULL CHECK (role IN ('employee', 'customer', 'unknown')),
+  dwell_s DOUBLE PRECISION NOT NULL
+);
+CREATE INDEX IF NOT EXISTS cell_dwell_run ON cell_dwell(run_id, map_version);
+
 -- Additive to v1: foot-point counts per camera per wall-clock hour, cells = JSON rows x cols grid over the frame.
 CREATE TABLE IF NOT EXISTS heatmaps (
   event_id TEXT PRIMARY KEY, run_id TEXT NOT NULL, store_id TEXT NOT NULL, camera_id TEXT NOT NULL,

@@ -18,8 +18,8 @@ export function RetroWindow({
 }: RetroWindowProps) {
   return (
     <div
-      className={`rounded-lg overflow-hidden border-2 border-border ${className}`}
-      style={{ boxShadow: "4px 4px 0px rgba(74, 46, 30, 0.25)" }}
+      className={`rounded-[var(--panel-radius)] overflow-hidden border border-border-soft ${className}`}
+      style={{ boxShadow: "4px 4px 0px rgba(16, 27, 70, 0.25)" }}
     >
       {/* ── Title bar ── */}
       <div className={`flex items-center justify-between bg-surface-alt px-4 py-2 border-b-2 border-border select-none ${titleBarClassName}`}>

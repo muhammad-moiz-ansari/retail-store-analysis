@@ -20,7 +20,7 @@ Snapshot v1 echoes the exact store/window/filter selection, provenance (`mode`, 
 | confirmedInteractions / unverifiedInteractions | count | get_interactions confirmed_count / unverified_count, kept separate |
 | meanConfirmedDuration | seconds | get_interactions mean_confirmed_duration, not a fabricated response/approach time |
 | customerDwellP50 | seconds | get_zone_dwell customer p50; explicit zone required by backend |
-| unattendedEpisodes | count | get_unattended episode_count; preserve stored_derivation_verdict_unfiltered limitation |
+| unattendedEpisodes | count | get_unattended episode_count; show legacy verdict warning when the derivation is unattested |
 | staffedOpenRatio | ratio | get_coverage selected zone staffed_open_ratio; null without trusted operating denominator |
 
 Each metric has nullable numeric `value`, `unit`, `status: ok | empty | partial | unavailable`, nullable `reason`, `estimated`, `limitations` and evidence entries (`query`, `source`, `ids`, `matchedCount`, `truncated`). The adapter must retain metric-specific unavailable reasons/estimates and source-result limitations, not upgrade partial tool outputs. Positive values require evidence; observed zero may have no row IDs, but needs the backend's actual observation/health justification. Undefined averages/ratios remain null even in an observed-empty window. Unavailable metrics cannot contain numbers. Non-finite/negative values, fractional counts, ratios outside 0–1, missing explanations and invalid evidence are rejected. No occupancy/net-inside claim is derived by subtracting crossings; initial occupancy is not established.
@@ -165,6 +165,10 @@ Zone and camera ids are the ones seeded in `store_core.py` (`z1`–`z6`, `c1`–
 - **footfall (B4.3)**: entrance camera config sets `entrance_line` (normalised x of a vertical line) and
   `entrance_in_direction` ("right"/"left"). A track that ends on the other side from where it started is one row at
   its last crossing time (net, so jitter on the line counts once; walking in and back out within one track counts 0).
+  Moiz’s `entrance_crossings` helper accepts a camera-local track’s time-ordered normalized x samples and returns
+  confirmed `(direction, seconds)` events. It arms on a stable side, ignores the neutral band, requires a hold on the
+  destination side, skips duplicate timestamps, and re-arms after a long gap. Separate confirmed return trips count.
+  Saqib owns integration, stable event IDs and camera setup. Defaults are provisional and require clip validation.
 - **queue_samples (B4.4)**: counter camera config sets `queue_zone` (normalised polygon) and `queue_sample_seconds` (5).
   Every sample counts customers (not staff, not unknown) whose feet are in the polygon; `est_wait_s` = length x the
   run's mean interaction duration (NULL when the run has no interactions).
@@ -184,7 +188,7 @@ All methods are keyword-only on an injected `AnalyticsTools` implementation:
 
 | Method | Request | Result | Event sources / availability |
 |---|---|---|---|
-| `get_footfall(*, scope, request)` | `FootfallRequest(window, filters={}, limit=100, granularity="hour")` | `FootfallResult`: buckets with entries/exits; nullable occupancy | `footfall`, supporting `pipeline_health`; stored net crossings, not all entrance crossings. Initial occupancy/entrance coverage currently absent. |
+| `get_footfall(*, scope, request)` | `FootfallRequest(window, filters={}, limit=100, granularity="hour")` | `FootfallResult`: buckets with entries/exits; nullable occupancy | `footfall`, supporting `pipeline_health`; stored directional crossings of one vertical entrance line per camera (every confirmed entry and exit since 15 Nov; earlier runs hold net crossings per track and need a re-ingest); unvalidated until scored on a labelled clip. Initial occupancy/entrance coverage currently absent. |
 | `get_zone_dwell(*, scope, request)` | `ZoneDwellRequest(window, filters={"zone_id":"z3"}, limit=100)` | `ZoneDwellResult`: by-role sample count, total, p50, p90 | `zone_dwell`; customer/employee/unknown kept separate; usable zone geometry remains camera-specific. |
 | `get_interactions(*, scope, request)` | `InteractionsRequest(window, filters={}, limit=100)` | `InteractionsResult`: confirmed/unverified counts, confirmed mean duration, mean approach and approach sample count | `interactions` plus `tracks`; confirmed means `verdict=interaction`. Approach reference is explicitly `camera_first_seen`, not entrance/zone entry. |
 | `get_unattended(*, scope, request)` | `UnattendedRequest(window, filters={}, limit=100, min_seconds=180)` | `UnattendedResult`: episode count and clipped episodes with helped/provenance | `unattended_episodes`; current writer's first-help derivation does **not** filter interaction verdict. These are stored derived waits, not verified absence of assistance. Saqib owns correction/validation. |
@@ -253,7 +257,7 @@ New-Item -ItemType Directory -Force data/outputs/moiz-phase1 | Out-Null
 
 This reuses Saqib's seeded `fixture-2026-11-03` / `store-1`, 09:00–21:00 UTC (rush 17:00–19:00, under-covered z3, blocked c2 14:00–14:40). Every consumer result must set `synthetic=true` for this store file; the schema itself has no synthetic column. A second-store collision case exists only in the new tests and does not replace his generator. Heatmaps remain image-grid counts; queue waits remain heuristics (length × mean interaction duration). No metric floor calibration, new CV models, account linkage, operating-hours policy or dispatch capability is introduced here.
 
-Follow-on interfaces (`get_queue`, `get_alerts`, `get_pipeline_health`, legacy `get_pos_sales`) are not part of this five-tool Phase 1 publication; their signatures/readers remain pending scope/data decisions. POS is outside the agreed project scope; the legacy name is not a commitment to build POS analytics. Arbitrary `run_readonly_sql` is deferred. No production migrations or writing connection are introduced; Phase 2 must use SQLite `mode=ro`, parameterized queries, fixed source names, and must not call `backend.events.ingest.connect`, which executes DDL.
+Follow-on readers `get_queue` and `get_pipeline_health` accept a trusted manager scope and typed `ToolRequest` in `OperationsAnalytics`. Their row evidence identifies the stored sample. Ask registers a separate operations node that can cite queue length, estimated waits and camera FPS. Original business specialists retain their existing allowlists. App alert readership awaits trusted store ownership. Arbitrary `run_readonly_sql` is deferred. No production migrations or writing connection are introduced; Phase 2 must use SQLite `mode=ro`, parameterized queries, fixed source names, and must not call `backend.events.ingest.connect`, which executes DDL.
 
 ## Executable event readers (Moiz Phase 2)
 
@@ -319,7 +323,6 @@ To configure a real reader, set `synthetic=False` only for a real event database
 | `get_queue(*, scope, window, counter=None, limit=100)` | `queue_samples`; length samples and nullable estimated wait seconds with per-metric event evidence | Confirm counter→camera/zone mapping. Label wait as heuristic (`estimated=true`), not measured waiting time; retain scoped UTC/health/truncation rules. |
 | `get_pipeline_health(*, scope, window, limit=100)` | `pipeline_health`; FPS, confidence, unknown-role share, churn and frozen/dark sample metrics/evidence | Null confidence/check fields remain unknown; camera-wide health uses authorized camera mapping. This is a proposed reporting interface, separate from the implemented internal observation helper. |
 | `get_alerts(*, scope, window, status=None, limit=100)` | Existing application alert records through a separately authorized read adapter; event evidence references when present | App alert tables are not in `events/schema.sql`. Store/actor ownership and evidence mapping must be agreed before implementing. No invented event-store alerts table. |
-| Legacy `get_pos_sales(*, scope, window, category=None)` | Unavailable: POS analytics is outside the agreed project scope | Retained only to resolve the older handoff name; no POS implementation, metric claim or registered callable is added. |
 
 These follow-on requests would use the same bounded/timezone-aware request, scoped access, status/null and evidence conventions after their source contracts are agreed. Arbitrary `run_readonly_sql` remains deferred. No graph, provider, business-agent policy, roster selection or operational task delivery is part of these readers.
 
@@ -349,7 +352,7 @@ Retention failure does not fabricate a saved run: `trace_retained=false`, error 
 
 | Proposed HTTP contract (not exposed yet) | Validated input / result | Required server integration |
 |---|---|---|
-| `POST /agents/ask` | Body `AskRequest`, response `GraphRun`; malformed inputs become validation errors | Resolve current authenticated actor and authorized store/filters from authoritative server records before `service.ask`. Never accept scope/node/dispatch in the body or treat arbitrary role headers as store authorization. |
+| `POST /agents/ask` | Body `AskRequest`, response `GraphRun`; malformed inputs become validation errors | Opt-in with `RETAILPULSE_ASK_ENABLED=1`. The existing dashboard identity and membership checks establish scope. Only the member’s default dashboard window and filters are accepted. Scope, node and dispatch are server-owned. The read-only graph uses the two business specialists, with ten requests per minute per manager per worker by default, or a shared ten-request budget per manager and store per clock minute when enabled with optional 24-hour HTTP trace retention. The response header `X-RetailPulse-Analytics-Source` identifies `synthetic` or `recorded` provenance for the dashboard panel. |
 | `GET /agents/runs/{id}` | Server-generated run ID, response the retained `GraphRun`; not-found for unknown/expired/unauthorized | Resolve the same current trusted actor/store/permission scope and call `get_run`. Do not expose another actor's or a broader historical trace. |
 
 These routes are deliberately absent from `backend/app.py` pending the real account/store binding. The existing internal-secret dependency and session-to-header proxy are integration building blocks, not a completed multi-store identity policy.
@@ -573,6 +576,19 @@ Rules: unmapped or less than 80% observed cells are masked. A role is present at
 - Keep layers on separate toggles, each showing its unit and window.
 - Never sum layers into a density, and show the confirmed and unverified layers separately.
 
+### Live camera view state (FR-07; Saqib, 17 Nov 2026)
+
+`backend/events/live_zones.py` gives the whole view of one camera a live state on the Interactions page and in the annotated video. It is an **attention indicator per camera, not one of the four occupancy categories and not a fifth zone type**. It has no floor plan, is never written to the event store and is not read by the dashboard map, the agents or dispatch.
+
+| State | Rule | Nearest occupancy category (not equal) |
+|---|---|---|
+| hot | customers > `zone_hot_ratio` × employees (default 1.0), and not every customer attended | customer, or customer_employee when employees are outnumbered |
+| gray | customers with at least as many employees, **or** every customer in view had a confirmed or unverified interaction within `zone_served_seconds` (default 30) | customer_employee, or customer when all were attended |
+| green | employees only | employee |
+| inactive | nobody, on an observed frame | no_one |
+
+It differs from the four categories on purpose: hot and gray rank attention, so they use the ratio and confirmed interactions, while the categories record presence only and say nothing about help. Unknown roles settle nothing and frozen or dark frames are skipped, so a blind camera never reads as inactive, which matches the rule that unobserved is not No one. A state shows after it has held `hold_s` (1.5 s). Do not quote hot/gray as occupancy categories, and do not feed them to `OccupancyTracker`.
+
 ### Insight Narration digest (Moiz UI, Ruhab wording)
 
 `narration.build_digest(runs, title=..., decisions=()) -> Digest`. `Digest` has `title`, `window`, `provenance` (`synthetic` | `real` | `mixed` | `unknown`), `status` (`ok` | `partial` | `no_evidence`), `sections[{heading, lines[]}]`, `caveats[]` and `citation_count`. `Digest.text()` gives plain text. All runs must share one window. Every printed figure is a verified claim value, worded from fixed templates. Sections are Traffic, Dwell, Assistance, Waiting customers, Staff coverage, and Raised for staff follow-up (from emitted signal decisions).
@@ -590,3 +606,29 @@ Rules: unmapped or less than 80% observed cells are masked. A role is present at
 - **Page summaries (C4):** `narration.page_summary(runs, page)` for page `dashboard` | `customer-info` | `employee-info` | `alerts` returns `{page, window, provenance, sentences[{text, citations[Evidence]}]}` with at most 5 sentences. A non-real provenance always leads with an uncited provenance sentence. **Moiz UI:** render the sentences in order and link each citation to its evidence trail. The end-of-day PDF follows FUTURE_WORK B3 (`window.print()` on a reports page), not a PDF dependency.
 - **Narrative check:** `narration.verify_narrative(text, runs) -> {supported, unsupported_numbers}`. Every number in an LLM narrative must round to a grounded claim value; dates and clock times are skipped as labels. If `supported` is false, show the template digest instead.
 - **Review clips (C5):** `review_items(..., pad_s=3, min_clip_s=10, max_clip_s=20)` gives clips of 10–20 s. `clip_render.render_review_clip(video, detections, segment, out, highlight_tracks=..., synthetic=...)` writes an MP4 with role-coloured boxes from `<output>.detections.json`. `clip_render.resolve_video(video_ref, root)` resolves only under one recording root. **Saqib:** supply the recording root, a `RecordingSource` per run/camera, and keep the `.detections.json` field names (`timestamp`, `people[].track_id|bbox|role|role_confidence`) stable.
+
+
+### Manager System Status dispatch summary
+
+`GET /system-status` returns `dispatchOutcomes`, a map of persisted dispatch-decision codes to counts, and `acknowledgement`, with `tasks`, `meanSeconds` and `medianSeconds`. The manager dashboard shows these as all-time operational totals, separate from the selected event analytics window. An empty map means no decisions were recorded. Timing is null when there are no acknowledgement samples. Same-event retries reuse the original record without adding a second count.
+
+### Dashboard interaction rows
+
+`GET /analytics/dashboard/interactions` uses the authenticated membership's default selection. It returns up to ten recent overlapping confirmed or unverified recorded events, newest first, with source provenance and truncation. No track or account identities are included. An empty event list does not establish an observed zero or a healthy feed.
+
+### Dashboard map presentation binding
+
+The dashboard snapshot may carry `spatial` with `version`, the exact dashboard `window`, and up to 500 `cells`. Each cell contains `id`, a normalized `polygon` of 3–64 [x,y] points, `category`, `quality`, and a `values` map keyed by the four agreed layer IDs. Numeric layer values are nonnegative; counts are integers. Missing/null values remain unavailable. Unmapped cells may not carry numeric values. Use the same registered map version for geometry, occupancy and heatmaps. The existing snapshot omits the field until backend assembly and projection exist.
+
+## Aisle relay demo (Saqib, 25 Nov 2026)
+
+Commit `567b85c`. Demonstration path from a split-screen recording to a real dispatch; it is separate from the internal operational dispatch contract above and does not satisfy it.
+
+- **Input:** one video holding two aisle feeds side by side. `find_split` locates the gutter; left = `aisle-1`, right = `aisle-2`. Zone binding is `DEFAULT_ZONES = {"aisle-1": "z2", "aisle-2": "z3"}`.
+- **Signals:** `AisleWatcher` (pure, no database) emits `need` when an aisle has customers and no employee for `need_hold_s` (2.0 s) and `arrived` when an employee is seen in an aisle with an open request for `arrive_hold_s` (1.0 s). `StoreBridge` sends `need` to `backend.dispatch.handle_event` (alert, decision, task) and `arrived` completes the task and resolves the alert with the camera as actor. Task evidence carries `relay: "aisle-relay"`; a new run cancels earlier open relay tasks.
+- **Event body:** the legacy `handle_event` body, plus `sourceZoneId` (optional): the zone where the cameras saw spare staff. `select_dispatch_employee(conn, target_zone_id, source_zone_id=None)` ranks target-zone staff, then staff rostered in the source zone, then floaters, then most spare staff. The min-staff rule still applies. This is not the `OperationalEvent` envelope: no `storeId`, `idempotencyKey` or stable `eventId`.
+- **Routes (manager only):** `POST /aisle-relay/start {"mode": "live" | "replay", "video"?, "stride"?, "realtime"?, "speed"?}`, `POST /aisle-relay/stop`, `GET /aisle-relay/status`, `GET /aisle-relay/stream` (MJPEG while a live run plays), `GET /aisle-relay/video/{webm|mp4}` (recording after the run). Runs are process-local and a live run takes a CV job slot.
+- **Outputs:** `trace.json` (aisle counts per sample, tracks, every watcher signal with its reason) and `annotated.webm` in `dummyoutputs/multirow/`.
+- **`GET /tasks/events`:** now a server-sent stream bound to the signed-in user: `ready` once, then a `message` (`{"changed": true}`) whenever that user's tasks change (managers see all tasks, employees their own). One database connection per open stream, polled every second, closed after 300 s (the browser reconnects), keepalive comment every 15 s.
+- **Safety:** `python -m backend.aisle_relay setup` and the demo accounts work on local databases only (`is_local_database`: localhost, loopback or a Unix socket). Never run it against the shared Neon database.
+- **Not provided:** CV-track to account link, calibration to a floor plan, per-camera health, durable idempotency, a second physical camera.

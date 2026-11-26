@@ -23,10 +23,12 @@ class IdempotencyConflict(ValueError):
     """The same idempotency key arrived with a different event: reconcile, never dispatch twice."""
 
 
-def select_dispatch_employee(conn, target_zone_id: str | None):
+def select_dispatch_employee(conn, target_zone_id: str | None, source_zone_id: str | None = None):
     """First eligible employee: active, rostered and available, no open task, and taking them does not drop
     their own rostered zone below its min_staff (unless that zone is the target). Ranked: staff of the target zone, then
-    floaters, then the zone with the most spare staff above its minimum. Adjacency and "mid-interaction" are not inputs yet:
+    floaters, then the zone with the most spare staff above its minimum. A caller that saw where the spare staff are (the aisle
+    relay's cameras) passes source_zone_id; employees rostered there come straight after the target zone's own staff.
+    Adjacency and "mid-interaction" are not inputs yet:
     there is no store map (MAP-2) and no link from CV tracks to employee accounts.
     shortcut: the roster's shift text ('9 AM - 1 PM') is not checked against the clock; parse it once shifts are structured."""
     return conn.execute(
@@ -44,20 +46,25 @@ def select_dispatch_employee(conn, target_zone_id: str | None):
         LEFT JOIN zones ON zones.id = free.zone_id
         LEFT JOIN free_per_zone ON free_per_zone.zone_id = free.zone_id
         WHERE free.zone_id IS NULL OR free.zone_id = %(zone)s OR free_per_zone.n > coalesce(zones.min_staff, 0)
-        ORDER BY CASE WHEN free.zone_id = %(zone)s THEN 0 WHEN free.zone_id IS NULL THEN 1 ELSE 2 END,
+        ORDER BY CASE WHEN free.zone_id = %(zone)s THEN 0 WHEN free.zone_id = %(source)s THEN 1
+                      WHEN free.zone_id IS NULL THEN 2 ELSE 3 END,
                  free_per_zone.n - coalesce(zones.min_staff, 0) DESC, free.name
         LIMIT 1
         """,
-        {"active": list(ACTIVE_TASK_STATES), "zone": target_zone_id},
+        {"active": list(ACTIVE_TASK_STATES), "zone": target_zone_id, "source": source_zone_id},
     ).fetchone()
 
 
-def choice_reason(employee, target_zone_id: str | None) -> str:
+def choice_reason(employee, target_zone_id: str | None, source_zone_id: str | None = None) -> str:
     """One line for the manager and the decision log."""
     if employee["zone_id"] == target_zone_id:
         return f"{employee['name']}: rostered in this zone, free and available."
     if employee["zone_id"] is None:
         return f"{employee['name']}: free floater with no rostered zone."
+    if source_zone_id and employee["zone_id"] == source_zone_id:
+        left = employee["spare"] - 1
+        return (f"{employee['name']}: free in {employee['zone_id']}, where the cameras see spare staff; "
+                + ("that zone still meets its minimum staff." if left == 0 else f"that zone keeps {left} above its minimum staff."))
     return f"{employee['name']}: free; zone {employee['zone_id']} keeps {employee['spare'] - 1} above its minimum staff."
 
 
@@ -152,11 +159,11 @@ def handle_event(conn, body: dict) -> dict:
             decision, reason = "paused", "Automatic dispatch is paused in settings."
         elif not should_dispatch:
             decision, reason = "alert_only", "Dispatch was not requested for this event."
-        elif employee := select_dispatch_employee(conn, zone_id):
+        elif employee := select_dispatch_employee(conn, zone_id, body.get("sourceZoneId") or None):
             employee_id = employee["id"]
             task_id = create_task_for_employee(conn, employee_id, str(body.get("instruction") or DEFAULT_INSTRUCTION), zone_id,
                                                body.get("sourceZoneId") or None, alert_id, evidence)
-            decision, reason = "dispatched", choice_reason(employee, zone_id)
+            decision, reason = "dispatched", choice_reason(employee, zone_id, body.get("sourceZoneId") or None)
         else:
             decision, reason = "no_eligible_employee", "No rostered, available employee could be sent without breaking zone minimum staffing."
 

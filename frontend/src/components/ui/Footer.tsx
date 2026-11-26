@@ -20,26 +20,15 @@ const PUBLIC_QUICK_LINKS: NavLink[] = [
 
 // Authenticated (dashboard) quick links
 const AUTHENTICATED_QUICK_LINKS: NavLink[] = [
-  { label: "Home", href: "/dashboard" },
-  { label: "Customer Info", href: "/customer-info" },
-  { label: "Employee Info", href: "/employee-info" },
-  { label: "Spatial Analytics", href: "/spatial-analytics" },
-  { label: "Store Settings", href: "/settings", managerOnly: true },
+  { label: "Home", href: "/manager/home" },
+  { label: "Customer Info", href: "/manager/customers" },
+  { label: "Employee Info", href: "/manager/employees" },
+  { label: "Spatial Analytics", href: "/manager/spatial-analytics" },
+  { label: "Store Settings", href: "/manager/settings", managerOnly: true },
   { label: "About", href: "/about" },
 ];
 
-/** Routes where the user is considered authenticated */
-const AUTHENTICATED_ROUTES = [
-  "/dashboard",
-  "/customer-info",
-  "/employee-info",
-  "/spatial-analytics",
-  "/settings",
-  "/alerts",
-  "/employee",
-  "/employee-home",
-  "/my-performance",
-];
+const AUTHENTICATED_ROUTES = ["/manager", "/employee", "/profile"];
 
 export function Footer() {
   const pathname = usePathname();
@@ -53,15 +42,15 @@ export function Footer() {
   const quickLinks = hasSession && protectedRoute
     ? role === "Employee"
       ? [
-          { label: "My Workspace", href: "/employee-home" },
-          { label: "My Performance", href: "/my-performance" },
+          { label: "My Workspace", href: "/employee/home" },
+          { label: "My Performance", href: "/employee/performance" },
           { label: "About", href: "/about" },
         ]
       : AUTHENTICATED_QUICK_LINKS
     : PUBLIC_QUICK_LINKS;
 
   return (
-    <footer className="bg-surface-alt border-t border-border-soft mt-auto">
+    <footer className="relative mt-auto border-t border-border-soft bg-surface-alt shadow-[0_-8px_24px_-12px_rgb(5_10_28_/_28%)]">
       {/* ── Three-column content ── */}
       <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-10">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -143,7 +132,7 @@ function FooterLogo() {
 
   return (
     <Image
-      src="/logo.png"
+      src="/favicon-light.png"
       alt="RetailPulse logo"
       width={24}
       height={24}

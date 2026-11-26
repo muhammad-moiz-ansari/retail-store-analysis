@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Space_Grotesk, Inter, JetBrains_Mono } from "next/font/google";
 import { NavbarShell } from "@/components/ui/NavbarShell";
-import { Footer } from "@/components/ui";
 import { AuthProvider } from "@/components/auth/AuthProvider";
 import { RouteAccessGuard } from "@/components/auth/RouteAccessGuard";
 import "./globals.css";
@@ -26,7 +25,12 @@ const jetbrainsMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: "RetailPulse",
-  description: "Retail analytics with an elegant retro touch",
+  description: "Store analytics and employee workflows",
+  icons: {
+    icon: { url: "/favicon-dark.png", type: "image/png" },
+    apple: { url: "/pwa-192.png", type: "image/png" },
+  },
+  appleWebApp: { capable: true, title: "RetailPulse" },
 };
 
 export default function RootLayout({
@@ -49,11 +53,9 @@ export default function RootLayout({
       </head>
       <body suppressHydrationWarning className="min-h-full flex flex-col">
         <AuthProvider>
-          <NavbarShell />
-          <RouteAccessGuard>
-            <div className="flex-1">{children}</div>
-          </RouteAccessGuard>
-          <Footer />
+          <NavbarShell>
+            <RouteAccessGuard>{children}</RouteAccessGuard>
+          </NavbarShell>
         </AuthProvider>
       </body>
     </html>

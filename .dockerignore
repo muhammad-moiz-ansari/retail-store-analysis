@@ -1,0 +1,16 @@
+.git
+node_modules
+frontend
+Report
+Report.pdf
+FYP Report-main.pdf
+data
+dummydataset
+notebooks
+docs
+.venv*
+**/__pycache__
+**/.next
+backend/videos
+backend/output
+backend/models

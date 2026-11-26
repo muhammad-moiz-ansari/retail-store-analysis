@@ -1,24 +1,71 @@
 @import "tailwindcss" source("..");  /* scan only frontend/src: the repo root holds live CV output that changes many times a second */
 
-/* ── Design System: Elegant Retro OS ── */
+/* ── RetailPulse design system ── */
 
 :root {
-  /* Core palette */
-  --color-bg: #EDE0C8;
-  --color-surface: #F7EFDD;
-  --color-surface-alt: #E4D4B0;
-  --color-border: #4A2E1E;
-  --color-border-soft: #8B6A4A;
-  --color-accent: #C1652F;
-  --color-accent-hover: #A6521F;
-  --color-accent-soft: #E8B84B;
-  --color-success: #4C7A5A;
-  --color-danger: #B5432E;
-  --color-text: #2E1F14;
-  --color-text-muted: #6B5642;
+  color-scheme: light;
+  --color-sidebar: #101B46;
+  --color-on-sidebar: #FFFFFF;
+  --color-on-accent: #FFFFFF;
+  --color-on-danger: #FFFFFF;
+  --color-sidebar-focus: #FFFFFF;
+  --color-heat-low: #EEEDFA;
+  --color-heat-mid: #7779CD;
+  --color-heat-high: #101B46;
+  --color-on-heat-low: #101B46;
+  --color-on-heat-high: #FFFFFF;
+  --color-coral: #C54F3D;
+  --color-cyan: #007F9E;
+  --color-lime: #C8E850;
+  --color-on-lime: #0D132B;
+  --color-attention: #8A4B08;
+  --panel-radius: 1rem;
+  --workspace-gap: clamp(1rem, 3vw, 2rem);
+  --color-bg: #FAF8F2;
+  --color-surface: #FFFFFF;
+  --color-surface-alt: #EEEDFA;
+  --color-border: #101B46;
+  --color-border-soft: #DADCEC;
+  --color-accent: #6335D4;
+  --color-accent-hover: #5026B7;
+  --color-accent-soft: #7779CD;
+  --color-success: #276749;
+  --color-danger: #9B2934;
+  --color-text: #101B46;
+  --color-text-muted: #51586B;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --color-bg: #0D132B;
+  --color-sidebar: #111A36;
+  --color-surface: #182242;
+  --color-surface-alt: #29355F;
+  --color-border: #354269;
+  --color-border-soft: #354269;
+  --color-accent: #A5ABFF;
+  --color-accent-hover: #C3BDFF;
+  --color-on-accent: #0D132B;
+  --color-on-danger: #0D132B;
+  --color-text: #FAF8F2;
+  --color-on-sidebar: #FAF8F2;
+  --color-text-muted: #AAB2CC;
+  --color-accent-soft: #C3BDFF;
+  --color-coral: #FF927D;
+  --color-cyan: #39D8F4;
+  --color-lime: #D9F565;
+  --color-sidebar-focus: #A5ABFF;
+  --color-attention: #FFD187;
+  --color-success: #87DBAD;
+  --color-danger: #FFA5AA;
 }
 
 @theme inline {
+  --color-sidebar: var(--color-sidebar);
+  --color-on-sidebar: var(--color-on-sidebar);
+  --color-on-accent: var(--color-on-accent);
+  --color-on-danger: var(--color-on-danger);
+  --color-attention: var(--color-attention);
   /* Map CSS variables into Tailwind utilities */
   --color-bg: var(--color-bg);
   --color-surface: var(--color-surface);
@@ -37,6 +84,15 @@
   --font-heading: var(--font-space-grotesk);
   --font-body: var(--font-inter);
   --font-mono: var(--font-jetbrains-mono);
+}
+
+/* Keep foregrounds and focus readable on the lime KPI in either theme. */
+.lime-kpi {
+  background: var(--color-lime);
+  border-color: var(--color-lime);
+  --color-text: var(--color-on-lime);
+  --color-text-muted: var(--color-on-lime);
+  --color-accent: var(--color-on-lime);
 }
 
 /* ── Base styles ── */
@@ -62,4 +118,203 @@ h1, h2, h3, h4, h5, h6 {
     rgba(0, 0, 0, 0.03) 4px
   );
   pointer-events: none;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+}
+
+.workspace-sidebar :focus-visible {
+  outline-color: var(--color-sidebar-focus);
+}
+
+.auth-field:focus,
+.profile-field:focus {
+  outline: 2px solid transparent;
+  box-shadow: 0 4px 20px 3px color-mix(in srgb, var(--color-accent) 24%, transparent);
+}
+
+:is(.auth-field, .profile-field):focus:not([aria-invalid="true"]) { border-color: var(--color-border-soft); }
+.employee-navbar { box-shadow: 0 6px 20px rgb(5 10 28 / 24%); }
+
+.auth-backdrop {
+  background:
+    radial-gradient(ellipse at 15% 10%, color-mix(in srgb, var(--color-accent) 13%, transparent), transparent 57%),
+    radial-gradient(ellipse at 88% 70%, color-mix(in srgb, var(--color-cyan) 10%, transparent), transparent 55%);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :is(.auth-field, .profile-field) { transition: box-shadow 160ms ease-out; }
+  :is(.auth-field, .profile-field):focus { transition-delay: 45ms; }
+}
+
+.theme-toggle {
+  display: inline-grid;
+  flex: none;
+  width: 2.75rem;
+  height: 2.75rem;
+  place-items: center;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.theme-toggle:hover { background: color-mix(in srgb, currentColor 10%, transparent); }
+.theme-toggle svg { width: 1.125rem; height: 1.125rem; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; }
+.theme-toggle-dark,
+[data-theme="dark"] .theme-toggle-light { display: none; }
+[data-theme="dark"] .theme-toggle-dark { display: inline-grid; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .theme-toggle > span { animation: theme-icon-in 180ms ease-out; }
+  @keyframes theme-icon-in {
+    from { opacity: 0; transform: rotate(-35deg); }
+    to { opacity: 1; transform: rotate(0); }
+  }
+}
+
+.recharts-default-tooltip {
+  background-color: var(--color-surface) !important;
+  border-color: var(--color-border-soft) !important;
+  color: var(--color-text);
+}
+
+.recharts-tooltip-item { color: var(--color-text) !important; }
+[data-theme="dark"] .recharts-legend-item-text { color: var(--color-text-muted) !important; }
+
+.workspace-content {
+  min-width: 0;
+  scroll-margin-top: 5rem;
+}
+
+html:has([data-public-shell]) {
+  scroll-padding-top: 5rem;
+}
+
+[data-public-shell] .workspace-content {
+  scroll-margin-top: 0;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html:has([data-public-shell]) {
+    scroll-behavior: smooth;
+  }
+}
+
+.translucent-nav {
+  background: color-mix(in srgb, var(--nav-surface, var(--color-surface-alt)) var(--nav-tint, 54%), transparent);
+  backdrop-filter: blur(18px) saturate(135%);
+  box-shadow: 0 6px 20px rgb(5 10 28 / 18%);
+}
+.translucent-nav.workspace-sidebar {
+  --nav-surface: var(--color-sidebar);
+  --nav-tint: 78%;
+}
+
+.manager-mobile-menu svg path { transform-origin: 12px 12px; }
+.manager-mobile-menu[data-open="true"] svg path:first-child { transform: rotate(45deg) translateY(6px); }
+.manager-mobile-menu[data-open="true"] svg path:nth-child(2) { opacity: 0; transform: scaleX(0.35); }
+.manager-mobile-menu[data-open="true"] svg path:last-child { transform: rotate(-45deg) translateY(-6px); }
+
+.manager-mobile-dropdown {
+  visibility: hidden;
+  opacity: 0;
+  transform: translateY(-10px) scale(0.98);
+  transform-origin: top right;
+  pointer-events: none;
+}
+.manager-mobile-menu[data-open="true"] .manager-mobile-dropdown {
+  visibility: visible;
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .manager-mobile-menu svg path { transition: transform 220ms ease, opacity 160ms ease; }
+  .manager-mobile-dropdown {
+    transition: transform 220ms ease, opacity 200ms ease, visibility 0s linear 220ms;
+  }
+  .manager-mobile-menu[data-open="true"] .manager-mobile-dropdown { transition-delay: 0s; }
+}
+
+[data-employee-shell] :is(.workspace-card, .workspace-panel) {
+  box-shadow: 0 12px 28px -16px rgb(5 10 28 / 42%), 0 3px 8px -5px rgb(5 10 28 / 18%);
+}
+
+[data-manager-shell] :is(.workspace-card, .workspace-panel):not(:is(.workspace-card, .workspace-panel) *) {
+  box-shadow: 0 14px 30px -17px rgb(5 10 28 / 38%), 0 3px 9px -4px rgb(5 10 28 / 14%);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .employee-avatar svg { transition: transform 150ms ease-out; }
+  .employee-avatar:hover svg { transform: scale(1.1); }
+  .employee-avatar:active svg { transform: scale(1); }
+  details[open] > .employee-account-dropdown {
+    transform-origin: top right;
+    animation: employee-dropdown-in 160ms ease-out both;
+  }
+  @keyframes employee-dropdown-in {
+    from { opacity: 0; transform: translateY(-5px) scale(0.96); }
+    to { opacity: 1; transform: none; }
+  }
+}
+
+:root {
+  scrollbar-color: var(--color-accent-soft) var(--color-bg);
+}
+
+#manager-sidebar-links {
+  padding-inline-end: 0.625rem;
+  scrollbar-width: thin;
+  scrollbar-color: white transparent;
+}
+
+:where(input[type="range"], progress, meter) {
+  accent-color: var(--color-accent);
+}
+
+@media (min-width: 64rem) {
+  .manager-shell {
+    display: grid;
+    grid-template-columns: 15rem minmax(0, 1fr);
+  }
+  .manager-shell[data-sidebar-collapsed] { grid-template-columns: 4.25rem minmax(0, 1fr); }
+}
+@media (min-width: 64rem) and (prefers-reduced-motion: no-preference) {
+  .manager-shell { transition: grid-template-columns 220ms ease; }
+}
+
+[data-manager-shell] :is(select, textarea, input:not([type="checkbox"], [type="radio"], [type="range"], [type="file"])):focus {
+  outline: 2px solid transparent;
+  border-color: var(--color-border-soft);
+  box-shadow: 0 4px 20px 3px color-mix(in srgb, var(--color-accent) 24%, transparent);
+}
+[data-manager-shell] :is(input, textarea, select)[aria-invalid="true"]:focus { border-color: var(--color-danger); }
+[data-manager-shell] select {
+  min-height: 2.5rem;
+  border: 1px solid var(--color-border-soft);
+  border-radius: 0.5rem;
+  padding-inline: 0.75rem;
+  background-color: var(--color-surface);
+  color: var(--color-text);
+}
+@supports (appearance: base-select) {
+  [data-manager-shell] select:not([multiple]),
+  [data-manager-shell] select:not([multiple])::picker(select) { appearance: base-select; }
+  [data-manager-shell] select::picker(select) {
+    border: 1px solid var(--color-border-soft);
+    border-radius: 0.65rem;
+    background: var(--color-surface);
+    color: var(--color-text);
+    box-shadow: 0 10px 24px rgb(5 10 28 / 18%);
+  }
+  [data-manager-shell] select option { padding: 0.5rem 0.75rem; }
+  [data-manager-shell] select option:is(:checked, :hover, :focus-visible) {
+    background: var(--color-surface-alt);
+    color: var(--color-accent);
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  [data-manager-shell] :is(select, textarea, input) { transition: box-shadow 160ms ease-out; }
 }

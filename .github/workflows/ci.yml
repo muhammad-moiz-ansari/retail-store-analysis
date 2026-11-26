@@ -44,8 +44,8 @@ jobs:
       - run: pip install -r backend/requirements-ci.txt
       - name: pytest (fast)
         run: >-
-          python -m pytest backend/agents backend/events/test_events.py backend/test_postgres_migration.py
-          backend/test_handoff_eval.py backend/tests/test_dispatch.py backend/tests/test_pos_core.py -q -ra -p no:cacheprovider --basetemp "$RUNNER_TEMP/pytest"
+          python -m pytest backend/agents backend/events/test_events.py backend/events/test_spatial.py backend/events/test_live_zones.py backend/test_postgres_migration.py
+          backend/test_handoff_eval.py backend/tests/test_dispatch.py backend/tests/test_operations.py backend/tests/test_ack_time.py backend/tests/test_security.py backend/tests/test_live_view.py -q -ra -p no:cacheprovider --basetemp "$RUNNER_TEMP/pytest"
 
   frontend:
     name: frontend checks
@@ -65,7 +65,8 @@ jobs:
 
   cv-slow:
     name: CV interaction suite (slow)
-    if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
+    # The Run workflow button needs this file on the default branch, so a commit message containing [cv] also starts it on push.
+    if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule' || contains(github.event.head_commit.message, '[cv]')
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:

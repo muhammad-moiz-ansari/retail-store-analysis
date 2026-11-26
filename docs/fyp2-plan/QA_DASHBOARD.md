@@ -21,6 +21,20 @@ Reviewed 12 November 2026 on `fyp2-ruhab`, which matches `fyp2-moiz` at `5f2c77c
 | Q6 | Info | Ask panel and map panel | Still disabled. Both business agents are now registered through `business_specialists()`, and the four-category and layer contracts exist (see CONTRACTS.md, "Ruhab business agents and policies") | Wire them when the `POST /agents/ask` auth binding lands |
 | Q7 | Info | Digest | There is no place for the Insight Narration digest yet | A "Today's digest" card that renders `Digest.sections`, the fixture banner and caveats as given |
 
+## Status (17 November 2026)
+
+| # | Status |
+|---|---|
+| Q1 | Fixed: each evidence line shows the first 5 IDs and "and N more" |
+| Q2 | Fixed: seconds read as s under 2 min, min under 2 h, then h; the exact seconds stay in the evidence details |
+| Q3 | Partly fixed: the window reads as `YYYY-MM-DD HH:MM UTC` (the ISO value stays in the `datetime` attribute). Zone display names are still the IDs; the backend has no display-name field |
+| Q4 | Fixed: the card reads "Unverified interactions (not counted)" with a "Not added to confirmed interactions" line |
+| Q5 | Fixed: the system status fetch aborts on unmount and has a Retry button (`manager/home/page.tsx`) |
+| Q6 | Ask is wired (`8272140`); the map panel renders when a map is configured |
+| Q7 | Open on this page; the manager home page has a digest panel (`c766434`) |
+
+Tests: `DashboardAnalytics.test.tsx` covers Q1–Q4; `npm run test:dashboard-provider` gives 40/40.
+
 ## Checks run
 
 See "Frontend check results" in PROGRESS.md for the exact commands and outcomes from this review.

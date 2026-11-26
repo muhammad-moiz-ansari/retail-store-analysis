@@ -49,6 +49,23 @@ GPU: `--device cuda:0` runs the detector on the GPU (the pipeline switches to `b
 
 The CLI writes an annotated video, `<output>.detections.json` (every processed frame: ByteTrack ID, bbox, detection confidence, per-frame role and factor evidence), `<output>.people.json` (one entry per ByteTrack ID: factors, weighted contributions, score, final role), `<output>.interactions.json` (one record per confirmed interaction: employee and customer ByteTrack IDs, start, last seen, duration, distance in body heights, the body part it was measured by, active state and the judge's `verdict`) and `<output>.rejected_interactions.json` (candidates the judge vetoed). Each detections frame also carries `interaction_active`, the flag shown on screen as INTERACTION: ON/OFF. Pixel distances must be calibrated per camera before treating them as physical distance.
 
+## Live zone state of the view
+
+The whole camera view is one zone, judged by the ratio of customers to employees, and the annotated video, the live preview and the Interactions page say which kind it is right now (`backend/events/live_zones.py`). No floor plan or calibration is involved.
+
+| State | Who is in view |
+|---|---|
+| Hot | More customers than employees, including customers with no employee |
+| Gray | Customers, with at least as many employees |
+| Green | Employees only |
+| Not active | Nobody |
+
+The comparison is a ratio. `zone_hot_ratio` (default 1.0) is how many customers one employee covers: the zone is hot when customers exceed that many per employee. At 1.0, two customers with one employee is hot; at 2.0 it takes three.
+
+Attention overrides the ratio. When an employee has had a confirmed interaction with every customer in view within the last `zone_served_seconds` (default 30), the zone is gray however many customers there are. It turns hot again when an unattended customer is in view or the timeframe runs out. Customers are followed by track, so one who gets a new track ID counts as not yet attended.
+
+A new state shows once it has lasted `view_hold_seconds` (1.5 s), so a missed detection or a brief role flip does not make it flicker. People of unknown role settle nothing, and frozen or dark frames are skipped, so a blind camera never reads as not active. The video gets a border and caption in the state's colour. While a run is in progress the state is kept in `<output>.view.json`, which also holds the time spent in each state and the timeline the page uses during playback; nothing goes to the event store. `"live_zones": false` in the `--config` file turns it off.
+
 ## Optional service
 
 For experimentation only, run the isolated service with:

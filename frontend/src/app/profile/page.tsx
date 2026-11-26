@@ -2,7 +2,8 @@
 
 import React, { type FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Badge, RetroButton, RetroCard, RetroInput, RetroWindow } from "@/components/ui";
+import { Badge, RetroButton, RetroInput } from "@/components/ui";
+import { ManagerPage, ManagerHeader, ManagerPanel, ManagerCard } from "@/components/ui/ManagerLayout";
 import { useAuth } from "@/components/auth/AuthProvider";
 
 const PROFILE_DATA = {
@@ -40,9 +41,9 @@ export default function ProfilePage() {
   const [systemAlerts, setSystemAlerts] = useState(true);
   const profile = PROFILE_DATA[role === "Manager" ? "Manager" : "Employee"];
 
-  function handleLogout() {
-    signOut();
-    router.push("/");
+  async function handleLogout() {
+    await signOut();
+    router.replace("/");
   }
 
   function handleDetailsSubmit(event: FormEvent<HTMLFormElement>) {
@@ -73,15 +74,11 @@ export default function ProfilePage() {
   }
 
   return (
-    <main className="mx-auto flex w-full max-w-[900px] flex-col gap-10 px-4 py-10 md:px-6 md:py-16">
-      <RetroWindow title="Edit Profile">
-        <p className="font-mono text-xs font-semibold uppercase tracking-[0.16em] text-accent">Account Settings</p>
-        <h1 className="mt-2 font-heading text-3xl font-bold tracking-tight text-text">Your Profile</h1>
-        <p className="mt-2 text-sm text-text-muted">Update your account details and preferences.</p>
-      </RetroWindow>
+    <ManagerPage>
+      <ManagerHeader title="Your profile"><p>Sample profile. Changes and notification preferences on this page apply to this session only. Password changes here are simulated.</p></ManagerHeader>
 
       <section aria-labelledby="profile-overview-heading">
-        <RetroCard>
+        <ManagerCard>
           <div className="flex flex-col items-center gap-6 sm:flex-row sm:items-start">
             <div className="flex shrink-0 flex-col items-center gap-2">
               <div className="flex h-20 w-20 items-center justify-center rounded-full bg-accent-soft font-heading text-3xl font-bold text-text" aria-label={`Avatar for ${profile.name}`}>
@@ -99,17 +96,20 @@ export default function ProfilePage() {
               <p className="mt-1 font-mono text-xs text-text-muted">System ID: {profile.employeeId}</p>
             </div>
           </div>
-        </RetroCard>
+        </ManagerCard>
       </section>
 
-      <RetroWindow title="Account Details">
+      <ManagerPanel title="Account Details">
         <form onSubmit={handleDetailsSubmit} className="space-y-6">
-          <RetroCard>
+          <ManagerCard>
             <div className="grid gap-5 md:grid-cols-2">
-              <RetroInput label="Full Name" type="text" value={fullName || profile.name} onChange={(event) => setFullName(event.target.value)} autoComplete="name" />
-              <RetroInput label="Email Address" type="email" value={email || (role === "Manager" ? "alex.morgan@retailpulse.com" : "staff03@retailpulse.com")} onChange={(event) => setEmail(event.target.value)} autoComplete="email" />
-              <RetroInput label="Phone Number" type="text" value={phone} onChange={(event) => setPhone(event.target.value)} autoComplete="tel" />
-              <RetroInput label="Employee/Staff ID" type="text" value={profile.employeeId} disabled readOnly />
+              <RetroInput className="profile-field" label="Full Name" type="text" value={fullName || profile.name} onChange={(event) => setFullName(event.target.value)} autoComplete="name" />
+              <RetroInput className="profile-field" label="Email Address" type="email" value={email || (role === "Manager" ? "alex.morgan@retailpulse.com" : "staff03@retailpulse.com")} onChange={(event) => setEmail(event.target.value)} autoComplete="email" />
+              <RetroInput className="profile-field" label="Phone Number" type="text" value={phone} onChange={(event) => setPhone(event.target.value)} autoComplete="tel" />
+              <div className="select-none cursor-default">
+                <p className="mb-1.5 font-heading text-xs font-semibold uppercase tracking-wide text-text-muted">Employee/Staff ID</p>
+                <p className="rounded-md border-2 border-border-soft bg-surface-alt px-3 py-2 text-sm">{profile.employeeId}</p>
+              </div>
               {role === "Employee" && (
                 <label className="block md:col-span-2">
                   <span className="mb-1.5 block font-heading text-xs font-semibold uppercase tracking-wide text-text-muted">Assigned Zone</span>
@@ -120,48 +120,48 @@ export default function ProfilePage() {
                 </label>
               )}
             </div>
-          </RetroCard>
+          </ManagerCard>
           <RetroButton type="submit" variant="primary" disabled={savingDetails}>{savingDetails ? "Saving..." : "Save Changes"}</RetroButton>
-          {detailsSaved && <SuccessBanner>Profile updated successfully.</SuccessBanner>}
+          {detailsSaved && <SuccessBanner>Sample profile updated for this page.</SuccessBanner>}
         </form>
-      </RetroWindow>
+      </ManagerPanel>
 
-      <RetroWindow title="Change Password">
+      <ManagerPanel title="Change Password">
         <form onSubmit={handlePasswordSubmit} className="space-y-6">
-          <RetroCard>
+          <ManagerCard>
             <div className="space-y-5">
-              <RetroInput label="Current Password" type="password" value={currentPassword} onChange={(event) => setCurrentPassword(event.target.value)} autoComplete="current-password" />
+              <RetroInput className="profile-field" label="Current Password" type="password" value={currentPassword} onChange={(event) => setCurrentPassword(event.target.value)} autoComplete="current-password" />
               <div>
-                <RetroInput label="New Password" type="password" value={newPassword} onChange={(event) => { setNewPassword(event.target.value); setPasswordError(""); }} autoComplete="new-password" error={!!passwordError} />
+                <RetroInput className="profile-field" label="New Password" type="password" value={newPassword} onChange={(event) => { setNewPassword(event.target.value); setPasswordError(""); }} autoComplete="new-password" error={!!passwordError} />
                 <p className="mt-1.5 text-xs text-text-muted">Minimum 8 characters, include a number.</p>
               </div>
-              <RetroInput label="Confirm New Password" type="password" value={confirmPassword} onChange={(event) => { setConfirmPassword(event.target.value); setPasswordError(""); }} autoComplete="new-password" error={!!passwordError} helperText={passwordError} />
+              <RetroInput className="profile-field" label="Confirm New Password" type="password" value={confirmPassword} onChange={(event) => { setConfirmPassword(event.target.value); setPasswordError(""); }} autoComplete="new-password" error={!!passwordError} helperText={passwordError} />
             </div>
-          </RetroCard>
+          </ManagerCard>
           <RetroButton type="submit" variant="secondary" disabled={savingPassword}>{savingPassword ? "Updating..." : "Update Password"}</RetroButton>
-          {passwordSaved && <SuccessBanner>Password updated successfully.</SuccessBanner>}
+          {passwordSaved && <SuccessBanner>Password change simulated. Your sign-in password is unchanged.</SuccessBanner>}
         </form>
-      </RetroWindow>
+      </ManagerPanel>
 
-      <RetroWindow title="Notifications">
-        <RetroCard>
+      <ManagerPanel title="Notifications">
+        <ManagerCard>
           <div className="divide-y divide-border-soft/50">
             <PreferenceToggle label="Shift Updates" description="Get notified when your manager posts a shift update." checked={shiftUpdates} onChange={() => setShiftUpdates((value) => !value)} />
             <PreferenceToggle label="Performance Summary" description="Weekly email summary of your performance score." checked={performanceSummary} onChange={() => setPerformanceSummary((value) => !value)} />
             {role === "Manager" && <PreferenceToggle label="System Alerts" description="Get notified about active alerts requiring attention." checked={systemAlerts} onChange={() => setSystemAlerts((value) => !value)} />}
           </div>
-        </RetroCard>
-      </RetroWindow>
+        </ManagerCard>
+      </ManagerPanel>
 
-      <RetroWindow title="Danger Zone" titleBarClassName="bg-danger/10">
-        <RetroCard className="border-danger">
+      <ManagerPanel title="Danger Zone">
+        <ManagerCard className="border-danger">
           <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-sm text-text">Signing out will end your current session.</p>
             <RetroButton type="button" variant="secondary" className="!border-danger !text-danger hover:!bg-danger/10" onClick={handleLogout}>Log Out</RetroButton>
           </div>
-        </RetroCard>
-      </RetroWindow>
-    </main>
+        </ManagerCard>
+      </ManagerPanel>
+    </ManagerPage>
   );
 }
 
@@ -176,8 +176,11 @@ function PreferenceToggle({ label, description, checked, onChange }: { label: st
         <p className="font-heading text-sm font-semibold text-text">{label}</p>
         <p className="mt-1 text-xs text-text-muted">{description}</p>
       </div>
-      <button type="button" role="switch" aria-checked={checked} aria-label={`${label}: ${checked ? "on" : "off"}`} onClick={onChange} className={`relative h-6 w-11 shrink-0 rounded border-2 border-border-soft transition-colors ${checked ? "bg-accent" : "bg-border-soft"}`}>
-        <span className={`absolute top-0.5 h-4 w-4 rounded-sm bg-surface transition-transform ${checked ? "translate-x-5" : "translate-x-0.5"}`} />
+      <button type="button" role="switch" aria-checked={checked} aria-label={label} onClick={onChange}
+        className="grid min-h-11 shrink-0 cursor-pointer place-items-center rounded-full">
+        <span aria-hidden="true" className={`flex h-6 w-11 items-center rounded-full p-0.5 motion-safe:transition-colors ${checked ? "bg-accent" : "bg-text-muted"}`}>
+          <span className={`size-5 rounded-full shadow-sm motion-safe:transition-transform ${checked ? "translate-x-5 bg-on-accent" : "bg-surface"}`} />
+        </span>
       </button>
     </div>
   );

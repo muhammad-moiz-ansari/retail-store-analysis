@@ -1,28 +1,35 @@
-"""Unified local backend entry point for POS, camera and store operations."""
+"""Unified local backend entry point for camera and store operations."""
 
 from __future__ import annotations
 
 import asyncio
 import json
+import logging
 import os
 import re
+import psycopg
 from psycopg import IntegrityError
 import subprocess
 import sys
 import time
 import uuid
 from datetime import datetime
+from fractions import Fraction
 from typing import Annotated, Any
 
 from fastapi import Depends, FastAPI, Header, HTTPException, Query
-from fastapi.responses import StreamingResponse
+from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 
+from .agents.ask_api import router as ask_router
+from .agents.advisory_api import router as advisory_router
 from .agents.dashboard_api import router as dashboard_router
 
+from .aisle_relay import build_router
 from .camera_service import REPO_ROOT, resolve_video
 from .camera_service import app as camera_app
+from .database import DatabaseNotConfigured
 from .dispatch import create_task_for_employee, handle_event, select_dispatch_employee
-from .pos_service import app as pos_app
+from .job_limits import MAX_KEPT_JOBS, MAX_RUNNING_JOBS, admit_job  # noqa: F401 (constants re-exported for tests)
 from .runtime_secrets import internal_secret, matches
 from .store_core import (
     accept_invitation,
@@ -39,10 +46,11 @@ from .voice_agent import generate_voice_script, integration_status, synthesize_v
 
 app = FastAPI(title="RetailPulse Backend", version="0.1.0")
 app.mount("/camera", camera_app)
-app.mount("/pos", pos_app)
 
 # Read-only analytics remain unavailable until explicit server membership/source configuration.
 app.include_router(dashboard_router)
+app.include_router(ask_router)
+app.include_router(advisory_router)
 
 INTERNAL_SECRET = internal_secret("RETAILPULSE_INTERNAL_SECRET", "POS_INTERNAL_SECRET")
 
@@ -94,6 +102,10 @@ def store_context(conn) -> dict[str, Any]:
 OUTPUT_DIR = REPO_ROOT / "backend" / "output"
 _jobs: dict[str, dict[str, Any]] = {}
 
+# Aisle relay (two aisle cameras in one split-screen video -> one YOLO pass -> real dispatch); manager-only routes
+# under /aisle-relay. A live run takes a CV job slot while it analyses.
+app.include_router(build_router(require_manager, connect, _jobs, OUTPUT_DIR))
+
 
 def run_script(job_id: str, args: list[str], read_result) -> None:
     """Run one CV script to completion, streaming its output into the job log (polled by the page)."""
@@ -118,14 +130,8 @@ def run_script(job_id: str, args: list[str], read_result) -> None:
         job.update(status="failed", error=str(exc))
 
 
-MAX_RUNNING_JOBS, MAX_KEPT_JOBS = 2, 50  # S8
-
-
 def start_job(args: list[str], read_result) -> dict[str, str]:
-    if sum(job["status"] in {"queued", "running"} for job in _jobs.values()) >= MAX_RUNNING_JOBS:
-        raise HTTPException(status_code=429, detail=f"{MAX_RUNNING_JOBS} CV jobs are already running; wait for one to finish")
-    for old in [k for k, job in _jobs.items() if job["status"] not in {"queued", "running"}][:-MAX_KEPT_JOBS or None]:
-        del _jobs[old]  # dicts keep insertion order, so this drops the oldest finished jobs
+    admit_job(_jobs)  # S8
     job_id = uuid.uuid4().hex
     _jobs[job_id] = {"id": job_id, "status": "queued", "logs": [], "result": None}
     asyncio.get_running_loop().run_in_executor(None, run_script, job_id, args, read_result)
@@ -164,8 +170,10 @@ async def start_interaction_run(body: dict) -> dict[str, str]:
     output = OUTPUT_DIR / "interaction-runs" / uuid.uuid4().hex / f"{video.stem}.mp4"
     output.parent.mkdir(parents=True, exist_ok=True)
     args = ["-m", "backend.interaction.cli", str(video), "--output", str(output), "--judge", judge,
-            "--every", str(every), "--track-every", str(track_every)] + event_args(body)
-    return start_job(args, lambda: interaction_result(output, str(video.relative_to(REPO_ROOT))))
+            "--every", str(every), "--track-every", str(track_every), "--preview"] + event_args(body)
+    started = start_job(args, lambda: interaction_result(output, str(video.relative_to(REPO_ROOT))))
+    _live_runs[started["id"]] = output  # so the page can watch it being processed and play it back afterwards
+    return started
 
 
 def event_args(body: dict) -> list[str]:
@@ -183,6 +191,8 @@ def event_args(body: dict) -> list[str]:
 def interaction_result(output, source: str) -> dict[str, Any]:
     people = json.loads(output.with_suffix(".people.json").read_text(encoding="utf-8"))
     return {
+        "view": view_state(output),
+        "playback": web_video(output) is not None,
         "video": source,
         "output": str(output.relative_to(REPO_ROOT)),
         "interactions": json.loads(output.with_suffix(".interactions.json").read_text(encoding="utf-8")),
@@ -190,7 +200,44 @@ def interaction_result(output, source: str) -> dict[str, Any]:
     }
 
 
-_live_runs: dict[str, Any] = {}  # job id -> output path of a live DroidCam run
+def view_state(output) -> dict[str, Any] | None:
+    """What kind of zone the camera view is right now: hot, gray, green or inactive (events.live_zones), from the run's view file.
+    None before the first processed frame or when the camera config turns live zones off."""
+    try:
+        zones = json.loads(output.with_suffix(".view.json").read_text(encoding="utf-8"))
+    except (FileNotFoundError, json.JSONDecodeError):  # no frame yet, or replaced mid-read
+        return None
+    return {"view": zones["view"], "hot_ratio": zones.get("hot_ratio", 1.0), "served_seconds": zones.get("served_seconds"),
+            "all_customers_attended": zones.get("all_customers_attended", False), "employees": zones["employees"], "customers": zones["customers"],
+            "view_seconds": zones["view_seconds"], "timestamp": zones["timestamp"], "timeline": zones.get("timeline", [])}
+
+
+def web_video(output):
+    """An H.264 copy of the annotated video (<output>.web.mp4) for the page's player, or None when it cannot be made.
+    OpenCV writes MPEG-4 Part 2, which browsers do not play."""
+    target = output.with_suffix(".web.mp4")
+    try:
+        import av  # lazy: part of the CV requirements, absent from the API-only image
+
+        with av.open(str(output)) as source, av.open(str(target), "w", options={"movflags": "faststart"}) as copy:
+            video = source.streams.video[0]
+            rate = Fraction(video.average_rate).limit_denominator(1000)
+            stream = copy.add_stream("libx264", rate=rate)
+            stream.width, stream.height, stream.pix_fmt = video.width // 2 * 2, video.height // 2 * 2, "yuv420p"
+            stream.options = {"crf": "23", "preset": "veryfast"}
+            stream.codec_context.time_base = 1 / rate
+            for index, frame in enumerate(source.decode(video)):
+                frame = frame.reformat(width=stream.width, height=stream.height, format="yuv420p")
+                frame.pts, frame.time_base = index, 1 / rate  # one frame per tick, whatever the source container said
+                copy.mux(stream.encode(frame))
+            copy.mux(stream.encode())
+    except Exception:  # playback is a convenience; the run's results must not fail with it
+        target.unlink(missing_ok=True)
+        return None
+    return target
+
+
+_live_runs: dict[str, Any] = {}  # job id -> output path of a run the page can watch: live DroidCam or a recording
 
 
 @app.post("/interaction/live", dependencies=[Depends(require_manager)])
@@ -232,6 +279,21 @@ def live_output(job_id: str):
 def stop_live_run(job_id: str) -> dict[str, str]:
     live_output(job_id).with_suffix(".stop").touch()
     return {"id": job_id, "status": "stopping"}
+
+
+@app.get("/interaction/runs/{job_id}/video", dependencies=[Depends(require_manager)])
+def run_video(job_id: str) -> FileResponse:
+    """The finished run's annotated video in a browser-playable encoding (supports seeking by range)."""
+    video = live_output(job_id).with_suffix(".web.mp4")
+    if not video.exists():
+        raise HTTPException(status_code=404, detail="No playable video for this run")
+    return FileResponse(video, media_type="video/mp4", headers={"Cache-Control": "private, no-store"})
+
+
+@app.get("/interaction/live/{job_id}/view", dependencies=[Depends(require_manager)])
+def live_view(job_id: str) -> dict[str, Any]:
+    """The live run's current view state: {"view": "hot" | "gray" | "green" | "inactive" | "starting", ...} or {"view": None}."""
+    return view_state(live_output(job_id)) or {"view": None}
 
 
 @app.get("/interaction/live/{job_id}/stream", dependencies=[Depends(require_manager)])
@@ -277,8 +339,15 @@ def job_status(job_id: str) -> dict[str, Any]:
 
 
 @app.get("/health")
-def health() -> dict[str, bool]:
-    return {"ok": True}
+def health() -> JSONResponse:
+    """Liveness plus a database round trip; the error text stays in the server log, not the response."""
+    try:
+        with connect() as conn:
+            conn.execute("SELECT 1").fetchone()
+    except (psycopg.Error, DatabaseNotConfigured):
+        logging.getLogger(__name__).exception("health check: database unreachable")
+        return JSONResponse({"ok": False, "database": False}, status_code=503)
+    return JSONResponse({"ok": True, "database": True})
 
 
 MIN_PASSWORD_LENGTH = 8  # S6
@@ -291,9 +360,6 @@ _failed_logins: dict[str, list[float]] = {}
 def login(body: dict) -> dict:
     email = str(body.get("email") or "").strip()
     password = str(body.get("password") or "")
-    role = str(body.get("role") or "").strip() or None
-    if role not in {None, "Manager", "Employee"}:
-        raise HTTPException(status_code=400, detail="role must be Manager or Employee")
     key = email.lower()
     now = time.monotonic()
     recent = [t for t in _failed_logins.get(key, []) if now - t < LOGIN_WINDOW_S]
@@ -301,7 +367,7 @@ def login(body: dict) -> dict:
         raise HTTPException(status_code=429, detail="Too many failed sign-ins for this account; try again in 15 minutes")
     with connect() as conn:
         try:
-            user = authenticate(conn, email, password, role)
+            user = authenticate(conn, email, password)
         except ValueError as exc:
             _failed_logins[key] = recent + [now]
             raise HTTPException(status_code=401, detail=str(exc)) from None
@@ -663,12 +729,65 @@ def task_voice(task_id: str, current: Annotated[dict[str, str | None], Depends(a
     return {"script": script, "audio": synthesize_voice(script["script"])}
 
 
-@app.get("/tasks/events", dependencies=[Depends(require_employee_or_manager)])
-def task_events() -> StreamingResponse:
-    async def stream():
-        yield "event: ready\ndata: {\"ok\": true}\n\n"
+TASK_STREAM_POLL_S = 1.0
+TASK_STREAM_MAX_S = 300  # the browser's EventSource reconnects by itself; a bounded stream frees its connection
 
-    return StreamingResponse(stream(), media_type="text/event-stream")
+
+def task_fingerprint(conn, current: dict[str, str | None]) -> str:
+    """Changes whenever a task this user can see is created or changes state."""
+    where, params = ("", ()) if current.get("role") == "Manager" else ("WHERE employee_id = %s", (current.get("user_id"),))
+    row = conn.execute(f"SELECT count(*) AS n, max(updated_at) AS last FROM tasks {where}", params).fetchone()
+    return f"{row['n']}:{row['last']}"
+
+
+@app.get("/tasks/events", dependencies=[Depends(require_employee_or_manager)])
+def task_events(current: Annotated[dict[str, str | None], Depends(actor)]) -> StreamingResponse:
+    """Server-sent events: `ready` once, then a `message` each time this user's tasks change (the pages reload on it).
+    One database connection per open stream, polled once a second, closed after TASK_STREAM_MAX_S."""
+    async def stream():
+        yield "retry: 1000\nevent: ready\ndata: {\"ok\": true}\n\n"
+        try:
+            conn = await asyncio.to_thread(connect)
+        except (psycopg.Error, DatabaseNotConfigured):
+            return
+        try:
+            await asyncio.to_thread(conn.set_autocommit, True)
+            last = await asyncio.to_thread(task_fingerprint, conn, current)
+            started = idle = time.monotonic()
+            while time.monotonic() - started < TASK_STREAM_MAX_S:
+                await asyncio.sleep(TASK_STREAM_POLL_S)
+                now = await asyncio.to_thread(task_fingerprint, conn, current)
+                if now != last:
+                    last, idle = now, time.monotonic()
+                    yield f"data: {json.dumps({'changed': True})}\n\n"
+                elif time.monotonic() - idle > 15:
+                    idle = time.monotonic()
+                    yield ": keepalive\n\n"
+        except psycopg.Error:
+            return
+        finally:
+            await asyncio.to_thread(conn.close)
+
+    return StreamingResponse(stream(), media_type="text/event-stream",
+                             headers={"Cache-Control": "no-store", "X-Accel-Buffering": "no"})
+
+
+WORKER_RECENT_S = 900  # a worker counts as active when it wrote something in the last 15 minutes
+
+
+def worker_states(conn) -> dict:
+    """Derived from what the workers last wrote, not from a heartbeat: dispatch events for the orchestrator, pipeline
+    health rows for CV. 'not_configured' means nothing has ever been written, 'idle' means nothing recently."""
+    now = datetime.now().astimezone()
+    recent = lambda stamp: stamp is not None and (now - stamp).total_seconds() <= WORKER_RECENT_S
+    state = lambda stamp, seen: "not_configured" if not seen else "active" if recent(stamp) else "idle"
+    event = conn.execute("SELECT max(created_at) AS last, count(*) AS n FROM orchestration_events").fetchone()
+    last_event = datetime.fromisoformat(event["last"]) if event["last"] else None
+    health = None
+    if conn.execute("SELECT to_regclass('pipeline_health') AS t").fetchone()["t"]:
+        health = conn.execute("SELECT max(ts_end) AS last, count(*) AS n FROM pipeline_health").fetchone()
+    return {"orchestrator": state(last_event, event["n"]),
+            "cv": state(health["last"] if health else None, health["n"] if health else 0)}
 
 
 @app.get("/system-status", dependencies=[Depends(require_manager)])
@@ -682,10 +801,14 @@ def system_status() -> dict:
         ack = conn.execute(
             "SELECT count(ack_seconds) AS n, avg(ack_seconds) AS mean, percentile_cont(0.5) WITHIN GROUP (ORDER BY ack_seconds) AS median FROM tasks"
         ).fetchone()
+        decisions = conn.execute(
+            "SELECT decision, count(*) AS total FROM dispatch_decisions GROUP BY decision ORDER BY decision"
+        ).fetchall()
         return {
+            "dispatchOutcomes": {row["decision"]: row["total"] for row in decisions},
             "acknowledgement": {"tasks": ack["n"], "meanSeconds": ack["mean"], "medianSeconds": ack["median"]},
             "ok": True,
-            "workers": {"orchestrator": "idle", "cv": "not_configured", "pos": "available"},
+            "workers": worker_states(conn),
             "activeAlerts": active_alerts,
             "activeTasks": active_tasks,
             "cameras": {"total": cameras["total"], "online": cameras["online"] or 0},

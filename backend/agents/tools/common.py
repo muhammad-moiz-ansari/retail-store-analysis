@@ -1,4 +1,5 @@
 """Interval/evidence helpers shared by the five fixed analytics tools."""
+from datetime import timezone
 from typing import Literal
 
 from pydantic import Field
@@ -112,7 +113,22 @@ def health(session, scope, request, contexts, *, source, zone=None, shift=None, 
             good = merge(good)
         healthy = intersect(healthy, good)
     complete = seconds(healthy) == (request.window.end - request.window.start).total_seconds()
-    return healthy, rows, (() if complete else ("Observation has blocked, missing, or unknown-health intervals",))
+    return healthy, rows, (() if complete else (blind_note(healthy, request.window),))
+
+
+def blind_note(healthy, window, limit=5):
+    """Name when the observation was not healthy, so a reader can tell which part of the window is unknown (A9)."""
+    gaps, cursor = [], window.start
+    for start, end in merge(healthy):
+        if start > cursor:
+            gaps.append((cursor, start))
+        cursor = max(cursor, end)
+    if cursor < window.end:
+        gaps.append((cursor, window.end))
+    stamp = "%Y-%m-%d %H:%M" if window.start.astimezone(timezone.utc).date() != window.end.astimezone(timezone.utc).date() else "%H:%M"
+    spans = [f"{a.astimezone(timezone.utc).strftime(stamp)}-{b.astimezone(timezone.utc).strftime(stamp)}" for a, b in gaps[:limit]]
+    more = f" and {len(gaps) - limit} more" if len(gaps) > limit else ""
+    return "Observation has blocked, missing, or unknown-health intervals" + (f": {', '.join(spans)}{more} UTC" if spans else "")
 
 
 def count(rows, table, tool, healthy_rows=(), observed=False):

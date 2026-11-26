@@ -10,11 +10,11 @@ interface RetroButtonProps
 
 const variantStyles: Record<ButtonVariant, string> = {
   primary:
-    "bg-accent text-surface border-border hover:bg-accent-hover",
+    "bg-accent text-on-accent border-border hover:bg-accent-hover",
   secondary:
     "bg-surface text-text border-border hover:bg-surface-alt",
   danger:
-    "bg-danger text-surface border-border hover:brightness-110",
+    "bg-danger text-on-danger border-border hover:brightness-110",
 };
 
 export function RetroButton({
@@ -27,16 +27,11 @@ export function RetroButton({
     <button
       {...props}
       className={[
-        /* Base */
-        "inline-flex items-center justify-center gap-2 px-4 py-2",
-        "font-heading text-sm font-semibold tracking-wide",
-        "rounded-md border-2 cursor-pointer select-none",
-        "transition-all duration-100",
-        /* Shadow & active press */
-        "shadow-[2px_2px_0px_rgba(74,46,30,0.25)]",
-        "active:shadow-none active:translate-x-[2px] active:translate-y-[2px]",
-        /* Disabled */
-        "disabled:opacity-50 disabled:cursor-not-allowed disabled:active:shadow-[2px_2px_0px_rgba(74,46,30,0.25)] disabled:active:translate-x-0 disabled:active:translate-y-0",
+        "inline-flex min-h-10 items-center justify-center gap-2 px-4 py-2",
+        "rounded-lg border cursor-pointer select-none text-sm font-semibold",
+        "motion-safe:transition-[background-color,color,box-shadow,translate] motion-safe:duration-150",
+        "motion-safe:pointer-fine:hover:enabled:-translate-y-0.5 hover:enabled:shadow-md motion-safe:active:enabled:translate-y-px motion-safe:pointer-fine:hover:active:enabled:translate-y-px active:enabled:shadow-none",
+        "disabled:opacity-50 disabled:cursor-not-allowed",
         /* Variant */
         variantStyles[variant],
         className,

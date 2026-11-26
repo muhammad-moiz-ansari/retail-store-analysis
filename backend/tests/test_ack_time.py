@@ -22,3 +22,16 @@ def test_ack_seconds_set_once_and_reported(postgres_connection, postgres_dsn, mo
     assert postgres_connection.execute("SELECT ack_seconds FROM tasks WHERE id = %s", (task_id,)).fetchone()["ack_seconds"] == first
     status = client.get("/system-status", headers={**employee, "x-retailpulse-role": "Manager"}).json()
     assert status["acknowledgement"]["tasks"] == 1 and status["acknowledgement"]["medianSeconds"] == first
+
+
+def test_worker_states_come_from_recent_rows(postgres_connection, postgres_dsn, monkeypatch):
+    from datetime import datetime, timedelta
+
+    seed_defaults(postgres_connection)
+    monkeypatch.setenv("DATABASE_URL", postgres_dsn)
+    assert app_module.worker_states(postgres_connection) == {"orchestrator": "not_configured", "cv": "not_configured"}
+    handle_event(postgres_connection, {"eventType": "unattended_customer", "zoneId": "z2"})
+    assert app_module.worker_states(postgres_connection)["orchestrator"] == "active"
+    old = (datetime.now().astimezone() - timedelta(hours=2)).isoformat()
+    postgres_connection.execute("UPDATE orchestration_events SET created_at = %s", (old,))
+    assert app_module.worker_states(postgres_connection)["orchestrator"] == "idle"

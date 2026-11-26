@@ -16,8 +16,8 @@ from ..graph_contracts import SpecialistDraft
 from .common import base_arguments, bounded_limit, claims_for, mentions, repaired, usable
 
 INTENT_WORDS = {
-    'footfall': ('footfall', 'traffic', 'entries', 'entry', 'exits', 'visitors', 'visits', 'busy', 'busiest', 'peak', 'quiet', 'quietest'),
-    'dwell': ('dwell', 'linger', 'lingering', 'stay', 'stayed', 'time spent'),
+    'footfall': ('footfall', 'traffic', 'entries', 'entry', 'exits', 'visitors', 'visits', 'busy', 'busiest', 'peak', 'quiet', 'quietest', 'coming in', 'came in', 'most people'),
+    'dwell': ('dwell', 'linger', 'lingering', 'stay', 'stayed', 'time spent', 'spend', 'spent'),
     'interactions': ('interaction', 'interactions', 'assist', 'assisted', 'assistance', 'helped', 'approach', 'served'),
     'unattended': ('unattended', 'waiting', 'waited', 'wait', 'ignored', 'unserved'),
 }

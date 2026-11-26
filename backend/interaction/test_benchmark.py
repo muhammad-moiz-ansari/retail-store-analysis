@@ -75,3 +75,17 @@ def test_log_row_reports_the_worst_video() -> None:
     report = {"videos": [video("fast", 1.5, 10), video("slow", 0.8, 7)], "interactions": {"with_judge": {"f1": 1.0}}}
     row = log_row("baseline", report)
     assert (row["worst_video"], row["realtime_factor"], row["track_ids"], row["judge_ms"]) == ("slow.MOV", 0.8, 17, None)
+
+
+def test_role_truth_follows_this_runs_track_ids() -> None:
+    """A stored {track_id: role} map from another machine names other tracks; reviewed person boxes do not."""
+    from .benchmark import truth_roles
+
+    persons = {"clip.mp4": [{"role": "employee", "keyframes": [[0, 0, 0, 0, 10, 10]]},
+                            {"role": "customer", "keyframes": [[0, 0, 50, 50, 60, 60]]}]}
+    detections = [{"frame": f, "people": [{"track_id": 7, "bbox": [0, 0, 10, 10]}, {"track_id": 3, "bbox": [50, 50, 60, 60]}]}
+                  for f in range(4)]
+    spec = {"path": "clip.mp4", "roles": {"1": "employee", "2": "customer"}}  # IDs from an older run
+    assert truth_roles(spec, detections, persons) == ({"7": "employee", "3": "customer"}, "persons")
+    assert truth_roles(spec, detections, None) == ({"1": "employee", "2": "customer"}, "spec")
+    assert truth_roles({"path": "other.mp4"}, detections, persons) == (None, None)

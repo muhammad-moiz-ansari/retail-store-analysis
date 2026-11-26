@@ -2,7 +2,7 @@
 from dataclasses import dataclass
 
 from ..contracts import (CoverageRequest, FootfallRequest, InteractionsRequest,
-                         TrustedAccessScope, UnattendedRequest, ZoneDwellRequest)
+                         ToolRequest, TrustedAccessScope, UnattendedRequest, ZoneDwellRequest)
 from . import AnalyticsTools
 
 REQUEST_TYPES = {
@@ -12,6 +12,9 @@ REQUEST_TYPES = {
     'get_unattended': UnattendedRequest,
     'get_coverage': CoverageRequest,
 }
+
+
+ALL_REQUEST_TYPES = REQUEST_TYPES | {"get_queue": ToolRequest, "get_pipeline_health": ToolRequest}
 
 
 @dataclass(frozen=True)
@@ -29,12 +32,13 @@ class ScopedToolRegistry:
             raise PermissionError('Registry requires a trusted manager scope')
 
     def invoke(self, name: str, arguments: dict):
-        if name not in REQUEST_TYPES:
+        if name not in ALL_REQUEST_TYPES:
             raise ValueError('Unknown analytics tool')
-        request = REQUEST_TYPES[name].model_validate(arguments)
+        request = ALL_REQUEST_TYPES[name].model_validate(arguments)
         self.scope.validate_filters(request.filters)
         return getattr(self.tools, name)(scope=self.scope, request=request)
 
     @staticmethod
-    def input_schemas():
-        return {name: model.model_json_schema() for name, model in REQUEST_TYPES.items()}
+    def input_schemas(*, include_operations=False):
+        types = ALL_REQUEST_TYPES if include_operations else REQUEST_TYPES
+        return {name: model.model_json_schema() for name, model in types.items()}

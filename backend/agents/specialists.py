@@ -5,9 +5,11 @@ from typing import Callable
 
 from .contracts import Metric
 from .graph_contracts import Claim, GroundingIssue, SpecialistContext, SpecialistDraft
+from .routing import queue_question
 
 ALLOWED_TOOLS = {
     'customer_behavior': frozenset(('get_footfall', 'get_zone_dwell', 'get_interactions', 'get_unattended')),
+    'operations': frozenset(('get_queue', 'get_pipeline_health')),
     'employee_activity': frozenset(('get_coverage', 'get_interactions', 'get_unattended')),
 }
 
@@ -75,6 +77,27 @@ def employee_activity_adapter(context: SpecialistContext, tools, prior=None, iss
         call_id, result = tools.invoke('get_coverage', arguments)
         paths = [('zones', i, name) for i in range(len(result.zones)) for name in ('observed_staffed', 'unknown_observation')]
     return SpecialistDraft(claims=tuple(claim for path in paths if (claim := claim_for(call_id, result, path)) is not None))
+
+
+def operations_summary(context, tools, prior=None, issues=()):
+    queue = queue_question(context.request.question)
+    name = "get_queue" if queue else "get_pipeline_health"
+    args = {
+        "window": context.request.window.model_dump(mode="json"),
+        "filters": context.request.filters.model_dump(exclude_none=True),
+        "limit": 5,
+    }
+    call_id, result = tools.invoke(name, args)
+    fields = ("queue_length", "estimated_wait_seconds") if queue else ("fps",)
+    claims = tuple(
+        claim for index in range(len(result.samples)) for field in fields
+        if (claim := claim_for(call_id, result, ("samples", index, field))) is not None
+    )
+    return SpecialistDraft(claims=claims)
+
+
+def operations_registration():
+    return SpecialistRegistration(operations_summary, ALLOWED_TOOLS["operations"], development_stub=False)
 
 
 def development_specialists():
