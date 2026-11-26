@@ -75,6 +75,17 @@ def test_coverage_keeps_zone_minimum_staff(store):
     assert handle_event(store, {"eventType": "unattended_customer", "zoneId": "z4"})["decision"] == "dispatched"
 
 
+def test_employee_mid_interaction_is_not_sent(store):
+    add_employee(store, "u_floater", None)
+    body = {"eventType": "unattended_customer", "zoneId": "z3", "inInteractionEmployeeIds": ["u_floater"]}
+    assert handle_event(store, body)["decision"] == "no_eligible_employee"  # the only free employee is with a customer
+    assert count(store, "tasks") == 0
+    body = {"eventType": "unattended_customer", "zoneId": "z3", "inInteractionEmployeeIds": ["someone_else"]}
+    result = handle_event(store, body)
+    assert result["decision"] == "dispatched"
+    assert store.execute("SELECT employee_id FROM tasks").fetchone()["employee_id"] == "u_floater"
+
+
 def test_paused_dispatch_and_alert_only(store):
     assert handle_event(store, {"eventType": "manual_event", "zoneId": "z2"})["decision"] == "alert_only"
     store.execute("UPDATE settings SET value_json = %s WHERE key = 'thresholds'", ('{"dispatchPaused": true}',))
