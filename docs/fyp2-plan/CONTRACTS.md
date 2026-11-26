@@ -619,3 +619,16 @@ It differs from the four categories on purpose: hot and gray rank attention, so 
 ### Dashboard map presentation binding
 
 The dashboard snapshot may carry `spatial` with `version`, the exact dashboard `window`, and up to 500 `cells`. Each cell contains `id`, a normalized `polygon` of 3–64 [x,y] points, `category`, `quality`, and a `values` map keyed by the four agreed layer IDs. Numeric layer values are nonnegative; counts are integers. Missing/null values remain unavailable. Unmapped cells may not carry numeric values. Use the same registered map version for geometry, occupancy and heatmaps. The existing snapshot omits the field until backend assembly and projection exist.
+
+## Aisle relay demo (Saqib, 25 Nov 2026)
+
+Commit `567b85c`. Demonstration path from a split-screen recording to a real dispatch; it is separate from the internal operational dispatch contract above and does not satisfy it.
+
+- **Input:** one video holding two aisle feeds side by side. `find_split` locates the gutter; left = `aisle-1`, right = `aisle-2`. Zone binding is `DEFAULT_ZONES = {"aisle-1": "z2", "aisle-2": "z3"}`.
+- **Signals:** `AisleWatcher` (pure, no database) emits `need` when an aisle has customers and no employee for `need_hold_s` (2.0 s) and `arrived` when an employee is seen in an aisle with an open request for `arrive_hold_s` (1.0 s). `StoreBridge` sends `need` to `backend.dispatch.handle_event` (alert, decision, task) and `arrived` completes the task and resolves the alert with the camera as actor. Task evidence carries `relay: "aisle-relay"`; a new run cancels earlier open relay tasks.
+- **Event body:** the legacy `handle_event` body, plus `sourceZoneId` (optional): the zone where the cameras saw spare staff. `select_dispatch_employee(conn, target_zone_id, source_zone_id=None)` ranks target-zone staff, then staff rostered in the source zone, then floaters, then most spare staff. The min-staff rule still applies. This is not the `OperationalEvent` envelope: no `storeId`, `idempotencyKey` or stable `eventId`.
+- **Routes (manager only):** `POST /aisle-relay/start {"mode": "live" | "replay", "video"?, "stride"?, "realtime"?, "speed"?}`, `POST /aisle-relay/stop`, `GET /aisle-relay/status`, `GET /aisle-relay/stream` (MJPEG while a live run plays), `GET /aisle-relay/video/{webm|mp4}` (recording after the run). Runs are process-local and a live run takes a CV job slot.
+- **Outputs:** `trace.json` (aisle counts per sample, tracks, every watcher signal with its reason) and `annotated.webm` in `dummyoutputs/multirow/`.
+- **`GET /tasks/events`:** now a server-sent stream bound to the signed-in user: `ready` once, then a `message` (`{"changed": true}`) whenever that user's tasks change (managers see all tasks, employees their own). One database connection per open stream, polled every second, closed after 300 s (the browser reconnects), keepalive comment every 15 s.
+- **Safety:** `python -m backend.aisle_relay setup` and the demo accounts work on local databases only (`is_local_database`: localhost, loopback or a Unix socket). Never run it against the shared Neon database.
+- **Not provided:** CV-track to account link, calibration to a floor plan, per-camera health, durable idempotency, a second physical camera.

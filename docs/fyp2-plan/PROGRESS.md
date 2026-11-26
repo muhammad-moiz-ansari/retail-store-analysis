@@ -4,6 +4,22 @@
 
 The [combined team plan](RetailPulse_FYP2_Implementation_Plan.md) governs current work and ownership. Implement camera/CV first, then register the supplied map, then render live role occupancy and confirmed-interaction layers. Exactly four dynamic occupancy categories are allowed: **Customer, Employee, Customer–employee both, No one**. They are not fixed permitted-role polygons. Invalid/missing/unknown observation is separate quality metadata, never a fifth category or a false No one. Historical z1–z6, staff zones, queue/counter geometries and hot/gray terminology below are legacy technical references, not additional category requirements. No existing runtime/schema/fixture has been migrated by this documentation update.
 
+## 25 November 2026 (Saqib)
+
+| Commit | Change | Evidence |
+|---|---|---|
+| `567b85c` | Aisle relay: one split-screen clip (`backend/videos/multirow.mp4`, left = Aisle 1 / zone z2, right = Aisle 2 / z3) goes through one YOLO tracking pass, detections are split by the gutter, and an aisle with customers and no employee becomes a real alert, dispatch decision and employee task. When an employee is seen in that aisle the task completes and the alert resolves, with the camera named as the actor. New: `backend/aisle_relay.py` (watcher, store bridge, run threads, manager-only `/aisle-relay/*` routes), `backend/aisle_relay_cv.py` (live CV), manager page `/manager/aisle-relay`, employee home push. Existing code touched: `dispatch.select_dispatch_employee` / `choice_reason` take an optional `source_zone_id` (staff rostered where the cameras see spare staff rank right after the target zone's own staff), `/tasks/events` is now a real server-sent stream that fires when the user's tasks change, `is_local_database` accepts a Unix socket | `backend/tests/test_aisle_relay.py`. Local demo run only; no real store footage, no deployed backend |
+| `fe3c936` | Dropped a stray Windows `Zone.Identifier` file; `*:Zone.Identifier` is ignored | |
+
+How to run it from these docs alone (local PostgreSQL only; never point it at the shared Neon database, `python -m backend.aisle_relay setup` refuses a non-local host):
+
+1. Set `DATABASE_URL` to a local PostgreSQL database, then `python -m backend.aisle_relay setup`. It creates the schema, the seeded demo accounts, a second employee rostered in Aisle 1 (`employee2@retailpulse.local`) and a camera row for Aisle 2. Sign in with the seeded demo password as the manager and as an employee, on separate screens.
+2. Start the backend, open `/manager/aisle-relay`, choose "Live CV" and start. The page shows the annotated MJPEG stream (`/aisle-relay/stream`); an employee signed in on `/employee/home` receives the task through `/tasks/events`.
+3. Offline alternatives: `python scripts/aisle_relay_demo.py backend/videos/multirow.mp4 --out dummyoutputs/multirow` writes `trace.json` and `annotated.webm` (about 18 minutes on CPU for 74 s; add `--dispatch` to send signals to the database while it runs, `--realtime` to pace it like a camera, `--max-seconds` for a quick check). `python -m backend.aisle_relay replay --trace dummyoutputs/multirow/trace.json` replays a trace into the store without the web page, and the page's "Replay recorded pass" does the same.
+4. `imageio-ffmpeg` is needed for a browser-playable recording; without it the video is mp4v and will not play in the page. A new run cancels the open tasks of earlier relay runs.
+
+Limits: demonstration scope. The two aisles are two halves of one recording, not two independent cameras, so this is not the labelled two-camera handoff (S-B5-HANDOFF) and does not decide D2. There is no map calibration, no CV-track to employee-account link and no deployment. Timing defaults are `WatchPolicy(need_hold_s=2.0, arrive_hold_s=1.0)`; they are demo values, not Ruhab's signed-off thresholds (D5).
+
 ## 17 November 2026 (Saqib)
 
 | Commit | Change | Evidence |
