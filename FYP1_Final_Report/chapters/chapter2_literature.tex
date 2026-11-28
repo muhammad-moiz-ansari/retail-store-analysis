@@ -1,0 +1,54 @@
+\chapter{Literature Review and Existing Solutions}
+\label{ch:lit}
+
+\section{Method}
+The review covered three areas: commercial retail-analytics products, using their official product descriptions; the published computer-vision methods the pipeline is built from; and recent work on language-model agents that use tools, which shaped how RetailPulse answers questions without inventing figures. Candidate techniques were then tried on the team's own store recordings before being adopted.
+
+\section{Existing Products}
+\textbf{RetailNext} describes traffic counting, conversion, staffing and interaction-rate analytics from in-store sensors~\cite{retailnextTraffic}. \textbf{Sensormatic} describes shopper-traffic and journey insights with labour planning~\cite{sensormaticInsights}. \textbf{Amazon Just Walk Out} uses cameras with weight sensors or RFID for checkout-free shopping~\cite{amazonJwo}. These are vendor descriptions; their accuracy, cost and camera compatibility were not independently tested.
+
+\begin{table}[H]
+\centering
+\caption{Existing products compared with RetailPulse}\label{tab:products}
+\begin{tabular}{P{0.18\textwidth}P{0.27\textwidth}P{0.23\textwidth}P{0.24\textwidth}}
+\toprule
+Product & Documented focus & Hardware & Difference from RetailPulse\\
+\midrule
+RetailNext & Traffic, conversion, staffing, interaction rate & Vendor sensors & Closed product; RetailPulse reuses existing CCTV on a CPU\\
+Sensormatic & Traffic, shopper journeys, labour planning & Vendor sensors & No direct dispatch of staff to a waiting customer described\\
+Just Walk Out & Checkout-free shopping & Cameras, shelf weight sensors, RFID & Different goal (checkout); heavy hardware\\
+RetailPulse & Service interactions, unattended customers, coverage, direct dispatch & Existing CCTV, CPU only & Inspectable academic prototype; one store evaluated\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The products already offer substantial analytics, including interaction rates. RetailPulse does not claim these features are absent from the market. Its aim is narrower: an inspectable system that runs on hardware a small store already owns and acts on what it sees by dispatching staff.
+
+\section{Computer-Vision Building Blocks}
+\textbf{Detection.} Single-stage YOLO detectors~\cite{redmon2016yolo} have small variants that run on a CPU; the project uses the Ultralytics YOLOv8 implementation~\cite{ultralytics}, exported to OpenVINO~\cite{openvino} for faster CPU inference.
+
+\textbf{Tracking.} SORT~\cite{bewley2016sort} and ByteTrack~\cite{zhang2022bytetrack} link detections into tracks across frames. BoT-SORT~\cite{aharon2022botsort} adds camera-motion compensation and appearance cues, which helps with the slightly moving cameras in the dataset; it is the tracker the pipeline uses. Cross-camera re-identification~\cite{ye2022reid} needs learned appearance embeddings and more compute, and is close to biometric identification, so it is outside the current scope.
+
+\textbf{Pose.} Keypoint models such as YOLO-Pose~\cite{maji2022yolopose} estimate head and shoulder positions in the same single pass as detection. RetailPulse uses head keypoints to check whether two people are facing each other, which separates a conversation from two people walking side by side.
+
+\textbf{Evaluation statistics.} With a small labelled set, a single F1 value is unreliable. The project reports bootstrap confidence intervals~\cite{efron1979bootstrap} resampled over clips, and Cohen's kappa~\cite{cohen1960kappa} for agreement between human reviewers.
+
+\section{Language-Model Agents and Grounding}
+Language models can plan and call external tools: ReAct interleaves reasoning with tool calls~\cite{yao2023react}, and Toolformer shows models learning when to call an API~\cite{schick2023toolformer}. The main risk for a store manager is hallucination, where fluent text states figures the data does not support~\cite{ji2023hallucination}. RetailPulse therefore separates the two roles: agents may only call a fixed set of read-only tools, every number in an answer must be a claim that points at a specific metric in a tool result, and an answer whose claims do not match is repaired or refused. The orchestration graph is built with LangGraph~\cite{langgraph}, and the event store uses PostgreSQL~\cite{postgresql}.
+
+\section{Gap Addressed}
+Three gaps follow from the review.
+\begin{enumerate}
+\item \textbf{Interaction versus proximity.} Proximity alone counts two people walking past each other as an interaction. On the held-out clips, adding the pose check in the same run raises precision from 0.346 to 0.391 at the same recall (Chapter~\ref{ch:cveval}).
+\item \textbf{Acting, not only reporting.} The reviewed products describe dashboards and staffing plans. RetailPulse turns a waiting customer into a task for a specific eligible employee, with rules that protect zone minimum staffing and prevent duplicate tasks.
+\item \textbf{Trustworthy answers.} Manager answers carry their evidence, and missing camera coverage is reported as unknown, never as an empty area.
+\end{enumerate}
+
+\section{Complex Computing Problem}
+Deriving service analytics from uncontrolled CCTV on a CPU is a complex computing problem in the sense of the programme outcomes:
+\begin{itemize}
+\item \textbf{Conflicting requirements:} accuracy against CPU throughput, and useful staff analytics against privacy and fair use.
+\item \textbf{No single correct definition:} whether two people ``interacted'' has to be defined operationally from distance, orientation and duration, and labellers can disagree about pauses.
+\item \textbf{Uncertain inputs:} identity switches, occlusion and blocked cameras mean some observations are unknown, and the system must carry that uncertainty to the manager instead of hiding it.
+\item \textbf{Several interacting subsystems:} vision, storage, agents, dispatch and the web tier must agree on identifiers, time and provenance.
+\end{itemize}

@@ -1,0 +1,168 @@
+\chapter{System Design}
+\label{ch:design}
+
+This chapter describes the design of RetailPulse as implemented. All figures in it were redrawn for this report from the current code; the figures of the mid report, which the mid evaluation found incorrect, are not reused (Appendix~\ref{app:feedback} lists what was wrong with each).
+
+\section{Architecture}
+RetailPulse uses a layered architecture (Figure~\ref{fig:architecture}). Each layer depends only on the layer below it, and every layer above the data layer reaches the database through a defined interface: the vision layer writes through the ingestion contract, the agents read through five read-only tools, and dispatch writes through one handler.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[font=\small, scale=0.92, transform shape,
+  comp/.style={box, fill=white, text width=#1},
+  comp/.default=3.5cm,
+  lay/.style={draw, rounded corners=4pt, fill=#1, inner sep=4pt},
+  dl/.style={font=\scriptsize, fill=white, inner sep=1pt}]
+% presentation
+\node[comp=5.2cm] (mgrui) at (3.4,0) {Manager workspace\\\scriptsize dashboard, analytics, alerts, settings, status};
+\node[comp=5.2cm] (empui) at (10.6,0) {Employee workspace\\\scriptsize own tasks, shift, profile};
+\node[comp=13.2cm] (proxy) at (7.0,-1.45) {Session and API proxy\\\scriptsize signed HTTP-only session, role check, adds the internal service secret};
+% application
+\node[comp=3.9cm] (dash) at (2.2,-3.75) {Dashboard and Ask routes\\\scriptsize scoped to the manager's store};
+\node[comp=3.9cm] (api) at (7.0,-3.75) {Backend API\\\scriptsize accounts, alerts, settings, tasks};
+\node[comp=3.9cm] (jobs) at (11.8,-3.75) {Camera and CV-job routes\\\scriptsize at most 2 jobs at once};
+% agents and operations
+\node[comp=3.0cm] (orch) at (1.9,-6.1) {Orchestrator and business agents};
+\node[comp=3.0cm] (signal) at (5.6,-6.1) {Signal policy and dispatch};
+\node[comp=6.6cm] (tools) at (3.75,-7.75) {Five read-only tools\\\scriptsize footfall, dwell, interactions, unattended, coverage};
+% vision
+\node[comp=3.9cm] (det) at (11.8,-6.05) {Detection and tracking\\\scriptsize YOLOv8n, BoT-SORT};
+\node[comp=3.9cm] (role) at (11.8,-7.45) {Role and interaction\\\scriptsize classifier, proximity, pose};
+\node[comp=3.9cm] (ing) at (11.8,-8.85) {Ingestion\\\scriptsize events, health, heatmaps};
+% data
+\node[box, double, double distance=1.2pt, text width=12.2cm, fill=white] (db) at (7.0,-11.0) {\textbf{PostgreSQL}\\\scriptsize application tables: accounts, rosters, zones, alerts, tasks, dispatch decisions\\\scriptsize event tables: tracks, interactions, unattended episodes, camera health, heatmaps};
+% layers
+\begin{scope}[on background layer]
+\node[lay=blue!6, fit=(mgrui)(empui)(proxy), label={[font=\scriptsize\bfseries, anchor=south west, inner sep=1pt]north west:Presentation (Next.js)}] {};
+\node[lay=green!6, fit=(dash)(api)(jobs), label={[font=\scriptsize\bfseries, anchor=south west, inner sep=1pt]north west:Application (FastAPI)}] {};
+\node[lay=orange!8, fit=(orch)(signal)(tools), label={[font=\scriptsize\bfseries, anchor=south west, inner sep=1pt]north west:Agents and operations}] {};
+\node[lay=violet!6, fit=(det)(role)(ing), label={[font=\scriptsize\bfseries, anchor=south west, inner sep=1pt]north west:Vision pipeline}] {};
+\node[lay=gray!10, fit=(db), label={[font=\scriptsize\bfseries, anchor=south west, inner sep=1pt]north west:Data}] {};
+\end{scope}
+% flows
+\draw[flow] (mgrui) -- (mgrui |- proxy.north);
+\draw[flow] (empui) -- (empui |- proxy.north);
+\foreach \t in {dash, api, jobs} { \draw[flow] (\t |- proxy.south) -- (\t); }
+\draw[flow] (dash.south -| orch) -- (orch);
+\draw[flow] (orch) -- (orch |- tools.north);
+\draw[flow] (signal) -- node[dl, right] {reads} (signal |- tools.north);
+\draw[flow] (jobs) -- (det);
+\draw[flow] (det) -- (role);
+\draw[flow] (role) -- (ing);
+\draw[flow] (tools) -- node[dl, right] {read only} (tools |- db.north);
+\draw[flow] (signal.east) -- ++(0.45,0) coordinate (sw) -- (sw |- db.north);
+\draw[flow] ([xshift=15mm]api.south) coordinate (aw) -- (aw |- db.north);
+\draw[flow] (ing) -- node[dl, right] {writes events} (ing |- db.north);
+\end{tikzpicture}
+\caption[Layered architecture of RetailPulse]{Layered architecture of RetailPulse. Arrows point from caller to callee. Only the backend API (accounts, alerts, tasks), dispatch (tasks, decisions, alerts) and ingestion (events) write to PostgreSQL; the agents only read.}
+\label{fig:architecture}
+\end{figure}
+
+\begin{table}[H]
+\centering
+\caption{Architectural components and responsibilities}\label{tab:components}
+\begin{tabular}{P{0.25\textwidth}P{0.42\textwidth}P{0.25\textwidth}}
+\toprule
+Component & Responsibility & Main source\\
+\midrule
+Session and API proxy & Signs sessions, checks role, forwards requests with the internal secret and actor identity & \path{frontend/src/app/api/}\\
+Backend API & Accounts, invitations, alerts, settings, rosters, tasks and the task event stream & \path{backend/app.py}, \path{store_core.py}\\
+Interaction pipeline & Detects, tracks and classifies people; nominates and judges interactions & \path{backend/interaction/}\\
+Ingestion & Converts a run's outputs into event rows, camera health and heatmaps & \path{backend/events/ingest.py}\\
+Read-only tools & Five typed, scoped analytics readers over the event store & \path{backend/agents/tools/}\\
+Orchestrator & Routes a question, runs one business agent, checks every claim & \path{backend/agents/graph.py}\\
+Business agents & Customer Behavior and Employee Activity specialists; digest; occupancy & \path{backend/agents/business/}\\
+Signal policy & Decides when a window becomes an unattended or unstaffed event & \path{signal_policy.py}\\
+Dispatch & Selects an eligible employee, creates the task, prevents duplicates & \path{backend/dispatch.py}\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Agents in the Architecture}
+The proposal named seven agent responsibilities. Table~\ref{tab:agent-map} shows where each one is realised. Two are full business agents; the others are realised as deterministic components, because rules are easier to test and explain than a language model wherever the decision is a fixed policy.
+
+\begin{table}[H]
+\centering
+\caption{Agent responsibilities and their realisation}\label{tab:agent-map}
+\begin{tabular}{P{0.27\textwidth}P{0.65\textwidth}}
+\toprule
+Responsibility & Realisation\\
+\midrule
+Customer Behavior Agent & Business specialist reading footfall, dwell, interactions and unattended episodes\\
+Employee Activity Agent & Business specialist reading staff coverage, interactions and unattended episodes\\
+Interaction Agent & The interaction pipeline: proximity nomination plus pose judge\\
+Employee Task Assignment Agent & Signal policy plus dispatch service (deterministic eligibility rules)\\
+Insight Narration Agent & Digest builder over verified claims, with a narrative number check\\
+Query Agent & The orchestrator's question path over the two specialists\\
+Orchestrator & LangGraph state graph: route, specialist, ground, repair, finish\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Vision Pipeline Design}
+For every processed frame the pipeline runs the steps in Figure~\ref{fig:pipeline}. A COCO-trained YOLOv8n model detects people and BoT-SORT keeps their track identifiers. A second detector trained on the team's store footage labels each new track as customer or employee during its first second and rechecks it every two seconds, so an identity switch cannot carry an employee label onto a customer. The role decision combines that detector's vote with bib colour and standing still, using the fitted weights adopted after evaluation (Section~\ref{sec:role-weights}).
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[font=\small, node distance=5mm and 7mm,
+  pstep/.style={box, text width=2.6cm, fill=white},
+  dec/.style={draw, diamond, aspect=2.2, align=center, font=\scriptsize, inner sep=1pt}]
+\node[pstep] (in) {Frame from camera or recording};
+\node[pstep, right=of in] (detect) {Detect people\\\scriptsize YOLOv8n (COCO)};
+\node[pstep, right=of detect] (track) {Track\\\scriptsize BoT-SORT with re-ID};
+\node[pstep, right=of track] (roles) {Classify role\\\scriptsize role detector, bib, stillness};
+\node[pstep, below=of roles] (prox) {Nominate pairs\\\scriptsize distance in body heights, $\geq 2$\,s};
+\node[dec, left=of prox] (cand) {Employee and\\customer close?};
+\node[pstep, below=10mm of cand] (judge) {Pose check\\\scriptsize head within $60^\circ$ in $\geq$ half of 4 frames};
+\node[pstep, left=of judge, xshift=-6mm] (rej) {Verdict: rejected\\\scriptsize re-judged every 1\,s};
+\node[pstep, right=of judge, xshift=6mm] (conf) {Verdict: interaction};
+\node[pstep, below=of judge, text width=4.4cm] (out) {Write frame record, annotated frame and camera health};
+\draw[flow] (in) -- (detect);
+\draw[flow] (detect) -- (track);
+\draw[flow] (track) -- (roles);
+\draw[flow] (roles) -- (prox);
+\draw[flow] (prox) -- (cand);
+\draw[flow] (cand) -- node[lbl, right] {yes} (judge);
+\draw[flow] (cand.west) -- node[lbl, above] {no} (cand.west -| in.south) -- ([yshift=-5mm]in.south |- out.south) -| (out.south);
+\draw[flow] (judge) -- node[lbl, above] {not facing} (rej);
+\draw[flow] (judge) -- node[lbl, above] {facing} (conf);
+\draw[flow] (rej) |- (out);
+\draw[flow] (conf) |- (out);
+\end{tikzpicture}
+\caption{Per-frame processing in the interaction pipeline}
+\label{fig:pipeline}
+\end{figure}
+
+Distance is measured in body heights rather than metres: the allowed gap is 1.0 body height between feet, 0.8 between hips and 0.6 between heads, because higher body parts carry less depth information. A pair must stay within that gap for two seconds and must not drift apart faster than walking pace, which removes most pass-bys. If the pose model finds no face or fails, the verdict stays \emph{unverified} rather than being guessed.
+
+\section{Question Answering and Grounding}
+A manager's question passes through the orchestration graph in Figure~\ref{fig:graph}. The router either selects one business agent or ends the run as unsupported; questions that mention dispatching, ranking or identifying people are refused before routing. The agent may call only its allowed tools. Every number the agent returns is a \emph{claim} that names a tool call and the path of one metric in its result; the grounding step compares each claim with that metric. A failed claim triggers one repair attempt, and anything that still fails is dropped. The graph never writes to the database.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[font=\small, node distance=6mm and 9mm,
+  st/.style={box, rounded corners=6pt, fill=white, text width=2.3cm}]
+\node[circle, fill=black, inner sep=3pt] (s) {};
+\node[st, right=of s] (route) {route\\\scriptsize offline rules or provider};
+\node[st, right=14mm of route, yshift=9mm] (cb) {Customer Behavior agent};
+\node[st, right=14mm of route, yshift=-9mm] (ea) {Employee Activity agent};
+\node[st, right=14mm of cb, yshift=-9mm] (ground) {ground\\\scriptsize claim = metric?};
+\node[st, below=12mm of ground] (repair) {repair\\\scriptsize once};
+\node[st, right=of ground] (finish) {finish\\\scriptsize answer, citations, limits};
+\node[circle, draw, inner sep=3pt, right=of finish] (e) {}; \node[circle, fill=black, inner sep=1.6pt] at (e) {};
+\draw[flow] (s) -- (route);
+\draw[flow] (route) -- (cb);
+\draw[flow] (route) -- (ea);
+\draw[flow] (route.south) -- ++(0,-2.1) -| node[lbl, pos=0.25] {unsupported or refused} (finish.south);
+\draw[flow] (cb) -- (ground);
+\draw[flow] (ea) -- (ground);
+\draw[flow] (ground) -- node[lbl, right] {issues, first time} (repair);
+\draw[flow] (repair.west) -- ++(-4mm,0) |- ([yshift=-1mm]ground.west);
+\draw[flow] (ground) -- node[lbl, above] {ok} (finish);
+\draw[flow] (finish) -- (e);
+\end{tikzpicture}
+\caption{Orchestration graph for a manager question}
+\label{fig:graph}
+\end{figure}
+
+\input{chapters/design_models}

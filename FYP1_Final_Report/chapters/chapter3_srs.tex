@@ -1,0 +1,365 @@
+\chapter{Software Requirements Specification}
+\label{ch:srs}
+
+This chapter specifies what RetailPulse must do, following the structure of ISO/IEC/IEEE 29148~\cite{iso29148}. It replaces the requirements chapter of the mid report, which the mid evaluation found incorrect. The main changes are listed in Appendix~\ref{app:req-changes}: requirements are now numbered without gaps, each states a single testable behaviour, non-functional requirements have measurable targets, and implementation progress is reported separately in Chapters~\ref{ch:impl} to~\ref{ch:testing} instead of inside the specification.
+
+\section{Purpose and Product Scope}
+RetailPulse analyses footage from a store's existing cameras to detect customers and employees, find customer--employee interactions and unattended customers, show this information to the manager, and assign staff to where they are needed. The specification covers the vision pipeline, the event store, the analytics agents, staff dispatch and the web application.
+
+\section{Product Perspective}
+RetailPulse is a self-contained system that uses the store's cameras as input. Figure~\ref{fig:context} shows its context: two human actors, the camera system, and two optional external services. The event store is part of the system, not an external actor.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[node distance=1.2cm]
+\node[box, minimum width=4.6cm, minimum height=2.2cm, very thick, fill=gray!8] (sys) {\textbf{RetailPulse}\\[2pt]vision pipeline, event store,\\agents, dispatch, web application};
+\node[box, left=3.0cm of sys, yshift=1.1cm] (mgr) {Store manager};
+\node[box, left=3.0cm of sys, yshift=-1.1cm] (emp) {Employee};
+\node[box, above=1.3cm of sys] (cam) {CCTV cameras /\\recorded video};
+\node[box, right=3.0cm of sys, yshift=1.1cm, dashed] (llm) {Language-model\\provider (optional)};
+\node[box, right=3.0cm of sys, yshift=-1.1cm, dashed] (tts) {Text-to-speech\\provider (optional)};
+\draw[flow] (cam) -- node[lbl, right] {video frames} (sys);
+\draw[flow] ([yshift=2mm]mgr.east) -- node[lbl, above] {questions, settings} ([yshift=1.3cm]sys.west);
+\draw[flow] ([yshift=0.9cm]sys.west) -- node[lbl, below] {analytics, alerts} ([yshift=-2mm]mgr.east);
+\draw[flow] ([yshift=-0.9cm]sys.west) -- node[lbl, above] {tasks} ([yshift=2mm]emp.east);
+\draw[flow] ([yshift=-2mm]emp.east) -- node[lbl, below] {task status} ([yshift=-1.3cm]sys.west);
+\draw[flow, dashed] ([yshift=1.1cm]sys.east) -- node[lbl, above] {question text only} (llm.west);
+\draw[flow, dashed] ([yshift=-1.1cm]sys.east) -- node[lbl, above] {task instruction} (tts.west);
+\end{tikzpicture}
+\caption{System context: actors and external services}
+\label{fig:context}
+\end{figure}
+
+The language-model provider may be used only to choose which agent handles a manager's question; it never supplies figures or chooses tools. The text-to-speech provider turns a task instruction into audio for the employee. Both are optional: without them the system routes questions with fixed rules and shows tasks as text.
+
+\section{User Classes and Characteristics}
+\begin{table}[H]
+\centering
+\caption{User classes}\label{tab:user-classes}
+\begin{tabular}{P{0.16\textwidth}P{0.42\textwidth}P{0.32\textwidth}}
+\toprule
+User class & Characteristics & Access\\
+\midrule
+Manager & Runs the store; not necessarily technical; uses the dashboard on a laptop or phone. & All analytics, questions, alerts, configuration and system status for their store.\\
+Employee & Works on the floor; uses a phone or shared screen. & Own shift, own tasks and own profile only.\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Operating Environment}
+\begin{itemize}
+\item Server: a Windows or Linux computer with a multi-core CPU and no GPU, running Python 3.11 and PostgreSQL 17 (local or hosted).
+\item Web tier: Next.js 15 on Node.js 20 or later, deployable on Vercel.
+\item Clients: current desktop and mobile browsers (Chrome, Edge, Firefox, Safari).
+\item Cameras: fixed CCTV cameras providing a video stream or recorded files readable by OpenCV.
+\end{itemize}
+
+\section{Design and Implementation Constraints}
+\label{sec:srs-constraints}
+\begin{enumerate}[label=C\arabic*.]
+\item Vision processing must run on a CPU without a GPU.
+\item No biometric identifier (face template or identity embedding linked to a person) may be stored.
+\item Waiting, staffing, coverage and occupancy thresholds are store configuration, not code constants, so each store can set its own service policy.
+\item Agents may read store data only through the fixed read-only analytics tools; they may not run arbitrary database queries.
+\item Assigning an aisle task to an employee must not require manager approval.
+\item Secrets (session, internal service and provider keys) are read from the environment and never sent to the browser.
+\end{enumerate}
+
+\textbf{Assumptions and dependencies.} Staff can be told apart from customers by appearance, such as a uniform or bib. Each store supplies its zones, minimum staffing per zone and a staff roster. A store map with camera calibration points must be supplied before map-cell occupancy can be shown.
+
+\section{Use Case Model}
+\label{sec:uc-model}
+Figure~\ref{fig:uc-diagram} shows the twelve use cases. The manager is the primary actor for most of them. The employee is primary for viewing and updating their tasks, and secondary for dispatch, where they receive the task. The camera system is the primary actor of the dispatch use case because a closed observation window, not a person, triggers it. Signing in is shared by both human actors. \emph{Generate store digest} always runs analytics questions, so it includes UC-04; updating a task's status is an optional extension of viewing one's tasks.
+
+\begin{figure}[p]
+\centering
+\begin{tikzpicture}[scale=0.84, transform shape,
+  uc/.style={ellipse, draw, align=center, font=\footnotesize, inner xsep=2pt, inner ysep=0pt, minimum width=4.7cm, minimum height=1.0cm},
+  assoc/.style={thin},
+  dep/.style={->, dashed, thin}]
+% system boundary
+\draw[rounded corners=3pt, thick] (2.9,0.95) rectangle (15.0,-13.2);
+\node[font=\bfseries] at (8.95,0.6) {RetailPulse};
+% manager use cases (left column)
+\node[uc] (u01) at (5.9,-0.20) {UC-01\\Sign in};
+\node[uc] (u03) at (5.9,-1.55) {UC-03\\View dashboard analytics};
+\node[uc] (u04) at (5.9,-2.90) {UC-04\\Ask an analytics question};
+\node[uc] (u08) at (5.9,-4.25) {UC-08\\Generate store digest};
+\node[uc] (u09) at (5.9,-5.60) {UC-09\\View live occupancy};
+\node[uc] (u05) at (5.9,-6.95) {UC-05\\Review and resolve alerts};
+\node[uc] (u06) at (5.9,-8.30) {UC-06\\Configure store};
+\node[uc] (u07) at (5.9,-9.65) {UC-07\\View system status};
+\node[uc] (u02) at (5.9,-11.00) {UC-02\\Process store video};
+\node[uc] (u12) at (5.9,-12.35) {UC-12\\Dispatch staffing task};
+% employee use cases (right column)
+\node[uc] (u10) at (12.0,-5.30) {UC-10\\View own tasks and shift};
+\node[uc] (u11) at (12.0,-7.15) {UC-11\\Update task status};
+% actors
+\foreach \name/\x/\y/\txt in {mgr/0.5/-6.1/Manager, cam/0.5/-12.4/{Camera system\\\scriptsize\guillemotleft system\guillemotright}, emp/17.0/-6.8/Employee} {
+  \begin{scope}[shift={(\x,\y)}]
+    \draw (0,0.95) circle (0.17);
+    \draw (0,0.78) -- (0,0.25) (-0.3,0.6) -- (0.3,0.6) (0,0.25) -- (-0.25,-0.15) (0,0.25) -- (0.25,-0.15);
+    \node[align=center, font=\footnotesize, below] at (0,-0.15) {\txt};
+    \coordinate (\name) at (0,0.5);
+  \end{scope}
+}
+% manager associations
+\foreach \u in {u01,u03,u04,u08,u09,u05,u06,u07,u02} { \draw[assoc] (mgr) -- (\u.west); }
+% camera associations
+\draw[assoc] (cam) -- (u02.west);
+\draw[assoc] (cam) -- (u12.west);
+% employee associations
+\draw[assoc] (emp) -- (u01.east);
+\draw[assoc] (emp) -- (u10.east);
+\draw[assoc] (emp) -- (u11.east);
+\draw[assoc] (emp) -- (u12.east);
+% include / extend
+\draw[dep] (u08.east) to[out=0, in=0, looseness=1.7] node[right, font=\scriptsize] {\guillemotleft include\guillemotright} (u04.east);
+\draw[dep] (u11) -- node[right, font=\scriptsize] {\guillemotleft extend\guillemotright} (u10);
+\end{tikzpicture}
+\caption{Use case diagram}
+\label{fig:uc-diagram}
+\end{figure}
+
+\section{Use Case Descriptions}
+Each description lists the functional requirements it realises. Steps are numbered so that alternative flows can refer to them.
+
+\newcommand{\ucrow}[2]{#1 & #2\\}
+\newenvironment{ucspec}[2]{%
+  \begin{longtable}{P{0.2\textwidth}P{0.72\textwidth}}
+  \caption{#1}\label{#2}\\
+  \toprule
+  \endfirsthead
+  \toprule
+  \endhead
+  \bottomrule
+  \endfoot}{\end{longtable}}
+
+\begin{ucspec}{UC-01 Sign in}{tab:uc01}
+\ucrow{Actors}{Manager or Employee (primary)}
+\ucrow{Realises}{FR-01, FR-02, FR-03}
+\ucrow{Precondition}{The user has an active account.}
+\ucrow{Main flow}{1. The user enters email and password and selects Manager or Employee. 2. The system verifies the password and that the selected role matches the stored role. 3. The system issues a signed session. 4. The system opens the manager dashboard or the employee home page.}
+\ucrow{Alternatives}{2a. Wrong password: the system shows an error and counts the failure. 2b. Five failures for the account within 15 minutes: the system locks the account for 15 minutes. 2c. The selected role does not match the stored role: the system refuses the sign-in.}
+\ucrow{Postcondition}{The user can reach only the workspace of their role until they sign out or the session expires.}
+\end{ucspec}
+
+\begin{ucspec}{UC-02 Process store video}{tab:uc02}
+\ucrow{Actors}{Manager (primary); camera system (secondary)}
+\ucrow{Realises}{FR-05 to FR-10}
+\ucrow{Precondition}{The manager is signed in; the camera or recording is registered.}
+\ucrow{Main flow}{1. The manager selects a recording or a live camera and starts analysis. 2. The system admits the job. 3. The system detects, tracks and classifies people and checks candidate interactions with the pose check. 4. The system shows an annotated preview while it runs. 5. The system writes the outputs and stores the run's events with the camera identifier.}
+\ucrow{Alternatives}{2a. Two jobs are already running: the system refuses the new job and asks the manager to retry later. 3a. The video cannot be read: the system stops and reports the error without storing partial results as complete.}
+\ucrow{Postcondition}{The run's events and camera-health records are in the event store.}
+\end{ucspec}
+
+\begin{ucspec}{UC-03 View dashboard analytics}{tab:uc03}
+\ucrow{Actors}{Manager (primary)}
+\ucrow{Realises}{FR-17}
+\ucrow{Precondition}{The manager is signed in and is a member of the store.}
+\ucrow{Main flow}{1. The manager opens the dashboard and selects an interval and, optionally, a zone. 2. The system reads footfall, interactions, unattended episodes, coverage and dwell through the analytics tools. 3. The system shows each figure with its unit, evidence and limitations.}
+\ucrow{Alternatives}{2a. A source has no data for the interval: the figure is shown as unavailable with the reason, never as zero. 2b. The backend cannot be reached: the dashboard shows an error and does not fall back to sample data.}
+\ucrow{Postcondition}{No data is changed.}
+\end{ucspec}
+
+\begin{ucspec}{UC-04 Ask an analytics question}{tab:uc04}
+\ucrow{Actors}{Manager (primary)}
+\ucrow{Realises}{FR-18, FR-19, FR-20}
+\ucrow{Precondition}{The manager is signed in and has asked fewer than ten questions in the current minute.}
+\ucrow{Main flow}{1. The manager types a question about customers or staff. 2. The system routes it to the Customer Behavior or Employee Activity agent. 3. The agent calls the analytics tools for the dashboard's interval and filters. 4. The system checks every figure against the tool result it cites. 5. The system shows the answer with its figures, citations and limitations.}
+\ucrow{Alternatives}{2a. The question asks to rank or identify people, or to take an action: the system refuses. 4a. A figure does not match its source: the agent is asked to repair it once; if it still fails, the claim is dropped. 4b. No supporting evidence: the system says so instead of answering.}
+\ucrow{Postcondition}{No store data is changed.}
+\end{ucspec}
+
+\begin{ucspec}{UC-05 Review and resolve alerts}{tab:uc05}
+\ucrow{Actors}{Manager (primary)}
+\ucrow{Realises}{FR-30}
+\ucrow{Precondition}{The manager is signed in.}
+\ucrow{Main flow}{1. The manager opens Alerts and filters by status, category or severity. 2. The system lists the alerts with their evidence and any related task. 3. The manager resolves an alert. 4. The system records who resolved it and when.}
+\ucrow{Alternatives}{3a. The manager assigns a task from the alert: the system applies the dispatch rules of UC-12 to the alert's zone.}
+\ucrow{Postcondition}{Resolved alerts move to the resolved list; resolving an alert never cancels a task.}
+\end{ucspec}
+
+\begin{ucspec}{UC-06 Configure store}{tab:uc06}
+\ucrow{Actors}{Manager (primary)}
+\ucrow{Realises}{FR-31, FR-32}
+\ucrow{Precondition}{The manager is signed in.}
+\ucrow{Main flow}{1. The manager edits zones and their minimum staff, cameras, staff rosters or service thresholds. 2. The system validates the change. 3. The system saves it and applies it to later decisions.}
+\ucrow{Alternatives}{2a. Invalid value: the system rejects the change and keeps the previous configuration. 1a. The manager pauses automatic dispatch: later staffing events raise alerts only.}
+\ucrow{Postcondition}{The new configuration is used for every decision made after saving.}
+\end{ucspec}
+
+\begin{ucspec}{UC-07 View system status}{tab:uc07}
+\ucrow{Actors}{Manager (primary)}
+\ucrow{Realises}{FR-33}
+\ucrow{Main flow}{1. The manager opens System Status. 2. The system shows database and component health, recent dispatch outcomes, and task acknowledgement counts with mean and median times.}
+\ucrow{Alternatives}{2a. A component reports no telemetry: it is shown as unknown, not healthy.}
+\end{ucspec}
+
+\begin{ucspec}{UC-08 Generate store digest}{tab:uc08}
+\ucrow{Actors}{Manager (primary)}
+\ucrow{Realises}{FR-21}
+\ucrow{Main flow}{1. The manager selects an interval and requests a digest. 2. The system runs the customer and staffing questions of UC-04 for that interval. 3. The system writes the digest sections (traffic, assistance, waiting customers, staff coverage, events raised) from the verified figures. 4. The system lists caveats, including any interval in which a camera was blind.}
+\ucrow{Alternatives}{3a. The data is synthetic: the digest says so on its first line.}
+\ucrow{Postcondition}{Every number in the digest equals a verified figure.}
+\end{ucspec}
+
+\begin{ucspec}{UC-09 View live occupancy}{tab:uc09}
+\ucrow{Actors}{Manager (primary)}
+\ucrow{Realises}{FR-15, FR-16}
+\ucrow{Precondition}{A store map is registered for at least one camera.}
+\ucrow{Main flow}{1. The manager opens the spatial view. 2. The system shows each mapped cell in one of the four categories, with the map version and window. 3. The system shows customer, employee and confirmed-interaction layers separately.}
+\ucrow{Alternatives}{2a. A cell lacks coverage or has unknown roles: it is masked with the reason, never shown as \emph{no one}.}
+\end{ucspec}
+
+\begin{ucspec}{UC-10 View own tasks and shift}{tab:uc10}
+\ucrow{Actors}{Employee (primary)}
+\ucrow{Realises}{FR-28}
+\ucrow{Precondition}{The employee is signed in.}
+\ucrow{Main flow}{1. The employee opens their home page. 2. The system shows open tasks first, then shift and zone. 3. When a new task is assigned, the system adds it without a page reload.}
+\ucrow{Alternatives}{2a. No open task: the page says so.}
+\ucrow{Postcondition}{The employee sees only their own tasks.}
+\end{ucspec}
+
+\begin{ucspec}{UC-11 Update task status}{tab:uc11}
+\ucrow{Actors}{Employee (primary)}
+\ucrow{Realises}{FR-29}
+\ucrow{Extends}{UC-10, at the point where the employee selects a task.}
+\ucrow{Main flow}{1. The employee acknowledges, starts or completes a task. 2. The system records the new state and its time. 3. The manager sees the change in Alerts and System Status.}
+\ucrow{Alternatives}{1a. The employee taps the button twice: the page ignores the second tap until the first update completes. 2a. The task belongs to another employee: the system refuses the update.}
+\end{ucspec}
+
+\begin{ucspec}{UC-12 Dispatch staffing task}{tab:uc12}
+\ucrow{Actors}{Camera system (primary); Employee (secondary)}
+\ucrow{Realises}{FR-11, FR-22 to FR-27, FR-34}
+\ucrow{Trigger}{An observation window for a zone closes.}
+\ucrow{Main flow}{1. The system reads the zone's unattended episodes, dwell and camera coverage for the window. 2. A customer waited at least the store's threshold without help, so the system raises an unattended-customer event. 3. The system selects an eligible employee. 4. The system creates the task with an instruction and a one-line reason, records the decision and an alert, and delivers the task to the employee. 5. The employee sees the task (UC-10).}
+\ucrow{Alternatives}{2a. The camera was blind for more than the allowed share of the window: the event is suppressed and the reason recorded. 3a. No eligible employee: no task is created and the manager is alerted. 3b. The event was already handled: the system reports a duplicate and creates no task. 3c. A task for the zone is still open: the existing task stands. 3d. Dispatch is paused: an alert is raised without a task.}
+\ucrow{Postcondition}{At most one task exists per event, and every decision is recorded with its reason.}
+\end{ucspec}
+
+\section{Functional Requirements}
+Priorities: \textbf{H} (needed for the core service), \textbf{M} (needed for a complete product), \textbf{L} (useful addition).
+
+\begin{longtable}{P{0.085\textwidth}P{0.63\textwidth}P{0.045\textwidth}P{0.13\textwidth}}
+\caption{Functional requirements}\label{tab:fr}\\
+\toprule
+ID & Requirement & Pr. & UC\\
+\midrule
+\endfirsthead
+\toprule
+ID & Requirement & Pr. & UC\\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+\multicolumn{4}{l}{\textit{Accounts and access}}\\
+FR-01 & The system shall authenticate users by email and password and issue a signed session that browser scripts cannot read. & H & UC-01\\
+FR-02 & The system shall give each user access only to the workspace and data of their stored role, and refuse a sign-in whose selected role differs from the stored role. & H & UC-01\\
+FR-03 & The system shall lock an account for 15 minutes after five failed sign-in attempts within 15 minutes. & H & UC-01\\
+FR-04 & The system shall let a manager invite an employee through a single-use link that expires after seven days. & M & UC-06\\
+\multicolumn{4}{l}{\textit{Video analysis}}\\
+FR-05 & The system shall detect people in sampled frames of a recorded video or a live camera stream. & H & UC-02\\
+FR-06 & The system shall give each detected person a track identifier that stays the same while the person remains visible to the same camera. & H & UC-02\\
+FR-07 & The system shall classify each track as customer or employee and record the classification score. & H & UC-02\\
+FR-08 & The system shall nominate an interaction when an employee and a customer stay within the configured body-height-normalised distance for at least the configured duration. & H & UC-02\\
+FR-09 & The system shall confirm a nominated interaction only when the pose check finds the two people facing each other, and otherwise mark it rejected or unverified. & H & UC-02\\
+FR-10 & The system shall write, for each run, an annotated video and structured files of detections, people and interactions. & M & UC-02\\
+\multicolumn{4}{l}{\textit{Event store}}\\
+FR-11 & The system shall store each run's tracks, role decisions, interactions, zone dwell, footfall, queue samples, unattended episodes, camera health and heatmaps, each with run, store, camera and zone identifiers and UTC start and end times. & H & UC-02, UC-12\\
+FR-12 & The system shall record an unattended episode when a customer waits at least the store's unattended threshold without a confirmed interaction. & H & UC-12\\
+FR-13 & The system shall count entries and exits across a configured entrance line, counting each track's crossing once. & M & UC-03\\
+FR-14 & The system shall record each camera's health every minute: frame rate, mean confidence, unknown-role share, identity churn and frozen or dark frames. & H & UC-07\\
+\multicolumn{4}{l}{\textit{Live occupancy}}\\
+FR-15 & The system shall place each observed map cell in each window in exactly one of four categories (customer, employee, customer and employee, no one), or mask it with a quality reason when coverage or role evidence is insufficient. & M & UC-09\\
+FR-16 & The system shall change a cell's displayed category only after the new category holds for the configured number of consecutive windows. & M & UC-09\\
+\multicolumn{4}{l}{\textit{Analytics and questions}}\\
+FR-17 & The system shall show the manager, for a selected interval and zone, footfall, interactions, unattended episodes, staff coverage and dwell, each with its evidence and limitations. & H & UC-03\\
+FR-18 & The system shall answer a manager's question about customers or staff using only the five read-only analytics tools. & M & UC-04\\
+FR-19 & The system shall check every figure in an answer against the tool metric it cites and remove any figure that does not match. & H & UC-04\\
+FR-20 & The system shall refuse questions that ask it to rank or identify individuals or to perform an operational action. & H & UC-04\\
+FR-21 & The system shall produce a store digest for a selected interval in which every number is a verified figure and synthetic data is labelled. & M & UC-08\\
+\multicolumn{4}{l}{\textit{Operational events and dispatch}}\\
+FR-22 & The system shall raise an unattended-customer event for a zone when at least one unhelped wait in the window reaches the store's minimum wait. & H & UC-12\\
+FR-23 & The system shall raise an unstaffed-zone event when a zone's staffed share of open time falls below the store's minimum while customers are present. & M & UC-12\\
+FR-24 & The system shall suppress both events, recording the reason, when the camera's unknown-observation share in the window exceeds the store's maximum. & H & UC-12\\
+FR-25 & The system shall select only an employee who is active, rostered, available, without an open task and not in an interaction, and whose departure keeps their own zone at or above its minimum staff. & H & UC-12\\
+FR-26 & The system shall rank eligible employees by: staff of the target zone, then floaters, then the zone with the most spare staff. & M & UC-12\\
+FR-27 & The system shall deliver the task to the selected employee with an instruction and a one-line reason, without manager approval. & H & UC-12\\
+FR-28 & The system shall show each employee their open tasks, shift and zone, and add newly assigned tasks without a page reload. & H & UC-10\\
+FR-29 & The system shall record each task status change (acknowledged, in progress, completed or declined) with its time. & H & UC-11\\
+\multicolumn{4}{l}{\textit{Alerts, configuration and status}}\\
+FR-30 & The system shall let a manager filter alerts and resolve them, recording who resolved each alert and when. & M & UC-05\\
+FR-31 & The system shall let a manager configure zones with minimum staff, cameras, rosters and service thresholds, rejecting invalid values. & H & UC-06\\
+FR-32 & The system shall let a manager pause automatic dispatch, after which staffing events raise alerts only. & M & UC-06\\
+FR-33 & The system shall show component health, recent dispatch outcomes and task acknowledgement times. & L & UC-07\\
+FR-34 & The system shall create at most one task per staffing event, returning the earlier decision when the same event is received again. & H & UC-12\\
+\end{longtable}
+
+\section{Non-Functional Requirements}
+Each requirement has a measurable target and a verification method. Measured results are reported in Chapters~\ref{ch:cveval} and~\ref{ch:testing}. The reference machine is a laptop with a multi-core CPU, no GPU and nothing else running.
+
+\begin{longtable}{P{0.095\textwidth}P{0.17\textwidth}P{0.4\textwidth}P{0.24\textwidth}}
+\caption{Non-functional requirements}\label{tab:nfr}\\
+\toprule
+ID & Quality & Requirement and target & Verification\\
+\midrule
+\endfirsthead
+\toprule
+ID & Quality & Requirement and target & Verification\\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+NFR-01 & Performance & The vision pipeline shall process recorded video at no less than 0.5 times real time on the reference machine with default sampling. & Timed benchmark on the held-out clips on an idle machine.\\
+NFR-02 & Accuracy & Interaction detection shall reach F1 of at least 0.40 on held-out labelled clips, reported with a 95\,\% confidence interval. & Benchmark on the held-out set; clip bootstrap.\\
+NFR-03 & Accuracy & Customer/employee classification shall be correct for at least 95\,\% of matched tracks on held-out clips. & Role benchmark against reviewed person labels.\\
+NFR-04 & Reliability & Replaying any staffing event shall create zero additional tasks. & Duplicate-event scenario and unit tests.\\
+NFR-05 & Integrity & Every stored event row shall carry non-empty run, store, camera and zone identifiers and end no earlier than it starts. & Contract check \texttt{validate()} on every run.\\
+NFR-06 & Honesty of data & Missing camera coverage shall never be reported as zero activity or as an empty area. & Blind-camera scenario; occupancy masking tests.\\
+NFR-07 & Security & Passwords shall be stored with PBKDF2-SHA256 using at least 600\,000 iterations~\cite{owaspPasswords} and shall be at least eight characters. & Unit tests on hashing and sign-up validation.\\
+NFR-08 & Security & The backend shall reject every request without the internal service secret and shall refuse to start with a missing or default secret outside development mode. & Security tests; startup test.\\
+NFR-09 & Security & Each manager shall be limited to ten questions per minute. & Rate-limit test.\\
+NFR-10 & Privacy & No face template, identity embedding linked to a person, or employee account identity derived from a CV track shall be stored. & Schema and code review.\\
+NFR-11 & Usability & Every manager page shall be reachable in at most two navigation actions from the dashboard, and every page shall display without horizontal scrolling at 390 px width. & Navigation and mobile-layout checks.\\
+NFR-12 & Maintainability & Every push shall run the backend, frontend and vision test suites automatically, and all shall pass before a merge to the main branch. & Continuous-integration workflow.\\
+NFR-13 & Configurability & A store shall be able to change every waiting, staffing, coverage and occupancy threshold without a code change. & Configuration tests per threshold.\\
+\end{longtable}
+
+\section{External Interface Requirements}
+\textbf{User interfaces.} A responsive web application: a manager workspace (dashboard, customer and employee analytics, spatial view, interactions, alerts, settings, system status) and an employee workspace (home with tasks, own performance, profile). Charts show their values as text, and each figure states its unit and interval.
+
+\textbf{Hardware interfaces.} Cameras supply a video stream or recorded files; no special camera hardware is required.
+
+\textbf{Software interfaces.} PostgreSQL 17 for all application and event data; the YOLOv8 detection and pose models through Ultralytics and OpenVINO; optionally a Hugging Face inference router for question routing and ElevenLabs for speech.
+
+\textbf{Communication interfaces.} Browsers use HTTPS to the web tier. The web tier calls the Python backend over HTTP with an internal service secret and the authenticated actor's identity; the browser never sees the secret. New tasks reach the employee's page through a server-sent event stream.
+
+\section{Requirements Traceability}
+Table~\ref{tab:trace} links each functional requirement to its use case, the design element that realises it (Chapter~\ref{ch:design}) and the test evidence (Chapter~\ref{ch:testing}).
+
+\begin{longtable}{P{0.15\textwidth}P{0.14\textwidth}P{0.33\textwidth}P{0.3\textwidth}}
+\caption{Traceability of functional requirements}\label{tab:trace}\\
+\toprule
+FR & UC & Design element & Test evidence\\
+\midrule
+\endfirsthead
+\toprule
+FR & UC & Design element & Test evidence\\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+FR-01--03 & UC-01 & Session routes, \texttt{store\_core} accounts & \texttt{test\_security.py}; frontend session tests\\
+FR-04 & UC-06 & Invitation tokens (hashed) & \texttt{test\_security.py}\\
+FR-05--10 & UC-02 & \texttt{InteractionPipeline}, \texttt{CustEmpClassifier}, pose judge & CV suite; benchmark (Chapter~\ref{ch:cveval})\\
+FR-11--14 & UC-02, UC-12 & Event store, \texttt{ingest}, \texttt{footfall} & \texttt{test\_events.py}; acceptance A1\\
+FR-15--16 & UC-09 & \texttt{OccupancyTracker}, \texttt{spatial} registration & \texttt{test\_occupancy.py}; acceptance A3\\
+FR-17 & UC-03 & Dashboard provider and routes & Dashboard tests; QA\\
+FR-18--20 & UC-04 & \texttt{AnalyticsService}, router, specialists & \texttt{test\_graph.py}; golden questions; acceptance A4\\
+FR-21 & UC-08 & \texttt{build\_digest}, \texttt{verify\_narrative} & \texttt{test\_narration.py}; acceptance A9\\
+FR-22--24 & UC-12 & \texttt{SignalPolicy}, \texttt{evaluate\_zone} & \texttt{test\_signal\_policy.py}; acceptance A5, A8\\
+FR-25--27, 34 & UC-12 & \texttt{dispatch.handle\_event} & \texttt{test\_dispatch.py}; 20 dispatch scenarios; acceptance A5--A7\\
+FR-28--29 & UC-10, UC-11 & Task routes, event stream & Employee-home tests\\
+FR-30--33 & UC-05--07 & Alerts, settings, status routes & Backend route tests; QA\\
+\end{longtable}

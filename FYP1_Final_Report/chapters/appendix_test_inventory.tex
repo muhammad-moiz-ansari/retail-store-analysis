@@ -1,0 +1,48 @@
+\chapter{Test Inventory}
+\label{app:tests}
+Test functions by area on commit \texttt{c8ff409}. Many tests are parametrised, so the number of executed cases is higher than the number of functions (276 cases in the fast backend job).
+
+\begin{longtable}{P{0.36\textwidth}P{0.1\textwidth}P{0.46\textwidth}}
+\caption{Test files and what they check}\label{tab:test-files}\\
+\toprule
+File & Tests & Checks\\
+\midrule
+\endfirsthead
+\toprule
+File & Tests & Checks\\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+\multicolumn{3}{l}{\textit{Business agents}}\\
+\path{business/test_customer_behavior.py} & 10 & Intents, footfall paths, waiting customers, claims\\
+\path{business/test_employee_activity.py} & 6 & Coverage and assistance answers\\
+\path{business/test_signal_policy.py} & 6 & Emission, suppression and severity rules\\
+\path{business/test_occupancy.py} & 9 & Four categories, masking, hysteresis, layers\\
+\path{business/test_narration.py} & 6 & Digest sections, verified numbers, provenance\\
+\path{business/test_clip_review.py}, \path{test_clip_render.py} & 8 & Blind review items, kappa, clip rendering\\
+\path{business/test_golden.py} & 3 & Golden-question routing, answers, refusals\\
+\multicolumn{3}{l}{\textit{Agent foundation}}\\
+\path{agents/test_contracts.py} & 14 & Typed contracts reject malformed values\\
+\path{agents/test_read_tools.py}, \path{test_contextual_tools.py}, \path{test_tool_integration.py} & 23 & Readers against PostgreSQL; scope enforcement\\
+\path{agents/test_graph.py}, \path{test_graph_service.py} & 22 & Routing, grounding, repair, refusals, traces\\
+\path{agents/test_operational.py}, \path{test_operational_integration.py} & 15 & Adapter validation; questions cannot reach dispatch\\
+\path{agents/test_dashboard.py}, \path{test_ask_api.py}, \path{test_advisory_api.py} & 16 & Dashboard and Ask routes, membership, rate limit\\
+\multicolumn{3}{l}{\textit{Events and operations}}\\
+\path{events/test_events.py} & 11 & Ingestion, contract check, fixture day\\
+\path{events/test_spatial.py}, \path{test_live_zones.py} & 16 & Map registration, cell dwell, camera attention state\\
+\path{tests/test_dispatch.py}, \path{test_operations.py} & 14 & Eligibility, ranking, duplicates, scenarios, operations cycle\\
+\path{tests/test_security.py} & 11 & Secrets, lockout, hashing, invitations, job limits, camera roles\\
+\path{tests/test_aisle_relay.py} & 16 & Aisle relay watcher and store bridge\\
+\path{tests/test_ack_time.py}, \path{test_task_voice.py}, \path{test_live_view.py} & 5 & Acknowledgement time, voice fallback, live view\\
+\path{test_postgres_migration.py} & 3 & SQLite import into PostgreSQL\\
+\multicolumn{3}{l}{\textit{Vision pipeline}}\\
+\path{interaction/test_role_classifier.py}, \path{test_cust_emp_classifier.py} & 14 & Role labelling, rechecks, weighted decision\\
+\path{interaction/test_engagement.py}, \path{test_judge.py} & 17 & Proximity nomination, pass-bys, pose verdicts\\
+\path{interaction/test_tracker.py}, \path{test_identity.py} & 10 & Tracking and identity relinking\\
+\path{interaction/test_benchmark.py}, \path{test_confidence.py}, \path{test_refit.py} & 14 & Metric calculations, bootstrap, refit\\
+Other vision tests & 21 & CVAT import, role labels, renderer, live switch, task A, calibration\\
+\path{test_handoff_core.py}, \path{test_handoff_eval.py} & 6 & Camera handoff logic and evaluator\\
+\multicolumn{3}{l}{\textit{Frontend}}\\
+Provider, controller, dashboard, session and identity tests & 40 & Validation, states, rendering, session signing, header stripping\\
+\end{longtable}

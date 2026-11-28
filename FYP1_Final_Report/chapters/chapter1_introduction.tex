@@ -1,0 +1,89 @@
+\chapter{Introduction}
+\label{ch:intro}
+
+\section{Project Overview}
+RetailPulse (\textit{Agentic AI for Retail Store Intelligence}) converts footage from a store's existing CCTV cameras into information a manager can act on: how many customers came in, whether they were attended to, where staff were and where they are needed now. It is designed for small and mid-sized stores, so it runs on an ordinary CPU, needs no new cameras, and never identifies people biometrically.
+
+The system has four parts that build on each other:
+\begin{enumerate}
+\item a \textbf{vision pipeline} that detects and tracks people, labels each one as a customer or an employee, and confirms customer--employee interactions with a pose check;
+\item an \textbf{event store} in PostgreSQL that keeps every run as typed, timestamped records together with camera-health information;
+\item an \textbf{agent layer} that answers manager questions from those records and raises operational events, with every figure checked against its source; and
+\item a \textbf{web application} with a manager dashboard and an employee task workspace, to which staffing tasks are dispatched directly.
+\end{enumerate}
+
+This report is the FYP-1 final report. It covers the whole project to date: the work shown at the mid evaluation on 21 October 2026 and everything completed since.
+
+\section{Problem Statement}
+Store managers have no low-cost way to know, during a shift, whether customers on the floor are being attended to and which aisles lack staff. The footage that would answer these questions is already recorded, but nobody watches it in real time, and commercial analytics products require dedicated sensors, subscriptions or analysts that smaller retailers cannot afford.
+
+\section{Motivation}
+\begin{itemize}
+\item \textbf{Service quality.} A customer who waits without help may leave without buying. A manager who learns about it at the moment it happens can send someone.
+\item \textbf{Informed staffing.} Rosters say where staff should be; footage shows where they were. Comparing the two shows coverage gaps.
+\item \textbf{Low cost.} Reusing existing cameras and a CPU-only computer removes the capital cost that blocks smaller stores.
+\item \textbf{Store-specific service policy.} Service expectations differ between stores: a luxury boutique may not want staff to approach every shopper. All waiting and coverage thresholds are therefore configured per store rather than fixed in code (Section~\ref{sec:srs-constraints}). This answers the generalisability question raised at the proposal defence.
+\end{itemize}
+
+\section{Objectives}
+Each objective names how it is measured; the measurements are reported in Chapters~\ref{ch:cveval} and~\ref{ch:testing}.
+\begin{enumerate}[label=O\arabic*.]
+\item Detect people in store footage and classify each tracked person as a customer or an employee without biometric identification. \emph{Measure:} per-track role accuracy on labelled held-out clips.
+\item Detect customer--employee interactions and reject close pass-bys. \emph{Measure:} precision, recall and F1 on held-out labelled clips, with and without the pose check, with confidence intervals.
+\item Store every analysis run as typed events with provenance and camera health. \emph{Measure:} contract validation of every stored row.
+\item Answer manager questions about customers and staff from stored events only. \emph{Measure:} share of answers whose figures match their source tool exactly, and correct refusal of out-of-scope questions.
+\item Turn an unattended customer into a task for an eligible employee without manager approval, never twice for the same event. \emph{Measure:} scenario tests for dispatch, no eligible employee, duplicates and blind cameras.
+\item Run the vision pipeline on a CPU only. \emph{Measure:} real-time factor on an idle machine.
+\item Provide role-based web access for managers and employees. \emph{Measure:} security tests for authentication, role checks and secret handling.
+\end{enumerate}
+
+\section{Scope}
+\textbf{In scope.}
+\begin{itemize}
+\item Person detection, tracking and customer/employee classification on recorded or live single-camera video.
+\item Interaction detection from body-height-normalised proximity, duration and a pose-based facing check.
+\item Entrance footfall, unattended-customer episodes, per-camera heatmaps and pipeline-health records in the event store.
+\item Four live occupancy categories for observed map cells: customer, employee, customer and employee, and no one.
+\item Customer Behavior and Employee Activity agents, an orchestrator for manager questions, and a narrated digest.
+\item Direct dispatch of staffing tasks to eligible employees, with duplicate protection and per-store thresholds.
+\item A web application with separate manager and employee workspaces.
+\end{itemize}
+\textbf{Out of scope.}
+\begin{itemize}
+\item Facial recognition or any biometric identity.
+\item Cross-camera re-identification of the same person (a handoff evaluator exists but no labelled crossings; Section~\ref{sec:cv-limits}).
+\item Metric floor distances: a calibrated floor-mapping prototype was built and descoped at the mid evaluation because moving-camera footage gave almost no valid projections.
+\item Shelf and product interaction, loss prevention, multi-store operation and automated employee performance rating.
+\end{itemize}
+
+\section{Stakeholders and User Classes}
+\begin{table}[H]
+\centering
+\caption{Stakeholders and user classes}\label{tab:stakeholders}
+\begin{tabular}{P{0.2\textwidth}P{0.72\textwidth}}
+\toprule
+Stakeholder & Role and needs\\
+\midrule
+Store manager & Primary user. Reviews analytics, asks questions, configures the store and resolves alerts. Not assumed to be technical.\\
+Employee & Receives and updates staffing tasks and sees only their own shift and tasks.\\
+Store owner & Uses summary results for staffing and service decisions.\\
+Customers & Appear in footage. Not identified; affected through service quality and privacy.\\
+Project team and supervisor & Develop, evaluate and supervise the system.\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Constraints and Assumptions}
+\textbf{Constraints.} No dedicated GPU is available; processing must run on a CPU. The project spans two semesters. The labelled dataset is the team's own recordings from one store with two cameras, because retailers were unwilling to share footage.
+
+\textbf{Assumptions.} Cameras are fixed or move only slightly; staff can be told apart from customers by appearance (for example, uniforms or bibs); each store supplies its roster and its own service thresholds.
+
+\section{Ethical and Legal Considerations}
+\textbf{Privacy.} RetailPulse stores no face templates or other biometric identifiers. Track numbers are temporary and per camera, and a tracked employee is never linked to an employee account automatically. Results describe areas and events, not named individuals: the orchestrator refuses questions that ask it to rank or identify people.
+
+\textbf{Fair use.} Staff activity results are decision support, not employee evaluation. An employee standing still while helping a customer is not idle, and an area the camera cannot see is reported as unobserved, never as empty.
+
+\textbf{Law and consent.} Deployment needs a review of local law, store policy and customer notice. Pakistan's personal-data-protection law is listed as draft legislation by the Ministry of IT and Telecommunication~\cite{pakistanMoittLegislation}; the design follows the data-minimisation principle of the GDPR~\cite{gdpr2016}, which does not by itself establish legal compliance.
+
+\section{Report Organisation}
+Chapter~\ref{ch:lit} reviews existing products and techniques. Chapter~\ref{ch:srs} is the software requirements specification. Chapter~\ref{ch:design} presents the architecture and design models. Chapter~\ref{ch:impl} describes the implementation in two iterations, Chapter~\ref{ch:cveval} evaluates the vision pipeline, Chapter~\ref{ch:testing} reports testing and acceptance, Chapter~\ref{ch:mgmt} covers project management, and Chapter~\ref{ch:conclusion} concludes and sets out the FYP-2 plan. Appendix~\ref{app:feedback} records how the evaluation feedback was addressed.

@@ -1,0 +1,181 @@
+% Design models: domain model, class diagrams, data design, sequence diagrams, state machine, deployment.
+\tikzset{
+  cls/.style={draw, rectangle split, rectangle split parts=2, rectangle split part align={center,left},
+              align=left, font=\scriptsize, fill=white, text width=#1, inner sep=2.5pt,
+              execute at begin node={\hyphenpenalty=10000\exhyphenpenalty=10000}},
+  cls/.default=2.9cm,
+  dcls/.style={draw, rectangle split, rectangle split parts=3, rectangle split part align={center,left,left},
+               align=left, font=\scriptsize, fill=white, text width=#1, inner sep=2.5pt,
+               execute at begin node={\hyphenpenalty=10000\exhyphenpenalty=10000}},
+  dcls/.default=4.6cm,
+  rel/.style={thin},
+  m/.style={font=\tiny, inner sep=1pt},
+  an/.style={font=\tiny\itshape, fill=white, inner sep=1pt},
+  compo/.style={thin, {Diamond[fill=black,length=2.6mm,width=1.8mm]}-},
+  aggr/.style={thin, {Diamond[open,length=2.6mm,width=1.8mm]}-},
+  inherit/.style={thin, -{Triangle[open,length=2.4mm,width=2.4mm]}},
+  realize/.style={thin, dashed, -{Triangle[open,length=2.4mm,width=2.4mm]}},
+  usedep/.style={thin, dashed, ->},
+}
+
+\section{Domain Model}
+The domain model (Figure~\ref{fig:domain}) shows the concepts of the problem and how they relate. It contains only real-world concepts and their attributes: software components such as agents, the orchestrator or the database do not appear, and no operations are shown.
+
+\begin{landscape}
+\begin{figure}[p]
+\centering
+\begin{tikzpicture}[scale=0.95, transform shape]
+% row 1
+\node[cls] (health) at (0,0) {\textbf{CameraHealth}\nodepart{second}minute\\frameRate\\unknownRoleShare\\frozenOrDark};
+\node[cls] (camera) at (4.6,0) {\textbf{Camera}\nodepart{second}name\\role\\source};
+\node[cls] (store) at (9.2,0) {\textbf{Store}\nodepart{second}name};
+\node[cls] (zone) at (13.8,0) {\textbf{Zone}\nodepart{second}name\\type\\capacity\\minimumStaff};
+\node[cls] (roster) at (18.4,0) {\textbf{RosterEntry}\nodepart{second}shift\\available};
+% row 2
+\node[cls] (run) at (4.6,-3.4) {\textbf{AnalysisRun}\nodepart{second}startedAt\\source};
+\node[cls=3.5cm] (user) at (18.4,-3.4) {\textbf{StaffMember}\nodepart{second}name\\email\\role (Manager \textbar\ Employee)\\active};
+% row 3
+\node[cls] (inter) at (0,-6.8) {\textbf{Interaction}\nodepart{second}start\\end\\verdict};
+\node[cls] (track) at (4.6,-6.8) {\textbf{Track}\nodepart{second}role\\roleScore\\firstSeen\\lastSeen};
+\node[cls] (unatt) at (9.2,-6.8) {\textbf{UnattendedEpisode}\nodepart{second}waitedSeconds\\helped};
+\node[cls] (event) at (13.8,-6.8) {\textbf{StaffingEvent}\nodepart{second}type\\window\\severity};
+% row 4
+\node[cls] (alert) at (9.2,-10.2) {\textbf{Alert}\nodepart{second}category\\severity\\status};
+\node[cls] (decision) at (13.8,-10.2) {\textbf{DispatchDecision}\nodepart{second}outcome\\reason};
+\node[cls] (task) at (18.4,-10.2) {\textbf{Task}\nodepart{second}instruction\\state\\acknowledgedAfter};
+
+% associations: label in the middle, multiplicities near the ends
+\draw[rel] (health) -- node[an, above] {reports on} node[m, below, pos=0.12] {0..*} node[m, below, pos=0.88] {1} (camera);
+\draw[rel] (camera) -- node[an, above] {belongs to} node[m, below, pos=0.12] {1..*} node[m, below, pos=0.88] {1} (store);
+\draw[rel] (store) -- node[an, above] {has} node[m, below, pos=0.12] {1} node[m, below, pos=0.88] {1..*} (zone);
+\draw[rel] (zone) -- node[an, above] {staffed by} node[m, below, pos=0.12] {0..1} node[m, below, pos=0.88] {0..*} (roster);
+\draw[rel] ([xshift=6mm]camera.south) -- ++(0,-0.7) -| node[an, pos=0.25] {watches} node[m, right, pos=0.92] {1} ([xshift=-6mm]zone.south)
+  node[m, left] at ([xshift=6mm,yshift=-2mm]camera.south) {0..*};
+\draw[rel] ([xshift=-6mm]camera.south) -- node[an, left] {produces} node[m, left, pos=0.15] {1} node[m, left, pos=0.85] {0..*} ([xshift=-6mm]run.north);
+\draw[rel] (roster) -- node[an, right] {for} node[m, right, pos=0.15] {0..*} node[m, right, pos=0.85] {1} (user);
+\draw[rel] (store.north) -- ++(0,0.7) -| node[an, pos=0.25] {employs} node[m, left, pos=0.97] {1..*} ([xshift=2.4cm]user.east) -- (user.east)
+  node[m, right] at ([yshift=2mm]store.north) {1};
+\draw[rel] (run) -- node[an, left] {contains} node[m, left, pos=0.15] {1} node[m, left, pos=0.85] {0..*} (track);
+\draw[rel] ([yshift=3mm]track.west) -- node[an, above] {employee} node[m, below, pos=0.15] {1} node[m, below, pos=0.85] {0..*} ([yshift=3mm]inter.east);
+\draw[rel] ([yshift=-3mm]track.west) -- node[an, below] {customer} node[m, below, pos=0.15] {1} node[m, below, pos=0.85] {0..*} ([yshift=-3mm]inter.east);
+\draw[rel] (track) -- node[an, above] {waits as} node[m, below, pos=0.12] {1} node[m, below, pos=0.88] {0..1} (unatt);
+\draw[rel] (unatt) -- node[an, above] {triggers} node[m, below, pos=0.12] {1..*} node[m, below, pos=0.88] {0..1} (event);
+\draw[rel] ([xshift=6mm]zone.south) -- node[an, right] {concerns} node[m, right, pos=0.1] {1} node[m, right, pos=0.9] {0..*} ([xshift=6mm]event.north);
+\draw[rel] (event) -- node[an, right] {decided by} node[m, right, pos=0.15] {1} node[m, right, pos=0.85] {1} (decision);
+\draw[rel] (decision) -- node[an, above] {raises} node[m, below, pos=0.12] {1} node[m, below, pos=0.88] {0..1} (alert);
+\draw[rel] (decision) -- node[an, above] {creates} node[m, below, pos=0.12] {1} node[m, below, pos=0.88] {0..1} (task);
+\draw[rel] (task) -- node[an, right] {assigned to} node[m, right, pos=0.12] {0..*} node[m, right, pos=0.88] {1} (user);
+\draw[rel] (alert.south) -- ++(0,-0.7) -| node[an, pos=0.25] {resolved by} node[m, left, pos=0.97] {0..1} ([xshift=2.9cm,yshift=-4mm]user.east) -- ([yshift=-4mm]user.east)
+  node[m, right] at ([yshift=-2mm]alert.south) {0..*};
+\end{tikzpicture}
+\caption{Domain model}
+\label{fig:domain}
+\end{figure}
+\end{landscape}
+
+\section{Class Diagrams}
+The class diagrams show the main design classes with their real names, typed attributes and operations with return types. Figure~\ref{fig:class-vision} covers the vision pipeline and Figure~\ref{fig:class-agents} the agent and operations layer. Helper classes and private members are omitted.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[scale=0.9, transform shape]
+% the pipeline and its configuration (left)
+\node[dcls=4.3cm] (cfg) at (0,3.3) {\textbf{InteractionConfig}
+  \nodepart{second}min\_interaction\_seconds: float = 2.0\\facing\_angle\_degrees: float = 60\\min\_facing\_fraction: float = 0.5\\role\_weights: dict[str, float]
+  \nodepart{third}from\_json(path: Path): InteractionConfig};
+\node[dcls=4.3cm] (pipe) at (0,-0.6) {\textbf{InteractionPipeline}
+  \nodepart{second}config: InteractionConfig\\judge: PoseJudge \textbar\ None
+  \nodepart{third}process\_frame(frame: ndarray,\\\quad timestamp: float): dict\\verdict(event: InteractionEvent): str};
+% the four parts (middle column)
+\node[dcls=4.5cm] (tracker) at (6.1,3.3) {\textbf{ByteTrackPersonTracker}
+  \nodepart{second}tracker: str = "botsort\_reid.yaml"
+  \nodepart{third}detect\_and\_track(frame: ndarray,\\\quad timestamp: float): list[dict]};
+\node[dcls=4.5cm] (roles) at (6.1,1.05) {\textbf{RoleClassifier}
+  \nodepart{second}agent: CustEmpClassifier
+  \nodepart{third}classify(frame: ndarray, bbox: tuple,\\\quad track\_id: int, timestamp: float):\\\quad tuple[str, float, dict]};
+\node[dcls=4.5cm] (eng) at (6.1,-1.45) {\textbf{EngagementDetector}
+  \nodepart{second}config: InteractionConfig
+  \nodepart{third}update(people: list[TrackedPerson],\\\quad timestamp: float, frame\_height: int):\\\quad list[InteractionEvent]};
+\node[dcls=4.5cm] (judge) at (6.1,-3.95) {\textbf{PoseJudge}
+  \nodepart{second}facing\_angle: float\\min\_facing\_fraction: float
+  \nodepart{third}classify\_interaction(frames: list,\\\quad boxes: list): JudgeResult};
+% results and helpers (right column)
+\node[dcls=3.7cm] (cec) at (11.6,1.05) {\textbf{CustEmpClassifier}
+  \nodepart{second}weights: dict[str, float]\\threshold: float
+  \nodepart{third}decide(factors: dict):\\\quad tuple[str, float, dict]};
+\node[dcls=3.7cm] (event) at (11.6,-1.45) {\textbf{InteractionEvent}
+  \nodepart{second}employee\_track\_id: int\\customer\_track\_id: int\\started\_at: float\\distance\_body\_heights: float\\active: bool
+  \nodepart{third}};
+\node[dcls=3.7cm] (jr) at (11.6,-3.95) {\textbf{JudgeResult}
+  \nodepart{second}label: str\\confidence: float
+  \nodepart{third}};
+\draw[usedep] (pipe) -- node[an, right] {configured by} (cfg);
+% composition: one diamond at the whole, a bus to each part
+\draw[compo] (pipe.east) -- ++(0.8,0) coordinate (bus);
+\draw[thin] (bus |- tracker) -- (bus |- judge);
+\draw[thin] (bus |- tracker) -- node[m, above, pos=0.8] {1} (tracker.west);
+\draw[thin] (bus |- roles) -- node[m, above, pos=0.8] {1} (roles.west);
+\draw[thin] (bus |- eng) -- node[m, above, pos=0.8] {1} (eng.west);
+\draw[thin] (bus |- judge) -- node[m, above, pos=0.8] {0..1} (judge.west);
+\draw[compo] (roles) -- node[m, above, pos=0.8] {1} (cec);
+\draw[usedep] (eng) -- node[an, above] {creates} (event);
+\draw[usedep] (judge) -- node[an, above] {returns} (jr);
+\end{tikzpicture}
+\caption{Class diagram: vision pipeline}
+\label{fig:class-vision}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[scale=0.9, transform shape]
+% question path (left and middle)
+\node[dcls=4.4cm] (svc) at (0,0) {\textbf{AnalyticsService}
+  \nodepart{second}traces: MemoryTraceStore
+  \nodepart{third}ask(request: AskRequest,\\\quad scope: TrustedAccessScope): GraphRun\\get\_run(run\_id: str,\\\quad scope: TrustedAccessScope): GraphRun};
+\node[dcls=3.9cm] (spec) at (0,-3.7) {\textbf{SpecialistRegistration}
+  \nodepart{second}handler: Callable\\allowed\_tools: frozenset[str]\\development\_stub: bool
+  \nodepart{third}};
+\node[dcls=4.4cm] (reg) at (5.8,0) {\textbf{ScopedToolRegistry}
+  \nodepart{second}scope: TrustedAccessScope
+  \nodepart{third}invoke(name: str, arguments: dict):\\\quad ToolResult\\input\_schemas(): dict};
+\node[dcls=4.4cm] (ea) at (5.8,-3.7) {\textbf{EventAnalytics}
+  \nodepart{second}dsn: str\\synthetic: bool
+  \nodepart{third}get\_footfall(scope, request): FootfallResult\\get\_zone\_dwell(scope, request):\\\quad ZoneDwellResult\\get\_interactions(scope, request):\\\quad InteractionsResult};
+\node[dcls=4.4cm] (pg) at (5.8,-7.6) {\textbf{PostgresAnalyticsTools}
+  \nodepart{second}contexts: tuple[ObservationContext]
+  \nodepart{third}get\_unattended(scope, request):\\\quad UnattendedResult\\get\_coverage(scope, request):\\\quad CoverageResult};
+% operations path (right and bottom)
+\node[dcls=4.1cm] (pol) at (11.4,0) {\textbf{SignalPolicy}
+  \nodepart{second}min\_wait\_s: float = 180\\high\_wait\_s: float = 360\\min\_staffed\_ratio: float = 0.25\\max\_unknown\_share: float = 0.2
+  \nodepart{third}};
+\node[dcls=4.1cm] (dec) at (11.4,-3.7) {\textbf{SignalDecision}
+  \nodepart{second}event\_type: str\\zone\_id: str\\reason: ReasonCode\\event: OperationalEvent \textbar\ None
+  \nodepart{third}};
+\node[dcls=4.1cm] (oe) at (11.4,-7.6) {\textbf{OperationalEvent}
+  \nodepart{second}event\_id: str\\idempotency\_key: str\\zone\_id: str\\event\_type: str\\severity: str
+  \nodepart{third}};
+\node[dcls=4.1cm] (ad) at (11.4,-11.3) {\textbf{OperationalDispatchAdapter}
+  \nodepart{second}handler: DispatchHandler
+  \nodepart{third}handle(event: OperationalEvent,\\\quad scope: TrustedOperationalScope):\\\quad DispatchReceipt};
+\node[dcls=4.4cm] (dh) at (5.8,-11.3) {\guillemotleft interface\guillemotright\\\textbf{DispatchHandler}
+  \nodepart{second}
+  \nodepart{third}\_\_call\_\_(event: OperationalEvent,\\\quad scope: TrustedOperationalScope):\\\quad DispatchOutcome};
+\node[dcls=4.4cm] (disp) at (0,-11.3) {\guillemotleft module\guillemotright\\\textbf{dispatch}
+  \nodepart{second}ACTIVE\_TASK\_STATES: tuple[str]
+  \nodepart{third}handle\_event(conn, body: dict): dict\\select\_dispatch\_employee(conn,\\\quad target\_zone\_id: str): Row \textbar\ None\\make\_dispatch\_handler(dsn: str):\\\quad DispatchHandler};
+\draw[usedep] (svc) -- node[an, above] {\guillemotleft create\guillemotright} (reg);
+\draw[aggr] (svc) -- node[m, left, pos=0.85] {0..2} (spec);
+\draw[aggr] (reg) -- node[m, right, pos=0.85] {1} (ea);
+\draw[inherit] (pg) -- (ea);
+\draw[usedep] (dec) -- node[an, right] {\guillemotleft use\guillemotright\ thresholds} (pol);
+\draw[usedep] (dec.west) -- ++(-0.5,0) |- node[an, pos=0.75] {\guillemotleft use\guillemotright\ reads tools} (reg.east);
+\draw[aggr] (dec) -- node[m, right, pos=0.85] {0..1} (oe);
+\draw[usedep] (ad) -- node[an, right] {handles} (oe);
+\draw[aggr] (ad) -- node[m, above, pos=0.8] {1} (dh);
+\draw[usedep] (disp) -- node[an, above] {\guillemotleft create\guillemotright} (dh);
+\end{tikzpicture}
+\caption{Class diagram: agents and operations}
+\label{fig:class-agents}
+\end{figure}
+
+\input{chapters/design_behaviour}

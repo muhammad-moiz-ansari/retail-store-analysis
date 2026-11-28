@@ -1,0 +1,45 @@
+\chapter{Changes to the Requirements Specification}
+\label{app:req-changes}
+
+\section{Structural Changes}
+\begin{enumerate}
+\item \textbf{Numbering without gaps.} The mid report kept withdrawn identifiers, so its requirements ran FR-01, FR-02, FR-04, FR-07, FR-10 and so on. Requirements are now numbered FR-01 to FR-34 and grouped by module.
+\item \textbf{One behaviour per requirement.} Several mid-report requirements combined many behaviours in one sentence (for example, footfall, exits and occupancy with coverage reporting). Each requirement now states one testable behaviour.
+\item \textbf{Specification separated from progress.} The mid-report tables mixed requirements with implementation status (``Planned'', ``Partial'', ``honest evidence status''). The specification now states only what the system must do; progress and results are in Chapters~\ref{ch:impl} to~\ref{ch:testing}.
+\item \textbf{Measurable non-functional requirements.} Mid-report NFRs had no targets, and one stated that no numeric target existed. Every NFR now has a measurable target and a verification method.
+\item \textbf{Use cases are user goals.} ``Evaluate analytical outputs'' by an ``Operator / project team'' was an internal evaluation activity, not a goal of a store user; evaluation is now described as method in Chapter~\ref{ch:cveval}. The camera system was added as the actor that triggers dispatch, and include and extend relations are shown where they apply.
+\item \textbf{Retired terms removed.} Hot and gray zones are no longer occupancy categories; the specification uses the four agreed categories and treats missing coverage as a quality mask.
+\item \textbf{Added sections.} Product perspective with a context diagram, operating environment, constraints, external interfaces and a traceability table linking each requirement to design elements and tests.
+\end{enumerate}
+
+\section{Mapping of Mid-Report Requirements}
+\begin{longtable}{P{0.11\textwidth}P{0.3\textwidth}P{0.18\textwidth}P{0.33\textwidth}}
+\caption{Mid-report functional requirements and their replacements}\label{tab:fr-map}\\
+\toprule
+Old ID & Old capability & New IDs & Note\\
+\midrule
+\endfirsthead
+\toprule
+Old ID & Old capability & New IDs & Note\\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+FR-01 & Analyze a video & FR-05--FR-10 & Split into detection, tracking, roles, nomination, confirmation and outputs\\
+FR-02 & Entrance footfall & FR-13 & Occupancy from footfall dropped: initial occupancy is unknown\\
+FR-04 & Service interactions & FR-08, FR-09, FR-12 & Interaction nomination, pose confirmation, unattended episodes\\
+FR-07 & Spatial customer activity & FR-15, FR-16 & Four occupancy categories replace hot and gray zones\\
+FR-10 & Role-specific account & FR-01--FR-04 & Sign-in, role access, lockout, invitations\\
+FR-11 & Monitor cameras & FR-14 & Camera health recorded per minute\\
+FR-12 & Manager analytics & FR-17 & \\
+FR-13 & Personal workspace & FR-28 & \\
+FR-17 & Insight report with PDF export & FR-21 & Digest of verified figures; PDF export withdrawn\\
+FR-18 & Operational alerts & FR-30 & \\
+FR-19 & System status & FR-33 & \\
+FR-20 & Personal settings & -- & Withdrawn: profile editing is not part of the delivered scope\\
+FR-29 & Configure store & FR-31, FR-32 & Includes pausing dispatch\\
+FR-34 & Evaluate outputs & -- & Moved to evaluation method (Chapter~\ref{ch:cveval})\\
+FR-35 & Staff availability and coverage & FR-23, FR-24 & Unstaffed-zone events and suppression on unknown coverage\\
+FR-36 & Aisle assignment & FR-22, FR-25--FR-29, FR-34 & Event, eligibility, ranking, delivery, status, duplicates\\
+FR-37 & Analytics question & FR-18--FR-20 & Tools only, grounding, refusals\\
+\end{longtable}

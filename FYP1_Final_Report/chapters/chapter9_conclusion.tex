@@ -1,0 +1,49 @@
+\chapter{Conclusion and Future Work}
+\label{ch:conclusion}
+
+\section{Conclusion}
+RetailPulse set out to turn the footage a store already records into service and staffing information on an ordinary CPU, without identifying anyone. At the end of FYP-1 the core loop works end to end on recorded and synthetic data: the vision pipeline finds people, labels customers and employees, and confirms interactions with a pose check; each run becomes validated events in PostgreSQL; two business agents answer manager questions with figures that are checked against their source; and an unattended customer becomes a task for an eligible employee, without a manager approval step and never twice for the same event.
+
+Measured against the objectives of Chapter~\ref{ch:intro}:
+\begin{itemize}
+\item \textbf{O1, roles:} all 56 matched held-out tracks classified correctly with the fitted weights.
+\item \textbf{O2, interactions:} F1 0.450 on held-out clips (interval 0.26--0.63); the pose check raises precision from 0.346 to 0.391 at equal recall.
+\item \textbf{O3, event store:} every run's rows pass the contract check; a synthetic day covers all event tables.
+\item \textbf{O4, questions:} 51 golden questions are routed, answered and refused correctly, with every answer fully grounded (after fixes made on the same set).
+\item \textbf{O5, dispatch:} dispatch, no eligible employee, duplicates and blind cameras behave correctly in tests and in the synthetic rehearsal.
+\item \textbf{O6, CPU only:} 0.60 times real time on an idle CPU.
+\item \textbf{O7, access:} the security review's findings are fixed and tested.
+\end{itemize}
+
+The mid evaluation found the report's figures and requirements incorrect. This report rebuilds both: the requirements specification is now numbered, atomic and testable with measurable non-functional targets, and every design figure has been redrawn from the current code.
+
+The main limitation is evidence, not function: no acceptance scenario has yet passed on real store footage, the backend has not been deployed, and the labelled set is small enough that the accuracy interval is wide.
+
+\section{FYP-2 Plan}
+\begin{longtable}{P{0.27\textwidth}P{0.45\textwidth}P{0.2\textwidth}}
+\caption{FYP-2 work plan}\label{tab:fyp2}\\
+\toprule
+Work & Done when & Owner\\
+\midrule
+\endfirsthead
+\toprule
+Work & Done when & Owner\\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+Real-footage acceptance & A1--A10 pass on recorded store footage through the integrated system & Ruhab (lead), all\\
+Store map and calibration & Floor plan and camera points supplied and registered; A2 runs; map view shows real cells & Saqib, Moiz\\
+Backend deployment & Backend reachable from the deployed web tier with production secrets; S1 checked in the deployment & Saqib\\
+Automatic ingestion & A run started from the web page is stored without a manual command & Saqib\\
+Second annotator and blind re-check & Tuning labels second-reviewed; IMG\_8838 part~2 and IMG\_8830 re-checked & Labeller, Ruhab\\
+Dispatch agreement & Human rater's blind choices compared with the system on all 20 scenarios & Ruhab\\
+Clip review on real events & Two reviewers; precision and Cohen's kappa reported (A10) & Ruhab, Saqib\\
+Task transitions & Backend rejects out-of-order task states & Saqib\\
+Camera handoff & Labelled crossings collected and the handoff evaluator scored & Saqib\\
+Branch protection & CI required before merging to the main branch & Moiz\\
+Model and agent freeze & Weights and configuration frozen and recorded before the final demonstration & All\\
+\end{longtable}
+
+\section{Future Work Beyond FYP-2}
+Cross-camera re-identification without biometric identity, metric floor distances with calibrated static cameras, GPU deployment for real-time processing, shelf-level product interaction, and operation across several stores remain outside the project scope. They are recorded so a later project can start from the same event store and agent contracts.

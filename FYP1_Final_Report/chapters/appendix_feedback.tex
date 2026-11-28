@@ -1,0 +1,56 @@
+\chapter{Evaluation Feedback and Responses}
+\label{app:feedback}
+
+\section{Mid Evaluation (21 October 2026)}
+\begin{quote}
+Reports need improvement. Figures were incorrect, and the SRS is incorrect.
+\end{quote}
+
+\subsection{Figures}
+Every design figure was redrawn for this report from the current code. Table~\ref{tab:fig-fixes} lists what was wrong with each mid-report figure and how its replacement differs.
+
+\begin{longtable}{P{0.18\textwidth}P{0.4\textwidth}P{0.34\textwidth}}
+\caption{Mid-report figures and their replacements}\label{tab:fig-fixes}\\
+\toprule
+Figure & Problem in the mid report & Replacement\\
+\midrule
+\endfirsthead
+\toprule
+Figure & Problem in the mid report & Replacement\\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+Architecture & Drew the agents as one straight chain, each feeding the next, which the system never did; showed no data store, interfaces or security boundary & Layered architecture with the proxy, application, agent, vision and data layers, and every write path to the database (Figure~\ref{fig:architecture})\\
+Domain model & Mixed software agents (``\guillemotleft agent\guillemotright'', ``\guillemotleft LLM'' with an unclosed stereotype) with problem concepts; association names cut off; overlapping multiplicities such as ``0..10..11..*''; dense line crossings & Problem concepts only, named associations with readable multiplicities (Figure~\ref{fig:domain})\\
+Class diagram & Attributes shown only as types (``+String'') with no names; operations with no return types; planned agents and database tables mixed in one diagram & Two class diagrams of real classes with named, typed attributes and typed operations (Figures~\ref{fig:class-vision} and~\ref{fig:class-agents})\\
+Deployment & Showed SQLite, which the system no longer uses; no event store, agents or hosted deployment; labels over boxes & Current deployment: Vercel, CPU application host, hosted PostgreSQL, optional services (Figure~\ref{fig:deployment})\\
+Use cases & Four separate diagrams, no include or extend relations, an internal evaluation tool shown as a user goal & One diagram with twelve user-goal use cases and correct relations (Figure~\ref{fig:uc-diagram})\\
+Dashboard screenshot & Old interface with demo data showing 38 entries, 42 exits and ``net inside $-4$'', an impossible negative occupancy & New screenshots of the current interface, taken from the running system with every figure coming from the backend and synthetic data labelled on screen (Section~\ref{sec:ui})\\
+\end{longtable}
+
+New figures were added for behaviour that the mid report did not model: the pipeline and orchestration flows, the database tables, two sequence diagrams and the task state machine.
+
+\subsection{Software Requirements Specification}
+The requirements chapter was rewritten (Chapter~\ref{ch:srs}). Appendix~\ref{app:req-changes} gives the detailed changes and maps the old requirement identifiers to the new ones.
+
+\section{Proposal Defence (11 September 2026)}
+The team recorded this feedback after the defence; no signed form is attached.
+\begin{quote}
+Students have no clue what they are doing. Technical knowledge is lacking. The students do not have an understanding of the project. Students need to learn more about the requirements of the project and next time be well prepared. Should work on their presentation skills; the presenters kept pacing back and forth. Their project was poorly explained, there was no clarity on the exact features, and the overall idea was unclear. Also, they did not defend the generalizability of their project; the behavioral requirements of employees vary from retail to retail store (for example, luxury brands like Gucci, Prada, etc. don't want their employees to be constantly approaching customers), so how is their project universal for all types of retail stores? Improve your skills. It is a healthy project if it is properly focused.
+\end{quote}
+
+\begin{table}[H]
+\centering
+\caption{Responses to the proposal-defence feedback}\label{tab:defence-response}
+\begin{tabular}{P{0.3\textwidth}P{0.62\textwidth}}
+\toprule
+Point & Response\\
+\midrule
+Unclear features and requirements & Twelve use cases and 34 numbered, testable requirements (Chapter~\ref{ch:srs}); each requirement traced to design and tests\\
+Technical understanding & Each member owns named components (Table~\ref{tab:ownership}) and their tests; results are reproducible from named files and commands\\
+Generalisability across stores & Every waiting, staffing and coverage threshold is per-store configuration (constraint C3, NFR-13); a luxury store can raise the waiting threshold or pause dispatch without code changes\\
+Focus & Out-of-scope features (re-identification, metric distance, shelf interaction) are stated explicitly; effort went to one complete loop from camera to task\\
+\bottomrule
+\end{tabular}
+\end{table}

@@ -1,0 +1,88 @@
+\documentclass[oneside]{fast-nuces-bs}
+
+\usepackage{mathptmx}% Times Roman font
+\usepackage[T1]{fontenc}
+\usepackage{sectsty}
+\usepackage{tikz-uml}
+\usepackage{url}
+\usepackage{titlesec}
+\usepackage{booktabs,longtable,array,enumitem,float,multirow}
+\usepackage{pdflscape}
+\usetikzlibrary{arrows.meta,positioning,shapes.geometric,shapes.multipart,fit,calc,backgrounds}
+\newcolumntype{P}[1]{>{\raggedright\arraybackslash}p{#1}}
+
+% Information about the report
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\department{FAST School of Computing}
+\faculty{Computer Science}
+\degreeyear{2026}
+\degreemonth{December}
+\degreename{Computer Science}
+\campuscity{Islamabad}
+\authorone{Moiz Ansari}{23I-0523}
+\authortwo{Ruhab Ahmad}{23I-0559}
+\authorthree{Saqib Atif}{23I-0769}
+\supervisor{Mr. Shehreyar Rashid}
+\sessionduration{2023-2027}
+\deanname{Dr. Jawwad Shamsi}
+\directorname{Dr. Waseem Shahzad}
+\hodname{Dr. Arshad Islam}
+\fypcoordinatorname{Dr. Behjat}
+\title{RetailPulse: Agentic AI for Retail Store Intelligence}
+\newcommand{\projecttitle}{RetailPulse: Agentic AI for Retail Store Intelligence}
+\newcommand{\studentone}{Moiz Ansari (23I-0523)}
+\newcommand{\studenttwo}{Saqib Atif (23I-0769)}
+\newcommand{\studentthree}{Ruhab Ahmad (23I-0559)}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\hypersetup{hidelinks}
+\setlength{\tabcolsep}{4pt}
+\setlength{\emergencystretch}{3em}
+
+% Shared diagram styles (all figures are drawn in TikZ so they stay editable and consistent)
+\tikzset{
+  >={Stealth[length=2.2mm]},
+  box/.style={draw, rounded corners=2pt, align=center, font=\small, inner sep=4pt, minimum height=8mm},
+  layer/.style={draw, dashed, rounded corners=4pt, inner sep=6pt},
+  store/.style={draw, cylinder, shape border rotate=90, aspect=0.18, align=center, font=\small, minimum height=11mm, minimum width=24mm},
+  flow/.style={->, thick},
+  lbl/.style={font=\scriptsize, fill=white, inner sep=1pt},
+}
+
+\begin{document}
+
+\cleardoublepage
+\pagenumbering{roman}
+\setcounter{page}{1}
+\input{chapters/01_students_submission}
+\input{chapters/02_anti_plagiarism}
+\input{chapters/03_authors_declaration}
+\input{chapters/04_abstract}
+\input{chapters/05_acknowledgments}
+\input{chapters/06_executive_summary}
+\tableofcontents
+\listoffigures
+\listoftables
+\input{chapters/07_abbreviations}
+
+\cleardoublepage
+\pagenumbering{arabic}
+\input{chapters/chapter1_introduction}
+\input{chapters/chapter2_literature}
+\input{chapters/chapter3_srs}
+\input{chapters/chapter4_design}
+\input{chapters/chapter5_implementation}
+\input{chapters/chapter6_cv_evaluation}
+\input{chapters/chapter7_testing}
+\input{chapters/chapter8_management}
+\input{chapters/chapter9_conclusion}
+
+\appendix
+\input{chapters/appendix_feedback}
+\input{chapters/appendix_requirement_changes}
+\input{chapters/appendix_test_inventory}
+\input{chapters/appendix_meetings}
+
+\bibliographystyle{IEEEtran}
+\bibliography{references/references}
+\end{document}

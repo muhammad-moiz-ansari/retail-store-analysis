@@ -1,0 +1,197 @@
+\section{Data Design}
+All persistent data is in one PostgreSQL database with two groups of tables. The \emph{application tables} (Figure~\ref{fig:erd}) hold accounts, store configuration and the operational record of every dispatch decision. The \emph{event tables} (Table~\ref{tab:event-tables}) hold what the cameras observed; they share one set of common columns and are linked by run, camera and track identifiers rather than foreign keys, because a run is always written and replaced as a whole.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[scale=0.88, transform shape,
+  tbl/.style={draw, rectangle split, rectangle split parts=2, rectangle split part align={center,left},
+              align=left, font=\scriptsize, fill=white, text width=3.3cm, inner sep=2.5pt,
+              rectangle split part fill={gray!15,white}},
+  fk/.style={thin, -{Stealth[length=1.6mm]}},
+  m/.style={font=\tiny, inner sep=1pt}]
+\node[tbl] (users) at (0,0) {\textbf{users}\nodepart{second}\underline{id}\\name, email\\role, password\_hash\\active};
+\node[tbl] (rosters) at (4.6,0) {\textbf{rosters}\nodepart{second}\underline{id}\\user\_id (FK)\\zone\_id (FK, null = floater)\\shift, available};
+\node[tbl] (zones) at (9.2,0) {\textbf{zones}\nodepart{second}\underline{id}\\name, type\\capacity, min\_staff};
+\node[tbl] (cameras) at (13.8,0) {\textbf{cameras}\nodepart{second}\underline{id}\\zone\_id (FK)\\role, source\_type, online};
+\node[tbl] (events) at (13.8,-4.6) {\textbf{orchestration\_events}\nodepart{second}\underline{id}\\event\_type, zone\_id\\severity, evidence\_json\\dedupe\_key (unique)};
+\node[tbl] (dd) at (9.2,-4.6) {\textbf{dispatch\_decisions}\nodepart{second}\underline{id}\\event\_id (FK)\\alert\_id, task\_id (FK)\\selected\_employee\_id (FK users)\\decision, reason};
+\node[tbl] (tasks) at (4.6,-4.6) {\textbf{tasks}\nodepart{second}\underline{id}\\employee\_id (FK)\\target\_zone\_id (FK)\\trigger\_alert\_id (FK)\\instruction, state, ack\_seconds};
+\node[tbl] (tev) at (0,-4.6) {\textbf{task\_events}\nodepart{second}\underline{id}\\task\_id (FK)\\actor\_id (FK)\\state, note, created\_at};
+\node[tbl] (alerts) at (9.2,-8.6) {\textbf{alerts}\nodepart{second}\underline{id}\\category, severity\\status, evidence\_json\\resolved\_by (FK users)};
+% foreign keys point from the referencing table to the referenced table
+\draw[fk] (rosters) -- (users);
+\draw[fk] (rosters) -- (zones);
+\draw[fk] (cameras) -- (zones);
+\draw[fk] (tasks) -- (users);
+\draw[fk] (tasks) -- (zones);
+\draw[fk] (tev) -- (tasks);
+\draw[fk] (tev) -- (users);
+\draw[fk] (dd) -- (events);
+\draw[fk] (dd) -- (tasks);
+\draw[fk] (dd) -- (alerts);
+\draw[fk] (tasks.south) |- ([yshift=2mm]alerts.west);
+\end{tikzpicture}
+\caption[Application tables]{Application tables. Arrows run from a foreign key to the table it references; the two references to \texttt{users} from \texttt{alerts} and \texttt{dispatch\_decisions} are named in the column instead of drawn. Only key columns are shown.}
+\label{fig:erd}
+\end{figure}
+
+\begin{table}[H]
+\centering
+\caption{Event tables (common columns: event\_id, run\_id, store\_id, camera\_id, zone\_id, ts\_start, ts\_end)}\label{tab:event-tables}
+\begin{tabular}{P{0.24\textwidth}P{0.68\textwidth}}
+\toprule
+Table & Additional content\\
+\midrule
+tracks & track\_id, role, employee\_score, frames\_observed\\
+role\_decisions & track\_id, role, frames\\
+interactions & employee and customer track\_id, duration\_s, verdict (interaction, no\_interaction, unverified)\\
+unattended\_episodes & customer\_track\_id, waited\_s, helped\\
+zone\_dwell / cell\_dwell & track\_id, role, dwell\_s (per zone or per registered map cell)\\
+footfall & track\_id, direction (in or out)\\
+queue\_samples & queue\_length, est\_wait\_s\\
+pipeline\_health & fps, mean\_confidence, unknown\_role\_share, id\_churn, frozen\_or\_dark (one row per camera per minute)\\
+heatmaps & cols, rows, cells (one grid per camera per hour)\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Two rules protect the data. Every event row must pass the contract check \texttt{validate()}: the common identifiers are non-empty and no row ends before it starts. And \texttt{dedupe\_key} on \texttt{orchestration\_events} is unique, so the same staffing event can never be inserted twice; the insert uses \texttt{ON CONFLICT DO NOTHING} and the handler then returns the earlier decision.
+
+\section{Interaction Design}
+\tikzset{
+  life/.style={draw, fill=white, font=\scriptsize, align=center, minimum height=7mm, inner sep=2pt, text width=1.9cm},
+  msg/.style={->, thin, >={Stealth[length=1.8mm]}},
+  ret/.style={->, thin, dashed, >={Stealth[length=1.8mm]}},
+  ml/.style={font=\tiny, above, inner sep=1pt, align=center},
+}
+\subsection{Staffing Dispatch}
+Figure~\ref{fig:seq-dispatch} shows how a closed observation window becomes a task (UC-12). The operations cycle runs after each window for every configured zone. The policy reads three tool results; only if a customer waited past the threshold and the camera could see enough of the window does it emit an event. The dispatch handler then works inside one transaction: it records the event, which fails harmlessly for a duplicate, selects an eligible employee, and writes the alert, task, task event and decision together.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[scale=0.86, transform shape]
+\foreach \x/\n/\t in {0/cyc/Operations\\cycle, 2.45/pol/Signal policy, 4.9/tools/Read-only\\tools, 7.35/ad/Dispatch\\adapter, 9.8/hd/Dispatch\\handler, 12.25/db/PostgreSQL, 14.7/emp/Employee\\page} {
+  \node[life] (\n) at (\x,0) {\t};
+  \draw[dashed, gray] (\n.south) -- (\x,-13.6);
+}
+\draw[msg] (0,-1.0) -- node[ml] {evaluate\_zone(zone, window)} (2.45,-1.0);
+\draw[msg] (2.45,-1.6) -- node[ml] {get\_unattended, get\_zone\_dwell,\\get\_coverage} (4.9,-1.6);
+\draw[msg] (4.9,-2.2) -- node[ml] {read-only SELECT} (12.25,-2.2);
+\draw[ret] (12.25,-2.7) -- node[ml] {rows} (4.9,-2.7);
+\draw[ret] (4.9,-3.2) -- node[ml] {typed results with evidence} (2.45,-3.2);
+\node[draw, font=\tiny, fill=yellow!10, align=left, text width=2.2cm] at (1.2,-4.2) {wait $\geq$ min\_wait\_s,\\unknown share $\leq$ max};
+\draw[ret] (2.45,-5.0) -- node[ml] {SignalDecision(event)} (0,-5.0);
+\draw[msg] (0,-5.6) -- node[ml] {handle(event, scope)} (7.35,-5.6);
+\draw[msg] (7.35,-6.2) -- node[ml] {handler(event, scope)} (9.8,-6.2);
+\draw[msg] (9.8,-6.8) -- node[ml] {INSERT event ON CONFLICT (dedupe\_key) DO NOTHING} (12.25,-6.8);
+% alt fragment
+\draw (8.9,-7.3) rectangle (13.3,-12.0);
+\node[draw, font=\tiny\bfseries, anchor=north west, inner sep=1.5pt] at (8.9,-7.3) {alt};
+\node[font=\tiny, anchor=north west] at (9.5,-7.35) {[key already stored]};
+\draw[ret] (12.25,-8.0) -- node[ml] {earlier decision (duplicate)} (9.8,-8.0);
+\draw[dashed] (8.9,-8.4) -- (13.3,-8.4);
+\node[font=\tiny, anchor=north west] at (9.0,-8.45) {[new event]};
+\draw[msg] (9.8,-9.1) -- node[ml] {select eligible employee} (12.25,-9.1);
+\draw[ret] (12.25,-9.6) -- node[ml] {employee or none} (9.8,-9.6);
+\draw[msg] (9.8,-10.3) -- node[ml] {INSERT alert, task, task\_event,\\dispatch\_decision; COMMIT} (12.25,-10.3);
+\node[font=\tiny, align=left, anchor=west] at (9.85,-11.3) {no employee: alert and\\decision only, no task};
+\draw[ret] (9.8,-12.6) -- node[ml] {DispatchOutcome} (7.35,-12.6);
+\draw[ret] (7.35,-13.0) -- node[ml] {DispatchReceipt} (0,-13.0);
+\draw[msg] (12.25,-13.4) -- node[ml] {task stream event} (14.7,-13.4);
+\end{tikzpicture}
+\caption{Sequence diagram: unattended customer to staffing task}
+\label{fig:seq-dispatch}
+\end{figure}
+
+\subsection{Manager Question}
+Figure~\ref{fig:seq-ask} shows UC-04. The web tier never forwards a question without a valid manager session, and the Ask route rejects the question if the manager has already asked ten in the current minute. The orchestrator works only through the scoped registry, which is bound to the manager's store.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[scale=0.86, transform shape]
+\foreach \x/\n/\t in {0/mgr/Manager, 2.45/web/Web tier\\and proxy, 4.9/ask/Ask route, 7.35/orc/Orchestrator, 9.8/agent/Business\\agent, 12.25/tl/Read-only\\tools, 14.7/pg/PostgreSQL} {
+  \node[life] (\n) at (\x,0) {\t};
+  \draw[dashed, gray] (\n.south) -- (\x,-8.4);
+}
+\draw[msg] (0,-1.0) -- node[ml] {question} (2.45,-1.0);
+\draw[msg] (2.45,-1.6) -- node[ml] {question, interval, filters,\\actor + internal secret} (4.9,-1.6);
+\node[draw, font=\tiny, fill=yellow!10, align=left, text width=2.0cm, anchor=north west] at (5.05,-2.05) {manager of this store?\\fewer than 10 per minute?};
+\draw[msg] (4.9,-3.25) -- node[ml] {ask(request, scope)} (7.35,-3.25);
+\draw[msg] (7.35,-3.7) -- node[ml] {route, then run} (9.8,-3.7);
+\draw[msg] (9.8,-4.3) -- node[ml] {invoke(tool, arguments)} (12.25,-4.3);
+\draw[msg] (12.25,-4.9) -- node[ml] {read-only query} (14.7,-4.9);
+\draw[ret] (14.7,-5.3) -- node[ml] {rows} (12.25,-5.3);
+\draw[ret] (12.25,-5.7) -- node[ml] {result with evidence} (9.8,-5.7);
+\draw[ret] (9.8,-6.2) -- node[ml] {draft claims} (7.35,-6.2);
+\draw[msg] (7.35,-6.6) arc[start angle=90, end angle=-90, radius=0.25] node[font=\tiny, right, pos=0.5] {ground claims};
+\draw[ret] (7.35,-7.4) -- node[ml] {answer, citations, limitations} (4.9,-7.4);
+\draw[ret] (4.9,-7.8) -- (2.45,-7.8);
+\draw[ret] (2.45,-8.2) -- node[ml] {answer shown on dashboard} (0,-8.2);
+\end{tikzpicture}
+\caption{Sequence diagram: manager asks an analytics question}
+\label{fig:seq-ask}
+\end{figure}
+
+\subsection{Task Lifecycle}
+A dispatched task is created in the \emph{delivered} state. Figure~\ref{fig:task-states} shows the intended lifecycle. The backend does not yet enforce these transitions: it accepts any of the listed states from the task's owner or a manager and records each change as a task event, so enforcing the order is listed as FYP-2 work. The first acknowledgement also stores the acknowledgement time, which System Status reports.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[font=\small, node distance=8mm and 14mm,
+  state/.style={draw, rounded corners=6pt, minimum width=2.4cm, minimum height=8mm, fill=white, align=center}]
+\node[circle, fill=black, inner sep=3pt] (init) {};
+\node[state, right=10mm of init] (deliv) {delivered};
+\node[state, right=of deliv] (ack) {acknowledged\\\scriptsize ack time stored};
+\node[state, right=of ack] (prog) {in\_progress};
+\node[state, below=14mm of prog] (done) {completed};
+\node[state, below=14mm of deliv] (stop) {declined, expired\\or cancelled};
+\node[circle, draw, inner sep=3pt, right=10mm of done] (fin) {}; \node[circle, fill=black, inner sep=1.6pt] at (fin) {};
+\node[circle, draw, inner sep=3pt, left=10mm of stop] (fin2) {}; \node[circle, fill=black, inner sep=1.6pt] at (fin2) {};
+\draw[flow] (init) -- node[lbl, above] {dispatch} (deliv);
+\draw[flow] (deliv) -- node[lbl, above] {acknowledge} (ack);
+\draw[flow] (ack) -- node[lbl, above] {start} (prog);
+\draw[flow] (prog) -- node[lbl, right] {complete} (done);
+\draw[flow] (ack) -- node[lbl, sloped, above] {complete} (done);
+\draw[flow] (deliv) -- node[lbl, right] {decline} (stop);
+\draw[flow] (ack) -- node[lbl, sloped, above] {decline} (stop);
+\draw[flow] (done) -- (fin);
+\draw[flow] (stop) -- (fin2);
+\end{tikzpicture}
+\caption{State machine of a staffing task}
+\label{fig:task-states}
+\end{figure}
+
+\section{Deployment}
+Figure~\ref{fig:deployment} shows the deployment the system is built for. The web tier is deployed on Vercel and the database is a hosted PostgreSQL service (Neon). The Python backend and vision pipeline run on one CPU computer near the cameras, because video should not leave the store. At the time of writing the backend has been run only on team laptops; deploying it is part of the FYP-2 plan (Chapter~\ref{ch:conclusion}).
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[font=\small,
+  node3d/.style={draw, fill=white, align=center, inner sep=5pt, font=\scriptsize},
+  art/.style={draw, fill=white, align=center, font=\scriptsize, inner sep=3pt, text width=3.2cm},
+  conn/.style={thin, <->, >={Stealth[length=1.8mm]}},
+  cl/.style={font=\tiny, fill=white, inner sep=1pt, align=center}]
+% browser
+\node[art] (br) at (0,0) {\guillemotleft artifact\guillemotright\\Web pages (React 19)};
+\node[art] (nx) at (6.2,0) {\guillemotleft artifact\guillemotright\\Next.js 15 app,\\session and API proxy};
+\node[art] (be) at (6.2,-3.6) {\guillemotleft artifact\guillemotright\\FastAPI backend (Uvicorn):\\API, agents, dispatch};
+\node[art] (cv) at (6.2,-5.5) {\guillemotleft artifact\guillemotright\\Vision pipeline jobs:\\YOLOv8n, best\_320, pose};
+\node[art] (cam) at (0,-4.55) {\guillemotleft device\guillemotright\\CCTV cameras or\\recorded video};
+\node[art] (pg) at (12.2,-3.6) {\guillemotleft database\guillemotright\\PostgreSQL 17};
+\begin{scope}[on background layer]
+\node[node3d, fill=gray!8, fit=(br), inner sep=8pt, label={[font=\scriptsize]above:\guillemotleft device\guillemotright\ Browser}] (dev) {};
+\node[node3d, fill=gray!8, fit=(nx), inner sep=8pt, label={[font=\scriptsize]above:\guillemotleft cloud\guillemotright\ Vercel}] (vc) {};
+\node[node3d, fill=gray!8, fit=(be)(cv), inner sep=8pt, label={[font=\scriptsize]below:\guillemotleft device\guillemotright\ Store application host (CPU only)}] (host) {};
+\node[node3d, fill=gray!8, fit=(pg), inner sep=8pt, label={[font=\scriptsize]above:\guillemotleft cloud\guillemotright\ Neon}] (neon) {};
+\end{scope}
+% external
+\node[art] (ext) at (12.2,0) {\guillemotleft service\guillemotright\\Hugging Face router,\\ElevenLabs (optional)};
+\draw[conn] (dev) -- node[cl, above] {HTTPS} (vc);
+\draw[conn] (vc) -- node[cl, left, pos=0.35] {HTTPS, internal secret,\\actor headers} (vc |- host.north);
+\draw[conn] (host.east |- pg) -- node[cl, above] {TLS (sslmode=require)} (neon);
+\draw[conn] (host.north east) -- node[cl, sloped, above] {HTTPS} (ext);
+\draw[conn] (cam) -- node[cl, above] {stream / files} (host.west |- cam);
+\end{tikzpicture}
+\caption{Deployment diagram}
+\label{fig:deployment}
+\end{figure}

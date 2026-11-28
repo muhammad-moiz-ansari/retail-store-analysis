@@ -1,0 +1,102 @@
+\chapter{Testing and Validation}
+\label{ch:testing}
+
+\section{Test Strategy}
+Testing works at five levels, each with a different kind of evidence:
+\begin{enumerate}
+\item \textbf{Unit tests} check single modules with known inputs: role decisions, the pose judge, interaction nomination, signal policy rules, occupancy classification, grounding and narration.
+\item \textbf{Database integration tests} run the readers, ingestion, dispatch and security code against a real PostgreSQL instance. Each test creates its own temporary schema and drops it afterwards, so tests never share or damage data.
+\item \textbf{Evaluation benchmarks} score the vision pipeline against labelled clips (Chapter~\ref{ch:cveval}), the question path against a golden set, and dispatch against a set of staffing scenarios.
+\item \textbf{End-to-end rehearsal} runs the ten acceptance scenarios through the integrated code on a synthetic store day.
+\item \textbf{Review and QA} covers what automated tests cannot: a security code review, a dashboard QA pass and manual browser checks.
+\end{enumerate}
+Synthetic and real evidence are never mixed: every result from the fixture day is labelled synthetic and is not reported as a store result.
+
+\section{Automated Test Results}
+\begin{table}[H]
+\centering
+\caption{Automated test suites}\label{tab:suites}
+\begin{tabular}{P{0.25\textwidth}P{0.38\textwidth}P{0.28\textwidth}}
+\toprule
+Suite & Scope & Last recorded result\\
+\midrule
+Fast backend (CI job 1) & Agents, tools, graph, business agents, events, dispatch, operations, security, PostgreSQL migration & 276 passed (17 Nov 2026, PostgreSQL 17)\\
+Frontend (CI job 2) & Provider, controller, dashboard rendering, session and identity; lint, type check and production build & 40 passed; type check and lint pass (17 Nov 2026)\\
+Vision (CI job 3) & Detector, tracker, role classifier, engagement, judge, benchmark metrics, refit, confidence & Passes in CI (run \#24)\\
+Golden questions & 51 questions through the real router and graph on the fixture day & Routing 1.0, answers 1.0, refusals 1.0, grounded runs 1.0\\
+Dispatch scenarios & 20 staffing scenarios through the real dispatch code & All 20 run; agreement with a human rater pending\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+All three CI jobs passed on the integration branch. A separate run by the team on 14 November 2026 against the hosted Neon database also passed (223 passed, 2 skipped for a missing optional library), which confirmed the tests work against the production database service and not only the CI container. Appendix~\ref{app:tests} lists the test files by area.
+
+\textbf{Golden questions.} On the first run of the 51-question set, routing accuracy was 0.941, answer accuracy 0.922 and refusal accuracy 0.917; every run that produced an answer was fully grounded. The failures were fixed, for example ``Who is the worst performing employee?'' is now refused and ``Where are the staffing gaps?'' is now routed. The perfect second-run score is measured on the same questions the fixes were written for, so it is not an independent result.
+
+\textbf{Dispatch scenarios.} The 20 scenarios cover one free employee, a busy target-zone employee with a free floater, protection of zone minimum staffing, unrostered staff, nobody available, ranking between floaters and spare staff, and tie-breaks. The system's choices are recorded. They will be compared with a human rater's blind choices, collected on a rating sheet that hides the expected answers, before the agreement figure is reported.
+
+\section{Acceptance Scenarios}
+Ten end-to-end acceptance scenarios were defined (Table~\ref{tab:acceptance}). A scenario passes only on real footage through the integrated system; none has yet been run on real footage. To prove the wiring before that, all ten were rehearsed through the real code paths on the synthetic fixture day against PostgreSQL (\path{python -m backend.acceptance_rehearsal}). The rehearsal passed eight; the other two cannot run without inputs that do not exist yet.
+
+\begin{longtable}{P{0.05\textwidth}P{0.2\textwidth}P{0.42\textwidth}P{0.23\textwidth}}
+\caption{Acceptance scenarios and synthetic rehearsal (17 November 2026)}\label{tab:acceptance}\\
+\toprule
+ID & Scenario & Pass condition & Rehearsal\\
+\midrule
+\endfirsthead
+\toprule
+ID & Scenario & Pass condition & Rehearsal\\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+A1 & Clip to events & Rows in every event table with run, store and camera identifiers; \texttt{validate()} returns no problems; health covers the clip & Pass (720 of 720 minutes per camera)\\
+A2 & Events to map & Each cell carries a map version; unmapped areas are marked & Not runnable: no floor plan or calibration points supplied\\
+A3 & Live categories & Customer becomes \emph{no one} only after the hold; staff with a customer shows both; a covered lens gives insufficient coverage, never \emph{no one} & Pass\\
+A4 & Manager question & Real agents (not stubs); every number equals a tool metric; caveats shown & Pass\\
+A5 & Unattended to employee & Event raised, real handler called, eligible employee gets a task, manager sees it & Pass\\
+A6 & No eligible employee & Outcome \emph{no eligible employee}; no task; manager alerted & Pass\\
+A7 & Duplicate event & Same key; outcome \emph{duplicate}; still one task & Pass\\
+A8 & Blind camera & Event suppressed for unknown observation; no task & Pass\\
+A9 & Digest & Figures verified; provenance labelled; caveat names the blind interval & Pass\\
+A10 & Clip review precision & Two reviewers; precision and Cohen's kappa recorded & Not runnable: needs two human reviewers and recordings\\
+\end{longtable}
+
+The rehearsal found and fixed three defects before this report: the router refused A4's own question ``Where are the staffing gaps?'', the narrative check treated the digits in zone identifiers such as \texttt{z3} as figures, and the digest's coverage caveat did not say when the camera was blind. Each fix has a regression test.
+
+\section{Non-Functional Requirement Verification}
+\begin{longtable}{P{0.1\textwidth}P{0.34\textwidth}P{0.29\textwidth}P{0.17\textwidth}}
+\caption{Verification of non-functional requirements}\label{tab:nfr-verify}\\
+\toprule
+ID & Target & Evidence & Status\\
+\midrule
+\endfirsthead
+\toprule
+ID & Target & Evidence & Status\\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+NFR-01 & $\geq 0.5\times$ real time on CPU & 0.60$\times$ on an idle machine & Met\\
+NFR-02 & Interaction F1 $\geq 0.40$ held out & 0.450, interval 0.26--0.63 & Met (point estimate)\\
+NFR-03 & Role accuracy $\geq 95\,\%$ held out & 100\,\% of 56 tracks & Met\\
+NFR-04 & Replay creates no task & A7; dispatch unit tests & Met (synthetic)\\
+NFR-05 & Every event row valid & \texttt{validate()} in A1 and on each run & Met\\
+NFR-06 & Missing coverage never shown as empty & A3, A8; occupancy tests & Met (synthetic)\\
+NFR-07 & PBKDF2 $\geq$ 600\,000 iterations; 8-character passwords & Security tests & Met\\
+NFR-08 & Secret required; no default secrets & Security tests; startup refusal & Met\\
+NFR-09 & 10 questions per minute & Ask API test & Met (per process)\\
+NFR-10 & No biometric or account-linked identity stored & Schema and code review & Met by review\\
+NFR-11 & Two navigation actions; no horizontal scroll at 390\,px & Dashboard QA; mobile checks & Partly verified\\
+NFR-12 & Three CI jobs on every push & Workflow runs & Met; branch protection not yet enabled\\
+NFR-13 & Thresholds configurable without code & Policy and settings tests & Met\\
+\end{longtable}
+
+\section{Known Defects and Open Issues}
+\begin{itemize}
+\item The backend accepts any listed task state from any state; the order of task transitions is not enforced.
+\item Ingestion of a run started from the web page is a separate command, not automatic.
+\item The Ask rate limit is per process; a shared database budget exists but its schema has not been applied to a deployment.
+\item Branch protection on the main branch is not enabled, so passing CI is not yet required before a merge.
+\item No scenario has been accepted on real store footage, and the backend has not been deployed.
+\end{itemize}

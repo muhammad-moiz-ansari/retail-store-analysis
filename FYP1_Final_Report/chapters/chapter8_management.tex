@@ -1,0 +1,93 @@
+\chapter{Project Management}
+\label{ch:mgmt}
+
+\section{Development Approach}
+The project follows an iterative process. Each iteration ends with a working, tested increment and a review of what to keep, change or drop; the floor-distance prototype, for example, was dropped after iteration~1 when moving-camera footage showed it could not work. Work is split into owned work items (for example B1 labels, C3 dispatch, M-UI-P3 dashboard connection), each developed on a feature branch, reviewed and merged into a shared integration branch. Status, contracts and open items are kept in tracked planning documents in the repository so every member works from the same information.
+
+\section{Timeline and Milestones}
+\begin{longtable}{P{0.2\textwidth}P{0.72\textwidth}}
+\caption{Milestones}\label{tab:milestones}\\
+\toprule
+Date & Milestone\\
+\midrule
+\endfirsthead
+\toprule
+Date & Milestone\\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+26 Aug 2026 & First commit to the repository\\
+11 Sep 2026 & Proposal defence (feedback in Appendix~\ref{app:feedback})\\
+12 Oct 2026 & Supervisor accepts the team's 70-video dataset\\
+21 Oct 2026 & Mid evaluation: vision prototype and web application (iteration~1)\\
+24 Oct 2026 & Model consolidation: COCO detector tracks everyone, role detector only labels\\
+3 Nov 2026 & Iteration~2 begins with the team's 16-week plan\\
+5--8 Nov 2026 & 25 clips labelled; benchmarks on tuning and held-out sets\\
+10 Nov 2026 & Agent foundation: typed tools, scoped registry, orchestration graph\\
+11 Nov 2026 & Move to PostgreSQL; dashboard connected to the backend\\
+12 Nov 2026 & Business agents, signal policy, occupancy categories, digest, clip review, CI workflow\\
+13 Nov 2026 & Security fixes; direct dispatch connected end to end\\
+14 Nov 2026 & Role-weight decision; acceptance rehearsal on the hosted database\\
+15--18 Nov 2026 & Map registration, directional footfall, frontend security, production audit\\
+17 Nov 2026 & Benchmarks rerun with fitted weights; 276 backend tests\\
+25--26 Nov 2026 & Aisle relay demonstration; dispatch skips employees in an interaction\\
+\end{longtable}
+
+\section{Team Responsibilities}
+\begin{table}[H]
+\centering
+\caption{Ownership of components}\label{tab:ownership}
+\begin{tabular}{P{0.2\textwidth}P{0.72\textwidth}}
+\toprule
+Member & Responsibilities\\
+\midrule
+Moiz Ansari (23I-0523) & Manager frontend and dashboard binding; agent foundation (typed tools, scoped registry, orchestration graph, operational adapter); Ask route; footfall counter; PostgreSQL migration\\
+Saqib Atif (23I-0769) & Vision pipeline, labelling and benchmarks; event store and ingestion; dispatch and voice; map registration; security fixes; aisle relay demonstration\\
+Ruhab Ahmad (23I-0559) & Employee frontend; Customer Behavior and Employee Activity agents; signal policy; occupancy categories; digest; clip review; golden questions; acceptance tests; security review; CI workflow; role-weight decision; documentation and this report\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Version Control Evidence}
+The repository \path{muhammad-moiz-ansari/retail-store-analysis} has 339 commits on the branch described here, from 26 August to 26 November 2026. Git records them under five author identities: Moiz Ansari (136), \texttt{msaqibatifj} (128) and Muhammad Saqib Atif (2) for Saqib, Ruhab Ahmad (62), and \texttt{GulsherKhan-04} (11). The last identity holds Saqib's labelling and benchmark commits of 5--8 November, which were recorded under the wrong identity and re-authored to him on the shared integration branch. Commit counts measure activity, not the size or value of each contribution.
+
+\section{Risk Management}
+\begin{longtable}{P{0.22\textwidth}P{0.34\textwidth}P{0.36\textwidth}}
+\caption{Risks and responses}\label{tab:risks}\\
+\toprule
+Risk & Effect & Response\\
+\midrule
+\endfirsthead
+\toprule
+Risk & Effect & Response\\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+No store would share footage & No data to train or evaluate & Team recorded its own 70-video dataset, accepted by the supervisor\\
+No GPU & Slow processing & Small models, OpenVINO, frame sampling and role labelling only for new tracks; 0.60$\times$ real time achieved\\
+Moving cameras & Floor mapping failed & Floor prototype descoped; body-height distance used\\
+Small labelled set & Unreliable accuracy figures & Held-out set, bootstrap intervals, error analysis, blind re-check planned\\
+Language model invents figures & Wrong answers to managers & Claims must cite tool metrics; grounding and narrative checks; model used only for routing\\
+Duplicate or wrong dispatch & Staff sent twice or a zone left empty & Unique event key; eligibility protects minimum staffing; scenario tests\\
+Exposed secrets & Forged sessions & Startup refuses default secrets; secrets server-side; keys exposed earlier are being rotated\\
+Store map not supplied & Map-cell occupancy cannot be shown & Map registration tested on synthetic geometry; real map requested for FYP-2\\
+\end{longtable}
+
+\section{Tools and Generative-AI Use}
+Development used Git and GitHub, GitHub Actions, CVAT for labelling, Node.js, a Python virtual environment and PostgreSQL. Generative-AI assistants were also used, as disclosed in Table~\ref{tab:ai-use}. Every AI-assisted change was checked by tests and by the member who owns the affected component, and each member must be able to explain the code and text in their area.
+
+\begin{table}[H]
+\centering
+\caption{Generative-AI use and how it was checked}\label{tab:ai-use}
+\begin{tabular}{P{0.15\textwidth}P{0.4\textwidth}P{0.37\textwidth}}
+\toprule
+Tool & Used for & Check\\
+\midrule
+Claude Code & Implementation support for agents, tests, acceptance rehearsal, report drafting and figure redrawing & Automated tests; benchmark reruns; every report number traced to its source file; figures checked against the code\\
+Codex & Implementation support for the descoped floor prototype and documentation & Automated tests and output inspection\\
+Claude & General development questions & Review by the owning member\\
+\bottomrule
+\end{tabular}
+\end{table}
